@@ -1,0 +1,11 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-CAVH-FORMULA-001",
+  "status": "specification_only",
+  "purpose": "Validate CAVH glide-range guidance at formula and kernel boundaries before closed-loop use.",
+  "authority": "scientific_authority",
+  "source_refs": ["design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md#10-reference-bcavh-滑翔增程制导拆分"],
+  "required_artifacts": ["paper citation and version", "assumption ledger", "Eq17 cases", "Eq18 cases", "derivative reference", "glide-envelope reference", "TDCT reference", "closed-loop comparison"],
+  "acceptance": ["Each intermediate quantity has units and tolerance", "Independent implementation agrees within approved bounds", "Fallback and domain failures are explicit"],
+  "open_tasks": ["R0-SCI-004"]
+}

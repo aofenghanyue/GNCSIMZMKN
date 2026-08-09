@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://internal.gnczmkn/schemas/plan-proof-record.schema.json",
+  "title": "PlanProofRecord fixture schema",
+  "description": "R0 fixture schema. R2 owns the implemented compiler contract.",
+  "x-maturity": "Fixture",
+  "type": "object",
+  "required": ["proof_id", "proof_kind", "subject_refs", "assertion_code", "source_refs", "premises", "result", "diagnostic_ids", "lowered_operator_refs", "generated_by_pass"],
+  "properties": {
+    "proof_id": {"type": "string"},
+    "proof_kind": {"enum": ["Identity", "Ownership", "Causality", "TimeLifecycle", "StateTransition", "ResourceEffect", "Evidence"]},
+    "subject_refs": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "assertion_code": {"type": "string", "pattern": "^GNC\\.PLAN\\.[A-Z0-9_.-]+$"},
+    "source_refs": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "premises": {"type": "object"},
+    "result": {"enum": ["Proven", "Rejected", "Unsupported"]},
+    "diagnostic_ids": {"type": "array", "items": {"type": "string"}},
+    "lowered_operator_refs": {"type": "array", "items": {"type": "string"}},
+    "generated_by_pass": {"type": "string"}
+  },
+  "additionalProperties": false
+}

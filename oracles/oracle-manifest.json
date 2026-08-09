@@ -1,0 +1,77 @@
+{
+  "schema_version": "gnczmkn.oracle-manifest/1",
+  "oracle_set_id": "ORACLE-GNCZMKN-R0-001",
+  "status": "planned",
+  "oracles": [
+    {
+      "id": "ORACLE-YYZ-PUBLISH-01",
+      "level": "component",
+      "status": "planned",
+      "claim": "Publishing t_k does not advance continuous state.",
+      "reference_kind": "legacy behavior plus target invariant",
+      "tolerance_policy": "exact state hash equality",
+      "source_refs": ["reference/legacy/source-manifest.json", "design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md#10-旧行为-oracle-怎样保护迁移"],
+      "artifact_refs": []
+    },
+    {
+      "id": "ORACLE-YYZ-PHASE-02",
+      "level": "mission",
+      "status": "planned",
+      "claim": "The preserved fixed-step phase order is explicit and observable.",
+      "reference_kind": "legacy invocation trace",
+      "tolerance_policy": "exact ordered sequence",
+      "source_refs": ["reference/legacy/source-manifest.json"],
+      "artifact_refs": []
+    },
+    {
+      "id": "ORACLE-YYZ-SYNC-03",
+      "level": "closure",
+      "status": "planned",
+      "claim": "Continuous candidates are computed before a synchronized commit.",
+      "reference_kind": "transaction trace",
+      "tolerance_policy": "exact event ordering; numeric values use variable tolerance",
+      "source_refs": ["reference/legacy/source-manifest.json"],
+      "artifact_refs": []
+    },
+    {
+      "id": "ORACLE-YYZ-GROUP-04",
+      "level": "closure",
+      "status": "planned",
+      "claim": "Shared RK candidate-state behavior is preserved by IntegrationScopePlan.",
+      "reference_kind": "legacy/new trajectory and stage comparison",
+      "tolerance_policy": "to be frozen by R0-SCI-003",
+      "source_refs": ["reference/legacy/source-manifest.json"],
+      "artifact_refs": []
+    },
+    {
+      "id": "ORACLE-YYZ-CSV-05",
+      "level": "mission",
+      "status": "planned",
+      "claim": "Each recorded time identifies t_k and fields follow declared publish/update boundaries.",
+      "reference_kind": "semantic dataset comparison",
+      "tolerance_policy": "exact time/identity metadata; field-specific numeric tolerance",
+      "source_refs": ["reference/legacy/source-manifest.json"],
+      "artifact_refs": []
+    },
+    {
+      "id": "ORACLE-YYZ-STOP-06",
+      "level": "mission",
+      "status": "planned",
+      "claim": "A stopping state is observed before the run reaches its terminal outcome.",
+      "reference_kind": "terminal observation and outcome trace",
+      "tolerance_policy": "exact event ordering",
+      "source_refs": ["reference/legacy/source-manifest.json"],
+      "artifact_refs": []
+    },
+    {
+      "id": "ORACLE-SIMFLOW-07",
+      "level": "workflow",
+      "status": "planned",
+      "claim": "Case materialization remains outside single-mission runtime semantics.",
+      "reference_kind": "effective-mission replay",
+      "tolerance_policy": "semantic input equality and deterministic case identity",
+      "source_refs": ["reference/legacy/source-manifest.json"],
+      "artifact_refs": []
+    }
+  ]
+}

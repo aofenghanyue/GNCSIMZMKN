@@ -1,0 +1,30 @@
+{
+  "schema_version": "gnczmkn.project-manifest/1",
+  "project": "GNCZMKN Next",
+  "status": "development",
+  "current_gate": "R0",
+  "language": {
+    "standard": "C++17",
+    "build_system": "CMake 3.20+"
+  },
+  "architecture": {
+    "path": "design-notes/gnczmkn-architecture-roadmap",
+    "import_date": "2026-08-09",
+    "source_head": "a63621c368aa8e7889547689bcce9c7686b886ac+working-tree-design-notes"
+  },
+  "modules": [
+    "foundation",
+    "contracts",
+    "model_sdk",
+    "compiler",
+    "kernel",
+    "evidence",
+    "workflow",
+    "application",
+    "adapters"
+  ],
+  "legacy_reference": {
+    "policy": "read-only-evidence-only",
+    "manifest": "reference/legacy/source-manifest.json"
+  }
+}

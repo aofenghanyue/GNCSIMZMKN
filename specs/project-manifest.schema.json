@@ -1,0 +1,43 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://internal.gnczmkn/schemas/project-manifest.schema.json",
+  "title": "GNCZMKN greenfield project manifest",
+  "type": "object",
+  "required": ["schema_version", "project", "status", "current_gate", "language", "architecture", "modules", "legacy_reference"],
+  "properties": {
+    "schema_version": {"const": "gnczmkn.project-manifest/1"},
+    "project": {"type": "string"},
+    "status": {"enum": ["bootstrap", "development", "qualified", "archived"]},
+    "current_gate": {"type": "string"},
+    "language": {
+      "type": "object",
+      "required": ["standard", "build_system"],
+      "properties": {
+        "standard": {"type": "string"},
+        "build_system": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "architecture": {
+      "type": "object",
+      "required": ["path", "import_date", "source_head"],
+      "properties": {
+        "path": {"type": "string"},
+        "import_date": {"type": "string", "format": "date"},
+        "source_head": {"type": "string"}
+      },
+      "additionalProperties": false
+    },
+    "modules": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+    "legacy_reference": {
+      "type": "object",
+      "required": ["policy", "manifest"],
+      "properties": {
+        "policy": {"const": "read-only-evidence-only"},
+        "manifest": {"type": "string"}
+      },
+      "additionalProperties": false
+    }
+  },
+  "additionalProperties": false
+}

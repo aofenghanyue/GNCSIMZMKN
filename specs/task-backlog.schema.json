@@ -1,0 +1,45 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://internal.gnczmkn/schemas/task-backlog.schema.json",
+  "title": "GNCZMKN task backlog",
+  "type": "object",
+  "required": ["schema_version", "current_gate", "status_values", "tasks"],
+  "properties": {
+    "schema_version": {"const": "gnczmkn.task-backlog/1"},
+    "current_gate": {"type": "string"},
+    "updated_at": {"type": "string", "format": "date"},
+    "status_values": {
+      "type": "array",
+      "items": {"enum": ["planned", "ready", "in_progress", "blocked", "review", "done"]},
+      "uniqueItems": true
+    },
+    "tasks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": [
+          "id", "stage", "title", "status", "priority", "size",
+          "owner_role", "assignee", "depends_on", "deliverables",
+          "acceptance", "evidence", "architecture_refs"
+        ],
+        "properties": {
+          "id": {"type": "string", "pattern": "^(B0|R[0-8])-[A-Z]+-[0-9]{3}$"},
+          "stage": {"enum": ["Bootstrap", "R0", "R1", "R2", "R3", "R4", "R5", "R6", "R7", "R8"]},
+          "title": {"type": "string", "minLength": 3},
+          "status": {"enum": ["planned", "ready", "in_progress", "blocked", "review", "done"]},
+          "priority": {"enum": ["P0", "P1", "P2", "P3"]},
+          "size": {"enum": ["S", "M", "L", "XL"]},
+          "owner_role": {"type": "string"},
+          "assignee": {"type": ["string", "null"]},
+          "depends_on": {"type": "array", "items": {"type": "string"}, "uniqueItems": true},
+          "deliverables": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+          "acceptance": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+          "evidence": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+          "architecture_refs": {"type": "array", "items": {"type": "string"}, "minItems": 1}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

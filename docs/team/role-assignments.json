@@ -1,0 +1,15 @@
+{
+  "schema_version": "gnczmkn.team-roles/1",
+  "updated_at": "2026-08-09",
+  "roles": [
+    {"id": "product_owner", "assignee": null, "required": true},
+    {"id": "scientific_authority", "assignee": null, "required": true},
+    {"id": "architecture_lead", "assignee": null, "required": true},
+    {"id": "model_sdk_lead", "assignee": null, "required": true},
+    {"id": "compiler_lead", "assignee": null, "required": true},
+    {"id": "runtime_numerics_lead", "assignee": null, "required": true},
+    {"id": "evidence_workflow_lead", "assignee": null, "required": true},
+    {"id": "application_lead", "assignee": null, "required": false},
+    {"id": "validation_lead", "assignee": null, "required": true}
+  ]
+}

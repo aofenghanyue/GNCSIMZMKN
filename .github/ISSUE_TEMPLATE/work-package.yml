@@ -1,0 +1,28 @@
+name: Work package
+description: Track an approved task from docs/tasks/backlog.json
+title: "[TASK-ID] "
+labels: [work-package]
+body:
+  - type: input
+    id: task
+    attributes:
+      label: Task ID
+      placeholder: R0-SCI-001
+    validations:
+      required: true
+  - type: textarea
+    id: scope
+    attributes:
+      label: Scope and deliverables
+    validations:
+      required: true
+  - type: textarea
+    id: acceptance
+    attributes:
+      label: Acceptance evidence
+    validations:
+      required: true
+  - type: textarea
+    id: decisions
+    attributes:
+      label: Decisions or blockers

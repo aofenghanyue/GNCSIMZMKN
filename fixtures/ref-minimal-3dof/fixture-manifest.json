@@ -1,0 +1,11 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-MINIMAL-3DOF-001",
+  "status": "specification_only",
+  "purpose": "Provide an analytic or independently computed fixed-step dynamics reference.",
+  "authority": "scientific_authority",
+  "source_refs": ["design-notes/gnczmkn-architecture-roadmap/11-roadmap-overview.md#53-退出门-g1科学-oracle-可用"],
+  "required_artifacts": ["mission source", "initial state", "analytic or independent trajectory", "termination facts", "dt convergence report", "tolerance policy"],
+  "acceptance": ["Independent of legacy class names and output column ordering", "Covers normal and numerical failure paths"],
+  "open_tasks": ["R0-SCI-002"]
+}

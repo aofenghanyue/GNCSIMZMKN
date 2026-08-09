@@ -1,0 +1,23 @@
+name: bootstrap-ci
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  build-and-verify:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Configure
+        run: cmake -S . -B build/ci -DGNC_BUILD_TESTS=ON
+      - name: Build
+        run: cmake --build build/ci --config Debug
+      - name: Test
+        run: ctest --test-dir build/ci -C Debug --output-on-failure
+      - name: Repository checks
+        shell: pwsh
+        run: ./tools/verify-repository.ps1

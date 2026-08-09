@@ -1,0 +1,11 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-YYZ-001",
+  "status": "specification_only",
+  "purpose": "Close the target architecture path from mission source to evidence and next proposal.",
+  "authority": "scientific_authority",
+  "source_refs": ["design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md", "design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md"],
+  "required_artifacts": ["authoritative mission source", "aero/propulsion/mass assets", "formula intermediate values", "PlanProofRecord set", "step journal facts", "ObservationBatch", "diagnostic failure case", "trajectory and terminal metrics", "tolerance and difference report"],
+  "acceptance": ["All example values have confirmed provenance", "Legacy and target results can be compared by semantic field identity", "Every difference has an approved classification"],
+  "open_tasks": ["R0-LEG-002", "R0-SCI-003", "R0-SPEC-001"]
+}

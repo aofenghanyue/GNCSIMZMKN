@@ -1,0 +1,19 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://internal.gnczmkn/schemas/fixture-manifest.schema.json",
+  "title": "GNCZMKN reference fixture manifest",
+  "type": "object",
+  "required": ["schema_version", "fixture_id", "status", "purpose", "authority", "required_artifacts", "acceptance"],
+  "properties": {
+    "schema_version": {"const": "gnczmkn.fixture-manifest/1"},
+    "fixture_id": {"type": "string"},
+    "status": {"enum": ["specification_only", "capturing", "executable", "qualified", "retired"]},
+    "purpose": {"type": "string"},
+    "authority": {"type": "string"},
+    "source_refs": {"type": "array", "items": {"type": "string"}},
+    "required_artifacts": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "acceptance": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+    "open_tasks": {"type": "array", "items": {"type": "string"}}
+  },
+  "additionalProperties": false
+}

@@ -1,0 +1,18 @@
+/build/
+/out/
+/.cache/
+/.idea/
+/.vscode/
+CMakeUserPresets.json
+compile_commands.json
+*.user
+*.swp
+*.tmp
+*.log
+
+# Generated research outputs stay outside version control unless promoted to a fixture.
+/user/outputs/
+/artifacts/
+
+# Extracted legacy material is disposable; the checked archive and manifest are authoritative.
+/reference/legacy/extracted/

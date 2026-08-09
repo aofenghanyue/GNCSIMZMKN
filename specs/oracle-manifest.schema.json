@@ -1,0 +1,31 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://internal.gnczmkn/schemas/oracle-manifest.schema.json",
+  "title": "GNCZMKN oracle manifest",
+  "type": "object",
+  "required": ["schema_version", "oracle_set_id", "status", "oracles"],
+  "properties": {
+    "schema_version": {"const": "gnczmkn.oracle-manifest/1"},
+    "oracle_set_id": {"type": "string"},
+    "status": {"enum": ["planned", "capturing", "executable", "qualified", "retired"]},
+    "oracles": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "level", "status", "claim", "reference_kind", "tolerance_policy", "source_refs"],
+        "properties": {
+          "id": {"type": "string"},
+          "level": {"enum": ["math", "numerical", "model", "component", "closure", "mission", "workflow"]},
+          "status": {"enum": ["planned", "capturing", "executable", "qualified", "retired"]},
+          "claim": {"type": "string"},
+          "reference_kind": {"type": "string"},
+          "tolerance_policy": {"type": "string"},
+          "source_refs": {"type": "array", "items": {"type": "string"}, "minItems": 1},
+          "artifact_refs": {"type": "array", "items": {"type": "string"}}
+        },
+        "additionalProperties": false
+      }
+    }
+  },
+  "additionalProperties": false
+}

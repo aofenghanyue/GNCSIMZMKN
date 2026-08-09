@@ -1,0 +1,39 @@
+{
+  "schema_version": "gnczmkn.legacy-source-manifest/1",
+  "captured_at": "2026-08-09",
+  "source_repository": "C:/Users/17721/Documents/workwork/GNCZMKN",
+  "git": {
+    "head": "a63621c368aa8e7889547689bcce9c7686b886ac",
+    "commit_time": "2026-08-03T15:40:14+08:00",
+    "subject": "docs(gnczmkn-architecture): 补充各分册主线定位，重构主叙事并新增术语附录"
+  },
+  "working_tree": {
+    "production_code_changes": 0,
+    "design_note_changes_present": true,
+    "team_facing_blueprint_source": "design-notes/gnczmkn-architecture-roadmap"
+  },
+  "archive": {
+    "path": "reference/legacy/legacy-source.zip",
+    "format": "git-archive-zip",
+    "prefix": "GNCZMKN-legacy-a63621c/",
+    "bytes": 990450,
+    "sha256": "2159a324fd897e4bd508c140a36c9165d744e4e4e61861c5b568201707f988e5"
+  },
+  "scope": {
+    "tracked_tree": "HEAD",
+    "includes": ["framework", "src", "tests", "doc", "user tracked inputs/assets", "CMake and tools"],
+    "excludes": ["working-tree-only blueprint revisions", "build directories", "generated user outputs", ".git history"]
+  },
+  "baseline_tests": {
+    "configured_tests": 25,
+    "ctest_passed": 23,
+    "ctest_failed": 2,
+    "path_sensitive_failures": ["test_ideal_cartesian_3dof_mission", "test_ideal_cartesian_6dof_mission"],
+    "direct_repo_root_rerun_exit_codes": {
+      "test_ideal_cartesian_3dof_mission": 0,
+      "test_ideal_cartesian_6dof_mission": 0
+    },
+    "report": "reference/legacy/baseline-test-report.md"
+  },
+  "policy": "read-only-evidence-only"
+}
