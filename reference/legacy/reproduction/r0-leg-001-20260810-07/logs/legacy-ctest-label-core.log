@@ -1,0 +1,51 @@
+﻿# stage: legacy-ctest-label-core
+# command: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\deps\w64devkit-extracted\w64devkit\bin\ctest.exe --test-dir C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\build-main -L core --output-on-failure
+# working_directory: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07
+# started_utc: 2026-08-10T05:19:52.0072427+00:00
+# elapsed_seconds: 0.537
+# exit_code: 0
+
+Test project C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/build-main
+      Start  1: test_coordinate_tree_builder
+ 1/18 Test  #1: test_coordinate_tree_builder .....   Passed    0.01 sec
+      Start  2: test_coordinate_tree_node
+ 2/18 Test  #2: test_coordinate_tree_node ........   Passed    0.01 sec
+      Start  3: test_environment_packages
+ 3/18 Test  #3: test_environment_packages ........   Passed    0.01 sec
+      Start  4: test_form_slices
+ 4/18 Test  #4: test_form_slices .................   Passed    0.00 sec
+      Start  5: test_local_spherical_6dof_form
+ 5/18 Test  #5: test_local_spherical_6dof_form ...   Passed    0.01 sec
+      Start  6: test_form_extension_contract
+ 6/18 Test  #6: test_form_extension_contract .....   Passed    0.01 sec
+      Start  7: test_component_listing
+ 7/18 Test  #7: test_component_listing ...........   Passed    0.01 sec
+      Start  8: test_mission_contract
+ 8/18 Test  #8: test_mission_contract ............   Passed    0.01 sec
+      Start  9: test_perturbation_contract
+ 9/18 Test  #9: test_perturbation_contract .......   Passed    0.01 sec
+      Start 10: test_continuous_group
+10/18 Test #10: test_continuous_group ............   Passed    0.01 sec
+      Start 11: test_publish_semantics
+11/18 Test #11: test_publish_semantics ...........   Passed    0.02 sec
+      Start 12: test_strict_config
+12/18 Test #12: test_strict_config ...............   Passed    0.03 sec
+      Start 13: test_auto_data_logger
+13/18 Test #13: test_auto_data_logger ............   Passed    0.03 sec
+      Start 14: test_config_preprocessor
+14/18 Test #14: test_config_preprocessor .........   Passed    0.04 sec
+      Start 15: test_preparation_pipeline
+15/18 Test #15: test_preparation_pipeline ........   Passed    0.03 sec
+      Start 16: test_parser_facade
+16/18 Test #16: test_parser_facade ...............   Passed    0.03 sec
+      Start 17: test_simflow_materializer
+17/18 Test #17: test_simflow_materializer ........   Passed    0.03 sec
+      Start 18: test_simflow_runner
+18/18 Test #18: test_simflow_runner ..............   Passed    0.18 sec
+
+100% tests passed out of 18
+
+Label Time Summary:
+core    =   0.44 sec*proc (18 tests)
+
+Total Test time (real) =   0.46 sec

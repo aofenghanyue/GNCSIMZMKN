@@ -1,0 +1,8 @@
+﻿# stage: dependency-w64devkit-extract
+# command: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\deps\w64devkit-x64-2.9.1.7z.exe -y -oC:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\deps\w64devkit-extracted
+# working_directory: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07
+# started_utc: 2026-08-10T05:16:22.8048839+00:00
+# elapsed_seconds: 6.101
+# exit_code: 0
+
+completed

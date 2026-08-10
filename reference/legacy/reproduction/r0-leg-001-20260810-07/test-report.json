@@ -1,0 +1,49 @@
+﻿{
+    "schema_version":  "gnczmkn.legacy-test-report/1",
+    "run_id":  "r0-leg-001-20260810-07",
+    "status":  "passed",
+    "configured":  27,
+    "passed":  27,
+    "failed":  0,
+    "labels":  {
+                   "core":  18,
+                   "example":  6,
+                   "project":  2,
+                   "architecture-guard":  1
+               },
+    "ctest_working_directory":  "build-main",
+    "historical_baseline":  {
+                                "configured":  25,
+                                "passed":  23,
+                                "failed":  2,
+                                "path_sensitive_failures":  [
+                                                                "test_ideal_cartesian_3dof_mission",
+                                                                "test_ideal_cartesian_6dof_mission"
+                                                            ]
+                            },
+    "path_sensitive_comparison":  {
+                                      "clean_ctest":  "passed",
+                                      "direct_source_root_runs":  [
+                                                                      {
+                                                                          "test":  "test_ideal_cartesian_3dof_mission",
+                                                                          "working_directory":  "legacy-source-root",
+                                                                          "exit_code":  0,
+                                                                          "log":  "logs/legacy-direct-test_ideal_cartesian_3dof_mission.log"
+                                                                      },
+                                                                      {
+                                                                          "test":  "test_ideal_cartesian_6dof_mission",
+                                                                          "working_directory":  "legacy-source-root",
+                                                                          "exit_code":  0,
+                                                                          "log":  "logs/legacy-direct-test_ideal_cartesian_6dof_mission.log"
+                                                                      }
+                                                                  ]
+                                  },
+    "logs":  {
+                 "list":  "logs/legacy-ctest-list.log",
+                 "all":  "logs/legacy-ctest-all.log",
+                 "core":  "logs/legacy-ctest-label-core.log",
+                 "example":  "logs/legacy-ctest-label-example.log",
+                 "project":  "logs/legacy-ctest-label-project.log",
+                 "architecture_guard":  "logs/legacy-ctest-label-architecture-guard.log"
+             }
+}

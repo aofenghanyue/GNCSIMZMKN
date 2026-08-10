@@ -1,0 +1,27 @@
+﻿# stage: legacy-ctest-label-example
+# command: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\deps\w64devkit-extracted\w64devkit\bin\ctest.exe --test-dir C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\build-main -L example --output-on-failure
+# working_directory: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07
+# started_utc: 2026-08-10T05:19:52.5480716+00:00
+# elapsed_seconds: 0.16
+# exit_code: 0
+
+Test project C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/build-main
+    Start 19: test_ideal_3dof_mission
+1/6 Test #19: test_ideal_3dof_mission .............   Passed    0.01 sec
+    Start 20: test_ideal_cartesian_3dof_mission
+2/6 Test #20: test_ideal_cartesian_3dof_mission ...   Passed    0.01 sec
+    Start 21: test_ideal_cartesian_6dof_mission
+3/6 Test #21: test_ideal_cartesian_6dof_mission ...   Passed    0.01 sec
+    Start 22: test_ideal_6dof_components
+4/6 Test #22: test_ideal_6dof_components ..........   Passed    0.01 sec
+    Start 23: test_ideal_6dof_process
+5/6 Test #23: test_ideal_6dof_process .............   Passed    0.01 sec
+    Start 24: test_ideal_6dof_mission
+6/6 Test #24: test_ideal_6dof_mission .............   Passed    0.01 sec
+
+100% tests passed out of 6
+
+Label Time Summary:
+example    =   0.06 sec*proc (6 tests)
+
+Total Test time (real) =   0.07 sec

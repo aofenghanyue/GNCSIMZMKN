@@ -8,3 +8,5 @@
 *.jpeg binary
 *.pdf binary
 design-notes/gnczmkn-architecture-roadmap/** whitespace=-trailing-space
+reference/legacy/reproduction/r0-leg-*/*.json -text whitespace=-trailing-space
+reference/legacy/reproduction/**/logs/*.log -text whitespace=-trailing-space

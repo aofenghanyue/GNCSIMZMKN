@@ -1,0 +1,334 @@
+﻿{
+    "schema_version":  "gnczmkn.legacy-mission-report/1",
+    "run_id":  "r0-leg-001-20260810-07",
+    "status":  "passed",
+    "mission_count":  5,
+    "summary_normalization":  [
+                                  "^Generated:",
+                                  "^  Wall clock time:",
+                                  "^  Real-time ratio:",
+                                  "^  Output:"
+                              ],
+    "missions":  [
+                     {
+                         "id":  "geographic-3dof",
+                         "description":  "Ideal geographic/local-spherical 3DoF baseline",
+                         "active_project":  "example_05_ideal_3dof_geographic_baseline",
+                         "mission":  "user/example_05_ideal_3dof_geographic_baseline/config/mission.json",
+                         "status":  "passed",
+                         "deterministic":  true,
+                         "comparisons":  [
+                                             {
+                                                 "artifact":  "ideal_3dof_geographic_baseline.csv",
+                                                 "basis":  "sha256",
+                                                 "matches":  true
+                                             },
+                                             {
+                                                 "artifact":  "summary.txt",
+                                                 "basis":  "normalized_sha256",
+                                                 "matches":  true
+                                             }
+                                         ],
+                         "runs":  [
+                                      {
+                                          "pass":  1,
+                                          "exit_code":  0,
+                                          "elapsed_seconds":  0.031,
+                                          "output_directory":  "user/outputs/example_05_ideal_3dof_geographic_baseline",
+                                          "log":  "logs/mission-geographic-3dof-run-1.log",
+                                          "artifacts":  [
+                                                            {
+                                                                "path":  "user/outputs/example_05_ideal_3dof_geographic_baseline/ideal_3dof_geographic_baseline.csv",
+                                                                "bytes":  6856,
+                                                                "sha256":  "8f62c3f9f8c2f06a2d5e9baa9f61b42fad21fd8c683cf44005cb8cc8a655ee37"
+                                                            },
+                                                            {
+                                                                "path":  "user/outputs/example_05_ideal_3dof_geographic_baseline/summary.txt",
+                                                                "bytes":  10152,
+                                                                "sha256":  "efe8a6b4d23a5c3fb72a149bcac5c53a66c6f95b3d5d2589517aeacba7bbe36a",
+                                                                "normalized_sha256":  "c83b93e9e7bcf504863416933610d090bd81380e6b2838ce81214066c8f2474e",
+                                                                "normalization":  "omit Generated, Wall clock time, Real-time ratio, and Output lines"
+                                                            }
+                                                        ]
+                                      },
+                                      {
+                                          "pass":  2,
+                                          "exit_code":  0,
+                                          "elapsed_seconds":  0.029,
+                                          "output_directory":  "user/outputs/example_05_ideal_3dof_geographic_baseline",
+                                          "log":  "logs/mission-geographic-3dof-run-2.log",
+                                          "artifacts":  [
+                                                            {
+                                                                "path":  "user/outputs/example_05_ideal_3dof_geographic_baseline/ideal_3dof_geographic_baseline.csv",
+                                                                "bytes":  6856,
+                                                                "sha256":  "8f62c3f9f8c2f06a2d5e9baa9f61b42fad21fd8c683cf44005cb8cc8a655ee37"
+                                                            },
+                                                            {
+                                                                "path":  "user/outputs/example_05_ideal_3dof_geographic_baseline/summary.txt",
+                                                                "bytes":  10152,
+                                                                "sha256":  "bd169bbdcc206678a87aea3c8ade9f11e065ff298b95ed07f9215904fcb116ac",
+                                                                "normalized_sha256":  "c83b93e9e7bcf504863416933610d090bd81380e6b2838ce81214066c8f2474e",
+                                                                "normalization":  "omit Generated, Wall clock time, Real-time ratio, and Output lines"
+                                                            }
+                                                        ]
+                                      }
+                                  ]
+                     },
+                     {
+                         "id":  "cartesian-3dof",
+                         "description":  "Ideal Cartesian 3DoF baseline",
+                         "active_project":  "example_05_ideal_3dof_geographic_baseline",
+                         "mission":  "user/example_06_ideal_cartesian_3dof_baseline/config/mission.json",
+                         "status":  "passed",
+                         "deterministic":  true,
+                         "comparisons":  [
+                                             {
+                                                 "artifact":  "ideal_cartesian_3dof_baseline.csv",
+                                                 "basis":  "sha256",
+                                                 "matches":  true
+                                             },
+                                             {
+                                                 "artifact":  "summary.txt",
+                                                 "basis":  "normalized_sha256",
+                                                 "matches":  true
+                                             }
+                                         ],
+                         "runs":  [
+                                      {
+                                          "pass":  1,
+                                          "exit_code":  0,
+                                          "elapsed_seconds":  0.031,
+                                          "output_directory":  "user/outputs/example_06_ideal_cartesian_3dof_baseline",
+                                          "log":  "logs/mission-cartesian-3dof-run-1.log",
+                                          "artifacts":  [
+                                                            {
+                                                                "path":  "user/outputs/example_06_ideal_cartesian_3dof_baseline/ideal_cartesian_3dof_baseline.csv",
+                                                                "bytes":  5141,
+                                                                "sha256":  "8c42c511804021536650a0f0b9c2211681b0f6ff5688734cea4a55065d3f60a7"
+                                                            },
+                                                            {
+                                                                "path":  "user/outputs/example_06_ideal_cartesian_3dof_baseline/summary.txt",
+                                                                "bytes":  9322,
+                                                                "sha256":  "d289dd61a9abcd2eec154ccec63ef1944b091ecac0d26860bb595b5a4ca6e8eb",
+                                                                "normalized_sha256":  "90c88875537508541acc86c23bae4d5d5b8ba2ab1167e7d6b6e17f616e2c45b8",
+                                                                "normalization":  "omit Generated, Wall clock time, Real-time ratio, and Output lines"
+                                                            }
+                                                        ]
+                                      },
+                                      {
+                                          "pass":  2,
+                                          "exit_code":  0,
+                                          "elapsed_seconds":  0.036,
+                                          "output_directory":  "user/outputs/example_06_ideal_cartesian_3dof_baseline",
+                                          "log":  "logs/mission-cartesian-3dof-run-2.log",
+                                          "artifacts":  [
+                                                            {
+                                                                "path":  "user/outputs/example_06_ideal_cartesian_3dof_baseline/ideal_cartesian_3dof_baseline.csv",
+                                                                "bytes":  5141,
+                                                                "sha256":  "8c42c511804021536650a0f0b9c2211681b0f6ff5688734cea4a55065d3f60a7"
+                                                            },
+                                                            {
+                                                                "path":  "user/outputs/example_06_ideal_cartesian_3dof_baseline/summary.txt",
+                                                                "bytes":  9322,
+                                                                "sha256":  "68bfd7131e7f7b6ce31ffa003888d0e0478057f92ab8888a5539314f53f93b74",
+                                                                "normalized_sha256":  "90c88875537508541acc86c23bae4d5d5b8ba2ab1167e7d6b6e17f616e2c45b8",
+                                                                "normalization":  "omit Generated, Wall clock time, Real-time ratio, and Output lines"
+                                                            }
+                                                        ]
+                                      }
+                                  ]
+                     },
+                     {
+                         "id":  "cartesian-6dof",
+                         "description":  "Ideal Cartesian 6DoF baseline",
+                         "active_project":  "example_05_ideal_3dof_geographic_baseline",
+                         "mission":  "user/example_07_ideal_cartesian_6dof_baseline/config/mission.json",
+                         "status":  "passed",
+                         "deterministic":  true,
+                         "comparisons":  [
+                                             {
+                                                 "artifact":  "ideal_cartesian_6dof_baseline.csv",
+                                                 "basis":  "sha256",
+                                                 "matches":  true
+                                             },
+                                             {
+                                                 "artifact":  "summary.txt",
+                                                 "basis":  "normalized_sha256",
+                                                 "matches":  true
+                                             }
+                                         ],
+                         "runs":  [
+                                      {
+                                          "pass":  1,
+                                          "exit_code":  0,
+                                          "elapsed_seconds":  0.032,
+                                          "output_directory":  "user/outputs/example_07_ideal_cartesian_6dof_baseline",
+                                          "log":  "logs/mission-cartesian-6dof-run-1.log",
+                                          "artifacts":  [
+                                                            {
+                                                                "path":  "user/outputs/example_07_ideal_cartesian_6dof_baseline/ideal_cartesian_6dof_baseline.csv",
+                                                                "bytes":  6700,
+                                                                "sha256":  "685cd0c25ce56ad0061de6e740c6e822a09059212214b2bd55b0c9e51ed9f0c0"
+                                                            },
+                                                            {
+                                                                "path":  "user/outputs/example_07_ideal_cartesian_6dof_baseline/summary.txt",
+                                                                "bytes":  9349,
+                                                                "sha256":  "43d26435e065885ec6f2f093e0a47ce927cf502560bda88afd4bf5c0c6f1286e",
+                                                                "normalized_sha256":  "17c22d269c8b1568c9701a1ebcb0385b5976543f13c5b28a425ac755b8dcb4d4",
+                                                                "normalization":  "omit Generated, Wall clock time, Real-time ratio, and Output lines"
+                                                            }
+                                                        ]
+                                      },
+                                      {
+                                          "pass":  2,
+                                          "exit_code":  0,
+                                          "elapsed_seconds":  0.029,
+                                          "output_directory":  "user/outputs/example_07_ideal_cartesian_6dof_baseline",
+                                          "log":  "logs/mission-cartesian-6dof-run-2.log",
+                                          "artifacts":  [
+                                                            {
+                                                                "path":  "user/outputs/example_07_ideal_cartesian_6dof_baseline/ideal_cartesian_6dof_baseline.csv",
+                                                                "bytes":  6700,
+                                                                "sha256":  "685cd0c25ce56ad0061de6e740c6e822a09059212214b2bd55b0c9e51ed9f0c0"
+                                                            },
+                                                            {
+                                                                "path":  "user/outputs/example_07_ideal_cartesian_6dof_baseline/summary.txt",
+                                                                "bytes":  9349,
+                                                                "sha256":  "d35d46f4eb423cfe7b9dd56effe9bd818c36bdff77a7e8ade3a229b16258d8e0",
+                                                                "normalized_sha256":  "17c22d269c8b1568c9701a1ebcb0385b5976543f13c5b28a425ac755b8dcb4d4",
+                                                                "normalization":  "omit Generated, Wall clock time, Real-time ratio, and Output lines"
+                                                            }
+                                                        ]
+                                      }
+                                  ]
+                     },
+                     {
+                         "id":  "cavh-geographic-3dof",
+                         "description":  "CAV-H custom geographic 3DoF research mission",
+                         "active_project":  "example_08_cavh_geographic_3dof_custom",
+                         "mission":  "user/example_08_cavh_geographic_3dof_custom/config/mission.json",
+                         "status":  "passed",
+                         "deterministic":  true,
+                         "comparisons":  [
+                                             {
+                                                 "artifact":  "cavh_geographic_3dof_custom.csv",
+                                                 "basis":  "sha256",
+                                                 "matches":  true
+                                             },
+                                             {
+                                                 "artifact":  "summary.txt",
+                                                 "basis":  "normalized_sha256",
+                                                 "matches":  true
+                                             }
+                                         ],
+                         "runs":  [
+                                      {
+                                          "pass":  1,
+                                          "exit_code":  0,
+                                          "elapsed_seconds":  1.799,
+                                          "output_directory":  "user/outputs/example_08_cavh_geographic_3dof_custom/time_2026-08-10_132038",
+                                          "log":  "logs/mission-cavh-geographic-3dof-run-1.log",
+                                          "artifacts":  [
+                                                            {
+                                                                "path":  "user/outputs/example_08_cavh_geographic_3dof_custom/time_2026-08-10_132038/cavh_geographic_3dof_custom.csv",
+                                                                "bytes":  44256835,
+                                                                "sha256":  "e3ada3dfdf3ef57eaacb1df59dcc9e75d94d67c0436e9ae9438f8d70d6dba6b1"
+                                                            },
+                                                            {
+                                                                "path":  "user/outputs/example_08_cavh_geographic_3dof_custom/time_2026-08-10_132038/summary.txt",
+                                                                "bytes":  9881,
+                                                                "sha256":  "81e559035998cc4158a781fc2a45b7cc1aecfda80e6e1345d92d6ae82f92a529",
+                                                                "normalized_sha256":  "7c96967736f3e1138a4cee78e467c63dda35d43561477ec28a67ef77f285231d",
+                                                                "normalization":  "omit Generated, Wall clock time, Real-time ratio, and Output lines"
+                                                            }
+                                                        ]
+                                      },
+                                      {
+                                          "pass":  2,
+                                          "exit_code":  0,
+                                          "elapsed_seconds":  1.773,
+                                          "output_directory":  "user/outputs/example_08_cavh_geographic_3dof_custom/time_2026-08-10_132041",
+                                          "log":  "logs/mission-cavh-geographic-3dof-run-2.log",
+                                          "artifacts":  [
+                                                            {
+                                                                "path":  "user/outputs/example_08_cavh_geographic_3dof_custom/time_2026-08-10_132041/cavh_geographic_3dof_custom.csv",
+                                                                "bytes":  44256835,
+                                                                "sha256":  "e3ada3dfdf3ef57eaacb1df59dcc9e75d94d67c0436e9ae9438f8d70d6dba6b1"
+                                                            },
+                                                            {
+                                                                "path":  "user/outputs/example_08_cavh_geographic_3dof_custom/time_2026-08-10_132041/summary.txt",
+                                                                "bytes":  9881,
+                                                                "sha256":  "ef038d0644e17088f2ee8322de6df84c064a8b93ce571e3757872ba0cae73634",
+                                                                "normalized_sha256":  "7c96967736f3e1138a4cee78e467c63dda35d43561477ec28a67ef77f285231d",
+                                                                "normalization":  "omit Generated, Wall clock time, Real-time ratio, and Output lines"
+                                                            }
+                                                        ]
+                                      }
+                                  ]
+                     },
+                     {
+                         "id":  "yyz-cartesian-6dof",
+                         "description":  "YYZ custom Cartesian 6DoF framework-9 mission",
+                         "active_project":  "yyz_cartesian_6dof_framework_9",
+                         "mission":  "user/yyz_cartesian_6dof_framework_9/config/mission.json",
+                         "status":  "passed",
+                         "deterministic":  true,
+                         "comparisons":  [
+                                             {
+                                                 "artifact":  "trajectory_nominal.csv",
+                                                 "basis":  "sha256",
+                                                 "matches":  true
+                                             },
+                                             {
+                                                 "artifact":  "summary.txt",
+                                                 "basis":  "normalized_sha256",
+                                                 "matches":  true
+                                             }
+                                         ],
+                         "runs":  [
+                                      {
+                                          "pass":  1,
+                                          "exit_code":  0,
+                                          "elapsed_seconds":  0.168,
+                                          "output_directory":  "user/outputs/yyz_cartesian_6dof_framework_9/2026-08-10_132043",
+                                          "log":  "logs/mission-yyz-cartesian-6dof-run-1.log",
+                                          "artifacts":  [
+                                                            {
+                                                                "path":  "user/outputs/yyz_cartesian_6dof_framework_9/2026-08-10_132043/trajectory_nominal.csv",
+                                                                "bytes":  115477,
+                                                                "sha256":  "fe8b60dffd65635d9a7d330f1d7a20dda2e0666ecc56f39711d5db1e68eec0e2"
+                                                            },
+                                                            {
+                                                                "path":  "user/outputs/yyz_cartesian_6dof_framework_9/2026-08-10_132043/summary.txt",
+                                                                "bytes":  9402,
+                                                                "sha256":  "fc79ccfa0838396c1da6c39b31d253b7b538da4c8a3ce7ace2c745a63d030c45",
+                                                                "normalized_sha256":  "8da7f1064d1d9eaf242e65fcd39140f0adde5fdd00bb59fcb626e32af002ebed",
+                                                                "normalization":  "omit Generated, Wall clock time, Real-time ratio, and Output lines"
+                                                            }
+                                                        ]
+                                      },
+                                      {
+                                          "pass":  2,
+                                          "exit_code":  0,
+                                          "elapsed_seconds":  0.04,
+                                          "output_directory":  "user/outputs/yyz_cartesian_6dof_framework_9/2026-08-10_132044",
+                                          "log":  "logs/mission-yyz-cartesian-6dof-run-2.log",
+                                          "artifacts":  [
+                                                            {
+                                                                "path":  "user/outputs/yyz_cartesian_6dof_framework_9/2026-08-10_132044/trajectory_nominal.csv",
+                                                                "bytes":  115477,
+                                                                "sha256":  "fe8b60dffd65635d9a7d330f1d7a20dda2e0666ecc56f39711d5db1e68eec0e2"
+                                                            },
+                                                            {
+                                                                "path":  "user/outputs/yyz_cartesian_6dof_framework_9/2026-08-10_132044/summary.txt",
+                                                                "bytes":  9402,
+                                                                "sha256":  "6f7f7fea644ed00b556c82ca5e58e75c254901a0a4233b4eb61a0e5cb4aa3135",
+                                                                "normalized_sha256":  "8da7f1064d1d9eaf242e65fcd39140f0adde5fdd00bb59fcb626e32af002ebed",
+                                                                "normalization":  "omit Generated, Wall clock time, Real-time ratio, and Output lines"
+                                                            }
+                                                        ]
+                                      }
+                                  ]
+                     }
+                 ]
+}

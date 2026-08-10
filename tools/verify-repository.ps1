@@ -44,6 +44,8 @@ $requiredPaths = @(
     'reference/legacy/source-manifest.json',
     'reference/legacy/legacy-source.zip',
     'reference/legacy/legacy-source.sha256',
+    'reference/legacy/reproduction/current.json',
+    'reference/legacy/reproduction/compatibility-msvc-19.50.json',
     'fixtures/ref-yyz-001/fixture-manifest.json',
     'oracles/oracle-manifest.json'
 )
@@ -251,6 +253,12 @@ if ($LASTEXITCODE -ne 0) {
     Add-Error "R0 architecture baseline conformance failed: $($architectureValidatorOutput -join [Environment]::NewLine)"
 }
 
+$legacyReproductionValidatorPath = Join-Path $PSScriptRoot 'validate-legacy-reproduction.ps1'
+$legacyReproductionValidatorOutput = & $powerShellHost -NoLogo -NoProfile -ExecutionPolicy Bypass -File $legacyReproductionValidatorPath -Quiet 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Add-Error "R0 legacy reproduction evidence failed: $($legacyReproductionValidatorOutput -join [Environment]::NewLine)"
+}
+
 if ($errors.Count -gt 0) {
     Write-Host "Repository verification failed with $($errors.Count) issue(s):"
     foreach ($errorMessage in $errors) {
@@ -266,3 +274,4 @@ Write-Host "Validated task entries: $taskCount"
 Write-Host "Validated Markdown files: $($markdownFiles.Count)"
 Write-Host "Validated R0 schema contracts: 3"
 Write-Host "Validated R0 architecture baseline: 1"
+Write-Host "Validated R0 legacy reproduction: 1"

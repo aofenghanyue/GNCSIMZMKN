@@ -1,0 +1,176 @@
+﻿# stage: mission-yyz-cartesian-6dof-run-2
+# command: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\build-project-yyz_cartesian_6dof_framework_9\bin\gnc_sim.exe --config user/yyz_cartesian_6dof_framework_9/config/mission.json
+# working_directory: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\source\GNCZMKN-legacy-a63621c
+# started_utc: 2026-08-10T05:20:44.8267120+00:00
+# elapsed_seconds: 0.04
+# exit_code: 0
+
+[INFO] Factory registered builtin type: environment.spherical_earth
+[INFO] Factory registered builtin type: environment.wgs84_earth
+[INFO] Factory registered builtin type: environment.standard_atmosphere
+[INFO] Factory registered builtin type: environment.spherical_gravity
+[INFO] Factory registered builtin type: vehicle.common.aero_assets_3dof.zero
+[INFO] Factory registered builtin type: vehicle.common.aero_assets_6dof.zero
+[INFO] Factory registered builtin type: vehicle.input.local_spherical_imu_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.local_spherical_satellite_nav_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.local_spherical_air_data_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.local_spherical_seeker_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.cartesian_imu_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.cartesian_satellite_nav_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.cartesian_air_data_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.cartesian_seeker_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.local_spherical_imu_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.local_spherical_satellite_nav_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.local_spherical_air_data_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.local_spherical_seeker_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.cartesian_imu_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.cartesian_satellite_nav_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.cartesian_air_data_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.cartesian_seeker_6dof.ideal
+[INFO] Factory registered builtin type: perturbation.static
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_phase_sequencer_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_trajectory_planner_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_navigation_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_target_tracking_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_guidance_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_flight_control_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_control_allocation_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_phase_sequencer_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_trajectory_planner_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_navigation_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_target_tracking_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_guidance_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_flight_control_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_control_allocation_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_phase_sequencer_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_trajectory_planner_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_navigation_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_target_tracking_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_guidance_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_attitude_control_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_control_allocation_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_phase_sequencer_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_trajectory_planner_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_navigation_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_target_tracking_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_guidance_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_attitude_control_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_control_allocation_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.output.propulsion_3dof.zero
+[INFO] Factory registered builtin type: vehicle.output.mass_3dof.constant
+[INFO] Factory registered builtin type: vehicle.output.actuator_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.output.aerodynamics_3dof.zero
+[INFO] Factory registered builtin type: vehicle.output.mass_properties_6dof.constant
+[INFO] Factory registered builtin type: vehicle.output.propulsion_6dof.zero
+[INFO] Factory registered builtin type: vehicle.output.actuator_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.output.aerodynamics_6dof.zero
+[INFO] Factory registered builtin type: form.cartesian_3dof.point_mass
+[INFO] Factory registered builtin type: form.cartesian_6dof.rigid_body
+[INFO] Factory registered builtin type: form.local_spherical_3dof.point_mass
+[INFO] Factory registered builtin type: form.local_spherical_6dof.rigid_body
+[INFO] Factory registered builtin type: form.target_point.kinematic
+[INFO] Factory registered builtin type: interaction.cartesian_3dof.standard
+[INFO] Factory registered builtin type: interaction.cartesian_6dof.standard
+[INFO] Factory registered builtin type: interaction.local_spherical_3dof.standard
+[INFO] Factory registered builtin type: interaction.local_spherical_6dof.standard
+[INFO] Factory registered builtin type: termination.component_field_below
+[INFO] Factory registered builtin type: termination.component_field_above
+[INFO] Factory registered builtin type: termination.engagement_local_spherical_6dof
+[INFO] Factory registered builtin type: termination.engagement_local_spherical_3dof
+[INFO] Factory registered builtin type: termination.engagement_cartesian_3dof
+[INFO] Factory registered builtin type: termination.engagement_cartesian_6dof
+[INFO] Factory registered builtin type: summary.engagement_local_spherical_3dof.ideal
+[INFO] Factory registered builtin type: summary.engagement_cartesian_3dof.ideal
+[INFO] Factory registered builtin type: summary.engagement_cartesian_6dof.ideal
+[INFO] Factory registered builtin type: summary.engagement_local_spherical_6dof.ideal
+[INFO] Factory registered builtin type: infrastructure.coordinate_tree
+[INFO] Factory registered builtin type: infrastructure.coordinate_frames.local_spherical_3dof.launch_track
+[INFO] Factory registered project type: custom.common.c6.standard_trajectory
+[INFO] Factory registered project type: custom.environment.c6.cgcs2000
+[INFO] Factory registered project type: custom.environment.c6.wind.constant
+[INFO] Factory registered project type: custom.form.c6.rigid_body
+[INFO] Factory registered project type: custom.input.c6.air_data
+[INFO] Factory registered project type: custom.input.c6.imu
+[INFO] Factory registered project type: custom.input.c6.satnav
+[INFO] Factory registered project type: custom.interaction.c6.force_moment
+[INFO] Factory registered project type: custom.output.c6.actuator
+[INFO] Factory registered project type: custom.output.c6.aerodynamics
+[INFO] Factory registered project type: custom.output.c6.mass_properties
+[INFO] Factory registered project type: custom.output.c6.propulsion
+[INFO] Factory registered project type: custom.process.c6.control_allocation
+[INFO] Factory registered project type: custom.process.c6.flight_control
+[INFO] Factory registered project type: custom.process.c6.guidance
+[INFO] Factory registered project type: custom.process.c6.navigation
+[INFO] Factory registered project type: custom.process.c6.onboard_state
+[INFO] Factory registered project type: custom.process.c6.sequencer
+[INFO] Factory registered project type: custom.process.c6.target_manager
+[INFO] Factory registered project type: custom.process.c6.trajectory_planner
+[INFO] Factory registered project type: custom.summary.c6.basic_metrics
+[INFO] Factory registered project type: custom.termination.c6.state_metric
+[INFO] === GNC Simulation Framework v2.0 ===
+[INFO] Config: C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/config/mission.json
+[INFO] Configuration loaded from: C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/config/mission.json
+[INFO] Registered node: env.cgcs2000
+[INFO] Registered node: env.wind
+[INFO] Registered node: interceptor.perturbation
+[INFO] Registered node: interceptor.dynamics
+[INFO] Registered node: interceptor.standard_trajectory
+[INFO] Registered node: interceptor.imu
+[INFO] Registered node: interceptor.satnav
+[INFO] Registered node: interceptor.air_data
+[INFO] Registered node: interceptor.sequencer
+[INFO] Registered node: interceptor.navigation
+[INFO] Registered node: interceptor.trajectory_planner
+[INFO] Registered node: interceptor.target_manager
+[INFO] Registered node: interceptor.onboard_state
+[INFO] Registered node: interceptor.guidance
+[INFO] Registered node: interceptor.flight_control
+[INFO] Registered node: interceptor.control_allocation
+[INFO] Registered node: interceptor.actuator
+[INFO] Registered node: interceptor.propulsion
+[INFO] Registered node: interceptor.mass
+[INFO] Registered node: interceptor.aero
+[INFO] Registered node: interceptor.interaction
+[INFO] Registered node: target.truth
+[INFO] Registered node: mission.termination
+[INFO] Registered node: mission.summary
+[INFO] CsvRecordSink recording to 'user/outputs/yyz_cartesian_6dof_framework_9/2026-08-10_132044/trajectory_nominal.csv'
+[INFO] AutoDataLogger enabled with 201 stable field(s). Output directory: 'user/outputs/yyz_cartesian_6dof_framework_9/2026-08-10_132044'
+[INFO] Mission node inventory: builtin types [form.target_point.kinematic, perturbation.static], project types [custom.common.c6.standard_trajectory, custom.environment.c6.cgcs2000, custom.environment.c6.wind.constant, custom.form.c6.rigid_body, custom.input.c6.air_data, custom.input.c6.imu, custom.input.c6.satnav, custom.interaction.c6.force_moment, custom.output.c6.actuator, custom.output.c6.aerodynamics, custom.output.c6.mass_properties, custom.output.c6.propulsion, custom.process.c6.control_allocation, custom.process.c6.flight_control, custom.process.c6.guidance, custom.process.c6.navigation, custom.process.c6.onboard_state, custom.process.c6.sequencer, custom.process.c6.target_manager, custom.process.c6.trajectory_planner, custom.summary.c6.basic_metrics, custom.termination.c6.state_metric]
+[INFO] Simulation phase: NotStarted -> Initializing
+[INFO] Initializing simulator...
+[INFO] Initializing node: env.cgcs2000
+[INFO] Initializing node: env.wind
+[INFO] Initializing node: interceptor.perturbation
+[INFO] Initializing node: interceptor.dynamics
+[INFO] Initializing node: interceptor.standard_trajectory
+[INFO] Initializing node: interceptor.imu
+[INFO] Initializing node: interceptor.satnav
+[INFO] Initializing node: interceptor.air_data
+[INFO] Initializing node: interceptor.sequencer
+[INFO] Initializing node: interceptor.navigation
+[INFO] Initializing node: interceptor.trajectory_planner
+[INFO] Initializing node: interceptor.target_manager
+[INFO] Initializing node: interceptor.onboard_state
+[INFO] Initializing node: interceptor.guidance
+[INFO] Initializing node: interceptor.flight_control
+[INFO] Initializing node: interceptor.control_allocation
+[INFO] Initializing node: interceptor.actuator
+[INFO] Initializing node: interceptor.propulsion
+[INFO] Initializing node: interceptor.mass
+[INFO] Initializing node: interceptor.aero
+[INFO] Initializing node: interceptor.interaction
+[INFO] Initializing node: target.truth
+[INFO] Initializing node: mission.termination
+[INFO] Initializing node: mission.summary
+[INFO] Simulator initialized with 24 nodes using 'rk4' integrator
+[INFO] Starting simulation: dt=0.02, duration=2
+[INFO] Simulation phase: Initializing -> Running
+[INFO] Simulation terminated early by condition 'max_time_s' at t=2 s, step=100
+[INFO] CsvRecordSink file closed
+[INFO] SimulationSummary written to 'user/outputs/yyz_cartesian_6dof_framework_9/2026-08-10_132044/summary.txt'
+[INFO] Simulation phase: Running -> Finalizing
+[INFO] Finalizing simulator...
+[INFO] Simulation phase: Finalizing -> Completed
+[INFO] Simulation completed. Final time: 2, reason: max_time_s
+[INFO] === Simulation Completed ===
