@@ -839,6 +839,7 @@ WorkflowOutcome 明确：
 
 ### W3：仿真与 Experiment
 
+- `CaseId` 由 ExperimentDefinition hash、规范化参数值与 replicate key 确定性派生；它是跨物化、执行、聚合和证据链的唯一 case 身份；
 - task 在 worker link `ExecutionPlanDescriptor` 后创建空 Session，再以 `RunBinding` initialize，并注入 frozen command stream；
 - case materializer 将参数 target 明确归入 CompilePatch、RunBindingPatch 或 RuntimeCommandSchedule；
 - executor 按 CompilePatch/Descriptor hash 编译分组，按 worker link fingerprint 管理 Image cache；

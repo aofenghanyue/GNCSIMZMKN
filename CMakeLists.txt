@@ -78,4 +78,12 @@ if(GNC_BUILD_TESTS)
             -NoProfile
             -ExecutionPolicy Bypass
             -File ${CMAKE_CURRENT_SOURCE_DIR}/tools/validate-r0-specs.ps1)
+    add_test(
+        NAME r0.architecture-baseline
+        COMMAND
+            ${GNC_POWERSHELL_EXECUTABLE}
+            -NoLogo
+            -NoProfile
+            -ExecutionPolicy Bypass
+            -File ${CMAKE_CURRENT_SOURCE_DIR}/tools/validate-architecture-baseline.ps1)
 endif()

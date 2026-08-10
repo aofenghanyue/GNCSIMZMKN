@@ -92,6 +92,8 @@ Batch 是一个发布点或采样窗口内的原子观测单元：
 | topology revision | 本批字段与 entity selector 对应的 committed topology |
 | observation_kind | InitialAtT0、CycleAtTk、RestoredAtCheckpoint |
 
+`ObservationKind = InitialAtT0 | CycleAtTk | RestoredAtCheckpoint` 是 `observation_kind` 的唯一枚举定义。新增成员需要同时说明 commit 形成点、epoch/tick 语义和 sink discriminator。
+
 Batch 由 `ObservationProjectionPlan` 从真实 `CommittedStateStore`、CycleFrame result 和 StepJournal 构造。它不通过组件 getter 或重新调用 query/kernel 取值。`ObservationPlan` 保存作者的选择、采样和关键度意图；`ObservationProjectionPlan` 是 Compiler 解析 FieldId、handles、projectors、schema 与 commit binding 后形成的子计划。
 
 projector 在 ObservationSeal 前把选中值物化到 batch-owned typed buffers；large immutable buffer 只能通过显式 retained ref 延长生命周期。ObservationBatch 和异步 sink 不持有 CycleFrame/InputFrameView/span，frame arena 可在 transaction 关闭后立即复用。
@@ -154,6 +156,8 @@ branch restore 不生成 `InitialAtT0`。ObservationPlan 选择恢复点时，�
 | DebugBurst | 诊断触发的短时高频 |
 
 ### 5.3 `EvidenceCriticality`
+
+`EvidenceCriticality = CriticalEvidence | RequiredMetricInput | OperationalTelemetry | BestEffortDisplay | DebugOnly` 是字段与 sink policy 共用的唯一关键度枚举。
 
 | 值 | 对结果的作用 | 默认 buffer/drop 规则 |
 | --- | --- | --- |

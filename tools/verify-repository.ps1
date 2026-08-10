@@ -37,6 +37,9 @@ $requiredPaths = @(
     'docs/handoff/README.md',
     'docs/tasks/backlog.json',
     'docs/team/role-assignments.json',
+    'docs/architecture/authority-registry.json',
+    'docs/architecture/architecture-baseline.json',
+    'docs/quality/terminology-conformance-report.json',
     'docs/adr/0001-greenfield-and-legacy-reference.md',
     'reference/legacy/source-manifest.json',
     'reference/legacy/legacy-source.zip',
@@ -242,6 +245,12 @@ if ($LASTEXITCODE -ne 0) {
     Add-Error "R0 schema conformance failed: $($schemaValidatorOutput -join [Environment]::NewLine)"
 }
 
+$architectureValidatorPath = Join-Path $PSScriptRoot 'validate-architecture-baseline.ps1'
+$architectureValidatorOutput = & $powerShellHost -NoLogo -NoProfile -ExecutionPolicy Bypass -File $architectureValidatorPath -Quiet 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Add-Error "R0 architecture baseline conformance failed: $($architectureValidatorOutput -join [Environment]::NewLine)"
+}
+
 if ($errors.Count -gt 0) {
     Write-Host "Repository verification failed with $($errors.Count) issue(s):"
     foreach ($errorMessage in $errors) {
@@ -256,3 +265,4 @@ Write-Host "Validated JSON files: $($jsonFiles.Count)"
 Write-Host "Validated task entries: $taskCount"
 Write-Host "Validated Markdown files: $($markdownFiles.Count)"
 Write-Host "Validated R0 schema contracts: 3"
+Write-Host "Validated R0 architecture baseline: 1"

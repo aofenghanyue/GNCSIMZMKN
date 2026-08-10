@@ -399,6 +399,8 @@ error <= atol(variable) + rtol * scale(reference, candidate)
 
 建议稳定状态集合：
 
+`NumericalStatus = Success | Converged | Approximate | OutOfRange | Extrapolated | NoBracket | MaxIterations | Singular | IllConditioned | DomainError | NonFiniteInput | NonFiniteIntermediate | NonFiniteOutput | StepUnderflow | ToleranceUnreachable | Cancelled | InternalFailure` 是统一数值结果状态枚举。
+
 | 状态                    | 含义             | 默认有效性   |
 | --------------------- | -------------- | ------- |
 | Success               | 正常完成           | 有效      |

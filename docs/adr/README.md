@@ -12,3 +12,4 @@ ADR 记录已经收窄到实现层的关键选择，并连接需求、架构分�
 - [0002 C++17 CMake modular monolith](0002-cpp17-cmake-modular-monolith.md)
 - [0003 Initial module dependency DAG](0003-initial-module-dependency-dag.md)
 - [0004 R0 JSON Schema contracts and dependency-free validation](0004-r0-json-schema-contracts.md)
+- [0005 Derived architecture baseline and authority index](0005-derived-architecture-baseline.md)

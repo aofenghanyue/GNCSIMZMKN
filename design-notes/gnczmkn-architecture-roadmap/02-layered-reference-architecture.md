@@ -342,6 +342,8 @@ intent encoding
 
 四类长期权威域如下：
 
+`AuthorityDomain = Design/Plan | Model | Operation | Artifact` 是跨设计、执行、控制与证据边界的唯一权威域枚举。
+
 | AuthorityDomain | 权威事实 | 典型 owner | 主要提交结果 |
 | --- | --- | --- | --- |
 | Design/Plan Authority | versioned Definition、canonical graph、绑定结果、执行选择和版本锁 | Package/Catalog + Mission/Workflow Compiler | definition release 或 immutable Descriptor/Plan + proof index |
