@@ -3,7 +3,7 @@
     "task_id":  "R0-SCI-001",
     "convention_id":  "SCI-CONVENTIONS-001",
     "status":  "pass",
-    "generated_at":  "2026-08-10T06:12:42.1128784Z",
+    "generated_at":  "2026-08-10T06:38:16.8207849Z",
     "environment":  {
                         "os":  "Microsoft Windows NT 10.0.26200.0",
                         "architecture":  "X64",
@@ -14,7 +14,7 @@
     "inputs":  [
                    {
                        "path":  "CMakeLists.txt",
-                       "sha256_normalized_utf8_lf":  "b2e9b9c88c8be03042d0d37f4ca629af1e45c36c86390e9eeae702890b93b0bc"
+                       "sha256_normalized_utf8_lf":  "46124b6b88eebf02c9bb1caccf66156d29d7297caa66b2366a20616549ac261a"
                    },
                    {
                        "path":  "docs/adr/0006-si-frame-and-simulation-time-conventions.md",

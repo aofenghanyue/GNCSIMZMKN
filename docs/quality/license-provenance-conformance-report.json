@@ -1,0 +1,148 @@
+{
+    "schema_version":  "gnczmkn.license-provenance-conformance/1",
+    "task_id":  "R0-GOV-002",
+    "reviewed_on":  "2026-08-10",
+    "status":  "passed",
+    "policy":  {
+                   "id":  "GNC-LIC-PROV-001",
+                   "adr_status":  "Proposed",
+                   "repository_distribution_license_selected":  false,
+                   "root_distribution_license_files":  0,
+                   "decision_roles":  {
+                                          "product_owner_assigned":  false,
+                                          "architecture_lead_assigned":  false
+                                      }
+               },
+    "inventory":  {
+                      "item_count":  7,
+                      "noassertion_count":  7,
+                      "externally_blocked_count":  4,
+                      "external_not_redistributed_count":  3,
+                      "runtime_consumers":  0
+                  },
+    "legacy_archive_audit":  {
+                                 "sha256":  "2159a324fd897e4bd508c140a36c9165d744e4e4e61861c5b568201707f988e5",
+                                 "bytes":  990450,
+                                 "zip_entries":  510,
+                                 "file_entries":  391,
+                                 "directory_entries":  119,
+                                 "uncompressed_file_bytes":  2708191,
+                                 "license_named_entries":  0,
+                                 "license_text_signal_entries":  0
+                             },
+    "pinned_external_inputs":  [
+                                   {
+                                       "id":  "eigen-3.4.0-legacy-reproduction",
+                                       "version":  "3.4.0",
+                                       "sha256":  "eba3f3d414d2f8cba2919c78ec6daab08fc71ba2ba4ae502b7e5d4d99fc02cda",
+                                       "repository_presence":  "external-untracked",
+                                       "external_distribution":  "not-redistributed"
+                                   },
+                                   {
+                                       "id":  "w64devkit-2.9.1-legacy-reproduction",
+                                       "version":  "2.9.1",
+                                       "sha256":  "9208c19755cd4964b7915b9afcf02c66d493a4c870c4b3e83f6c538d9c1237a5",
+                                       "repository_presence":  "external-untracked",
+                                       "external_distribution":  "not-redistributed"
+                                   }
+                               ],
+    "mutation_tests":  [
+                           {
+                               "name":  "duplicate-item-id",
+                               "rejected":  true,
+                               "detected_issue_count":  3
+                           },
+                           {
+                               "name":  "missing-source-provenance",
+                               "rejected":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "noassertion-external-distribution",
+                               "rejected":  true,
+                               "detected_issue_count":  2
+                           },
+                           {
+                               "name":  "legacy-hash-drift",
+                               "rejected":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "unapproved-license-conclusion",
+                               "rejected":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "license-ref-without-text",
+                               "rejected":  true,
+                               "detected_issue_count":  2
+                           },
+                           {
+                               "name":  "repository-license-status-contradiction",
+                               "rejected":  true,
+                               "detected_issue_count":  1
+                           }
+                       ],
+    "input_hashes":  [
+                         {
+                             "path":  "LICENSE-STATUS.md",
+                             "sha256":  "13d0983aac320adfbfe5af44c8c8d8553771063bf3c7d33c5cf8c21b3a8ef154",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
+                             "path":  "docs/adr/0008-internal-default-license-and-provenance-gate.md",
+                             "sha256":  "c3fc39512b835bd0d4443c1576da72afba0855177e9135c22995dcd83ec610e7",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
+                             "path":  "docs/governance/license-and-provenance-policy.md",
+                             "sha256":  "2342c347c522a5e1dabaa17c0d1792e60ef4c5a9a5a6c95992d950c860ea9a9f",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
+                             "path":  "docs/governance/provenance-inventory.json",
+                             "sha256":  "ed17e6c370941987bc486e1b9d7e4c50dd738cf653b54ac0c41109bc48a2c596",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
+                             "path":  "docs/quality/provenance-review-checklist.md",
+                             "sha256":  "4d86c1fa9e448eb091a32ae493f8ec5690c99021a7eaf32df8c05432c0e32287",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
+                             "path":  "docs/tasks/work-packages/R0-GOV-002.md",
+                             "sha256":  "1415acff4ebf1b451f2413793b5346cb9f161dc6a19e618ba5f8847acfd8f75e",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
+                             "path":  "reference/legacy/source-manifest.json",
+                             "sha256":  "4e58f9b8c16e56052478a98738e03df3291795f0154cdf16cc1b8e947f017c74",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
+                             "path":  "reference/legacy/legacy-source.sha256",
+                             "sha256":  "50acd7fd634a5c31699cb3fc13308f73e0f87b048ce6177928e6644548c9efe5",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
+                             "path":  "reference/legacy/legacy-source.zip",
+                             "sha256":  "2159a324fd897e4bd508c140a36c9165d744e4e4e61861c5b568201707f988e5",
+                             "hash_normalization":  "raw-bytes"
+                         },
+                         {
+                             "path":  "reference/legacy/reproduction/current.json",
+                             "sha256":  "95d53dbdc8102de8883fa5ab4c66a4ea2af85da7950eeb181aa591e39cca450d",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
+                             "path":  "reference/legacy/reproduction/r0-leg-001-20260810-07/environment-manifest.json",
+                             "sha256":  "6f7391b0cde7700450bdba5e515b511c24aa75b182b09efec870604587e6c48f",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
+                             "path":  "tools/validate-license-provenance.ps1",
+                             "sha256":  "775489fa9e35e0ebb599e7bd3c195c6c936dadee3200bb6b9dd7707a6ffecea1",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         }
+                     ]
+}

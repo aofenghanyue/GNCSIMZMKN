@@ -8,6 +8,7 @@
 - `validate-legacy-reproduction.ps1`：校验受控 Legacy 证据索引、环境、测试、任务基线和 MSVC 兼容性缺口，不重新执行耗时构建。
 - `scientific_conventions_reference.py`：只使用 CPython 标准库计算 R0 单位、frame、时间与被动 Hamilton 四元数参考结果。
 - `validate-scientific-conventions.ps1`：校验 scientific convention fixture，运行 C++/Python 交叉验证、故障注入并检查证据 hash。
+- `validate-license-provenance.ps1`：校验 Proposed 许可证策略、provenance inventory、Legacy archive 扫描、外部工具身份、故障注入与审计报告。
 - `extract-legacy-reference.ps1`：校验并解包只读 legacy archive 到忽略目录。
 
 脚本只操作本仓库中的明确路径。任何生成的研究数据需要经过 fixture/Artifact 晋升流程才能进入版本控制。

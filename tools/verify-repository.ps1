@@ -33,6 +33,7 @@ $requiredPaths = @(
     'CMakeLists.txt',
     'CMakePresets.json',
     'project-manifest.json',
+    'LICENSE-STATUS.md',
     'design-notes/gnczmkn-architecture-roadmap/README.md',
     'docs/handoff/README.md',
     'docs/tasks/backlog.json',
@@ -41,6 +42,11 @@ $requiredPaths = @(
     'docs/architecture/architecture-baseline.json',
     'docs/quality/terminology-conformance-report.json',
     'docs/adr/0001-greenfield-and-legacy-reference.md',
+    'docs/adr/0008-internal-default-license-and-provenance-gate.md',
+    'docs/governance/license-and-provenance-policy.md',
+    'docs/governance/provenance-inventory.json',
+    'docs/quality/provenance-review-checklist.md',
+    'docs/quality/license-provenance-conformance-report.json',
     'reference/legacy/source-manifest.json',
     'reference/legacy/legacy-source.zip',
     'reference/legacy/legacy-source.sha256',
@@ -269,6 +275,12 @@ if ($LASTEXITCODE -ne 0) {
     Add-Error "R0 scientific convention evidence failed: $($scientificConventionValidatorOutput -join [Environment]::NewLine)"
 }
 
+$licenseProvenanceValidatorPath = Join-Path $PSScriptRoot 'validate-license-provenance.ps1'
+$licenseProvenanceValidatorOutput = & $powerShellHost -NoLogo -NoProfile -ExecutionPolicy Bypass -File $licenseProvenanceValidatorPath -Quiet 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Add-Error "R0 license/provenance evidence failed: $($licenseProvenanceValidatorOutput -join [Environment]::NewLine)"
+}
+
 if ($errors.Count -gt 0) {
     Write-Host "Repository verification failed with $($errors.Count) issue(s):"
     foreach ($errorMessage in $errors) {
@@ -286,3 +298,4 @@ Write-Host "Validated R0 schema contracts: 3"
 Write-Host "Validated R0 architecture baseline: 1"
 Write-Host "Validated R0 legacy reproduction: 1"
 Write-Host "Validated R0 scientific convention bundle: 1"
+Write-Host "Validated R0 license/provenance bundle: 1"

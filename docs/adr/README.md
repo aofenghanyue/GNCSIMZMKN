@@ -15,3 +15,4 @@ ADR 记录已经收窄到实现层的关键选择，并连接需求、架构分�
 - [0005 Derived architecture baseline and authority index](0005-derived-architecture-baseline.md)
 - [0006 SI, frame and simulation-time conventions](0006-si-frame-and-simulation-time-conventions.md)
 - [0007 Passive Hamilton quaternion convention](0007-passive-hamilton-quaternion-convention.md)
+- [0008 Internal-default license and provenance gate](0008-internal-default-license-and-provenance-gate.md)
