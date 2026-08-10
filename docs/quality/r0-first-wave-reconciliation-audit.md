@@ -10,6 +10,8 @@
 - Prepared by：Codex
 - Prepared on：2026-08-10
 - Disposition：`selective_reimplementation_required`
+- Reconciled through：`7d43a64d15590dead4082939d4188ec8b947133b`
+- Reconciliation status：`technical_slices_committed_authority_decisions_open`
 
 ## 1. 结论
 
@@ -525,3 +527,18 @@ Candidate discovery changes the evidence inventory, not the current gate result�
 - Science review：axis-angle difference separated from shared Hamilton/passive algebra；all existing direction expected values remain byte-for-byte unchanged；edge checks exercise Proposed policy without claiming owner acceptance；
 - Legacy review：current structured/double-run evidence compared against candidate scope；no raw artifact copied；
 - Boundary review：the initial audit changed only reconciliation evidence；subsequent isolated amendments changed governance/spec/architecture/provenance validators and the R0-SCI fixture/oracles, while product paths、public schemas、Legacy、roles、backlog and release state remain unchanged。
+
+## 18. Technical reconciliation closeout
+
+| Stage | Commit | Reviewed outcome |
+| --- | --- | --- |
+| comparison audit | `59db59b` | isolated candidate reproduction、hosted evidence scope、authority/schema/science/Legacy/provenance differences and selective strategy fixed |
+| Slice 0 / GOV-001 | `c16aed9` | distinct `codex-r0-*` virtual seats rejected；real role slots unchanged |
+| Slice A / SPEC-001 | `9ce5a85` | strict JSON、actual identity registry and current-contract negative coverage；public schemas unchanged |
+| Slice B / SCI-001 | `4c916e1` | quaternion/unit/time edge properties strengthened；current direction fixture and public semantic decisions unchanged |
+| Slice C / ARCH-001 | `a9a84c6` | all 27/33 candidate architecture responsibilities classified；exact registry boundaries and 15 mutations；nine-module authority unchanged |
+| Slice D / GOV-002 | `7d43a64` | closed current provenance categories、generated lineage/restriction and 14 intended-diagnostic mutations；inventory/right facts unchanged |
+
+At `7d43a64` the worktree was clean。The final implementation-bearing state passed Windows PowerShell 5.1 targeted validators、MSVC x64 Debug 9/9 CTest、Release 9/9 CTest、repository verification（56 JSON、65 task entries、98 Markdown）and staged diff checks。No candidate commit was merged or cherry-picked。
+
+Technical reconciliation does not close authority：all `RECON-DEC-001`～`RECON-DEC-009` remain open；ADR-0004～ADR-0009 remain `Proposed`；required human role slots、current-commit hosted CI、source/right decisions and R0 owner reviews remain absent。The R0 gate result is unchanged（3 direct dependencies in `review`、6 `planned`、0 `done`），and R1 remains locked until signed G1。

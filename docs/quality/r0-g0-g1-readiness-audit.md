@@ -106,14 +106,14 @@ G1 只有科学约定 bundle 达到 `executable`，且其技术 cross-tool compa
 
 | Task | Owner role | Backlog / assignee | 当前切片 | 可验证事实 | 关闭前缺口 |
 | --- | --- | --- | --- | --- | --- |
-| `R0-GOV-001` | Product Owner | `review` / Codex | `75af0c1` + reconciliation amendment | 配置 validator 通过；candidate profiles 固定；12 mutations rejected，包括互不相同的 `codex-r0-*` 虚拟席位 | 16 role slots、ADR-0009、hosted CI run |
-| `R0-GOV-002` | Product Owner | `review` / Codex | `2796dbc` + reconciliation amendment | inventory bytes/8 `NOASSERTION` facts 不变；closed categories、generated lineage/restriction；14 mutations matched/rejected | ADR-0008、license/share authority decisions；scientific context remains `RECON-DEC-005` |
+| `R0-GOV-001` | Product Owner | `review` / Codex | `75af0c1` + `c16aed9` | 配置 validator 通过；candidate profiles 固定；12 mutations rejected，包括互不相同的 `codex-r0-*` 虚拟席位 | 16 role slots、ADR-0009、hosted CI run |
+| `R0-GOV-002` | Product Owner | `review` / Codex | `2796dbc` + `7d43a64` | inventory bytes/8 `NOASSERTION` facts 不变；closed categories、generated lineage/restriction；14 mutations matched/rejected | ADR-0008、license/share authority decisions；scientific context remains `RECON-DEC-005` |
 | `R0-ARCH-002` | Architecture Lead | `planned` / null | prep `f3b2bc1` | guard coverage、实施分层和 mutations 已设计 | production guard、test、CI evidence |
 | `R0-LEG-002` | Validation Lead | `planned` / null | prep `4c62bc2` | 7 类 capture/probe/comparator/disposition 已设计 | executable oracle artifact refs 全部缺失 |
 | `R0-SCI-002` | Model SDK Lead | `planned` / null | prep `4a610a0` | analytic/independent 3DoF bundle 设计 | source、expected trajectory、convergence/failure runs |
 | `R0-SCI-003` | Scientific Authority | `planned` / null | prep `1c77089` | REF-YYZ source-to-evidence 设计 | authoritative inputs、independent expected、完整 artifacts |
 | `R0-SCI-004` | Scientific Authority | `planned` / null | prep `41623ee` | formula lanes/cases/derivative/envelope/mutations 设计 | source edition/license、independent values、executable suite |
-| `R0-SPEC-001` | Architecture Lead | `review` / Codex | `6613186` + reconciliation amendment | 3 contract schemas；6 valid、16 targeted invalid、9 strict-validator failures、25 actual identities、5 registry mutations 通过 | ADR-0004、Architecture Lead acceptance；current hosted/PowerShell 7 evidence |
+| `R0-SPEC-001` | Architecture Lead | `review` / Codex | `6613186` + `9ce5a85` | 3 contract schemas；6 valid、16 targeted invalid、9 strict-validator failures、25 actual identities、5 registry mutations 通过 | ADR-0004、Architecture Lead acceptance；current hosted/PowerShell 7 evidence |
 | `R0-PERF-001` | Runtime Numerics Lead | `planned` / null | prep `bfd735e` | correctness/determinism/capacity/perf 分离设计 | workload/profile/raw samples/budgets/baseline |
 
 直接依赖统计：`review=3`、`planned=6`、`done=0`。因此 gate task activation 的必要条件为 false。
@@ -122,9 +122,9 @@ G1 只有科学约定 bundle 达到 `executable`，且其技术 cross-tool compa
 
 | Task | Backlog | Commit | 有效技术证据 | 仍缺 |
 | --- | --- | --- | --- | --- |
-| `R0-ARCH-001` | `review` | `84b7d6c` + reconciliation amendment | terminology/owner/dependency baseline；27/33 candidate delta 已归类；15 negative cases | ADR-0005、Architecture Lead / Validation Lead review；`RECON-DEC-006/007` |
+| `R0-ARCH-001` | `review` | `84b7d6c` + `a9a84c6` | terminology/owner/dependency baseline；27/33 candidate delta 已归类；15 negative cases | ADR-0005、Architecture Lead / Validation Lead review；`RECON-DEC-006/007` |
 | `R0-LEG-001` | `review` | `b2e69d0` | frozen archive reproduction、双跑 normalized hash | Validation/Science owner classification/review |
-| `R0-SCI-001` | `review` | `9e95f1c` + reconciliation amendment | C++/Python 各 23 checks/1819 assertions、16 observations、0 mismatch、6 failures rejected | ADR-0006/0007、Scientific Authority review；half-open validity remains Proposed |
+| `R0-SCI-001` | `review` | `9e95f1c` + `4c916e1` | C++/Python 各 23 checks/1819 assertions、16 observations、0 mismatch、6 failures rejected | ADR-0006/0007、Scientific Authority review；half-open validity remains Proposed |
 
 它们是 direct dependencies 的上游。下游不能通过状态修改来绕过这些 review。
 
