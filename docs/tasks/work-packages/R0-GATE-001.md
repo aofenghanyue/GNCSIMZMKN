@@ -44,7 +44,7 @@
 | Task | Backlog | 已有可用证据 | 未闭合项 | Gate 资格 |
 | --- | --- | --- | --- | --- |
 | `R0-GOV-001` | `review` | 角色/工具链 validator、候选 CI profile、12 个 mutation | 16 个 required role slots；ADR-0009；hosted run | 不合格 |
-| `R0-GOV-002` | `review` | provenance inventory、policy validator、8 个 mutation | ADR-0008；Product Owner 决策；distribution license 未选 | 不合格 |
+| `R0-GOV-002` | `review` | provenance inventory、policy validator、14 个带预期诊断的 mutation | ADR-0008；Product Owner 决策；distribution license 未选；scientific-context authority 未闭合 | 不合格 |
 | `R0-ARCH-002` | `planned` | fitness coverage 设计和 20 个 mutation 设计 | production guards、positive/negative suite、CI integration | 不合格 |
 | `R0-LEG-002` | `planned` | 7 类 oracle capture 设计 | executable artifacts、tolerance、Preserve/Fix/Retire 审批 | 不合格 |
 | `R0-SCI-002` | `planned` | minimal 3DoF reference 设计 | executable independent trajectory/convergence/failure bundle | 不合格 |
@@ -68,7 +68,7 @@
 - terminology report raw SHA-256：`298f06e15eb7b52d37a9a6c0338222d2a6e88ec2991301a1680acb2b4e8527fc`
 - oracle manifest raw SHA-256：`eade78296e7b102db4e2ca59aec503df8b2a63db1d2810851909a375bd64d0b8`
 - scientific cross-tool report raw SHA-256：`c121c74b546b2ad7722a6a5d90ee8ca0de028c4524fce624a3b95963138252c8`
-- license/provenance report raw SHA-256：`f6f11cd0fb064203465377f18beb91b865cc31d590ebf88816427e1f221c7d3b`
+- license/provenance report raw SHA-256：`d47def50dd372ddf68a334917da4b93f070c582beac07b50db82e9abb97a1284`
 - hosted CI workflow raw SHA-256：`33a6afa5b2adfbcb4143b142fd56cff2ecb10e2625c2f9f79947fbd4e94198e2`
 
 这些 hash 固定准备审计读取的 raw bytes；它们不是 gate pass，也不能替代未来正式评审对 reviewed commit 的重新捕获。

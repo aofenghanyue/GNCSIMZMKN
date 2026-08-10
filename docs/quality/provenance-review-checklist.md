@@ -5,6 +5,7 @@
 ## Intake identity
 
 - [ ] item id、category、scope、purpose、owner role 与目标 consumer 明确；
+- [ ] category、classification 与 integrity kind 属于当前封闭治理词表，且 category/classification 配对合法；
 - [ ] publisher/author、主来源 URL、version/tag/commit/date 已固定；
 - [ ] 原始 archive/file bytes 与 SHA-256 已记录并复核；
 - [ ] mirror、下载命令、访问日期和 upstream identity 可追踪；
@@ -25,6 +26,7 @@
 - [ ] PII、secrets、客户/项目标识、内部路径/URL 与受限技术信息扫描通过；
 - [ ] 模型权重、训练数据、字体、图片、地图、论文附录与 benchmark 数据均单独登记；
 - [ ] conversion/preparation 参数、工具、人工修订和输出 hash 已进入 lineage。
+- [ ] scientific claim 具有逐 artifact 的适用域、单位、frame、time、reference/oracle 与独立性依据；聚合 inventory 或同源实现输出不能替代 Scientific Authority 审查。
 
 ## Repository admission
 
@@ -32,6 +34,7 @@
 - [ ] vendored 文件带逐文件声明或受审查 annotation，未删除上游 notices；
 - [ ] lockfile/SBOM、构建与测试证据覆盖精确版本；
 - [ ] inventory、policy、documentation 和 failure tests 同步更新；
+- [ ] generated evidence 具有至少一个已解析 lineage parent、非空完整性 identity，并保持所有未闭合上游的外部分发阻断；
 - [ ] Legacy 仍为 read-only/evidence-only，未进入产品 include/link/runtime 路径。
 
 ## External export

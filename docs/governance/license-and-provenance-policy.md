@@ -27,6 +27,9 @@
 | `external_distribution` | `blocked-pending-accepted-adr` | 等待仓库许可证和双角色批准 |
 |  | `blocked-pending-item-review` | 单项权属/许可证/数据权限未闭合 |
 |  | `not-redistributed` | 仅执行外部安装，不进入项目分发包 |
+| `category` | `repository-governed-content`、`imported-design-source`、`fixture-oracle-and-generated-evidence`、`frozen-reference-archive`、`external-build-dependency`、`external-tool-bundle`、`external-validation-tools`、`external-ci-action` | R0 inventory 的封闭治理类别；新增类别必须先更新 policy、validator 和 failure evidence |
+| `classification` | `internal-research`、`external-dependency`、`external-tool` | 必须与 category 的当前固定映射一致；它们不是外部分发许可，也不是跨域可自由排序的公共分类 schema |
+| `integrity.kind` | `per-file-git-object`、`manifest-and-per-file-sha256`、`sha256-zip-audit`、`sha256`、`environment-identity`、`git-commit` | 必须携带对应的非空 identity，SHA-256 类还必须携带 64 位小写 hex 和正字节数 |
 
 `NONE` 和 `NOASSERTION` 永远不能映射为 `allowed`。`LicenseRef-*` 必须指向仓库中保存的完整自定义许可证文本，并登记版权方、适用 scope 和 hash。
 
@@ -62,6 +65,8 @@
 外部工具即使不提交，也必须在可复现实验中记录 executable/product identity、version、来源、archive hash（可获得时）、调用参数、工作目录、locale、受控环境变量、license mode 与输出 hash。w64devkit 等工具包逐组件处理；编译器 runtime、模板、静态库、代码生成输出和嵌入资源需要单独判断是否进入 Artifact。
 
 生成内容不因“由工具生成”自动成为项目可分发材料。Artifact 必须引用所有 code/data/model/tool parent，并继承其中最严格的许可证、数据权限、分类、保密和导出限制。人工修订登记为新的 provenance event。
+
+R0 checker 对当前聚合 inventory 能证明的边界是：生成证据具有至少一个可解析、无重复、无环的 `lineage_parents`；category/classification 与 integrity identity 合法；只要上游权利未闭合，tracked 生成证据就保持 `blocked-*`。这些结构检查不能证明 parent 集合完备，也不能证明科学数据、fixture 或 oracle 的适用域、独立性与权威性。后者需要逐 artifact 的 scientific-context contract 和 Scientific Authority 审查；不得从 candidate 的虚拟签署或聚合条目推导 `independent_reference_confirmed=true`。
 
 ## 6. 外部导出门禁
 

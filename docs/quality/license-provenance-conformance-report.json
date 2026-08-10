@@ -57,41 +57,99 @@
                            {
                                "name":  "duplicate-item-id",
                                "rejected":  true,
+                               "expected_diagnostic":  "Duplicate inventory item id",
+                               "diagnostic_matched":  true,
                                "detected_issue_count":  3
                            },
                            {
                                "name":  "missing-source-provenance",
                                "rejected":  true,
+                               "expected_diagnostic":  "has no source reference",
+                               "diagnostic_matched":  true,
                                "detected_issue_count":  1
                            },
                            {
                                "name":  "noassertion-external-distribution",
                                "rejected":  true,
+                               "expected_diagnostic":  "cannot be externally distributable",
+                               "diagnostic_matched":  true,
                                "detected_issue_count":  2
                            },
                            {
                                "name":  "legacy-hash-drift",
                                "rejected":  true,
+                               "expected_diagnostic":  "Legacy inventory integrity field \u0027sha256\u0027 differs",
+                               "diagnostic_matched":  true,
                                "detected_issue_count":  1
                            },
                            {
                                "name":  "unapproved-license-conclusion",
                                "rejected":  true,
+                               "expected_diagnostic":  "has an unapproved license conclusion",
+                               "diagnostic_matched":  true,
                                "detected_issue_count":  1
                            },
                            {
                                "name":  "license-ref-without-text",
                                "rejected":  true,
+                               "expected_diagnostic":  "has no preserved custom license text",
+                               "diagnostic_matched":  true,
                                "detected_issue_count":  2
                            },
                            {
                                "name":  "repository-license-status-contradiction",
                                "rejected":  true,
+                               "expected_diagnostic":  "Repository license cannot be selected",
+                               "diagnostic_matched":  true,
                                "detected_issue_count":  1
                            },
                            {
                                "name":  "checkout-action-pin-drift",
                                "rejected":  true,
+                               "expected_diagnostic":  "Pinned actions/checkout identity differs",
+                               "diagnostic_matched":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "unknown-item-category",
+                               "rejected":  true,
+                               "expected_diagnostic":  "has unsupported category",
+                               "diagnostic_matched":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "generated-classification-mismatch",
+                               "rejected":  true,
+                               "expected_diagnostic":  "is incompatible with category",
+                               "diagnostic_matched":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "generated-missing-lineage",
+                               "rejected":  true,
+                               "expected_diagnostic":  "has no lineage parents",
+                               "diagnostic_matched":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "generated-unresolved-lineage",
+                               "rejected":  true,
+                               "expected_diagnostic":  "has missing lineage parent",
+                               "diagnostic_matched":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "generated-restriction-downgrade",
+                               "rejected":  true,
+                               "expected_diagnostic":  "must remain externally blocked",
+                               "diagnostic_matched":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "generated-missing-integrity",
+                               "rejected":  true,
+                               "expected_diagnostic":  "integrity value is empty",
+                               "diagnostic_matched":  true,
                                "detected_issue_count":  1
                            }
                        ],
@@ -108,7 +166,7 @@
                          },
                          {
                              "path":  "docs/governance/license-and-provenance-policy.md",
-                             "sha256":  "2342c347c522a5e1dabaa17c0d1792e60ef4c5a9a5a6c95992d950c860ea9a9f",
+                             "sha256":  "b0df2aa3609c40c2a7193641e5d2318ef1cd51d8855ca2c41bb7d3a7fe4c89ff",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
@@ -118,12 +176,12 @@
                          },
                          {
                              "path":  "docs/quality/provenance-review-checklist.md",
-                             "sha256":  "4d86c1fa9e448eb091a32ae493f8ec5690c99021a7eaf32df8c05432c0e32287",
+                             "sha256":  "3bda62495078179f1419506a4203a10fbfa9a18cb37c052bcb8c183e409988f1",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
                              "path":  "docs/tasks/work-packages/R0-GOV-002.md",
-                             "sha256":  "1415acff4ebf1b451f2413793b5346cb9f161dc6a19e618ba5f8847acfd8f75e",
+                             "sha256":  "161a557abb0352711fdaa7c2747345d70bcad8582422f72ee4680cc74fdad704",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
@@ -153,7 +211,7 @@
                          },
                          {
                              "path":  "tools/validate-license-provenance.ps1",
-                             "sha256":  "d9ec8c0a2d6192fe40e812705180bc4ccc6e06dcb59c48140e9bd90c1dcf9366",
+                             "sha256":  "51f6c886cee177d7e89e4a21d62dd37f3375099bfb112499e0318fdee4eda8ab",
                              "hash_normalization":  "utf8-lf-no-bom"
                          }
                      ]

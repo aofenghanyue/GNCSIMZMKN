@@ -95,7 +95,7 @@ G1 只有科学约定 bundle 达到 `executable`，且其技术 cross-tool compa
 | `REF-YYZ-001` manifest | `69eb288d48714edcdc565268151e151cbb62a4e1a2f8644a45c000d659f5086f` |
 | `REF-CAVH-FORMULA-001` manifest | `d89f4e9517aeb0e6a7eebecf3191b37aef29a1a875a5e125f9db72007e891ac6` |
 | scientific conventions report | `c121c74b546b2ad7722a6a5d90ee8ca0de028c4524fce624a3b95963138252c8` |
-| license/provenance report | `f6f11cd0fb064203465377f18beb91b865cc31d590ebf88816427e1f221c7d3b` |
+| license/provenance report | `d47def50dd372ddf68a334917da4b93f070c582beac07b50db82e9abb97a1284` |
 | `.github/workflows/ci.yml` | `33a6afa5b2adfbcb4143b142fd56cff2ecb10e2625c2f9f79947fbd4e94198e2` |
 
 正式评审必须针对新的 reviewed commit 重新计算全部 authority/evidence hash；不能把本表复制为永久真值。
@@ -107,7 +107,7 @@ G1 只有科学约定 bundle 达到 `executable`，且其技术 cross-tool compa
 | Task | Owner role | Backlog / assignee | 当前切片 | 可验证事实 | 关闭前缺口 |
 | --- | --- | --- | --- | --- | --- |
 | `R0-GOV-001` | Product Owner | `review` / Codex | `75af0c1` + reconciliation amendment | 配置 validator 通过；candidate profiles 固定；12 mutations rejected，包括互不相同的 `codex-r0-*` 虚拟席位 | 16 role slots、ADR-0009、hosted CI run |
-| `R0-GOV-002` | Product Owner | `review` / Codex | `2796dbc` | inventory/policy validator 通过；Legacy/source pins；8 mutations rejected | ADR-0008、license/share authority decisions |
+| `R0-GOV-002` | Product Owner | `review` / Codex | `2796dbc` + reconciliation amendment | inventory bytes/8 `NOASSERTION` facts 不变；closed categories、generated lineage/restriction；14 mutations matched/rejected | ADR-0008、license/share authority decisions；scientific context remains `RECON-DEC-005` |
 | `R0-ARCH-002` | Architecture Lead | `planned` / null | prep `f3b2bc1` | guard coverage、实施分层和 mutations 已设计 | production guard、test、CI evidence |
 | `R0-LEG-002` | Validation Lead | `planned` / null | prep `4c62bc2` | 7 类 capture/probe/comparator/disposition 已设计 | executable oracle artifact refs 全部缺失 |
 | `R0-SCI-002` | Model SDK Lead | `planned` / null | prep `4a610a0` | analytic/independent 3DoF bundle 设计 | source、expected trajectory、convergence/failure runs |

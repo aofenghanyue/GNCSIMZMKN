@@ -364,6 +364,23 @@ Current line already fails closed on missing provenance, license text, `NOASSERT
 
 No candidate record may change current facts：repository distribution license remains unselected；Legacy/source rights remain unresolved；external sharing remains blocked。
 
+### 11.1 Current-model mapping result
+
+The candidate cases divide into two groups：
+
+| Candidate idea | Current representation | Slice D disposition |
+| --- | --- | --- |
+| closed subject types | 8 current inventory `category` values plus fixed category/classification pairs | enforce without adding a schema field |
+| generated upstream refs | non-empty、unique、resolving、acyclic `lineage_parents` | enforce presence/resolution for the generated-evidence category |
+| generated integrity | existing `integrity.kind` plus value/SHA/byte identity | close the six current integrity kinds and reject empty identity |
+| restriction inheritance | `external_distribution` remains `blocked-*` for tracked generated evidence while upstream rights are unresolved | enforce the current fail-closed state；do not invent a clearance rank |
+| weaker generated classification | category/classification mismatch | reject known invalid pair；do not claim a general cross-domain classification ordering |
+| scientific context and independent-reference assertion | no current per-artifact field；`r0-research-evidence` aggregates scientific、Legacy-derived and governance evidence | do not import；requires `RECON-DEC-005` and Scientific Authority review |
+
+The current inventory bytes and all eight `NOASSERTION` conclusions remain unchanged。No candidate provenance record、reviewer、approval、scientific claim、rights basis or external-sharing state is copied。
+
+Verification passed under Windows PowerShell 5.1 and MSVC x64：Debug 9/9 CTest、Release 9/9 CTest、repository verification（56 JSON、65 task entries、98 Markdown）and `git diff --check`。All 14 mutations matched their intended diagnostics。The conformance report raw SHA-256 is `d47def50dd372ddf68a334917da4b93f070c582beac07b50db82e9abb97a1284`。
+
 ## 12. CI audit
 
 Candidate hosted run is authentic execution evidence for commit `7d7c0a8`：two jobs succeeded. It does not satisfy current GOV-001 because：
@@ -426,14 +443,16 @@ Scope：ARCH-001 review / ARCH-002 preparation。
 5. Architecture Lead / Validation Lead decisions remain open for representation、mapping identity and owner granularity；
 6. Windows PowerShell 5.1 targeted validation、MSVC Debug/Release 9/9、repository verification and diff review passed；commit independently。
 
-### Slice D — provenance mutation strengthening
+### Slice D — provenance mutation strengthening（implemented）
 
 Scope：GOV-002 review amendment。
 
-1. map generated-upstream/restriction/scientific-context candidate cases to current inventory/policy；
-2. add only facts expressible without asserting new rights；
-3. keep distribution license and external sharing blocked；
-4. commit independently。
+1. map candidate closed types、generated upstream/integrity、restriction and classification ideas onto the existing governance-only inventory without changing its bytes；
+2. require exact current category/classification and integrity kinds；generated evidence must have resolving lineage and remain externally blocked；
+3. raise the suite from 8 to 14 mutations and require every mutation to match its intended diagnostic；
+4. keep `scientific_context` / independence out of the aggregate model pending `RECON-DEC-005`；
+5. keep all 8 license conclusions at `NOASSERTION`、repository license unselected and external sharing blocked；
+6. Windows PowerShell 5.1 targeted validation、MSVC Debug/Release 9/9、repository verification and diff review passed；commit independently。
 
 ### Explicit non-slices
 
@@ -480,6 +499,9 @@ Prepared slices may test both sides but cannot silently close these decisions。
 | `RECON-MUT-012` | port test code but omit independent lane/report hash | cross-tool lineage gate |
 | `RECON-MUT-013` | promote `packages_user` / `composition_root` into the physical DAG | ADR-0003 and exact registry-shape gate |
 | `RECON-MUT-014` | copy candidate responsibility rows as a silent ownership overlay | registry schema and glossary-closure gate |
+| `RECON-MUT-015` | generated evidence drops or invents upstream lineage | lineage presence/resolution/DAG gate |
+| `RECON-MUT-016` | generated evidence weakens category/classification or external restriction | closed category mapping and blocked-distribution gate |
+| `RECON-MUT-017` | copy candidate scientific independence assertion into the aggregate inventory | scientific-context contract and accountable-authority gate |
 
 ## 16. Gate impact
 
@@ -502,4 +524,4 @@ Candidate discovery changes the evidence inventory, not the current gate result�
 - Contract review：schema incompatibilities listed before any port；no v1 bytes changed；
 - Science review：axis-angle difference separated from shared Hamilton/passive algebra；all existing direction expected values remain byte-for-byte unchanged；edge checks exercise Proposed policy without claiming owner acceptance；
 - Legacy review：current structured/double-run evidence compared against candidate scope；no raw artifact copied；
-- Boundary review：the initial audit changed only reconciliation evidence；subsequent isolated amendments changed governance/spec/architecture validators and the R0-SCI fixture/oracles, while product paths、public schemas、Legacy、roles、backlog and release state remain unchanged。
+- Boundary review：the initial audit changed only reconciliation evidence；subsequent isolated amendments changed governance/spec/architecture/provenance validators and the R0-SCI fixture/oracles, while product paths、public schemas、Legacy、roles、backlog and release state remain unchanged。

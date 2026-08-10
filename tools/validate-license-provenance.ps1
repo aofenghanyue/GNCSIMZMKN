@@ -106,6 +106,24 @@ function Test-InventoryObject([object]$Inventory) {
     $allowedPresence = @(Get-Field $vocabulary 'repository_presence')
     $allowedInternal = @(Get-Field $vocabulary 'internal_handling')
     $allowedExternal = @(Get-Field $vocabulary 'external_distribution')
+    $categoryClassifications = [System.Collections.Generic.Dictionary[string, string]]::new(
+        [System.StringComparer]::Ordinal)
+    $categoryClassifications.Add('repository-governed-content', 'internal-research')
+    $categoryClassifications.Add('imported-design-source', 'internal-research')
+    $categoryClassifications.Add('fixture-oracle-and-generated-evidence', 'internal-research')
+    $categoryClassifications.Add('frozen-reference-archive', 'internal-research')
+    $categoryClassifications.Add('external-build-dependency', 'external-dependency')
+    $categoryClassifications.Add('external-tool-bundle', 'external-tool')
+    $categoryClassifications.Add('external-validation-tools', 'external-tool')
+    $categoryClassifications.Add('external-ci-action', 'external-tool')
+    $allowedClassifications = @('internal-research', 'external-dependency', 'external-tool')
+    $allowedIntegrityKinds = @(
+        'per-file-git-object',
+        'manifest-and-per-file-sha256',
+        'sha256-zip-audit',
+        'sha256',
+        'environment-identity',
+        'git-commit')
     foreach ($expected in @(
             'no-license-information-found',
             'license-information-present',
@@ -160,6 +178,44 @@ function Test-InventoryObject([object]$Inventory) {
         }
         else {
             $ids[$id] = $item
+        }
+
+        $category = [string](Get-Field $item 'category')
+        $classification = [string](Get-Field $item 'classification')
+        if (-not $categoryClassifications.ContainsKey($category)) {
+            $issues.Add("Inventory item '$id' has unsupported category '$category'.")
+        }
+        if ($classification -cnotin $allowedClassifications) {
+            $issues.Add("Inventory item '$id' has unsupported classification '$classification'.")
+        }
+        elseif ($categoryClassifications.ContainsKey($category) -and
+            $classification -cne [string]$categoryClassifications[$category]) {
+            $issues.Add("Inventory item '$id' classification '$classification' is incompatible with category '$category'.")
+        }
+
+        $integrity = Get-Field $item 'integrity'
+        $integrityKind = [string](Get-Field $integrity 'kind')
+        if ($integrityKind -cnotin $allowedIntegrityKinds) {
+            $issues.Add("Inventory item '$id' has unsupported integrity kind '$integrityKind'.")
+        }
+        elseif ($integrityKind -cin @(
+                'per-file-git-object',
+                'manifest-and-per-file-sha256',
+                'environment-identity',
+                'git-commit') -and
+            [string]::IsNullOrWhiteSpace([string](Get-Field $integrity 'value'))) {
+            $issues.Add("Inventory item '$id' integrity value is empty.")
+        }
+        elseif ($integrityKind -cin @('sha256-zip-audit', 'sha256')) {
+            $integritySha = [string](Get-Field $integrity 'sha256')
+            $integrityBytes = Get-Field $integrity 'bytes'
+            if ($integritySha -cnotmatch '^[0-9a-f]{64}$') {
+                $issues.Add("Inventory item '$id' has an invalid SHA-256 integrity value.")
+            }
+            if (($integrityBytes -isnot [int] -and $integrityBytes -isnot [long]) -or
+                $integrityBytes -le 0) {
+                $issues.Add("Inventory item '$id' has an invalid integrity byte count.")
+            }
         }
 
         $sourceRefs = @(Get-Field $item 'source_refs')
@@ -247,6 +303,16 @@ function Test-InventoryObject([object]$Inventory) {
     foreach ($item in $items) {
         $id = [string](Get-Field $item 'id')
         $parents = @(Get-Field $item 'lineage_parents')
+        $category = [string](Get-Field $item 'category')
+        $external = [string](Get-Field $item 'external_distribution')
+        if ($category -ceq 'fixture-oracle-and-generated-evidence') {
+            if ($parents.Count -eq 0) {
+                $issues.Add("Generated evidence item '$id' has no lineage parents.")
+            }
+            if ($external -cnotmatch '^blocked-') {
+                $issues.Add("Generated evidence item '$id' must remain externally blocked while upstream rights are unresolved.")
+            }
+        }
         if (@($parents | Sort-Object -Unique).Count -ne $parents.Count) {
             $issues.Add("Inventory item '$id' has duplicate lineage parents.")
         }
@@ -359,17 +425,28 @@ function Test-InventoryObject([object]$Inventory) {
     return $issues.ToArray()
 }
 
-function Invoke-Mutation([string]$Name, [scriptblock]$Mutation) {
+function Invoke-Mutation(
+    [string]$Name,
+    [string]$ExpectedDiagnostic,
+    [scriptblock]$Mutation) {
     $copy = $script:inventory | ConvertTo-Json -Depth 100 | ConvertFrom-Json
     & $Mutation $copy
     $mutationIssues = @(Test-InventoryObject $copy)
-    $rejected = $mutationIssues.Count -gt 0
-    if (-not $rejected) {
+    $diagnosticMatched = @($mutationIssues | Where-Object {
+            $_.IndexOf($ExpectedDiagnostic, [System.StringComparison]::OrdinalIgnoreCase) -ge 0
+        }).Count -gt 0
+    $rejected = $mutationIssues.Count -gt 0 -and $diagnosticMatched
+    if ($mutationIssues.Count -eq 0) {
         Add-Error "Mutation was not rejected: $Name"
+    }
+    elseif (-not $diagnosticMatched) {
+        Add-Error "Mutation '$Name' failed for the wrong reason: $($mutationIssues -join ' | ')"
     }
     $script:mutationResults.Add([pscustomobject][ordered]@{
             name = $Name
             rejected = $rejected
+            expected_diagnostic = $ExpectedDiagnostic
+            diagnostic_matched = $diagnosticMatched
             detected_issue_count = $mutationIssues.Count
         })
 }
@@ -562,40 +639,65 @@ if ($null -ne $environment -and $null -ne $inventory) {
 }
 
 if ($null -ne $inventory) {
-    Invoke-Mutation 'duplicate-item-id' {
+    Invoke-Mutation 'duplicate-item-id' 'Duplicate inventory item id' {
         param($value)
         $value.items[1].id = $value.items[0].id
     }
-    Invoke-Mutation 'missing-source-provenance' {
+    Invoke-Mutation 'missing-source-provenance' 'has no source reference' {
         param($value)
         $value.items[0].source_refs = @()
     }
-    Invoke-Mutation 'noassertion-external-distribution' {
+    Invoke-Mutation 'noassertion-external-distribution' 'cannot be externally distributable' {
         param($value)
         $value.items[0].external_distribution = 'allowed'
     }
-    Invoke-Mutation 'legacy-hash-drift' {
+    Invoke-Mutation 'legacy-hash-drift' "Legacy inventory integrity field 'sha256' differs" {
         param($value)
         $value.items[3].integrity.sha256 = ('0' * 64)
     }
-    Invoke-Mutation 'unapproved-license-conclusion' {
+    Invoke-Mutation 'unapproved-license-conclusion' 'has an unapproved license conclusion' {
         param($value)
         $value.items[0].license.concluded_expression = 'MIT'
     }
-    Invoke-Mutation 'license-ref-without-text' {
+    Invoke-Mutation 'license-ref-without-text' 'has no preserved custom license text' {
         param($value)
         $value.items[0].license.concluded_expression = 'LicenseRef-GNC-Private'
     }
-    Invoke-Mutation 'repository-license-status-contradiction' {
+    Invoke-Mutation 'repository-license-status-contradiction' 'Repository license cannot be selected' {
         param($value)
         $value.repository_license.selected = $true
     }
-    Invoke-Mutation 'checkout-action-pin-drift' {
+    Invoke-Mutation 'checkout-action-pin-drift' 'Pinned actions/checkout identity differs' {
         param($value)
         $checkout = @($value.items | Where-Object {
                 $_.id -eq 'github-actions-checkout-6.0.2'
             }) | Select-Object -First 1
         $checkout.integrity.value = ('0' * 40)
+    }
+    Invoke-Mutation 'unknown-item-category' 'has unsupported category' {
+        param($value)
+        $value.items[2].category = 'Fixture-Oracle-And-Generated-Evidence'
+    }
+    Invoke-Mutation 'generated-classification-mismatch' 'is incompatible with category' {
+        param($value)
+        $value.items[2].classification = 'external-tool'
+    }
+    Invoke-Mutation 'generated-missing-lineage' 'has no lineage parents' {
+        param($value)
+        $value.items[2].lineage_parents = @()
+    }
+    Invoke-Mutation 'generated-unresolved-lineage' 'has missing lineage parent' {
+        param($value)
+        $value.items[2].lineage_parents = @($value.items[2].lineage_parents) +
+            @('missing-upstream-record')
+    }
+    Invoke-Mutation 'generated-restriction-downgrade' 'must remain externally blocked' {
+        param($value)
+        $value.items[2].external_distribution = 'not-redistributed'
+    }
+    Invoke-Mutation 'generated-missing-integrity' 'integrity value is empty' {
+        param($value)
+        $value.items[2].integrity.value = ''
     }
 }
 
@@ -702,9 +804,10 @@ $expectedReport = [pscustomobject][ordered]@{
 if ($errors.Count -eq 0) {
     if ($UpdateReport) {
         $json = $expectedReport | ConvertTo-Json -Depth 20
+        $json = $json.Replace("`r`n", "`n").Replace("`r", "`n")
         [System.IO.File]::WriteAllText(
             $reportPath,
-            $json + [Environment]::NewLine,
+            $json + "`n",
             [System.Text.UTF8Encoding]::new($false))
     }
     else {
