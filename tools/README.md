@@ -2,6 +2,7 @@
 
 - `bootstrap.ps1`：配置、构建、运行 CTest 和仓库检查。
 - `verify-repository.ps1`：验证目录、JSON、任务依赖、legacy hash、架构边界、UTF-8 和 Markdown 链接。
+- `validate-r0-specs.ps1`：验证 R0 fixture、oracle、PlanProofRecord schema、实际 manifests 与正反例。
 - `extract-legacy-reference.ps1`：校验并解包只读 legacy archive 到忽略目录。
 
 脚本只操作本仓库中的明确路径。任何生成的研究数据需要经过 fixture/Artifact 晋升流程才能进入版本控制。

@@ -1,0 +1,21 @@
+{
+  "schema_version": "gnczmkn.oracle-manifest/1",
+  "oracle_set_id": "ORACLE-EXAMPLE-001",
+  "status": "planned",
+  "provenance": {
+    "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"]
+  },
+  "oracles": [
+    {
+      "id": "ORACLE-EXAMPLE-EXACT-01",
+      "level": "math",
+      "status": "planned",
+      "claim": "One plus one equals two.",
+      "expected_facts": ["The computed integer is two."],
+      "reference_kind": "analytic identity",
+      "tolerance_policy": "Exact integer equality.",
+      "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"],
+      "artifact_refs": []
+    }
+  ]
+}

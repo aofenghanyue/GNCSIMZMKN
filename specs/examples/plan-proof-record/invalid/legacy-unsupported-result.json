@@ -1,0 +1,13 @@
+{
+  "schema_version": "gnczmkn.plan-proof-record/1",
+  "proof_id": "proof:topology:legacy-result:0001",
+  "proof_kind": "StateTransition",
+  "subject_refs": ["entity-prototype:dynamic"],
+  "assertion_code": "GNC.PLAN.TOPOLOGY.DYNAMIC_ENTITY",
+  "source_refs": ["mission:unsupported#/entities"],
+  "premises": {"runtime_entity_count": "unknown"},
+  "result": "Unsupported",
+  "diagnostic_ids": ["diag:compile:unsupported-topology:0001"],
+  "lowered_operator_refs": [],
+  "generated_by_pass": "topology-lowering@1"
+}

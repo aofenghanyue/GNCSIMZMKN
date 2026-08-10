@@ -219,16 +219,16 @@
       "id": "R0-SPEC-001",
       "stage": "R0",
       "title": "Define machine schemas for fixtures, oracles and PlanProofRecord",
-      "status": "ready",
+      "status": "review",
       "priority": "P0",
       "size": "L",
       "owner_role": "architecture_lead",
-      "assignee": null,
+      "assignee": "Codex",
       "depends_on": ["B0-VER-001"],
       "deliverables": ["Versioned JSON schemas", "valid and invalid examples", "schema validation command"],
       "acceptance": ["R0 bundles fail early on missing identity, provenance, tolerance or expected facts"],
       "evidence": ["Schema conformance tests"],
-      "architecture_refs": ["05 §13", "00A §3.4", "roadmap R0"]
+      "architecture_refs": ["05 §10.6", "00A §3.4", "11 §5"]
     },
     {
       "id": "R0-PERF-001",

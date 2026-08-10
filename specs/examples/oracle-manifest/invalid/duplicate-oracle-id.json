@@ -1,0 +1,30 @@
+{
+  "schema_version": "gnczmkn.oracle-manifest/1",
+  "oracle_set_id": "ORACLE-EXAMPLE-003",
+  "status": "planned",
+  "provenance": {
+    "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"]
+  },
+  "oracles": [
+    {
+      "id": "ORACLE-EXAMPLE-DUPLICATE-01",
+      "level": "math",
+      "status": "planned",
+      "claim": "The first oracle uses this identity.",
+      "expected_facts": ["The first fact is observed."],
+      "reference_kind": "analytic identity",
+      "tolerance_policy": "Exact equality.",
+      "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"]
+    },
+    {
+      "id": "ORACLE-EXAMPLE-DUPLICATE-01",
+      "level": "component",
+      "status": "planned",
+      "claim": "A second oracle reuses the identity.",
+      "expected_facts": ["The second fact is observed."],
+      "reference_kind": "component fixture",
+      "tolerance_policy": "Exact equality.",
+      "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"]
+    }
+  ]
+}

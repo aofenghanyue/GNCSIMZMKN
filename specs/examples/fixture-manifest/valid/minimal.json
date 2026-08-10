@@ -1,0 +1,20 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-EXAMPLE-001",
+  "status": "specification_only",
+  "purpose": "Exercise the minimum valid R0 fixture contract.",
+  "authority": "validation_lead",
+  "provenance": {
+    "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"]
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-EXAMPLE-EXACT",
+      "claim": "The example value is exactly one.",
+      "tolerance_policy": "Exact integer equality."
+    }
+  ],
+  "required_artifacts": ["example input", "example result"],
+  "acceptance": ["The expected fact is machine-checkable."],
+  "open_tasks": ["R0-SPEC-001"]
+}

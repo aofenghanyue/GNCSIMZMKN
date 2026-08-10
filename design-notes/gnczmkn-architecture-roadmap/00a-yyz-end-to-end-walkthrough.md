@@ -201,6 +201,7 @@ Compiler 对关键断言生成可序列化证明记录。它记录“哪个 pass
 
 ```yaml
 plan_proof_record:
+  schema_version: gnczmkn.plan-proof-record/1
   proof_id: proof:temporal:guidance-rate:4fd0
   proof_kind: TimeLifecycle
   subject_refs: [occ:guidance, region:boundary]

@@ -1,6 +1,6 @@
 # Reference fixtures
 
-Fixture 是可复制、可校验、带 provenance 的规范实例。每个目录至少包含 `fixture-manifest.json`，达到 executable 后再加入输入、expected facts、失败样例和运行脚本。
+Fixture 是可复制、可校验、带 provenance 的规范实例。每个目录至少包含 `fixture-manifest.json`，并在 `specification_only` 阶段登记计划验证的 expected facts 与 tolerance policy。达到 executable 后再加入权威输入、机器可比 expected values、失败样例、hash 和运行脚本。
 
 当前三个起始 fixture 均为 `specification_only`：
 

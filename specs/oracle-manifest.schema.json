@@ -1,27 +1,71 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://internal.gnczmkn/schemas/oracle-manifest.schema.json",
+  "$id": "https://internal.gnczmkn/schemas/oracle-manifest/1",
   "title": "GNCZMKN oracle manifest",
+  "description": "R0 oracle contract. Every claim has stable identity, provenance, expected facts and an explicit tolerance policy.",
+  "x-maturity": "Fixture",
   "type": "object",
-  "required": ["schema_version", "oracle_set_id", "status", "oracles"],
+  "required": ["schema_version", "oracle_set_id", "status", "provenance", "oracles"],
   "properties": {
     "schema_version": {"const": "gnczmkn.oracle-manifest/1"},
-    "oracle_set_id": {"type": "string"},
+    "oracle_set_id": {
+      "type": "string",
+      "pattern": "^ORACLE-[A-Z0-9][A-Z0-9_.-]*$"
+    },
     "status": {"enum": ["planned", "capturing", "executable", "qualified", "retired"]},
+    "provenance": {
+      "type": "object",
+      "required": ["source_refs"],
+      "properties": {
+        "source_refs": {
+          "type": "array",
+          "items": {"type": "string", "minLength": 1},
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "notes": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
     "oracles": {
       "type": "array",
+      "minItems": 1,
       "items": {
         "type": "object",
-        "required": ["id", "level", "status", "claim", "reference_kind", "tolerance_policy", "source_refs"],
+        "required": [
+          "id",
+          "level",
+          "status",
+          "claim",
+          "expected_facts",
+          "reference_kind",
+          "tolerance_policy",
+          "source_refs"
+        ],
         "properties": {
-          "id": {"type": "string"},
+          "id": {"type": "string", "pattern": "^ORACLE-[A-Z0-9][A-Z0-9_.-]*$"},
           "level": {"enum": ["math", "numerical", "model", "component", "closure", "mission", "workflow"]},
           "status": {"enum": ["planned", "capturing", "executable", "qualified", "retired"]},
-          "claim": {"type": "string"},
-          "reference_kind": {"type": "string"},
-          "tolerance_policy": {"type": "string"},
-          "source_refs": {"type": "array", "items": {"type": "string"}, "minItems": 1},
-          "artifact_refs": {"type": "array", "items": {"type": "string"}}
+          "claim": {"type": "string", "minLength": 1},
+          "expected_facts": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1},
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "reference_kind": {"type": "string", "minLength": 1},
+          "tolerance_policy": {"type": "string", "minLength": 1},
+          "source_refs": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1},
+            "minItems": 1,
+            "uniqueItems": true
+          },
+          "artifact_refs": {
+            "type": "array",
+            "items": {"type": "string", "minLength": 1},
+            "uniqueItems": true
+          }
         },
         "additionalProperties": false
       }

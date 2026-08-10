@@ -1,22 +1,87 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://internal.gnczmkn/schemas/plan-proof-record.schema.json",
+  "$id": "https://internal.gnczmkn/schemas/plan-proof-record/1",
   "title": "PlanProofRecord fixture schema",
   "description": "R0 fixture schema. R2 owns the implemented compiler contract.",
   "x-maturity": "Fixture",
   "type": "object",
-  "required": ["proof_id", "proof_kind", "subject_refs", "assertion_code", "source_refs", "premises", "result", "diagnostic_ids", "lowered_operator_refs", "generated_by_pass"],
+  "required": [
+    "schema_version",
+    "proof_id",
+    "proof_kind",
+    "subject_refs",
+    "assertion_code",
+    "source_refs",
+    "premises",
+    "result",
+    "diagnostic_ids",
+    "lowered_operator_refs",
+    "generated_by_pass"
+  ],
   "properties": {
-    "proof_id": {"type": "string"},
-    "proof_kind": {"enum": ["Identity", "Ownership", "Causality", "TimeLifecycle", "StateTransition", "ResourceEffect", "Evidence"]},
-    "subject_refs": {"type": "array", "items": {"type": "string"}, "minItems": 1},
-    "assertion_code": {"type": "string", "pattern": "^GNC\\.PLAN\\.[A-Z0-9_.-]+$"},
-    "source_refs": {"type": "array", "items": {"type": "string"}, "minItems": 1},
-    "premises": {"type": "object"},
-    "result": {"enum": ["Proven", "Rejected", "Unsupported"]},
-    "diagnostic_ids": {"type": "array", "items": {"type": "string"}},
-    "lowered_operator_refs": {"type": "array", "items": {"type": "string"}},
-    "generated_by_pass": {"type": "string"}
+    "schema_version": {"const": "gnczmkn.plan-proof-record/1"},
+    "proof_id": {
+      "type": "string",
+      "pattern": "^proof:[a-z0-9][a-z0-9._:-]*$"
+    },
+    "proof_kind": {
+      "enum": ["Identity", "Ownership", "Causality", "TimeLifecycle", "StateTransition", "ResourceEffect", "Evidence"]
+    },
+    "subject_refs": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "assertion_code": {
+      "type": "string",
+      "pattern": "^GNC\\.PLAN\\.[A-Z0-9_.-]+$"
+    },
+    "source_refs": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "premises": {"type": "object", "minProperties": 1},
+    "result": {"enum": ["Proven", "Rejected", "DeferredUnsupported"]},
+    "diagnostic_ids": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "lowered_operator_refs": {
+      "type": "array",
+      "items": {"type": "string", "minLength": 1},
+      "uniqueItems": true
+    },
+    "generated_by_pass": {"type": "string", "minLength": 1}
   },
+  "allOf": [
+    {
+      "if": {
+        "required": ["result"],
+        "properties": {"result": {"const": "Rejected"}}
+      },
+      "then": {
+        "properties": {
+          "diagnostic_ids": {"minItems": 1},
+          "lowered_operator_refs": {"maxItems": 0}
+        }
+      }
+    },
+    {
+      "if": {
+        "required": ["result"],
+        "properties": {"result": {"const": "DeferredUnsupported"}}
+      },
+      "then": {
+        "properties": {
+          "diagnostic_ids": {"minItems": 1},
+          "lowered_operator_refs": {"maxItems": 0}
+        }
+      }
+    }
+  ],
   "additionalProperties": false
 }

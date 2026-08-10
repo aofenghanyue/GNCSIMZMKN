@@ -65,4 +65,17 @@ if(GNC_BUILD_TESTS)
 
     add_test(NAME skeleton.library COMMAND gnc_skeleton_smoke)
     add_test(NAME skeleton.cli COMMAND gnc_sim --self-check)
+
+    find_program(GNC_POWERSHELL_EXECUTABLE NAMES pwsh powershell)
+    if(NOT GNC_POWERSHELL_EXECUTABLE)
+        message(FATAL_ERROR "PowerShell is required for R0 schema conformance tests.")
+    endif()
+    add_test(
+        NAME r0.schema-contracts
+        COMMAND
+            ${GNC_POWERSHELL_EXECUTABLE}
+            -NoLogo
+            -NoProfile
+            -ExecutionPolicy Bypass
+            -File ${CMAKE_CURRENT_SOURCE_DIR}/tools/validate-r0-specs.ps1)
 endif()

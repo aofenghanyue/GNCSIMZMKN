@@ -235,6 +235,13 @@ foreach ($file in $markdownFiles | Sort-Object FullName -Unique) {
     }
 }
 
+$schemaValidatorPath = Join-Path $PSScriptRoot 'validate-r0-specs.ps1'
+$powerShellHost = (Get-Process -Id $PID).Path
+$schemaValidatorOutput = & $powerShellHost -NoLogo -NoProfile -ExecutionPolicy Bypass -File $schemaValidatorPath -Quiet 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Add-Error "R0 schema conformance failed: $($schemaValidatorOutput -join [Environment]::NewLine)"
+}
+
 if ($errors.Count -gt 0) {
     Write-Host "Repository verification failed with $($errors.Count) issue(s):"
     foreach ($errorMessage in $errors) {
@@ -248,3 +255,4 @@ Write-Host "Repository verification passed."
 Write-Host "Validated JSON files: $($jsonFiles.Count)"
 Write-Host "Validated task entries: $taskCount"
 Write-Host "Validated Markdown files: $($markdownFiles.Count)"
+Write-Host "Validated R0 schema contracts: 3"
