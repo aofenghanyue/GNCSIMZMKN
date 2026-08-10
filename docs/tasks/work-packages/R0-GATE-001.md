@@ -37,6 +37,7 @@
 - ADR-0001–ADR-0009、R0 work packages、schema/architecture/science/provenance reports；
 - architecture baseline、PlanProof schema/examples、scientific fixture manifests、Legacy oracle manifest 与 Legacy reproduction evidence；
 - `project-manifest.json` 与 `.github/workflows/ci.yml`。
+- [remote first-wave reconciliation audit](../../quality/r0-first-wave-reconciliation-audit.md)：独立远端 R0 实现线的可复用技术证据、不可迁移签署/状态和语义冲突。
 
 ## 当前直接依赖判定
 

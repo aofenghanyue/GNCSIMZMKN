@@ -74,6 +74,8 @@ G1 只有科学约定 bundle 达到 `executable`，且其技术 cross-tool compa
 
 下列 SHA-256 是对审计时 raw bytes 的固定，不是未来 gate decision 的替代物。
 
+审计后发现远端还存在从 B0 独立分叉的 `origin/codex/r0-first-wave@7d7c0a8`。其技术资产、hosted run、虚拟角色签署、schema/ADR 冲突和四元数 axis-angle 差异已单独记录在 [remote first-wave reconciliation audit](r0-first-wave-reconciliation-audit.md)。该分支证据不改变本文件对当前线的 task/ADR/role/fixture readiness 判定。
+
 | Input | SHA-256 |
 | --- | --- |
 | `docs/tasks/backlog.json` | `8627b65f1d655f09043833eb23965c3bf72772e554eedc9e920429d131f3a06c` |
