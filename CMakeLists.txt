@@ -63,8 +63,18 @@ if(GNC_BUILD_TESTS)
     target_link_libraries(gnc_skeleton_smoke PRIVATE foundation)
     gnc_enable_warnings(gnc_skeleton_smoke)
 
+    # R0 validation spike: intentionally isolated from product modules and Legacy.
+    add_executable(
+        gnc_scientific_conventions
+        tests/scientific_conventions.cpp)
+    target_compile_features(gnc_scientific_conventions PRIVATE cxx_std_17)
+    gnc_enable_warnings(gnc_scientific_conventions)
+
     add_test(NAME skeleton.library COMMAND gnc_skeleton_smoke)
     add_test(NAME skeleton.cli COMMAND gnc_sim --self-check)
+    add_test(
+        NAME r0.scientific-conventions.properties
+        COMMAND gnc_scientific_conventions --self-check)
 
     find_program(GNC_POWERSHELL_EXECUTABLE NAMES pwsh powershell)
     if(NOT GNC_POWERSHELL_EXECUTABLE)
@@ -94,5 +104,18 @@ if(GNC_BUILD_TESTS)
             -NoProfile
             -ExecutionPolicy Bypass
             -File ${CMAKE_CURRENT_SOURCE_DIR}/tools/validate-legacy-reproduction.ps1
+            -Quiet)
+
+    find_package(Python3 3.8 REQUIRED COMPONENTS Interpreter)
+    add_test(
+        NAME r0.scientific-conventions.cross-tool
+        COMMAND
+            ${GNC_POWERSHELL_EXECUTABLE}
+            -NoLogo
+            -NoProfile
+            -ExecutionPolicy Bypass
+            -File ${CMAKE_CURRENT_SOURCE_DIR}/tools/validate-scientific-conventions.ps1
+            -CppExecutable $<TARGET_FILE:gnc_scientific_conventions>
+            -PythonExecutable ${Python3_EXECUTABLE}
             -Quiet)
 endif()

@@ -47,6 +47,10 @@ $requiredPaths = @(
     'reference/legacy/reproduction/current.json',
     'reference/legacy/reproduction/compatibility-msvc-19.50.json',
     'fixtures/ref-yyz-001/fixture-manifest.json',
+    'fixtures/ref-scientific-conventions/fixture-manifest.json',
+    'fixtures/ref-scientific-conventions/conventions.json',
+    'fixtures/ref-scientific-conventions/cases.json',
+    'docs/quality/scientific-conventions-cross-tool-report.json',
     'oracles/oracle-manifest.json'
 )
 
@@ -259,6 +263,12 @@ if ($LASTEXITCODE -ne 0) {
     Add-Error "R0 legacy reproduction evidence failed: $($legacyReproductionValidatorOutput -join [Environment]::NewLine)"
 }
 
+$scientificConventionValidatorPath = Join-Path $PSScriptRoot 'validate-scientific-conventions.ps1'
+$scientificConventionValidatorOutput = & $powerShellHost -NoLogo -NoProfile -ExecutionPolicy Bypass -File $scientificConventionValidatorPath -StaticOnly -Quiet 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Add-Error "R0 scientific convention evidence failed: $($scientificConventionValidatorOutput -join [Environment]::NewLine)"
+}
+
 if ($errors.Count -gt 0) {
     Write-Host "Repository verification failed with $($errors.Count) issue(s):"
     foreach ($errorMessage in $errors) {
@@ -275,3 +285,4 @@ Write-Host "Validated Markdown files: $($markdownFiles.Count)"
 Write-Host "Validated R0 schema contracts: 3"
 Write-Host "Validated R0 architecture baseline: 1"
 Write-Host "Validated R0 legacy reproduction: 1"
+Write-Host "Validated R0 scientific convention bundle: 1"

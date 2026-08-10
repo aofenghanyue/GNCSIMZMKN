@@ -19,3 +19,7 @@ compile_commands.json
 
 # Extracted legacy material is disposable; the checked archive and manifest are authoritative.
 /reference/legacy/extracted/
+
+# Python tool caches
+__pycache__/
+*.py[cod]

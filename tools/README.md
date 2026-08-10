@@ -6,6 +6,8 @@
 - `validate-architecture-baseline.ps1`：生成或检查术语、共享 symbol、模块 DAG 和 Legacy 归属派生基线，并运行反例。
 - `reproduce-legacy.ps1`：从冻结 ZIP 和固定哈希的离线依赖归档创建隔离工作区，构建并运行 Legacy 全部测试与五条代表任务。
 - `validate-legacy-reproduction.ps1`：校验受控 Legacy 证据索引、环境、测试、任务基线和 MSVC 兼容性缺口，不重新执行耗时构建。
+- `scientific_conventions_reference.py`：只使用 CPython 标准库计算 R0 单位、frame、时间与被动 Hamilton 四元数参考结果。
+- `validate-scientific-conventions.ps1`：校验 scientific convention fixture，运行 C++/Python 交叉验证、故障注入并检查证据 hash。
 - `extract-legacy-reference.ps1`：校验并解包只读 legacy archive 到忽略目录。
 
 脚本只操作本仓库中的明确路径。任何生成的研究数据需要经过 fixture/Artifact 晋升流程才能进入版本控制。
