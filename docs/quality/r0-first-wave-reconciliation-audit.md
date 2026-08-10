@@ -277,11 +277,11 @@ Raw count differences are not pass/fail. Candidate adds a nine-term scientific o
 
 | Aspect | Current | Candidate |
 | --- | --- | --- |
-| C++ summary | 18 semantic check categories；256 randomized rotation samples | 559 individual checks；128 randomized samples |
-| Python summary | same 18 categories/16 observations | 554 checks；6 cross-tool cases |
+| C++ summary | 23 semantic check categories；1819 assertions；256 randomized rotation samples | 559 individual checks；128 randomized samples |
+| Python summary | same 23 categories/1819 assertions/16 observations | 554 checks；6 cross-tool cases |
 | Cross-tool | 48 numeric values；0 mismatches | 102 fixed values；0 mismatches |
 | Direction fixture | positive z coefficient maps x to `-y` | negative z coefficient labelled passive +90 maps x to `+y` |
-| Extra candidate edges | limited in current | malformed/nonfinite/non-unit quaternion、NormalizeWithFlag、invalid units/Kelvin、clock domains、half-open validity |
+| Extra candidate edges | independently covers malformed/nonfinite/non-unit quaternion、NormalizeWithFlag、invalid units/Kelvin、clock domains and Proposed half-open validity | candidate supplied the comparison ideas |
 
 ### 9.2 Critical scientific difference
 
@@ -294,7 +294,7 @@ The blueprint fixes transform algebra but does not explicitly define the externa
 
 ### 9.3 Safe property ports
 
-After preserving current direction expected values, the following candidate tests can be independently reimplemented：
+After preserving current direction expected values, the following candidate tests were evaluated for independent reimplementation：
 
 - exact four finite quaternion coefficients；
 - zero norm、non-unit Reject、NormalizeWithFlag and correction flag；
@@ -304,7 +304,7 @@ After preserving current direction expected values, the following candidate test
 - same-clock time arithmetic、mixed-clock rejection；
 - half-open validity interval、reversed interval and non-finite time rejection。
 
-These ports must be added to both isolated C++ and independent Python lanes and reflected in fixture/report hashes. Candidate code cannot be copied with its axis-angle helper unchanged.
+Slice B implements the coefficient/normalization、unit-domain、clock-domain and validity items in both isolated lanes and reflects them in fixture/report hashes. Existing `q/-q` coverage remains；matrix/metadata rejection stays outside this amendment. Candidate code and its conflicting axis-angle helper were not copied.
 
 ## 10. Legacy evidence audit
 
@@ -374,17 +374,18 @@ Scope：`R0-SPEC-001` review amendment。
 7. Windows PowerShell 5.1 targeted validation、Debug/Release 9/9 CTest、repository verification（56 JSON、65 tasks、98 Markdown）and diff check pass；PowerShell 7/current hosted evidence remains pending push/run；
 8. commit independently。
 
-### Slice B — scientific edge-property strengthening
+### Slice B — scientific edge-property strengthening（implemented）
 
 Scope：`R0-SCI-001` review amendment。
 
-1. add malformed/nonfinite/non-unit quaternion policy tests；
-2. add invalid unit/Kelvin and time-domain/validity tests；
-3. implement independently in C++ and Python；
-4. keep current quaternion direction fixture unchanged；
-5. regenerate cross-tool report and manifest hashes；
-6. record axis-angle sign as unresolved owner decision；
-7. commit independently。
+1. exact-four/finite quaternion coefficient checks reject malformed inputs；`Error` rejects non-unit input while `NormalizeWithFlag` corrects it and exposes `normalized=true`；
+2. unit boundary checks accept absolute zero and reject unknown/nonfinite/overflow/below-zero-Kelvin inputs；
+3. distinct fixture-only time types enforce finite values、non-empty/same clock domains and half-open validity, while documenting half-open semantics as Proposed pending owner acceptance；
+4. C++ and Python independently execute 23 checks/1819 assertions；16 observations/48 values compare with 0 mismatch and 0 maximum cross-tool difference；
+5. report validation requires positive assertion counts and rejects 6/6 mutations, including an unexecuted check falsely marked pass；
+6. current positive-z quaternion direction fixture and all 16 expected observations remain unchanged；axis-angle sign remains `RECON-DEC-004`；
+7. MSVC Debug/Release 9/9 CTest and repository verification pass；report raw SHA-256 is `c121c74b546b2ad7722a6a5d90ee8ca0de028c4524fce624a3b95963138252c8`；
+8. commit independently。
 
 ### Slice C — architecture delta reconciliation
 
@@ -428,6 +429,7 @@ Scope：GOV-002 review amendment。
 | `RECON-DEC-006` | `packages_user`/`composition_root` representation and source authority | Architecture Lead |
 | `RECON-DEC-007` | candidate extra Legacy mappings/responsibility granularity | Architecture Lead + Validation Lead |
 | `RECON-DEC-008` | current hosted runner/action profile and artifact retention | Product Owner + Validation Lead |
+| `RECON-DEC-009` | whether half-open validity becomes the approved public time contract | Scientific Authority + Architecture Lead |
 
 Prepared slices may test both sides but cannot silently close these decisions。
 
@@ -467,6 +469,6 @@ Candidate discovery changes the evidence inventory, not the current gate result�
 - Hosted review：GitHub run URL/result/job counts captured；no claim beyond candidate commit；
 - Governance review：virtual labels retained only as evidence of invalid approval, not copied into current roles；
 - Contract review：schema incompatibilities listed before any port；no v1 bytes changed；
-- Science review：axis-angle difference separated from shared Hamilton/passive algebra；no expected values selected by Codex；
+- Science review：axis-angle difference separated from shared Hamilton/passive algebra；all existing direction expected values remain byte-for-byte unchanged；edge checks exercise Proposed policy without claiming owner acceptance；
 - Legacy review：current structured/double-run evidence compared against candidate scope；no raw artifact copied；
-- Boundary review：this stage adds only a reconciliation audit and links it from gate readiness；product, schema, fixture, oracle, ADR, role, backlog and release state remain unchanged。
+- Boundary review：the initial audit changed only reconciliation evidence；subsequent isolated amendments changed governance/spec validators and the R0-SCI fixture/oracles, while product paths、public schemas、Legacy、roles、backlog and release state remain unchanged。

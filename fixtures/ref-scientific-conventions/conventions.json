@@ -28,7 +28,13 @@
     ],
     "conversion_boundaries": ["ConfigAdapter", "ToolAdapter", "ArtifactAdapter", "DomainConverter"],
     "offset_units_require_explicit_rule": true,
-    "hot_path_unit_guessing_allowed": false
+    "hot_path_unit_guessing_allowed": false,
+    "domain_policy": {
+      "finite_input_required": true,
+      "absolute_zero_kelvin": 0.0,
+      "below_absolute_zero_disposition": "DomainError",
+      "unknown_unit_disposition": "DomainError"
+    }
   },
   "frames": {
     "vector_layout": "column",
@@ -50,6 +56,13 @@
     "matrix_composition": "R_c_a = R_c_b * R_b_a",
     "quaternion_composition": "q_c_a = q_b_a * q_c_b",
     "zero_norm_disposition": "DomainError",
+    "input_policy": {
+      "coefficient_count": 4,
+      "finite_coefficients_required": true,
+      "non_unit_requires_explicit_policy": true,
+      "supported_normalization_policies": ["Error", "NormalizeWithFlag"],
+      "normalization_correction_flag": "normalized"
+    },
     "sign_equivalence": true,
     "euler_metadata_required": ["sequence", "intrinsic_or_extrinsic", "angle_unit", "canonical_range", "singular_interval"],
     "euler_verification_profile": {
@@ -68,6 +81,13 @@
   },
   "time": {
     "public_types": ["SimulationTime", "Duration", "SampleTime", "ValidTime", "WallTime"],
+    "domain_policy": {
+      "finite_seconds_required": true,
+      "clock_domain_required_for": ["SimulationTime", "SampleTime", "ValidTime"],
+      "cross_clock_arithmetic_disposition": "DomainError",
+      "valid_interval_semantics": "half_open_[valid_from,valid_until)",
+      "reversed_interval_disposition": "DomainError"
+    },
     "canonical_duration_unit": "s",
     "fixed_step_authority": "integer_tick",
     "fixed_step_equation": "t_k = time_origin + tick * base_dt",
@@ -92,14 +112,19 @@
       "quaternion.sign-equivalence",
       "quaternion.serialization-wxyz",
       "quaternion.zero-norm-domain-error",
+      "quaternion.coefficient-validation",
+      "quaternion.normalization-policy",
       "quaternion.body-rate-derivative",
       "quaternion.euler-round-trip",
       "quaternion.euler-singularity",
       "units.si-boundary",
+      "units.domain-validation",
       "frames.point-versus-free-vector",
       "time.integer-tick",
       "time.duration-alignment",
-      "time.type-separation"
+      "time.type-separation",
+      "time.clock-domain",
+      "time.validity-interval"
     ]
   }
 }

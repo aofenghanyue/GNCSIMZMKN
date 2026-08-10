@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -49,7 +50,7 @@ struct Check {
     std::size_t assertion_count = 0;
 };
 
-const std::array<std::string_view, 18> kRequiredCheckIds = {
+const std::array<std::string_view, 23> kRequiredCheckIds = {
     "quaternion.direction",
     "quaternion.hamilton-product",
     "quaternion.composition",
@@ -60,14 +61,19 @@ const std::array<std::string_view, 18> kRequiredCheckIds = {
     "quaternion.sign-equivalence",
     "quaternion.serialization-wxyz",
     "quaternion.zero-norm-domain-error",
+    "quaternion.coefficient-validation",
+    "quaternion.normalization-policy",
     "quaternion.body-rate-derivative",
     "quaternion.euler-round-trip",
     "quaternion.euler-singularity",
     "units.si-boundary",
+    "units.domain-validation",
     "frames.point-versus-free-vector",
     "time.integer-tick",
     "time.duration-alignment",
     "time.type-separation",
+    "time.clock-domain",
+    "time.validity-interval",
 };
 
 class CheckBook {
@@ -86,8 +92,11 @@ public:
         if (iterator == checks_.end()) {
             throw std::logic_error("unknown scientific check id");
         }
-        iterator->passed = iterator->passed && passed;
-        iterator->max_error = std::max(iterator->max_error, error);
+        const bool finite_error = std::isfinite(error) && error >= 0.0;
+        iterator->passed = iterator->passed && passed && finite_error;
+        iterator->max_error = finite_error
+                                  ? std::max(iterator->max_error, error)
+                                  : std::numeric_limits<double>::max();
         ++iterator->assertion_count;
     }
 
@@ -152,31 +161,103 @@ double normSquared(const Quaternion& value) {
            value.z * value.z;
 }
 
-Quaternion normalize(const Quaternion& value) {
+bool finite(const Quaternion& value) {
+    return std::isfinite(value.w) && std::isfinite(value.x) &&
+           std::isfinite(value.y) && std::isfinite(value.z);
+}
+
+bool finite(const Vec3& value) {
+    return std::isfinite(value.x) && std::isfinite(value.y) &&
+           std::isfinite(value.z);
+}
+
+enum class NormalizationPolicy {
+    Error,
+    NormalizeWithFlag,
+};
+
+struct PreparedQuaternion {
+    bool ok = false;
+    Quaternion value{1.0, 0.0, 0.0, 0.0};
+    bool normalized = false;
+};
+
+PreparedQuaternion prepareQuaternion(const Quaternion& value,
+                                     NormalizationPolicy policy) {
     const double squared = normSquared(value);
-    if (squared == 0.0) {
-        throw std::domain_error("zero-norm quaternion");
+    if (!finite(value) || !std::isfinite(squared) || squared == 0.0) {
+        return {};
     }
-    return scale(value, 1.0 / std::sqrt(squared));
+
+    const double magnitude = std::sqrt(squared);
+    if (!std::isfinite(magnitude)) {
+        return {};
+    }
+    const double unit_error = std::abs(magnitude - 1.0);
+    const double unit_bound =
+        kAbsoluteTolerance +
+        kRelativeTolerance * std::max(std::abs(magnitude), 1.0);
+    if (unit_error <= unit_bound) {
+        return {true, value, false};
+    }
+    if (policy == NormalizationPolicy::Error) {
+        return {};
+    }
+
+    const Quaternion normalized = scale(value, 1.0 / magnitude);
+    if (!finite(normalized)) {
+        return {};
+    }
+    return {true, normalized, true};
+}
+
+PreparedQuaternion deserializeQuaternion(
+    const std::vector<double>& coefficients, NormalizationPolicy policy) {
+    if (coefficients.size() != 4U) {
+        return {};
+    }
+    return prepareQuaternion(
+        Quaternion{coefficients[0], coefficients[1], coefficients[2],
+                   coefficients[3]},
+        policy);
+}
+
+Quaternion requireUnitQuaternion(const Quaternion& value) {
+    const PreparedQuaternion prepared =
+        prepareQuaternion(value, NormalizationPolicy::Error);
+    if (!prepared.ok) {
+        throw std::domain_error("quaternion is not a finite unit quaternion");
+    }
+    return prepared.value;
 }
 
 Quaternion inverse(const Quaternion& value) {
     const double squared = normSquared(value);
-    if (squared == 0.0) {
-        throw std::domain_error("zero-norm quaternion");
+    if (!finite(value) || !std::isfinite(squared) || squared == 0.0) {
+        throw std::domain_error("invalid quaternion inverse input");
     }
-    return scale(conjugate(value), 1.0 / squared);
+    const Quaternion result = scale(conjugate(value), 1.0 / squared);
+    if (!finite(result)) {
+        throw std::domain_error("non-finite quaternion inverse output");
+    }
+    return result;
 }
 
 Vec3 passiveRotate(const Quaternion& quaternion, const Vec3& vector) {
-    const Quaternion unit = normalize(quaternion);
+    if (!finite(vector)) {
+        throw std::domain_error("non-finite vector input");
+    }
+    const Quaternion unit = requireUnitQuaternion(quaternion);
     const Quaternion pure{0.0, vector.x, vector.y, vector.z};
     const Quaternion result = hamilton(hamilton(conjugate(unit), pure), unit);
+    if (!finite(result)) {
+        throw std::domain_error("non-finite quaternion rotation output");
+    }
     return {result.x, result.y, result.z};
 }
 
 Matrix3 passiveMatrix(const Quaternion& quaternion) {
-    const Quaternion unit = normalize(quaternion);
+    const Quaternion unit = requireUnitQuaternion(quaternion);
     const double w = unit.w;
     const double x = unit.x;
     const double y = unit.y;
@@ -285,6 +366,9 @@ double maxAbsDifference(const std::vector<double>& lhs,
     }
     double maximum = 0.0;
     for (std::size_t index = 0; index < lhs.size(); ++index) {
+        if (!std::isfinite(lhs[index]) || !std::isfinite(rhs[index])) {
+            return std::numeric_limits<double>::max();
+        }
         maximum = std::max(maximum, std::abs(lhs[index] - rhs[index]));
     }
     return maximum;
@@ -296,6 +380,10 @@ bool withinTolerance(const std::vector<double>& actual,
         return false;
     }
     for (std::size_t index = 0; index < actual.size(); ++index) {
+        if (!std::isfinite(actual[index]) ||
+            !std::isfinite(expected[index])) {
+            return false;
+        }
         const double bound =
             kAbsoluteTolerance +
             kRelativeTolerance *
@@ -344,23 +432,201 @@ Quaternion randomUnitQuaternion(DeterministicGenerator& generator) {
             generator.uniform(-1.0, 1.0),
         };
         if (normSquared(candidate) > 0.01) {
-            return normalize(candidate);
+            const PreparedQuaternion prepared = prepareQuaternion(
+                candidate, NormalizationPolicy::NormalizeWithFlag);
+            if (prepared.ok) {
+                return prepared.value;
+            }
         }
     }
 }
 
+struct UnitConversionResult {
+    bool ok = false;
+    double value = 0.0;
+};
+
+UnitConversionResult convertToSi(double input, std::string_view unit) {
+    if (!std::isfinite(input)) {
+        return {};
+    }
+
+    constexpr double kPi = 3.14159265358979323846;
+    double converted = input;
+    bool temperature = false;
+    if (unit == "deg") {
+        converted = input * (kPi / 180.0);
+    } else if (unit == "km/h") {
+        converted = input / 3.6;
+    } else if (unit == "degC") {
+        converted = input + 273.15;
+        temperature = true;
+    } else if (unit == "km") {
+        converted = input * 1000.0;
+    } else if (unit == "K") {
+        temperature = true;
+    } else if (unit != "m" && unit != "s" && unit != "kg" &&
+               unit != "rad" && unit != "m/s" && unit != "m/s^2" &&
+               unit != "rad/s" && unit != "N" && unit != "N*m" &&
+               unit != "Pa") {
+        return {};
+    }
+
+    if (!std::isfinite(converted) || (temperature && converted < 0.0)) {
+        return {};
+    }
+    return {true, converted};
+}
+
+double requireSiConversion(double input, std::string_view unit) {
+    const UnitConversionResult result = convertToSi(input, unit);
+    if (!result.ok) {
+        throw std::domain_error("invalid unit conversion input");
+    }
+    return result.value;
+}
+
+struct Duration {
+    double seconds = 0.0;
+};
+
+struct SimulationTime {
+    double seconds = 0.0;
+    std::string clock_domain;
+};
+
+struct SampleTime {
+    double seconds = 0.0;
+    std::string clock_domain;
+};
+
+struct ValidTime {
+    double seconds = 0.0;
+    std::string clock_domain;
+};
+
+struct WallTime {
+    double seconds = 0.0;
+};
+
+static_assert(!std::is_same_v<SimulationTime, Duration>);
+static_assert(!std::is_same_v<SimulationTime, SampleTime>);
+static_assert(!std::is_same_v<SimulationTime, ValidTime>);
+static_assert(!std::is_same_v<SimulationTime, WallTime>);
+static_assert(!std::is_same_v<Duration, SampleTime>);
+static_assert(!std::is_same_v<Duration, ValidTime>);
+static_assert(!std::is_same_v<Duration, WallTime>);
+static_assert(!std::is_same_v<SampleTime, ValidTime>);
+static_assert(!std::is_same_v<SampleTime, WallTime>);
+static_assert(!std::is_same_v<ValidTime, WallTime>);
+
+bool validDuration(const Duration& duration) {
+    return std::isfinite(duration.seconds);
+}
+
+bool validWallTime(const WallTime& wall_time) {
+    return std::isfinite(wall_time.seconds);
+}
+
+template <typename TimePoint>
+bool validClockPoint(const TimePoint& point) {
+    return std::isfinite(point.seconds) && !point.clock_domain.empty();
+}
+
+template <typename TimePoint>
+struct TimePointResult {
+    bool ok = false;
+    TimePoint value{};
+};
+
+template <typename TimePoint>
+TimePointResult<TimePoint> addDuration(const TimePoint& point,
+                                       const Duration& duration) {
+    if (!validClockPoint(point) || !validDuration(duration)) {
+        return {};
+    }
+    const double seconds = point.seconds + duration.seconds;
+    if (!std::isfinite(seconds)) {
+        return {};
+    }
+    return {true, TimePoint{seconds, point.clock_domain}};
+}
+
+struct DurationResult {
+    bool ok = false;
+    Duration value{};
+};
+
+template <typename TimePoint>
+DurationResult subtractSameClock(const TimePoint& lhs,
+                                 const TimePoint& rhs) {
+    if (!validClockPoint(lhs) || !validClockPoint(rhs) ||
+        lhs.clock_domain != rhs.clock_domain) {
+        return {};
+    }
+    const double seconds = lhs.seconds - rhs.seconds;
+    if (!std::isfinite(seconds)) {
+        return {};
+    }
+    return {true, Duration{seconds}};
+}
+
+struct ValidInterval {
+    ValidTime valid_from;
+    ValidTime valid_until;
+};
+
+bool valid(const ValidInterval& interval) {
+    return validClockPoint(interval.valid_from) &&
+           validClockPoint(interval.valid_until) &&
+           interval.valid_from.clock_domain ==
+               interval.valid_until.clock_domain &&
+           interval.valid_from.seconds <= interval.valid_until.seconds;
+}
+
+struct BooleanResult {
+    bool ok = false;
+    bool value = false;
+};
+
+BooleanResult contains(const ValidInterval& interval, const ValidTime& point) {
+    if (!valid(interval) || !validClockPoint(point) ||
+        interval.valid_from.clock_domain != point.clock_domain) {
+        return {};
+    }
+    return {true, interval.valid_from.seconds <= point.seconds &&
+                      point.seconds < interval.valid_until.seconds};
+}
+
 std::int64_t exactGridTicks(double duration, double base_dt) {
+    if (!std::isfinite(duration) || !std::isfinite(base_dt) ||
+        base_dt <= 0.0) {
+        throw std::domain_error("invalid duration alignment input");
+    }
     const double ratio = duration / base_dt;
     const double nearest = std::round(ratio);
-    if (std::abs(ratio - nearest) > kAbsoluteTolerance) {
+    if (!std::isfinite(ratio) || !std::isfinite(nearest) ||
+        std::abs(ratio - nearest) > kAbsoluteTolerance ||
+        nearest < static_cast<double>(std::numeric_limits<std::int64_t>::min()) ||
+        nearest >= static_cast<double>(std::numeric_limits<std::int64_t>::max())) {
         throw std::domain_error("duration is not an integer multiple of base_dt");
     }
     return static_cast<std::int64_t>(nearest);
 }
 
 std::array<double, 2> durationAlignment(double duration, double base_dt) {
+    if (!std::isfinite(duration) || !std::isfinite(base_dt) ||
+        base_dt <= 0.0) {
+        throw std::domain_error("invalid duration alignment input");
+    }
     const double ratio = duration / base_dt;
-    return {std::floor(ratio) * base_dt, std::ceil(ratio) * base_dt};
+    const std::array<double, 2> result{
+        std::floor(ratio) * base_dt, std::ceil(ratio) * base_dt};
+    if (!std::isfinite(ratio) || !std::isfinite(result[0]) ||
+        !std::isfinite(result[1])) {
+        throw std::domain_error("non-finite duration alignment output");
+    }
+    return result;
 }
 
 void runFixtureObservations(std::vector<Observation>& observations,
@@ -427,11 +693,14 @@ void runFixtureObservations(std::vector<Observation>& observations,
 
     constexpr double kPi = 3.14159265358979323846;
     addObservation(observations, checks, "units.degree-180-to-radian",
-                   "units.si-boundary", {180.0 * (kPi / 180.0)}, {kPi});
+                   "units.si-boundary", {requireSiConversion(180.0, "deg")},
+                   {kPi});
     addObservation(observations, checks, "units.kmh-72-to-mps",
-                   "units.si-boundary", {72.0 * (1.0 / 3.6)}, {20.0});
+                   "units.si-boundary", {requireSiConversion(72.0, "km/h")},
+                   {20.0});
     addObservation(observations, checks, "units.celsius-25-to-kelvin",
-                   "units.si-boundary", {25.0 + 273.15}, {298.15});
+                   "units.si-boundary", {requireSiConversion(25.0, "degC")},
+                   {298.15});
 
     const Matrix3 rotation{
         0.0, 1.0, 0.0,
@@ -544,6 +813,51 @@ void runRandomProperties(CheckBook& checks) {
     }
     checks.observe("quaternion.zero-norm-domain-error", zero_rejected);
 
+    const PreparedQuaternion valid_coefficients = deserializeQuaternion(
+        {1.0, 0.0, 0.0, 0.0}, NormalizationPolicy::Error);
+    const PreparedQuaternion short_coefficients = deserializeQuaternion(
+        {1.0, 0.0, 0.0}, NormalizationPolicy::Error);
+    const PreparedQuaternion long_coefficients = deserializeQuaternion(
+        {1.0, 0.0, 0.0, 0.0, 0.0}, NormalizationPolicy::Error);
+    const PreparedQuaternion nan_coefficients = deserializeQuaternion(
+        {1.0, std::numeric_limits<double>::quiet_NaN(), 0.0, 0.0},
+        NormalizationPolicy::Error);
+    const PreparedQuaternion infinite_coefficients = deserializeQuaternion(
+        {1.0, 0.0, std::numeric_limits<double>::infinity(), 0.0},
+        NormalizationPolicy::Error);
+    checks.observe("quaternion.coefficient-validation",
+                   valid_coefficients.ok && !short_coefficients.ok &&
+                       !long_coefficients.ok && !nan_coefficients.ok &&
+                       !infinite_coefficients.ok);
+
+    const PreparedQuaternion rejected_non_unit =
+        prepareQuaternion(Quaternion{2.0, 0.0, 0.0, 0.0},
+                          NormalizationPolicy::Error);
+    const PreparedQuaternion corrected_non_unit =
+        prepareQuaternion(Quaternion{2.0, 0.0, 0.0, 0.0},
+                          NormalizationPolicy::NormalizeWithFlag);
+    const PreparedQuaternion accepted_unit =
+        prepareQuaternion(Quaternion{1.0, 0.0, 0.0, 0.0},
+                          NormalizationPolicy::Error);
+    bool implicit_normalization_rejected = false;
+    try {
+        static_cast<void>(passiveRotate(Quaternion{2.0, 0.0, 0.0, 0.0},
+                                        Vec3{1.0, 0.0, 0.0}));
+    } catch (const std::domain_error&) {
+        implicit_normalization_rejected = true;
+    }
+    const std::vector<double> identity_quaternion{1.0, 0.0, 0.0, 0.0};
+    const double normalization_error = maxAbsDifference(
+        values(corrected_non_unit.value), identity_quaternion);
+    checks.observe(
+        "quaternion.normalization-policy",
+        !rejected_non_unit.ok && corrected_non_unit.ok &&
+            corrected_non_unit.normalized && accepted_unit.ok &&
+            !accepted_unit.normalized && implicit_normalization_rejected &&
+            withinTolerance(values(corrected_non_unit.value),
+                            identity_quaternion),
+        normalization_error);
+
     bool singularity_rejected = false;
     try {
         constexpr double kPi = 3.14159265358979323846;
@@ -567,6 +881,29 @@ void runRandomProperties(CheckBook& checks) {
                                    expected_euler_direction),
                    euler_direction_error);
 
+    const UnitConversionResult absolute_zero =
+        convertToSi(-273.15, "degC");
+    const UnitConversionResult zero_kelvin = convertToSi(0.0, "K");
+    const UnitConversionResult below_celsius =
+        convertToSi(-273.1500000001, "degC");
+    const UnitConversionResult below_kelvin = convertToSi(-1.0e-12, "K");
+    const UnitConversionResult unknown_unit = convertToSi(1.0, "furlong");
+    const UnitConversionResult non_finite_unit = convertToSi(
+        std::numeric_limits<double>::quiet_NaN(), "m");
+    const UnitConversionResult overflowing_unit = convertToSi(
+        std::numeric_limits<double>::max(), "km");
+    const double absolute_zero_error = absolute_zero.ok
+                                           ? std::abs(absolute_zero.value)
+                                           : std::numeric_limits<double>::max();
+    checks.observe(
+        "units.domain-validation",
+        absolute_zero.ok && zero_kelvin.ok &&
+            absolute_zero_error <= kAbsoluteTolerance &&
+            zero_kelvin.value == 0.0 && !below_celsius.ok &&
+            !below_kelvin.ok && !unknown_unit.ok && !non_finite_unit.ok &&
+            !overflowing_unit.ok,
+        absolute_zero_error);
+
     checks.observe("time.duration-alignment",
                    exactGridTicks(2.0, 0.125) == 16);
     bool non_grid_rejected = false;
@@ -577,16 +914,76 @@ void runRandomProperties(CheckBook& checks) {
     }
     checks.observe("time.duration-alignment", non_grid_rejected);
 
-    const std::array<std::string_view, 5> time_types = {
-        "SimulationTime", "Duration", "SampleTime", "ValidTime", "WallTime"};
-    bool distinct = true;
-    for (std::size_t first = 0; first < time_types.size(); ++first) {
-        for (std::size_t second = first + 1; second < time_types.size();
-             ++second) {
-            distinct = distinct && time_types[first] != time_types[second];
-        }
-    }
+    constexpr bool distinct =
+        !std::is_same_v<SimulationTime, Duration> &&
+        !std::is_same_v<SimulationTime, SampleTime> &&
+        !std::is_same_v<SimulationTime, ValidTime> &&
+        !std::is_same_v<SimulationTime, WallTime> &&
+        !std::is_same_v<Duration, SampleTime> &&
+        !std::is_same_v<Duration, ValidTime> &&
+        !std::is_same_v<Duration, WallTime> &&
+        !std::is_same_v<SampleTime, ValidTime> &&
+        !std::is_same_v<SampleTime, WallTime> &&
+        !std::is_same_v<ValidTime, WallTime>;
     checks.observe("time.type-separation", distinct);
+
+    const SimulationTime simulation_start{10.0, "simulation.primary"};
+    const TimePointResult<SimulationTime> simulation_advanced =
+        addDuration(simulation_start, Duration{2.5});
+    const DurationResult simulation_elapsed = subtractSameClock(
+        simulation_advanced.value, simulation_start);
+    const DurationResult mixed_clock = subtractSameClock(
+        SimulationTime{11.0, "simulation.primary"},
+        SimulationTime{10.0, "simulation.secondary"});
+    const TimePointResult<SampleTime> missing_clock =
+        addDuration(SampleTime{1.0, ""}, Duration{1.0});
+    const TimePointResult<ValidTime> non_finite_clock = addDuration(
+        ValidTime{std::numeric_limits<double>::infinity(),
+                  "simulation.primary"},
+        Duration{1.0});
+    const TimePointResult<SimulationTime> non_finite_duration = addDuration(
+        simulation_start,
+        Duration{std::numeric_limits<double>::quiet_NaN()});
+    const bool wall_time_finite =
+        validWallTime(WallTime{0.0}) &&
+        !validWallTime(WallTime{std::numeric_limits<double>::infinity()});
+    const double clock_error =
+        simulation_elapsed.ok
+            ? std::abs(simulation_elapsed.value.seconds - 2.5)
+            : std::numeric_limits<double>::max();
+    checks.observe(
+        "time.clock-domain",
+        simulation_advanced.ok && simulation_elapsed.ok &&
+            clock_error <= kAbsoluteTolerance && !mixed_clock.ok &&
+            !missing_clock.ok && !non_finite_clock.ok &&
+            !non_finite_duration.ok && wall_time_finite,
+        clock_error);
+
+    const ValidInterval interval{
+        ValidTime{5.0, "simulation.primary"},
+        ValidTime{7.0, "simulation.primary"}};
+    const BooleanResult includes_start = contains(
+        interval, ValidTime{5.0, "simulation.primary"});
+    const BooleanResult excludes_end = contains(
+        interval, ValidTime{7.0, "simulation.primary"});
+    const BooleanResult reversed_interval = contains(
+        ValidInterval{ValidTime{7.0, "simulation.primary"},
+                      ValidTime{5.0, "simulation.primary"}},
+        ValidTime{6.0, "simulation.primary"});
+    const BooleanResult mixed_interval = contains(
+        ValidInterval{ValidTime{5.0, "simulation.primary"},
+                      ValidTime{7.0, "simulation.secondary"}},
+        ValidTime{6.0, "simulation.primary"});
+    const BooleanResult non_finite_interval = contains(
+        ValidInterval{ValidTime{5.0, "simulation.primary"},
+                      ValidTime{std::numeric_limits<double>::quiet_NaN(),
+                                "simulation.primary"}},
+        ValidTime{6.0, "simulation.primary"});
+    checks.observe(
+        "time.validity-interval",
+        includes_start.ok && includes_start.value && excludes_end.ok &&
+            !excludes_end.value && !reversed_interval.ok &&
+            !mixed_interval.ok && !non_finite_interval.ok);
 }
 
 std::string compilerDescription() {
@@ -638,10 +1035,14 @@ void writeReport(std::ostream& stream, const CheckBook& checks,
               [](const Check& lhs, const Check& rhs) { return lhs.id < rhs.id; });
     for (std::size_t index = 0; index < sorted_checks.size(); ++index) {
         const Check& check = sorted_checks[index];
+        const bool check_passed =
+            check.passed && check.assertion_count > 0 &&
+            std::isfinite(check.max_error);
         stream << "    {\"id\": ";
         writeJsonString(stream, check.id);
-        stream << ", \"status\": \"" << (check.passed ? "pass" : "fail")
-               << "\", \"max_error\": " << check.max_error << '}';
+        stream << ", \"status\": \"" << (check_passed ? "pass" : "fail")
+               << "\", \"max_error\": " << check.max_error
+               << ", \"assertion_count\": " << check.assertion_count << '}';
         stream << (index + 1 == sorted_checks.size() ? "\n" : ",\n");
     }
 

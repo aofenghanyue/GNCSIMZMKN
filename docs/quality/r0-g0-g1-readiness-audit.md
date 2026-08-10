@@ -94,7 +94,7 @@ G1 只有科学约定 bundle 达到 `executable`，且其技术 cross-tool compa
 | `REF-MINIMAL-3DOF-001` manifest | `8e90bdefcf8d5250f22b147a061e7a5934c9618d08bc9f63e6407a32732f579a` |
 | `REF-YYZ-001` manifest | `69eb288d48714edcdc565268151e151cbb62a4e1a2f8644a45c000d659f5086f` |
 | `REF-CAVH-FORMULA-001` manifest | `d89f4e9517aeb0e6a7eebecf3191b37aef29a1a875a5e125f9db72007e891ac6` |
-| scientific conventions report | `6db8218e5d52cecffc474f2851c10c4089976292a3b7396350233063a66a3419` |
+| scientific conventions report | `c121c74b546b2ad7722a6a5d90ee8ca0de028c4524fce624a3b95963138252c8` |
 | license/provenance report | `f6f11cd0fb064203465377f18beb91b865cc31d590ebf88816427e1f221c7d3b` |
 | `.github/workflows/ci.yml` | `33a6afa5b2adfbcb4143b142fd56cff2ecb10e2625c2f9f79947fbd4e94198e2` |
 
@@ -124,7 +124,7 @@ G1 只有科学约定 bundle 达到 `executable`，且其技术 cross-tool compa
 | --- | --- | --- | --- | --- |
 | `R0-ARCH-001` | `review` | `84b7d6c` | terminology/owner/dependency baseline 与 9 negative cases | ADR-0005、Architecture Lead review |
 | `R0-LEG-001` | `review` | `b2e69d0` | frozen archive reproduction、双跑 normalized hash | Validation/Science owner classification/review |
-| `R0-SCI-001` | `review` | `9e95f1c` | C++/Python 18 checks、16 observations、0 mismatch、5 failures rejected | ADR-0006/0007、Scientific Authority review |
+| `R0-SCI-001` | `review` | `9e95f1c` + reconciliation amendment | C++/Python 各 23 checks/1819 assertions、16 observations、0 mismatch、6 failures rejected | ADR-0006/0007、Scientific Authority review；half-open validity remains Proposed |
 
 它们是 direct dependencies 的上游。下游不能通过状态修改来绕过这些 review。
 
@@ -259,7 +259,7 @@ Authority：[11 §5.3](../../design-notes/gnczmkn-architecture-roadmap/11-roadma
 
 | Criterion | 要求 | 当前证据 | 状态 | 关闭条件 |
 | --- | --- | --- | --- | --- |
-| `G1-X-001` | 修订 quaternion convention 有 properties | executable convention fixture；C++/Python 18 checks、0 mismatch、5 failures rejected | `review_pending` | ADR-0006/0007 + Scientific Authority review；approved profiles rerun |
+| `G1-X-001` | 修订 quaternion convention 有 properties | executable convention fixture；C++/Python 各 23 checks/1819 assertions、0 mismatch、6 failures rejected | `review_pending` | ADR-0006/0007 + Scientific Authority review；axis-angle/validity owner decisions；approved profiles rerun |
 | `G1-X-002` | minimal 3DoF 独立 initial/trajectory/termination | specification-only manifest + detailed design | `prepared_only` | executable source/reference/trajectory/termination/convergence/failure bundle |
 | `G1-X-003` | YYZ 6DoF 独立 initial/trajectory/termination | specification-only REF-YYZ manifest + design | `prepared_only` | authoritative source/assets + independent expected + target/Legacy mappings |
 | `G1-X-004` | CAVH intermediate formula cross-check | specification-only manifest + formula design | `prepared_only` | authoritative edition/license + independent Eq17/Eq18/derivative/envelope/TDCT results |

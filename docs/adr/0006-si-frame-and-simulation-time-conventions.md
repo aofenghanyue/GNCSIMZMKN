@@ -16,9 +16,13 @@ R0 允许隔离 validation spike，禁止提前建设产品级 Session、Compile
 
 运行时物理量统一采用 SI 基本/导出单位，角度采用弧度。非 SI、显示单位和 offset unit 只在 Config Adapter、Tool Adapter、Artifact Adapter 或显式 Domain Converter 边界转换；转换前后的值与 unit identity 必须可追踪。算法内部可以使用紧凑标量/向量，公共领域边界必须表达量纲与语义。
 
+单位边界只接受有限数值和已登记单位；未知单位、转换溢出或低于绝对零度的温度产生 `DomainError`。`0 K` 与等价的 `-273.15 °C` 是合法边界值，不得用模糊钳位掩盖越界输入。
+
 向量采用列向量。`R_to_from` 把同一几何对象从 `from` frame 坐标变换到 `to` frame 坐标，满足 `v_to = R_to_from * v_from`。稳定 `FrameId` 带 namespace/version，实例 frame 还带 owner。领域三维量必须区分 point/free vector、expressed-in frame、reference frame、physical semantic、unit、sample/valid time。point 变换应用旋转和平移，free vector 只应用旋转；速度、加速度、wrench 与 covariance 使用各自显式变换类别。
 
 公共时间 identity 固定为 `SimulationTime`、`Duration`、`SampleTime`、`ValidTime` 与 `WallTime`。固定步长以非负整数 tick 为权威，通过 `t_k = time_origin + tick * base_dt` 计算逻辑时间，禁止重复浮点加法累积。v1 duration 对齐支持 `ExactGrid`、`StopBefore` 与 `StopAfter`，默认 `ExactGrid`；`FinalPartialStep` 在事务/time-point mapping 决策完成前保持 unsupported。
+
+时间秒值必须有限；`SimulationTime`、`SampleTime` 与 `ValidTime` 必须携带非空 clock domain，同类时间点的算术只允许在相同 domain 内进行，跨 domain 操作产生 `DomainError`。R0 fixture 以半开区间 `[valid_from, valid_until)` 验证 validity 边界并拒绝反向、跨 domain 与非有限区间；该区间规则仍随本 ADR 保持 `Proposed`，在 Scientific Authority 接受前不是已批准的产品 API 契约。
 
 `fixtures/ref-scientific-conventions/conventions.json` 是本 ADR 决策的 executable profile，`cases.json` 固定方向、单位、point/free-vector 与 tick 示例。两个文件保持 Fixture maturity，不进入 runtime，也不构成语言绑定 ABI。
 
@@ -43,7 +47,9 @@ R0 允许隔离 validation spike，禁止提前建设产品级 Session、Compile
 - fixture 精确登记 SI/弧度单位表、允许转换边界与 offset conversion；
 - 90° 被动旋转、point/free-vector 变换使用同一 `R_to_from` 并得到不同平移结果；
 - 单位案例覆盖 degree/radian、km/h 到 m/s 与 Celsius 到 Kelvin；
+- 单位边界拒绝未知单位、非有限数值、溢出与低于绝对零度，同时接受 `0 K`；
 - 大 tick 时间由一次乘加表达，duration 非整网格案例分别验证 StopBefore/StopAfter，ExactGrid 拒绝非整数倍；
+- 五类时间 identity 以隔离类型验证；clock-domain 算术拒绝空 domain、跨 domain 与非有限值，validity 验证半开端点及非法区间；
 - C++17 property spike 与独立 CPython 标准库参考在逐量容差内一致；
 - CTest 和 repository verification 检查 profile、证据 hash 与交叉工具报告。
 

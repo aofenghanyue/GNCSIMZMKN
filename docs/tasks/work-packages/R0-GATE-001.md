@@ -67,7 +67,7 @@
 - architecture baseline raw SHA-256：`237d721a1cbd6737b293472475e2233f89e56fa58a3f62c7feb3c89506d76f7b`
 - terminology report raw SHA-256：`fdba6dba1c0f802da2fd86df86c8b6c549edfaa1d093626e3685974f0816bf82`
 - oracle manifest raw SHA-256：`eade78296e7b102db4e2ca59aec503df8b2a63db1d2810851909a375bd64d0b8`
-- scientific cross-tool report raw SHA-256：`6db8218e5d52cecffc474f2851c10c4089976292a3b7396350233063a66a3419`
+- scientific cross-tool report raw SHA-256：`c121c74b546b2ad7722a6a5d90ee8ca0de028c4524fce624a3b95963138252c8`
 - license/provenance report raw SHA-256：`f6f11cd0fb064203465377f18beb91b865cc31d590ebf88816427e1f221c7d3b`
 - hosted CI workflow raw SHA-256：`33a6afa5b2adfbcb4143b142fd56cff2ecb10e2625c2f9f79947fbd4e94198e2`
 

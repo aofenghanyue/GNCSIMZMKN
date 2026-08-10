@@ -36,7 +36,7 @@ q_c_a = q_b_a * q_c_b
 
 对正 z 轴的 `+90°` axis-angle 四元数 `[sqrt(1/2), 0, 0, sqrt(1/2)]`，本约定把 from-frame 的 `[1, 0, 0]` 坐标变换为 to-frame 的 `[0, -1, 0]`。该案例固定 axis-angle 符号和被动方向。
 
-外部序列化顺序严格为 `[w, x, y, z]`。storage backend 的内存布局不得推断为 wire order；adapter 必须逐字段映射。单位四元数 `q` 与 `-q` 表达同一旋转。零模四元数产生 `DomainError`；非零非单位输入是否正规化由显式 policy 决定，并记录 correction flag。
+外部序列化顺序严格为 `[w, x, y, z]`。storage backend 的内存布局不得推断为 wire order；adapter 必须逐字段映射。输入必须恰有四个有限系数。单位四元数 `q` 与 `-q` 表达同一旋转。零模四元数产生 `DomainError`；非零非单位输入必须显式选择 `Error` 或 `NormalizeWithFlag`，后者正规化并把 `normalized` correction flag 置为真，禁止无记录的隐式修正。
 
 Euler 表示没有隐式默认值。每个 Euler payload 同时声明 axis sequence、intrinsic/extrinsic、angle unit、canonical range 与 singular interval；跨奇异区和 ±π 的相等性通过旋转对象判断。oracle 只为验证固定一个带完整标签的 profile：intrinsic ZYX、分量顺序 yaw-pitch-roll、单位 rad、pitch 区间 `[-pi/2, pi/2]`。它满足 `q_I_B = inverse(q_z(yaw) * q_y(pitch) * q_x(roll))`，在 `abs(cos(pitch))` 不超过 policy tolerance 时拒绝无唯一解的反向转换；该 profile 不成为 runtime 默认值。
 
@@ -64,6 +64,7 @@ Euler 表示没有隐式默认值。每个 Euler payload 同时声明 axis seque
 - Hamilton coefficient、右乘 composition、inverse round-trip 与 matrix action 逐项验证；
 - 随机单位四元数验证矩阵正交性、行列式 `+1`、`q/-q` 等价与 matrix/quaternion equivalence；
 - `[w, x, y, z]` serialization 做 exact-order 检查，零模路径必须抛出 domain failure；
+- 反序列化拒绝系数数量错误、`NaN`/无穷与零模；非单位输入分别验证 `Error` 拒绝和 `NormalizeWithFlag` 修正/标记；
 - 带完整 metadata 的 intrinsic-ZYX profile 验证 quaternion/matrix/Euler 往返，并拒绝 pitch 奇异点；
 - body/inertial angular-rate derivative 等式以有限差分/代数性质检查；
 - C++17 spike 与独立 CPython 标准库实现对 executable fixture 交叉验证。

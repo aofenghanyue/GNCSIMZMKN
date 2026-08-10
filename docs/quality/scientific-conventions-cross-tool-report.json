@@ -3,7 +3,7 @@
     "task_id":  "R0-SCI-001",
     "convention_id":  "SCI-CONVENTIONS-001",
     "status":  "pass",
-    "generated_at":  "2026-08-10T07:08:57.1980797Z",
+    "generated_at":  "2026-08-10T10:52:11.4291733Z",
     "environment":  {
                         "os":  "Microsoft Windows NT 10.0.26200.0",
                         "architecture":  "X64",
@@ -18,15 +18,15 @@
                    },
                    {
                        "path":  "docs/adr/0006-si-frame-and-simulation-time-conventions.md",
-                       "sha256_normalized_utf8_lf":  "db7945d9f92e7b1ac5fa83d423dafd2e623dfd67f5780a120c26b61b4ca98fe0"
+                       "sha256_normalized_utf8_lf":  "fcfc7bb337a7f692a388cdfaed6132833526731b8e1d0e2607d35e9339537a00"
                    },
                    {
                        "path":  "docs/adr/0007-passive-hamilton-quaternion-convention.md",
-                       "sha256_normalized_utf8_lf":  "14ae5f30c8c499ceb5816dfc9e24c0b5d0f2327ae0b7da14046ecfac732888af"
+                       "sha256_normalized_utf8_lf":  "dcd80cdf7a20324a8755a3f0c91ece88546ed99da82b916e7e09a09d92f74263"
                    },
                    {
                        "path":  "docs/tasks/work-packages/R0-SCI-001.md",
-                       "sha256_normalized_utf8_lf":  "492cb5a8474f404acc5f8ee358501b34612d91aa7d70a22f6e03a09d6e7015ab"
+                       "sha256_normalized_utf8_lf":  "3584f667d32e2cf35f0d2a2a6131209fa9920fcee603a98b251d33eba67b9850"
                    },
                    {
                        "path":  "fixtures/ref-scientific-conventions/fixture-manifest.json",
@@ -34,7 +34,7 @@
                    },
                    {
                        "path":  "fixtures/ref-scientific-conventions/conventions.json",
-                       "sha256_normalized_utf8_lf":  "82887511e06dd1b36d5e7c45d5073a0b03654f049b475d879b5ff154e0d44194"
+                       "sha256_normalized_utf8_lf":  "7fad08972da00b6998d750ea5e62e5deaa925b8c3eec444873fddbd4d169695c"
                    },
                    {
                        "path":  "fixtures/ref-scientific-conventions/cases.json",
@@ -42,29 +42,31 @@
                    },
                    {
                        "path":  "tests/scientific_conventions.cpp",
-                       "sha256_normalized_utf8_lf":  "a6e4e260a8d3b06fa32bf2bfe22a56938ca3da9539401c2362ca6e128108879b"
+                       "sha256_normalized_utf8_lf":  "1419c37d40ebbc06309b7f02f7e811aab6171b8c453f683861bda2897ce23026"
                    },
                    {
                        "path":  "tools/scientific_conventions_reference.py",
-                       "sha256_normalized_utf8_lf":  "b44126184d8f13ee85f88e128aad65754c2f4bbe50bd7c3f851c402419e4a034"
+                       "sha256_normalized_utf8_lf":  "1e8f964c332274bc16afdf03aae940e82cbfe62777ef22e26dd6fdca54328fdc"
                    },
                    {
                        "path":  "tools/validate-scientific-conventions.ps1",
-                       "sha256_normalized_utf8_lf":  "617a2b0284946c8f1108a10c982ae8c0a1a27ae032144cc4a63934a5e7ec2b8d"
+                       "sha256_normalized_utf8_lf":  "54c534811e67e4d75deb69a5e2e89020909a08fb5beeb7806ae7ccacda1c9986"
                    }
                ],
     "execution":  {
                       "cpp":  {
                                   "implementation_id":  "cpp17-isolated-property-spike",
-                                  "checks":  18,
+                                  "checks":  23,
                                   "observations":  16,
-                                  "max_property_error":  8.8817841970012523E-15
+                                  "assertions":  1819,
+                                  "max_property_error":  5.3290705182007514E-15
                               },
                       "python":  {
                                      "implementation_id":  "cpython-stdlib-reference",
-                                     "checks":  18,
+                                     "checks":  23,
                                      "observations":  16,
-                                     "max_property_error":  8.8817841970012523E-15
+                                     "assertions":  1819,
+                                     "max_property_error":  7.1054273576010019E-15
                                  }
                   },
     "comparison":  {
@@ -72,17 +74,18 @@
                        "numeric_values_compared":  48,
                        "absolute_tolerance":  1E-12,
                        "relative_tolerance":  1E-12,
-                       "max_abs_difference":  2.2204460492503131E-16,
+                       "max_abs_difference":  0,
                        "mismatches":  0
                    },
     "failure_path_tests":  {
-                               "cases":  5,
-                               "rejected":  5,
+                               "cases":  6,
+                               "rejected":  6,
                                "status":  "pass",
                                "covered":  [
                                                "wrong direction",
                                                "wrong serialization order",
                                                "missing required check",
+                                               "zero executed assertions",
                                                "wrong convention identity",
                                                "cross-tool numeric drift"
                                            ]

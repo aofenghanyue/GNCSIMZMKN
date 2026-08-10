@@ -128,14 +128,19 @@ $requiredCheckIds = @(
     'quaternion.sign-equivalence',
     'quaternion.serialization-wxyz',
     'quaternion.zero-norm-domain-error',
+    'quaternion.coefficient-validation',
+    'quaternion.normalization-policy',
     'quaternion.body-rate-derivative',
     'quaternion.euler-round-trip',
     'quaternion.euler-singularity',
     'units.si-boundary',
+    'units.domain-validation',
     'frames.point-versus-free-vector',
     'time.integer-tick',
     'time.duration-alignment',
-    'time.type-separation'
+    'time.type-separation',
+    'time.clock-domain',
+    'time.validity-interval'
 )
 
 $expectedUnitPairs = @(
@@ -191,6 +196,11 @@ if ($null -ne $conventions) {
         'ConfigAdapter', 'ToolAdapter', 'ArtifactAdapter', 'DomainConverter') -Label 'Unit conversion boundaries'
     if (-not [bool]$conventions.units.offset_units_require_explicit_rule) { Add-Issue 'Offset units must require an explicit conversion rule.' }
     if ([bool]$conventions.units.hot_path_unit_guessing_allowed) { Add-Issue 'Hot-path unit guessing must remain forbidden.' }
+    $unitDomain = $conventions.units.domain_policy
+    if (-not [bool]$unitDomain.finite_input_required) { Add-Issue 'Unit conversion inputs must remain finite.' }
+    if ([double]$unitDomain.absolute_zero_kelvin -ne 0.0) { Add-Issue 'Absolute-zero Kelvin identity drifted.' }
+    if ($unitDomain.below_absolute_zero_disposition -cne 'DomainError') { Add-Issue 'Below-absolute-zero disposition drifted.' }
+    if ($unitDomain.unknown_unit_disposition -cne 'DomainError') { Add-Issue 'Unknown-unit disposition drifted.' }
 
     if ($conventions.frames.vector_layout -cne 'column') { Add-Issue 'Vector layout must remain column.' }
     if ($conventions.frames.transform_notation -cne 'R_to_from') { Add-Issue 'Frame transform notation drifted.' }
@@ -212,6 +222,13 @@ if ($null -ne $conventions) {
     if ($conventions.quaternion.quaternion_composition -cne 'q_c_a = q_b_a * q_c_b') { Add-Issue 'Quaternion composition order drifted.' }
     if ($conventions.quaternion.matrix_composition -cne 'R_c_a = R_c_b * R_b_a') { Add-Issue 'Matrix composition order drifted.' }
     if ($conventions.quaternion.zero_norm_disposition -cne 'DomainError') { Add-Issue 'Zero-norm quaternion disposition drifted.' }
+    $quaternionInput = $conventions.quaternion.input_policy
+    if ([int]$quaternionInput.coefficient_count -ne 4) { Add-Issue 'Quaternion coefficient count drifted.' }
+    if (-not [bool]$quaternionInput.finite_coefficients_required) { Add-Issue 'Quaternion coefficients must remain finite.' }
+    if (-not [bool]$quaternionInput.non_unit_requires_explicit_policy) { Add-Issue 'Non-unit quaternion input must require an explicit policy.' }
+    Test-ExactSequence -Actual @($quaternionInput.supported_normalization_policies) -Expected @(
+        'Error', 'NormalizeWithFlag') -Label 'Quaternion normalization policies'
+    if ($quaternionInput.normalization_correction_flag -cne 'normalized') { Add-Issue 'Quaternion normalization correction flag drifted.' }
     if (-not [bool]$conventions.quaternion.sign_equivalence) { Add-Issue 'Quaternion sign equivalence must remain enabled.' }
     Test-ExactSequence -Actual @($conventions.quaternion.euler_metadata_required) -Expected @(
         'sequence', 'intrinsic_or_extrinsic', 'angle_unit', 'canonical_range',
@@ -232,6 +249,13 @@ if ($null -ne $conventions) {
 
     Test-ExactSequence -Actual @($conventions.time.public_types) -Expected @(
         'SimulationTime', 'Duration', 'SampleTime', 'ValidTime', 'WallTime') -Label 'Public time identities'
+    $timeDomain = $conventions.time.domain_policy
+    if (-not [bool]$timeDomain.finite_seconds_required) { Add-Issue 'Time values must remain finite.' }
+    Test-ExactSequence -Actual @($timeDomain.clock_domain_required_for) -Expected @(
+        'SimulationTime', 'SampleTime', 'ValidTime') -Label 'Clock-domain-required time identities'
+    if ($timeDomain.cross_clock_arithmetic_disposition -cne 'DomainError') { Add-Issue 'Cross-clock arithmetic disposition drifted.' }
+    if ($timeDomain.valid_interval_semantics -cne 'half_open_[valid_from,valid_until)') { Add-Issue 'Validity interval semantics drifted.' }
+    if ($timeDomain.reversed_interval_disposition -cne 'DomainError') { Add-Issue 'Reversed validity interval disposition drifted.' }
     if ($conventions.time.fixed_step_authority -cne 'integer_tick') { Add-Issue 'Fixed-step authority must remain integer tick.' }
     if ($conventions.time.canonical_duration_unit -cne 's') { Add-Issue 'Canonical duration unit must remain seconds.' }
     if ($conventions.time.fixed_step_equation -cne 't_k = time_origin + tick * base_dt') { Add-Issue 'Fixed-step time equation drifted.' }
@@ -325,6 +349,11 @@ function Test-Report {
     }
     foreach ($check in $checks) {
         if ($check.status -cne 'pass') { $localIssues.Add("$Label check '$($check.id)' failed.") }
+        $assertionValue = [double]$check.assertion_count
+        if ([double]::IsNaN($assertionValue) -or [double]::IsInfinity($assertionValue) -or
+            $assertionValue -le 0.0 -or [Math]::Floor($assertionValue) -ne $assertionValue) {
+            $localIssues.Add("$Label check '$($check.id)' has an invalid assertion_count.")
+        }
         $errorValue = [double]$check.max_error
         if ([double]::IsNaN($errorValue) -or [double]::IsInfinity($errorValue) -or $errorValue -lt 0.0) {
             $localIssues.Add("$Label check '$($check.id)' has an invalid max_error.")
@@ -354,6 +383,10 @@ function Test-Report {
         for ($index = 0; $index -lt $expected.Count; ++$index) {
             $actualValue = [double]$actual[$index]
             $expectedValue = [double]$expected[$index]
+            if ([double]::IsNaN($actualValue) -or [double]::IsInfinity($actualValue)) {
+                $localIssues.Add("$Label observation '$id' is non-finite at index $index.")
+                continue
+            }
             $difference = [Math]::Abs($actualValue - $expectedValue)
             $bound = $absolute + $relative * [Math]::Max([Math]::Abs($actualValue), [Math]::Abs($expectedValue))
             if ($id -eq 'quaternion.serialization-wxyz') {
@@ -393,6 +426,11 @@ function Compare-Reports {
         for ($index = 0; $index -lt $cppValues.Count; ++$index) {
             $cppValue = [double]$cppValues[$index]
             $pythonValue = [double]$pythonValues[$index]
+            if ([double]::IsNaN($cppValue) -or [double]::IsInfinity($cppValue) -or
+                [double]::IsNaN($pythonValue) -or [double]::IsInfinity($pythonValue)) {
+                $localIssues.Add("Cross-tool observation '$id' is non-finite at index $index.")
+                continue
+            }
             $difference = [Math]::Abs($cppValue - $pythonValue)
             $maximum = [Math]::Max($maximum, $difference)
             ++$valueCount
@@ -430,6 +468,12 @@ function Get-MaxCheckError([object]$Report) {
     return $maximum
 }
 
+function Get-TotalAssertions([object]$Report) {
+    $total = 0
+    foreach ($check in @($Report.checks)) { $total += [int]$check.assertion_count }
+    return $total
+}
+
 function New-EvidenceReport {
     param(
         [object]$CppReport,
@@ -464,12 +508,14 @@ function New-EvidenceReport {
                 implementation_id = [string]$CppReport.implementation.id
                 checks = @($CppReport.checks).Count
                 observations = @($CppReport.observations).Count
+                assertions = Get-TotalAssertions $CppReport
                 max_property_error = Get-MaxCheckError $CppReport
             }
             python = [ordered]@{
                 implementation_id = [string]$PythonReport.implementation.id
                 checks = @($PythonReport.checks).Count
                 observations = @($PythonReport.observations).Count
+                assertions = Get-TotalAssertions $PythonReport
                 max_property_error = Get-MaxCheckError $PythonReport
             }
         }
@@ -485,7 +531,7 @@ function New-EvidenceReport {
             cases = $FailureCaseCount
             rejected = $FailureCaseCount
             status = 'pass'
-            covered = @('wrong direction', 'wrong serialization order', 'missing required check', 'wrong convention identity', 'cross-tool numeric drift')
+            covered = @('wrong direction', 'wrong serialization order', 'missing required check', 'zero executed assertions', 'wrong convention identity', 'cross-tool numeric drift')
         }
         isolation = [ordered]@{
             cpp = 'standard library only; no product or Legacy link'
@@ -510,7 +556,14 @@ function Test-Evidence {
     if ($evidence.task_id -cne 'R0-SCI-001' -or $evidence.convention_id -cne 'SCI-CONVENTIONS-001') { Add-Issue 'Scientific evidence identity drifted.' }
     if ($evidence.status -cne 'pass') { Add-Issue 'Scientific evidence status is not pass.' }
     if ([int]$evidence.comparison.mismatches -ne 0) { Add-Issue 'Scientific evidence records cross-tool mismatches.' }
-    if ([int]$evidence.failure_path_tests.cases -lt 5 -or [int]$evidence.failure_path_tests.rejected -ne [int]$evidence.failure_path_tests.cases) { Add-Issue 'Scientific failure-path evidence is incomplete.' }
+    if ($evidence.failure_path_tests.status -cne 'pass') { Add-Issue 'Scientific failure-path evidence status is not pass.' }
+    if ([int]$evidence.execution.cpp.checks -ne 23 -or [int]$evidence.execution.python.checks -ne 23) { Add-Issue 'Scientific evidence check counts drifted.' }
+    if ([int]$evidence.execution.cpp.observations -ne 16 -or [int]$evidence.execution.python.observations -ne 16) { Add-Issue 'Scientific evidence observation counts drifted.' }
+    if ([int]$evidence.execution.cpp.assertions -le 0 -or [int]$evidence.execution.python.assertions -le 0) { Add-Issue 'Scientific evidence assertion counts are incomplete.' }
+    if ([int]$evidence.failure_path_tests.cases -lt 6 -or [int]$evidence.failure_path_tests.rejected -ne [int]$evidence.failure_path_tests.cases) { Add-Issue 'Scientific failure-path evidence is incomplete.' }
+    Test-ExactSequence -Actual @($evidence.failure_path_tests.covered) -Expected @(
+        'wrong direction', 'wrong serialization order', 'missing required check',
+        'zero executed assertions', 'wrong convention identity', 'cross-tool numeric drift') -Label 'Scientific failure-path coverage'
     if ([int]$evidence.isolation.runtime_consumers -ne 0) { Add-Issue 'Scientific fixture unexpectedly has a runtime consumer.' }
 
     $evidenceInputs = @($evidence.inputs)
@@ -580,6 +633,10 @@ if (-not $StaticOnly) {
                 $missingCheck.checks = @($missingCheck.checks | Select-Object -Skip 1)
                 if (@(Test-Report -Report $missingCheck -ExpectedImplementationId 'cpp17-isolated-property-spike' -Label 'failure-case missing check' -ReturnOnly).Count -gt 0) { ++$failureCaseCount }
 
+                $zeroAssertions = $cppReport | ConvertTo-Json -Depth 12 | ConvertFrom-Json
+                $zeroAssertions.checks[0].assertion_count = 0
+                if (@(Test-Report -Report $zeroAssertions -ExpectedImplementationId 'cpp17-isolated-property-spike' -Label 'failure-case zero assertions' -ReturnOnly).Count -gt 0) { ++$failureCaseCount }
+
                 $wrongIdentity = $cppReport | ConvertTo-Json -Depth 12 | ConvertFrom-Json
                 $wrongIdentity.convention_id = 'SCI-CONVENTIONS-BROKEN'
                 if (@(Test-Report -Report $wrongIdentity -ExpectedImplementationId 'cpp17-isolated-property-spike' -Label 'failure-case identity' -ReturnOnly).Count -gt 0) { ++$failureCaseCount }
@@ -589,7 +646,7 @@ if (-not $StaticOnly) {
                 $driftComparison = Compare-Reports -CppReport $cppReport -PythonReport $crossDrift -ReturnOnly
                 if (@($driftComparison.Issues).Count -gt 0) { ++$failureCaseCount }
 
-                if ($failureCaseCount -ne 5) { Add-Issue "Scientific failure-path suite rejected $failureCaseCount of 5 mutations." }
+                if ($failureCaseCount -ne 6) { Add-Issue "Scientific failure-path suite rejected $failureCaseCount of 6 mutations." }
             }
         }
         finally {
@@ -621,7 +678,7 @@ if (-not $Quiet) {
     if (-not $StaticOnly) {
         Write-Host "Cross-tool numeric values: $($comparison.ValueCount)"
         Write-Host "Cross-tool max abs difference: $($comparison.Maximum)"
-        Write-Host "Rejected failure-path mutations: $failureCaseCount/5"
+        Write-Host "Rejected failure-path mutations: $failureCaseCount/6"
     }
     Write-Host "Evidence: $(Get-RelativePath $EvidencePath)"
 }
