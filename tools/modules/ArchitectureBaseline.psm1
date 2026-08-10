@@ -401,6 +401,42 @@ function Test-UniqueProperty {
     }
 }
 
+function Test-ExactObjectProperties {
+    param(
+        $Object,
+        [string[]]$RequiredProperties,
+        [string[]]$OptionalProperties = @(),
+        [string]$Label,
+        [System.Collections.Generic.List[string]]$Issues
+    )
+
+    if ($null -eq $Object -or $Object -isnot [System.Management.Automation.PSCustomObject]) {
+        Add-ArchitectureIssue $Issues "$Label must be a JSON object."
+        return
+    }
+
+    $actual = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+    foreach ($property in @($Object.PSObject.Properties)) {
+        [void]$actual.Add([string]$property.Name)
+    }
+
+    $allowed = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+    foreach ($propertyName in @($RequiredProperties) + @($OptionalProperties)) {
+        [void]$allowed.Add([string]$propertyName)
+    }
+
+    foreach ($propertyName in $RequiredProperties) {
+        if (-not $actual.Contains([string]$propertyName)) {
+            Add-ArchitectureIssue $Issues "$Label is missing required property '$propertyName'."
+        }
+    }
+    foreach ($propertyName in $actual) {
+        if (-not $allowed.Contains([string]$propertyName)) {
+            Add-ArchitectureIssue $Issues "$Label has unknown property '$propertyName'."
+        }
+    }
+}
+
 function Test-ArchitectureInputs {
     [CmdletBinding()]
     param(
@@ -412,6 +448,18 @@ function Test-ArchitectureInputs {
 
     $issues = [System.Collections.Generic.List[string]]::new()
     $allowedStatuses = @('Stable', 'V1', 'PressureOnly', 'Deferred', 'Legacy')
+    Test-ExactObjectProperties `
+        -Object $Registry `
+        -RequiredProperties @(
+            'schema_version',
+            'terminology_authority',
+            'dependency_authority',
+            'physical_partition_authority',
+            'modules',
+            'shared_symbols',
+            'legacy_ownership') `
+        -Label 'Authority registry' `
+        -Issues $issues
     if ([string]$Registry.schema_version -cne 'gnczmkn.architecture-authority-registry/1') {
         Add-ArchitectureIssue $issues "Authority registry has unsupported schema version '$($Registry.schema_version)'."
     }
@@ -489,6 +537,35 @@ function Test-ArchitectureInputs {
     Test-UniqueProperty -Items @($Registry.modules) -Property 'name' -Label 'module ownership' -Issues $issues
     Test-UniqueProperty -Items @($Registry.shared_symbols) -Property 'name' -Label 'shared symbol' -Issues $issues
     Test-UniqueProperty -Items @($Registry.legacy_ownership) -Property 'legacy_name' -Label 'Legacy ownership' -Issues $issues
+
+    $rowIndex = 0
+    foreach ($module in @($Registry.modules)) {
+        Test-ExactObjectProperties `
+            -Object $module `
+            -RequiredProperties @('name', 'source_root') `
+            -Label "Authority registry module row $rowIndex" `
+            -Issues $issues
+        ++$rowIndex
+    }
+    $rowIndex = 0
+    foreach ($symbol in @($Registry.shared_symbols)) {
+        Test-ExactObjectProperties `
+            -Object $symbol `
+            -RequiredProperties @('name', 'kind', 'semantic_authority', 'owner_module') `
+            -Label "Authority registry shared symbol row $rowIndex" `
+            -Issues $issues
+        ++$rowIndex
+    }
+    $rowIndex = 0
+    foreach ($ownership in @($Registry.legacy_ownership)) {
+        Test-ExactObjectProperties `
+            -Object $ownership `
+            -RequiredProperties @('legacy_name', 'disposition', 'primary_owner') `
+            -OptionalProperties @('secondary_consumers') `
+            -Label "Authority registry Legacy ownership row $rowIndex" `
+            -Issues $issues
+        ++$rowIndex
+    }
 
     $moduleSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
     $repoPrefix = $RepoRoot.TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
@@ -951,6 +1028,56 @@ function Invoke-ArchitectureNegativeCases {
     $mutatedRegistry.legacy_ownership = @($mutatedRegistry.legacy_ownership | Select-Object -Skip 1)
     $result = Test-ArchitectureInputs -Glossary $Glossary -Dependency $Dependency -Registry $mutatedRegistry -RepoRoot $RepoRoot
     Assert-NegativeFailure -Failures $failures -Name 'missing Legacy owner' -Result $result -ExpectedText 'is missing ownership'
+
+    ++$caseCount
+    $mutatedRegistry = Copy-JsonData $Registry
+    $mutatedRegistry | Add-Member -MemberType NoteProperty -Name 'logical_boundaries' -Value @(
+        [PSCustomObject]@{ name = 'packages_user'; kind = 'logical_contribution_boundary' },
+        [PSCustomObject]@{ name = 'composition_root'; kind = 'logical_composition_boundary' })
+    $result = Test-ArchitectureInputs -Glossary $Glossary -Dependency $Dependency -Registry $mutatedRegistry -RepoRoot $RepoRoot
+    Assert-NegativeFailure -Failures $failures -Name 'unreviewed registry extension' -Result $result -ExpectedText "Authority registry has unknown property 'logical_boundaries'"
+
+    ++$caseCount
+    $mutatedRegistry = Copy-JsonData $Registry
+    $mutatedRegistry.modules[0] | Add-Member -MemberType NoteProperty -Name 'kind' -Value 'cmake_interface'
+    $result = Test-ArchitectureInputs -Glossary $Glossary -Dependency $Dependency -Registry $mutatedRegistry -RepoRoot $RepoRoot
+    Assert-NegativeFailure -Failures $failures -Name 'unreviewed module-row extension' -Result $result -ExpectedText "module row 0 has unknown property 'kind'"
+
+    ++$caseCount
+    $mutatedRegistry = Copy-JsonData $Registry
+    $mutatedRegistry.shared_symbols[0] | Add-Member -MemberType NoteProperty -Name 'owner_role' -Value 'architecture_lead'
+    $result = Test-ArchitectureInputs -Glossary $Glossary -Dependency $Dependency -Registry $mutatedRegistry -RepoRoot $RepoRoot
+    Assert-NegativeFailure -Failures $failures -Name 'unreviewed shared-symbol extension' -Result $result -ExpectedText "shared symbol row 0 has unknown property 'owner_role'"
+
+    ++$caseCount
+    $mutatedRegistry = Copy-JsonData $Registry
+    $mutatedRegistry.legacy_ownership[0] | Add-Member -MemberType NoteProperty -Name 'responsibilities' -Value @(
+        [PSCustomObject]@{ id = 'candidate-overlay'; target_module = 'compiler' })
+    $result = Test-ArchitectureInputs -Glossary $Glossary -Dependency $Dependency -Registry $mutatedRegistry -RepoRoot $RepoRoot
+    Assert-NegativeFailure -Failures $failures -Name 'unreviewed Legacy responsibility overlay' -Result $result -ExpectedText "Legacy ownership row 0 has unknown property 'responsibilities'"
+
+    ++$caseCount
+    $mutatedRegistry = Copy-JsonData $Registry
+    $mutatedRegistry.modules = @($mutatedRegistry.modules) + @(
+        [PSCustomObject]@{ name = 'packages_user'; source_root = 'packages' },
+        [PSCustomObject]@{ name = 'composition_root'; source_root = 'apps' })
+    $result = Test-ArchitectureInputs -Glossary $Glossary -Dependency $Dependency -Registry $mutatedRegistry -RepoRoot $RepoRoot
+    Assert-NegativeFailure -Failures $failures -Name 'packages_user physical-module promotion' -Result $result -ExpectedText "Ownership registry module 'packages_user' is absent from ADR-0003"
+    Assert-NegativeFailure -Failures $failures -Name 'composition_root physical-module promotion' -Result $result -ExpectedText "Ownership registry module 'composition_root' is absent from ADR-0003"
+
+    ++$caseCount
+    $mutatedRegistry = Copy-JsonData $Registry
+    $candidateOnlyLegacyOwners = @(
+        [PSCustomObject]@{ legacy_name = 'IContinuousGroup'; disposition = 'replace'; primary_owner = 'compiler' },
+        [PSCustomObject]@{ legacy_name = 'IIntegrator'; disposition = 'split'; primary_owner = 'foundation' },
+        [PSCustomObject]@{ legacy_name = 'ISummaryObserver'; disposition = 'replace'; primary_owner = 'evidence' },
+        [PSCustomObject]@{ legacy_name = 'math_types.hpp'; disposition = 'split'; primary_owner = 'contracts' },
+        [PSCustomObject]@{ legacy_name = 'SimulationSummary'; disposition = 'replace'; primary_owner = 'workflow' })
+    $mutatedRegistry.legacy_ownership = @($mutatedRegistry.legacy_ownership) + $candidateOnlyLegacyOwners
+    $result = Test-ArchitectureInputs -Glossary $Glossary -Dependency $Dependency -Registry $mutatedRegistry -RepoRoot $RepoRoot
+    foreach ($legacyName in @('IContinuousGroup', 'IIntegrator', 'ISummaryObserver', 'math_types.hpp', 'SimulationSummary')) {
+        Assert-NegativeFailure -Failures $failures -Name "candidate-only Legacy owner $legacyName" -Result $result -ExpectedText "Legacy ownership '$legacyName' has no glossary migration row"
+    }
 
     ++$caseCount
     $mutatedDependency = Copy-JsonData $Dependency

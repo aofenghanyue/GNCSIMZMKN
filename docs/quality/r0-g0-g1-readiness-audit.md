@@ -87,8 +87,8 @@ G1 只有科学约定 bundle 达到 `executable`，且其技术 cross-tool compa
 | `project-manifest.json` | `eb8a1145d95c92396073a4a9ece7d5d41f84b2e286c0842331c1d9e8653ca5ad` |
 | `docs/team/role-assignments.json` | `4ede05482e214268cc7cf0dc139c17f0e92b9bf9e8c773b090ce83d6fe678f0e` |
 | `docs/quality/team-toolchain-readiness-report.json` | `40d0ce185e49f2a63a74f05802a48462f9e75490fe2f2e825d37d4c3bcec4849` |
-| `docs/architecture/architecture-baseline.json` | `237d721a1cbd6737b293472475e2233f89e56fa58a3f62c7feb3c89506d76f7b` |
-| `docs/quality/terminology-conformance-report.json` | `fdba6dba1c0f802da2fd86df86c8b6c549edfaa1d093626e3685974f0816bf82` |
+| `docs/architecture/architecture-baseline.json` | `69cf9c4f26a15b62ecdb60364417bb066c89756924134612a3701471f10943e7` |
+| `docs/quality/terminology-conformance-report.json` | `298f06e15eb7b52d37a9a6c0338222d2a6e88ec2991301a1680acb2b4e8527fc` |
 | `oracles/oracle-manifest.json` | `eade78296e7b102db4e2ca59aec503df8b2a63db1d2810851909a375bd64d0b8` |
 | `REF-SCIENTIFIC-CONVENTIONS-001` manifest | `446d6700f3e7fc86ae4a6905586b471dea7bd1bec4b0c7a72e8c3777491026ef` |
 | `REF-MINIMAL-3DOF-001` manifest | `8e90bdefcf8d5250f22b147a061e7a5934c9618d08bc9f63e6407a32732f579a` |
@@ -122,7 +122,7 @@ G1 只有科学约定 bundle 达到 `executable`，且其技术 cross-tool compa
 
 | Task | Backlog | Commit | 有效技术证据 | 仍缺 |
 | --- | --- | --- | --- | --- |
-| `R0-ARCH-001` | `review` | `84b7d6c` | terminology/owner/dependency baseline 与 9 negative cases | ADR-0005、Architecture Lead review |
+| `R0-ARCH-001` | `review` | `84b7d6c` + reconciliation amendment | terminology/owner/dependency baseline；27/33 candidate delta 已归类；15 negative cases | ADR-0005、Architecture Lead / Validation Lead review；`RECON-DEC-006/007` |
 | `R0-LEG-001` | `review` | `b2e69d0` | frozen archive reproduction、双跑 normalized hash | Validation/Science owner classification/review |
 | `R0-SCI-001` | `review` | `9e95f1c` + reconciliation amendment | C++/Python 各 23 checks/1819 assertions、16 observations、0 mismatch、6 failures rejected | ADR-0006/0007、Scientific Authority review；half-open validity remains Proposed |
 
@@ -219,7 +219,7 @@ Authority：[11 §5.1](../../design-notes/gnczmkn-architecture-roadmap/11-roadma
 | `G0-D-006` | source ownership/deletion map | authority registry、22 Legacy migrations、baseline validator | `review_pending` | ADR-0005/owner review；source path/deletion evidence closure |
 | `G0-D-007` | scientific bundles | manifests + preparation designs | `prepared_only` | 见 G1 matrix；executable bundles |
 | `G0-D-008` | 7 Legacy behavior oracle tests | planned manifest + capture design | `prepared_only` | 7 executable artifacts、hash/tolerance/disposition/negative tests |
-| `G0-D-009` | terminology conformance checker | 276 terms、20 aliases、27 shared symbols、9 negative cases；report conformant | `review_pending` | ADR-0005/ARCH-001 owner review；正式 reviewed commit rerun |
+| `G0-D-009` | terminology conformance checker | 276 terms、20 aliases、27 shared symbols、15 negative cases；report conformant | `review_pending` | ADR-0005/ARCH-001 owner review；正式 reviewed commit rerun |
 | `G0-D-010` | PlanProofRecord/Index + YYZ fixture + dry-run | Record schema 和单个 guidance-rate example | `missing` | Index schema/query、YYZ proof set、dry-run expected/actual evidence |
 | `G0-D-011` | 13 pressure route/untouched table | blueprint + fitness coverage design | `prepared_only` | executable/validated table，13/13 route 与 untouched assertions |
 | `G0-D-012` | representation matrix + causal walkthroughs | blueprint narrative | `missing` | machine-reviewable cases covering required consumers/physical scenarios |

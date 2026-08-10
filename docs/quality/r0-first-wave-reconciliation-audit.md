@@ -271,6 +271,34 @@ Raw count differences are not pass/fail. Candidate adds a nine-term scientific o
 - keep current deterministic generator/source hashes；do not copy candidate accepted overlay as authority；
 - route any new canonical term through glossary/ADR owner rather than inventing local overlay truth。
 
+### 8.3 Responsibility reconciliation result
+
+所有 27 个 candidate mapping identities 和 33 项 responsibility 已逐项与当前派生 baseline 对照。candidate 所有 `target_terms` 都能解析到当前 276 个 canonical terms；差异不在术语缺失，而在 mapping identity、owner 粒度与逻辑边界的 authority。
+
+| Classification | Count | Responsibility ids | Disposition |
+| --- | ---: | --- | --- |
+| current owner/consumer aligned | 22 | `assembly-context-lowering`、`auto-data-recording`、`config-manager-compile`、`config-node-source`、`config-reader-frontend`、`discrete-node-descriptor`、`execution-phase-transaction`、`framework-catalog-view`、`discrete-task-obligation`、`observable-projection-plan`、`record-sink-port`、`mission-assembler-passes`、`node-registry-plan-handles`、`node-registry-session-state`、`observable-field-contract`、`onboard-state-contracts`、`simflow-experiment`、`simulation-builder-operation`、`simulation-node-definition`、`simulator-session`、`simulator-control`、`simulator-comparison` | covered by current primary/secondary ownership；candidate term detail remains comparison evidence |
+| proposed physical owner split | 3 | `execution-phase-plan` → compiler、`onboard-state-input-view` → compiler、`simulation-builder-plan` → compiler | do not import；Architecture Lead decides whether current ownership needs a reviewed split |
+| logical contribution routing | 2 | `guidance-process-recipe`、`node-factory-contribution` → `packages_user` | retain as ARCH-002 source-boundary design；not an ADR-0003 physical module |
+| absent current mapping identity | 6 | `continuous-group-plan`；`integrator-plan`、`integrator-outcome`；`summary-observer-metrics`；`math-types-contract-boundaries`；`simulation-summary-workflow` | `IContinuousGroup` is candidate-registered；the other four names are candidate `audit-only`；none has a current glossary migration row |
+
+The partition is closed：`22 + 3 + 2 + 6 = 33`。The 27 names are the current 22 plus `IContinuousGroup`、`IIntegrator`、`ISummaryObserver`、`math_types.hpp` and `SimulationSummary`。No current ownership row、glossary row or canonical term was changed。
+
+### 8.4 Safe hardening port
+
+The current deterministic validator now requires exact property sets for the authority registry and every module、shared-symbol and Legacy-ownership row。Six added mutation groups reject：
+
+1. an unreviewed top-level `logical_boundaries` extension；
+2. an unreviewed module-row `kind` extension；
+3. an unreviewed shared-symbol `owner_role` extension；
+4. a Legacy `responsibilities` overlay；
+5. physical-module promotion of both `packages_user` and `composition_root`；
+6. ownership rows for all five candidate-only names without glossary migration rows。
+
+Together with the original nine cases, 15/15 invalid mutations are rejected。The baseline remains a projection of the same glossary、ADR-0003、physical partition、authority registry and CMake graph：276 terms、20 aliases、27 shared symbols、22 Legacy mappings、9 physical modules and 22 CMake edges。This closes the safe technical part of Slice C but intentionally leaves `RECON-DEC-006` / `RECON-DEC-007` open。
+
+Verification passed under Windows PowerShell 5.1 and MSVC x64：Debug 9/9 CTest、Release 9/9 CTest、repository verification（56 JSON、65 task entries、98 Markdown）and `git diff --check`。The generated baseline raw SHA-256 is `69cf9c4f26a15b62ecdb60364417bb066c89756924134612a3701471f10943e7`；the conformance report raw SHA-256 is `298f06e15eb7b52d37a9a6c0338222d2a6e88ec2991301a1680acb2b4e8527fc`。
+
 ## 9. Scientific convention audit
 
 ### 9.1 Coverage comparison
@@ -387,15 +415,16 @@ Scope：`R0-SCI-001` review amendment。
 7. MSVC Debug/Release 9/9 CTest and repository verification pass；report raw SHA-256 is `c121c74b546b2ad7722a6a5d90ee8ca0de028c4524fce624a3b95963138252c8`；
 8. commit independently。
 
-### Slice C — architecture delta reconciliation
+### Slice C — architecture delta reconciliation（implemented）
 
 Scope：ARCH-001 review / ARCH-002 preparation。
 
-1. compare candidate 27 mappings/33 responsibilities against current 22；
-2. classify `packages_user`/`composition_root` as logical boundaries, not new physical modules；
-3. port only coverage/mutation gaps to the deterministic generator/fitness plan；
-4. require Architecture Lead decision for canonical terminology changes；
-5. commit independently。
+1. all 27 mappings / 33 responsibilities are partitioned as 22 aligned、3 owner-split proposals、2 logical-boundary routes and 6 responsibilities on 5 absent names；all target terms resolve in the current glossary；
+2. `packages_user` / `composition_root` remain logical rule labels, not new physical modules；
+3. exact registry shapes and 6 mutation groups were ported into the deterministic validator, raising the suite from 9 to 15 without changing authority content；
+4. ARCH-002 preparation now carries ARCH-MUT-015/016 and remains `planned` / unassigned；
+5. Architecture Lead / Validation Lead decisions remain open for representation、mapping identity and owner granularity；
+6. Windows PowerShell 5.1 targeted validation、MSVC Debug/Release 9/9、repository verification and diff review passed；commit independently。
 
 ### Slice D — provenance mutation strengthening
 
@@ -449,6 +478,8 @@ Prepared slices may test both sides but cannot silently close these decisions。
 | `RECON-MUT-010` | copy generated provenance approvals | rights/authority gate |
 | `RECON-MUT-011` | prefer larger term/test count without semantic mapping | criterion evidence gate |
 | `RECON-MUT-012` | port test code but omit independent lane/report hash | cross-tool lineage gate |
+| `RECON-MUT-013` | promote `packages_user` / `composition_root` into the physical DAG | ADR-0003 and exact registry-shape gate |
+| `RECON-MUT-014` | copy candidate responsibility rows as a silent ownership overlay | registry schema and glossary-closure gate |
 
 ## 16. Gate impact
 
@@ -471,4 +502,4 @@ Candidate discovery changes the evidence inventory, not the current gate result�
 - Contract review：schema incompatibilities listed before any port；no v1 bytes changed；
 - Science review：axis-angle difference separated from shared Hamilton/passive algebra；all existing direction expected values remain byte-for-byte unchanged；edge checks exercise Proposed policy without claiming owner acceptance；
 - Legacy review：current structured/double-run evidence compared against candidate scope；no raw artifact copied；
-- Boundary review：the initial audit changed only reconciliation evidence；subsequent isolated amendments changed governance/spec validators and the R0-SCI fixture/oracles, while product paths、public schemas、Legacy、roles、backlog and release state remain unchanged。
+- Boundary review：the initial audit changed only reconciliation evidence；subsequent isolated amendments changed governance/spec/architecture validators and the R0-SCI fixture/oracles, while product paths、public schemas、Legacy、roles、backlog and release state remain unchanged。

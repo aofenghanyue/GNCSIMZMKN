@@ -64,8 +64,8 @@
 - gate template raw SHA-256：`143c656914b6ff577e0ad06a4f5613e5c81c596daf7dba031134f9fbf94cc2d9`
 - role assignments raw SHA-256：`4ede05482e214268cc7cf0dc139c17f0e92b9bf9e8c773b090ce83d6fe678f0e`
 - team/toolchain report raw SHA-256：`40d0ce185e49f2a63a74f05802a48462f9e75490fe2f2e825d37d4c3bcec4849`
-- architecture baseline raw SHA-256：`237d721a1cbd6737b293472475e2233f89e56fa58a3f62c7feb3c89506d76f7b`
-- terminology report raw SHA-256：`fdba6dba1c0f802da2fd86df86c8b6c549edfaa1d093626e3685974f0816bf82`
+- architecture baseline raw SHA-256：`69cf9c4f26a15b62ecdb60364417bb066c89756924134612a3701471f10943e7`
+- terminology report raw SHA-256：`298f06e15eb7b52d37a9a6c0338222d2a6e88ec2991301a1680acb2b4e8527fc`
 - oracle manifest raw SHA-256：`eade78296e7b102db4e2ca59aec503df8b2a63db1d2810851909a375bd64d0b8`
 - scientific cross-tool report raw SHA-256：`c121c74b546b2ad7722a6a5d90ee8ca0de028c4524fce624a3b95963138252c8`
 - license/provenance report raw SHA-256：`f6f11cd0fb064203465377f18beb91b865cc31d590ebf88816427e1f221c7d3b`

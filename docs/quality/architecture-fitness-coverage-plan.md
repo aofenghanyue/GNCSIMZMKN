@@ -27,7 +27,19 @@
 | semantic/evolution guards | 无目标 artifact | 未启用 | 需要 maturity、prerequisite 与 mutation 证据 |
 | orchestration | CTest + repository verification + fixed-runner workflow | 强：入口闭合 | 新 architecture-fitness validator 尚未接入 |
 
-现有 architecture baseline 的 9 个 mutation 覆盖：glossary table 损坏、重复 term、悬空 alias、共享 enum 漂移、缺失 semantic authority、缺失 Legacy owner、DAG cycle、禁止 Kernel dependency 和 source hash 漂移。新任务应复用这些检查，避免复制第二份 terminology/DAG authority。
+现有 architecture baseline 的 15 个 mutation 覆盖：glossary table 损坏、重复 term、悬空 alias、共享 enum 漂移、缺失 semantic authority、缺失 Legacy owner、DAG cycle、禁止 Kernel dependency、source hash 漂移，以及 6 组 registry shape / logical-boundary / candidate-only Legacy mutation。新任务应复用这些检查，避免复制第二份 terminology/DAG authority。
+
+### 2.1 Candidate responsibility reconciliation
+
+`origin/codex/r0-first-wave@7d7c0a8` 的 27 个名称 / 33 项职责是 comparison evidence，不是新的 authority：
+
+- 22 项 target module 已落在当前 ownership registry 的 primary owner 或 secondary consumer 集合；
+- `execution-phase-plan`、`onboard-state-input-view`、`simulation-builder-plan` 共 3 项提出新的物理 owner 细分；
+- `guidance-process-recipe` 与 `node-factory-contribution` 共 2 项使用 `packages_user` 逻辑贡献边界；
+- `IContinuousGroup`、`IIntegrator`、`ISummaryObserver`、`math_types.hpp`、`SimulationSummary` 共 5 个当前未登记名称承载 6 项职责；
+- 33 项职责引用的 target terms 全部已经存在于当前 glossary，因此差异集中在名称注册、owner 粒度和逻辑边界表示，而不是缺少 canonical vocabulary。
+
+在 `RECON-DEC-006` / `RECON-DEC-007` 关闭前，当前九模块 DAG、22 条 Legacy ownership 和 registry schema 保持不变。准备表可以使用 `packages/`、`user/`、`apps/`、composition root 等 source-rule label，但不得把它们写成 framework physical modules，也不得把 responsibility overlay 伪装成已接受 authority。
 
 ## 3. 拟采用的守卫层次
 
@@ -152,7 +164,7 @@ positive repository scan + same-evaluator mutations
 
 未来 validator 应先把 repository 转为标准化 inventory，再让正向检查与 mutation 都调用同一 evaluator。mutation 只改变 inventory 中的 source file、include edge、CMake edge、policy exception 或 maturity record。
 
-最小矩阵为工作包中的 ARCH-MUT-001～014，并增加以下元测试：
+最小矩阵为工作包中的 ARCH-MUT-001～016，并增加以下元测试：
 
 - 删除一条 mutation 对应 rule 时，coverage completeness 失败；
 - 将零目标的 semantic rule 改为 `passed` 时，maturity consistency 失败；
