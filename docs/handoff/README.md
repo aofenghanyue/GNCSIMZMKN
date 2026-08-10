@@ -44,4 +44,5 @@
 - [工作量与人员建议](effort-and-staffing.md)
 - [风险登记](risk-register.md)
 - [开放决策](open-decisions.md)
+- [R0 权威解锁包](r0-authority-unblock-packet.md)
 - [首月安排](first-30-days.md)
