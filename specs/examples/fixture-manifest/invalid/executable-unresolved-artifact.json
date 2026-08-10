@@ -1,0 +1,21 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-UNRESOLVED-ARTIFACT-001",
+  "status": "executable",
+  "purpose": "Prove that executable fixture artifacts must resolve to repository files.",
+  "authority": "validation_lead",
+  "provenance": {
+    "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"]
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-UNRESOLVED-ARTIFACT",
+      "claim": "Every executable artifact reference resolves to a committed file.",
+      "tolerance_policy": "Exact repository file closure.",
+      "evidence_refs": ["specs/README.md"]
+    }
+  ],
+  "required_artifacts": ["missing/artifact.json"],
+  "acceptance": ["Unresolved executable artifacts are rejected."],
+  "open_tasks": ["R0-SPEC-001"]
+}

@@ -50,7 +50,7 @@
 | `R0-SCI-002` | `planned` | minimal 3DoF reference 设计 | executable independent trajectory/convergence/failure bundle | 不合格 |
 | `R0-SCI-003` | `planned` | YYZ bundle 设计 | authoritative source/assets、independent values、machine-valid evidence chain | 不合格 |
 | `R0-SCI-004` | `planned` | CAVH formula 设计 | authoritative source edition/license、independent formula bundle | 不合格 |
-| `R0-SPEC-001` | `review` | 4 个 schema、valid/invalid examples、validator | Architecture Lead review；ADR-0004 acceptance | 不合格 |
+| `R0-SPEC-001` | `review` | 3 个 contract schemas；6 valid、16 targeted invalid、9 strict failures、25 actual identities、5 registry mutations | Architecture Lead review；ADR-0004 acceptance；current hosted/PowerShell 7 evidence | 不合格 |
 | `R0-PERF-001` | `planned` | determinism/performance baseline 设计 | workload、profiles、raw samples、budgets、baseline report | 不合格 |
 
 `R0-ARCH-001`、`R0-LEG-001` 与 `R0-SCI-001` 虽不是 gate 的直接依赖，但分别是上述任务的上游且仍为 `review`。这些技术切片不能通过把下游任务标记 `done` 来绕过 owner 审查。

@@ -113,7 +113,7 @@ G1 只有科学约定 bundle 达到 `executable`，且其技术 cross-tool compa
 | `R0-SCI-002` | Model SDK Lead | `planned` / null | prep `4a610a0` | analytic/independent 3DoF bundle 设计 | source、expected trajectory、convergence/failure runs |
 | `R0-SCI-003` | Scientific Authority | `planned` / null | prep `1c77089` | REF-YYZ source-to-evidence 设计 | authoritative inputs、independent expected、完整 artifacts |
 | `R0-SCI-004` | Scientific Authority | `planned` / null | prep `41623ee` | formula lanes/cases/derivative/envelope/mutations 设计 | source edition/license、independent values、executable suite |
-| `R0-SPEC-001` | Architecture Lead | `review` / Codex | `6613186` | 4 schema、valid/invalid examples、repository validator 通过 | ADR-0004、Architecture Lead acceptance |
+| `R0-SPEC-001` | Architecture Lead | `review` / Codex | `6613186` + reconciliation amendment | 3 contract schemas；6 valid、16 targeted invalid、9 strict-validator failures、25 actual identities、5 registry mutations 通过 | ADR-0004、Architecture Lead acceptance；current hosted/PowerShell 7 evidence |
 | `R0-PERF-001` | Runtime Numerics Lead | `planned` / null | prep `bfd735e` | correctness/determinism/capacity/perf 分离设计 | workload/profile/raw samples/budgets/baseline |
 
 直接依赖统计：`review=3`、`planned=6`、`done=0`。因此 gate task activation 的必要条件为 false。
@@ -214,7 +214,7 @@ Authority：[11 §5.1](../../design-notes/gnczmkn-architecture-roadmap/11-roadma
 | `G0-D-001` | 三道 firewall + 五 partitions dependency map | 蓝图；ADR-0003；9-module CMake DAG baseline | `review_pending` | ADR-0005/ARCH-001 review；firewall/partition route 逐项 conformance |
 | `G0-D-002` | ChangeCard + `<AuthorityDomain, Delta<V,G,S,T,I,R,X>>` | 蓝图术语；baseline capability/change-vector data | `missing` | machine-valid filled samples、normal/invalid cases、owner review |
 | `G0-D-003` | 四类 closed operation languages + Model lowering | 蓝图术语与 operator inventory | `missing` | grammar/closed-set fixture、lowering examples、unsupported diagnostics |
-| `G0-D-004` | 7 类 PlanProofRecord | schema enum、1 valid + 3 invalid examples、schema test | `review_pending` | ADR-0004/owner review；每类 positive/negative coverage |
+| `G0-D-004` | 7 类 PlanProofRecord | schema enum、3 result-shape valid + 5 result-shape invalid examples、schema test | `review_pending` | ADR-0004/owner review；每个 proof kind 的 positive/negative semantic coverage |
 | `G0-D-005` | A–F classification + 9 seams | 蓝图与 baseline vocabulary | `missing` | filled A–F cases、seam ownership/route/untouched assertions |
 | `G0-D-006` | source ownership/deletion map | authority registry、22 Legacy migrations、baseline validator | `review_pending` | ADR-0005/owner review；source path/deletion evidence closure |
 | `G0-D-007` | scientific bundles | manifests + preparation designs | `prepared_only` | 见 G1 matrix；executable bundles |

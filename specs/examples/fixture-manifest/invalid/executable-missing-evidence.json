@@ -1,0 +1,20 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-MISSING-EVIDENCE-001",
+  "status": "executable",
+  "purpose": "Prove that executable facts require committed evidence files.",
+  "authority": "validation_lead",
+  "provenance": {
+    "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"]
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-MISSING-EVIDENCE",
+      "claim": "Executable claims cannot exist without evidence references.",
+      "tolerance_policy": "Exact evidence closure."
+    }
+  ],
+  "required_artifacts": ["specs/README.md"],
+  "acceptance": ["Missing executable evidence is rejected."],
+  "open_tasks": ["R0-SPEC-001"]
+}

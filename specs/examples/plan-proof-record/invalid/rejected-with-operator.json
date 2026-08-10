@@ -1,0 +1,13 @@
+{
+  "schema_version": "gnczmkn.plan-proof-record/1",
+  "proof_id": "proof:temporal:rejected-with-operator:0001",
+  "proof_kind": "TimeLifecycle",
+  "subject_refs": ["occ:guidance"],
+  "assertion_code": "GNC.PLAN.RATE.INTEGER_INTERVAL",
+  "source_refs": ["mission:invalid#/rate_hz"],
+  "premises": {"base_rate_hz": 100, "requested_rate_hz": 60},
+  "result": "Rejected",
+  "diagnostic_ids": ["diag:compile:invalid-rate:0001"],
+  "lowered_operator_refs": ["invoke:occ:guidance@invalid-rate"],
+  "generated_by_pass": "schedule-lowering@1"
+}

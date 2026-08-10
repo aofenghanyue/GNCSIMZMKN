@@ -1,0 +1,21 @@
+{
+  "schema_version": "gnczmkn.oracle-manifest/1",
+  "oracle_set_id": "ORACLE-EXECUTABLE-MISSING-ARTIFACT-001",
+  "status": "capturing",
+  "provenance": {
+    "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"]
+  },
+  "oracles": [
+    {
+      "id": "ORACLE-EXECUTABLE-MISSING-ARTIFACT-01",
+      "level": "math",
+      "status": "executable",
+      "claim": "An executable oracle has committed evidence.",
+      "expected_facts": ["The evidence file exists."],
+      "reference_kind": "contract negative example",
+      "tolerance_policy": "Exact evidence closure.",
+      "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"],
+      "artifact_refs": []
+    }
+  ]
+}

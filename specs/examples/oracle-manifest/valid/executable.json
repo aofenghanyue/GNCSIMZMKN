@@ -1,0 +1,21 @@
+{
+  "schema_version": "gnczmkn.oracle-manifest/1",
+  "oracle_set_id": "ORACLE-EXAMPLE-EXECUTABLE-001",
+  "status": "executable",
+  "provenance": {
+    "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"]
+  },
+  "oracles": [
+    {
+      "id": "ORACLE-EXAMPLE-EXECUTABLE-01",
+      "level": "math",
+      "status": "executable",
+      "claim": "A committed specification document exists.",
+      "expected_facts": ["The repository contains specs/README.md."],
+      "reference_kind": "repository file closure",
+      "tolerance_policy": "Exact file existence.",
+      "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"],
+      "artifact_refs": ["specs/README.md"]
+    }
+  ]
+}

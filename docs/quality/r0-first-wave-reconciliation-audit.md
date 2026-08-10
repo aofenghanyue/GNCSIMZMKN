@@ -361,16 +361,18 @@ Scope：`R0-GOV-001` review amendment。
 4. real role assignments remain null；no human identity is selected；
 5. readiness report、Debug/Release and repository verification are regenerated/reviewed in the amendment commit。
 
-### Slice A — strict R0 contract parsing and registry semantics
+### Slice A — strict R0 contract parsing and registry semantics（implemented）
 
 Scope：`R0-SPEC-001` review amendment。
 
-1. add dependency-free strict lexical checks for duplicate JSON keys and non-standard numeric tokens；
-2. add fixture authority/open-task and global identity semantic validation；
-3. add current-schema-shaped positive/negative examples；
-4. keep schema version/field graph unchanged；
-5. run PowerShell 5.1、Debug/Release CTest and repository verification；
-6. commit independently。
+1. dependency-free strict JSON parsing rejects decoded duplicate keys plus `NaN`、`Infinity` and `-Infinity` before `ConvertFrom-Json`；
+2. fixture authority resolves to the current role registry；open tasks resolve to non-`done` backlog entries；
+3. actual manifest registry validates 25 fixture/fact/oracle-set/oracle identities；5 mutations cover cross-file fixture/fact/oracle/proof duplicates；
+4. executable/qualified facts and oracles require repository-resolving evidence/artifact files under the current evidence-location convention；this does not close `RECON-DEC-002` public reference grammar；
+5. current-schema-shaped matrix passes 5 actual manifests、6 valid、16 targeted invalid and 9 validator failure cases；every invalid case has an expected diagnostic；
+6. all three public schema bytes、versions and field graphs remain unchanged；no placeholder downgrade or typed-premise graph is imported；
+7. Windows PowerShell 5.1 targeted validation、Debug/Release 9/9 CTest、repository verification（56 JSON、65 tasks、98 Markdown）and diff check pass；PowerShell 7/current hosted evidence remains pending push/run；
+8. commit independently。
 
 ### Slice B — scientific edge-property strengthening
 

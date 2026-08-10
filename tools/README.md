@@ -2,7 +2,7 @@
 
 - `bootstrap.ps1`：配置、构建、运行 CTest 和仓库检查。
 - `verify-repository.ps1`：验证目录、JSON、任务依赖、legacy hash、架构边界、UTF-8 和 Markdown 链接。
-- `validate-r0-specs.ps1`：验证 R0 fixture、oracle、PlanProofRecord schema、实际 manifests 与正反例。
+- `validate-r0-specs.ps1`：验证 R0 fixture、oracle、PlanProofRecord schema、严格 JSON、实际 manifest registry/证据闭包、正反例与 identity mutations。
 - `validate-architecture-baseline.ps1`：生成或检查术语、共享 symbol、模块 DAG 和 Legacy 归属派生基线，并运行反例。
 - `reproduce-legacy.ps1`：从冻结 ZIP 和固定哈希的离线依赖归档创建隔离工作区，构建并运行 Legacy 全部测试与五条代表任务。
 - `validate-legacy-reproduction.ps1`：校验受控 Legacy 证据索引、环境、测试、任务基线和 MSVC 兼容性缺口，不重新执行耗时构建。

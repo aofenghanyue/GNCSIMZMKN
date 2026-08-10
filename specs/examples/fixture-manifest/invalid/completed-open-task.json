@@ -1,0 +1,20 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-COMPLETED-TASK-001",
+  "status": "specification_only",
+  "purpose": "Prove that a completed task cannot remain an open fixture blocker.",
+  "authority": "validation_lead",
+  "provenance": {
+    "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"]
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-COMPLETED-TASK",
+      "claim": "A done task is not an open blocker.",
+      "tolerance_policy": "Exact backlog status."
+    }
+  ],
+  "required_artifacts": ["task backlog"],
+  "acceptance": ["Completed open-task references are rejected."],
+  "open_tasks": ["B0-REP-001"]
+}

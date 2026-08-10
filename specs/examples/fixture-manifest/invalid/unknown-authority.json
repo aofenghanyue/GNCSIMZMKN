@@ -1,0 +1,20 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-UNKNOWN-AUTHORITY-001",
+  "status": "specification_only",
+  "purpose": "Prove that fixture authority must resolve to the repository role registry.",
+  "authority": "invented_authority",
+  "provenance": {
+    "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"]
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-UNKNOWN-AUTHORITY",
+      "claim": "An unknown authority cannot own a fixture.",
+      "tolerance_policy": "Exact role identity."
+    }
+  ],
+  "required_artifacts": ["role registry"],
+  "acceptance": ["Unknown role identities are rejected."],
+  "open_tasks": ["R0-SPEC-001"]
+}

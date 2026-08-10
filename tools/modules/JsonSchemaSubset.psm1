@@ -1,5 +1,325 @@
 Set-StrictMode -Version Latest
 
+function Throw-StrictJsonError {
+    param(
+        [int]$Offset,
+        [string]$Message
+    )
+
+    throw [System.FormatException]::new("strict JSON error at offset ${Offset}: $Message")
+}
+
+function Move-PastJsonWhitespace {
+    param(
+        [string]$Text,
+        [ref]$Index
+    )
+
+    while ($Index.Value -lt $Text.Length) {
+        $code = [int][char]$Text[$Index.Value]
+        if ($code -notin @(0x20, 0x09, 0x0A, 0x0D)) { return }
+        $Index.Value = [int]$Index.Value + 1
+    }
+}
+
+function Test-JsonDigit {
+    param([char]$Character)
+
+    $code = [int]$Character
+    return $code -ge [int][char]'0' -and $code -le [int][char]'9'
+}
+
+function Test-JsonTokenAt {
+    param(
+        [string]$Text,
+        [int]$Offset,
+        [string]$Token
+    )
+
+    if ($Offset + $Token.Length -gt $Text.Length) { return $false }
+    return [string]::CompareOrdinal($Text, $Offset, $Token, 0, $Token.Length) -eq 0
+}
+
+function Read-StrictJsonString {
+    param(
+        [string]$Text,
+        [ref]$Index
+    )
+
+    if ($Index.Value -ge $Text.Length -or $Text[$Index.Value] -ne '"') {
+        Throw-StrictJsonError -Offset $Index.Value -Message 'expected a JSON string'
+    }
+
+    $Index.Value = [int]$Index.Value + 1
+    $builder = [System.Text.StringBuilder]::new()
+    while ($Index.Value -lt $Text.Length) {
+        $character = [char]$Text[$Index.Value]
+        $Index.Value = [int]$Index.Value + 1
+
+        if ($character -eq '"') {
+            return $builder.ToString()
+        }
+        if ([int]$character -lt 0x20) {
+            Throw-StrictJsonError -Offset ([int]$Index.Value - 1) -Message 'unescaped control character in string'
+        }
+        if ($character -ne '\') {
+            [void]$builder.Append($character)
+            continue
+        }
+
+        if ($Index.Value -ge $Text.Length) {
+            Throw-StrictJsonError -Offset $Index.Value -Message 'unterminated string escape'
+        }
+        $escape = [char]$Text[$Index.Value]
+        $Index.Value = [int]$Index.Value + 1
+        switch -CaseSensitive ($escape) {
+            '"' { [void]$builder.Append('"') }
+            '\' { [void]$builder.Append([char]0x5C) }
+            '/' { [void]$builder.Append('/') }
+            'b' { [void]$builder.Append([char]0x08) }
+            'f' { [void]$builder.Append([char]0x0C) }
+            'n' { [void]$builder.Append([char]0x0A) }
+            'r' { [void]$builder.Append([char]0x0D) }
+            't' { [void]$builder.Append([char]0x09) }
+            'u' {
+                if ($Index.Value + 4 -gt $Text.Length) {
+                    Throw-StrictJsonError -Offset $Index.Value -Message 'incomplete Unicode escape'
+                }
+                $hex = $Text.Substring($Index.Value, 4)
+                if ($hex -cnotmatch '^[0-9A-Fa-f]{4}$') {
+                    Throw-StrictJsonError -Offset $Index.Value -Message "invalid Unicode escape '\u$hex'"
+                }
+                [void]$builder.Append([char][Convert]::ToInt32($hex, 16))
+                $Index.Value = [int]$Index.Value + 4
+            }
+            default {
+                Throw-StrictJsonError -Offset ([int]$Index.Value - 1) -Message "invalid string escape '\$escape'"
+            }
+        }
+    }
+
+    Throw-StrictJsonError -Offset $Index.Value -Message 'unterminated JSON string'
+}
+
+function Read-StrictJsonNumber {
+    param(
+        [string]$Text,
+        [ref]$Index
+    )
+
+    $start = [int]$Index.Value
+    if ($Text[$Index.Value] -eq '-') {
+        $Index.Value = [int]$Index.Value + 1
+        if ($Index.Value -ge $Text.Length) {
+            Throw-StrictJsonError -Offset $start -Message 'incomplete JSON number'
+        }
+    }
+
+    if ($Text[$Index.Value] -eq '0') {
+        $Index.Value = [int]$Index.Value + 1
+        if ($Index.Value -lt $Text.Length -and (Test-JsonDigit $Text[$Index.Value])) {
+            Throw-StrictJsonError -Offset $Index.Value -Message 'leading zero in JSON number'
+        }
+    }
+    elseif ([int][char]$Text[$Index.Value] -ge [int][char]'1' -and
+            [int][char]$Text[$Index.Value] -le [int][char]'9') {
+        do {
+            $Index.Value = [int]$Index.Value + 1
+        } while ($Index.Value -lt $Text.Length -and (Test-JsonDigit $Text[$Index.Value]))
+    }
+    else {
+        Throw-StrictJsonError -Offset $Index.Value -Message 'invalid JSON number'
+    }
+
+    if ($Index.Value -lt $Text.Length -and $Text[$Index.Value] -eq '.') {
+        $Index.Value = [int]$Index.Value + 1
+        if ($Index.Value -ge $Text.Length -or -not (Test-JsonDigit $Text[$Index.Value])) {
+            Throw-StrictJsonError -Offset $Index.Value -Message 'fraction requires at least one digit'
+        }
+        while ($Index.Value -lt $Text.Length -and (Test-JsonDigit $Text[$Index.Value])) {
+            $Index.Value = [int]$Index.Value + 1
+        }
+    }
+
+    if ($Index.Value -lt $Text.Length -and $Text[$Index.Value] -in @('e', 'E')) {
+        $Index.Value = [int]$Index.Value + 1
+        if ($Index.Value -lt $Text.Length -and $Text[$Index.Value] -in @('+', '-')) {
+            $Index.Value = [int]$Index.Value + 1
+        }
+        if ($Index.Value -ge $Text.Length -or -not (Test-JsonDigit $Text[$Index.Value])) {
+            Throw-StrictJsonError -Offset $Index.Value -Message 'exponent requires at least one digit'
+        }
+        while ($Index.Value -lt $Text.Length -and (Test-JsonDigit $Text[$Index.Value])) {
+            $Index.Value = [int]$Index.Value + 1
+        }
+    }
+}
+
+function Read-StrictJsonLiteral {
+    param(
+        [string]$Text,
+        [ref]$Index,
+        [string]$Literal
+    )
+
+    if (-not (Test-JsonTokenAt -Text $Text -Offset $Index.Value -Token $Literal)) {
+        Throw-StrictJsonError -Offset $Index.Value -Message "invalid JSON token; expected '$Literal'"
+    }
+    $Index.Value = [int]$Index.Value + $Literal.Length
+}
+
+function Read-StrictJsonObject {
+    param(
+        [string]$Text,
+        [ref]$Index,
+        [int]$Depth
+    )
+
+    $Index.Value = [int]$Index.Value + 1
+    Move-PastJsonWhitespace -Text $Text -Index $Index
+    if ($Index.Value -lt $Text.Length -and $Text[$Index.Value] -eq '}') {
+        $Index.Value = [int]$Index.Value + 1
+        return
+    }
+
+    $keys = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+    while ($true) {
+        Move-PastJsonWhitespace -Text $Text -Index $Index
+        $keyOffset = [int]$Index.Value
+        $key = [string](Read-StrictJsonString -Text $Text -Index $Index)
+        if (-not $keys.Add($key)) {
+            Throw-StrictJsonError -Offset $keyOffset -Message "duplicate JSON object key '$key'"
+        }
+
+        Move-PastJsonWhitespace -Text $Text -Index $Index
+        if ($Index.Value -ge $Text.Length -or $Text[$Index.Value] -ne ':') {
+            Throw-StrictJsonError -Offset $Index.Value -Message "expected ':' after object key"
+        }
+        $Index.Value = [int]$Index.Value + 1
+        Read-StrictJsonValue -Text $Text -Index $Index -Depth ([int]$Depth + 1)
+        Move-PastJsonWhitespace -Text $Text -Index $Index
+
+        if ($Index.Value -ge $Text.Length) {
+            Throw-StrictJsonError -Offset $Index.Value -Message 'unterminated JSON object'
+        }
+        if ($Text[$Index.Value] -eq '}') {
+            $Index.Value = [int]$Index.Value + 1
+            return
+        }
+        if ($Text[$Index.Value] -ne ',') {
+            Throw-StrictJsonError -Offset $Index.Value -Message "expected ',' or '}' in object"
+        }
+        $Index.Value = [int]$Index.Value + 1
+    }
+}
+
+function Read-StrictJsonArray {
+    param(
+        [string]$Text,
+        [ref]$Index,
+        [int]$Depth
+    )
+
+    $Index.Value = [int]$Index.Value + 1
+    Move-PastJsonWhitespace -Text $Text -Index $Index
+    if ($Index.Value -lt $Text.Length -and $Text[$Index.Value] -eq ']') {
+        $Index.Value = [int]$Index.Value + 1
+        return
+    }
+
+    while ($true) {
+        Read-StrictJsonValue -Text $Text -Index $Index -Depth ([int]$Depth + 1)
+        Move-PastJsonWhitespace -Text $Text -Index $Index
+        if ($Index.Value -ge $Text.Length) {
+            Throw-StrictJsonError -Offset $Index.Value -Message 'unterminated JSON array'
+        }
+        if ($Text[$Index.Value] -eq ']') {
+            $Index.Value = [int]$Index.Value + 1
+            return
+        }
+        if ($Text[$Index.Value] -ne ',') {
+            Throw-StrictJsonError -Offset $Index.Value -Message "expected ',' or ']' in array"
+        }
+        $Index.Value = [int]$Index.Value + 1
+    }
+}
+
+function Read-StrictJsonValue {
+    param(
+        [string]$Text,
+        [ref]$Index,
+        [int]$Depth
+    )
+
+    if ($Depth -gt 128) {
+        Throw-StrictJsonError -Offset $Index.Value -Message 'nesting exceeds the R0 limit of 128'
+    }
+    Move-PastJsonWhitespace -Text $Text -Index $Index
+    if ($Index.Value -ge $Text.Length) {
+        Throw-StrictJsonError -Offset $Index.Value -Message 'expected a JSON value'
+    }
+
+    $character = [char]$Text[$Index.Value]
+    switch -CaseSensitive ($character) {
+        '{' { Read-StrictJsonObject -Text $Text -Index $Index -Depth $Depth; return }
+        '[' { Read-StrictJsonArray -Text $Text -Index $Index -Depth $Depth; return }
+        '"' { [void](Read-StrictJsonString -Text $Text -Index $Index); return }
+        't' { Read-StrictJsonLiteral -Text $Text -Index $Index -Literal 'true'; return }
+        'f' { Read-StrictJsonLiteral -Text $Text -Index $Index -Literal 'false'; return }
+        'n' { Read-StrictJsonLiteral -Text $Text -Index $Index -Literal 'null'; return }
+        'N' {
+            if (Test-JsonTokenAt -Text $Text -Offset $Index.Value -Token 'NaN') {
+                Throw-StrictJsonError -Offset $Index.Value -Message "non-finite JSON token 'NaN' is forbidden"
+            }
+        }
+        'I' {
+            if (Test-JsonTokenAt -Text $Text -Offset $Index.Value -Token 'Infinity') {
+                Throw-StrictJsonError -Offset $Index.Value -Message "non-finite JSON token 'Infinity' is forbidden"
+            }
+        }
+        '-' {
+            if (Test-JsonTokenAt -Text $Text -Offset $Index.Value -Token '-Infinity') {
+                Throw-StrictJsonError -Offset $Index.Value -Message "non-finite JSON token '-Infinity' is forbidden"
+            }
+            Read-StrictJsonNumber -Text $Text -Index $Index
+            return
+        }
+        default {
+            if (Test-JsonDigit $character) {
+                Read-StrictJsonNumber -Text $Text -Index $Index
+                return
+            }
+        }
+    }
+
+    Throw-StrictJsonError -Offset $Index.Value -Message "unexpected token '$character'"
+}
+
+function Assert-StrictJsonText {
+    param([string]$Text)
+
+    $index = 0
+    if ($Text.Length -gt 0 -and [int][char]$Text[0] -eq 0xFEFF) {
+        $index = 1
+    }
+    Read-StrictJsonValue -Text $Text -Index ([ref]$index) -Depth 0
+    Move-PastJsonWhitespace -Text $Text -Index ([ref]$index)
+    if ($index -ne $Text.Length) {
+        Throw-StrictJsonError -Offset $index -Message 'unexpected content after the root value'
+    }
+}
+
+function Read-StrictJsonFile {
+    [CmdletBinding()]
+    param([Parameter(Mandatory = $true)][string]$Path)
+
+    $resolved = (Resolve-Path -LiteralPath $Path -ErrorAction Stop).Path
+    $text = Get-Content -LiteralPath $resolved -Raw -Encoding utf8 -ErrorAction Stop
+    Assert-StrictJsonText -Text $text
+    $value = $text | ConvertFrom-Json -ErrorAction Stop
+    Write-Output -NoEnumerate $value
+}
+
 function Add-ValidationError {
     param(
         [System.Collections.Generic.List[string]]$Errors,
@@ -304,7 +624,7 @@ function Test-JsonSchemaSubset {
 
     try {
         $resolvedSchema = (Resolve-Path -LiteralPath $SchemaPath -ErrorAction Stop).Path
-        $schema = Get-Content -LiteralPath $resolvedSchema -Raw -Encoding utf8 -ErrorAction Stop | ConvertFrom-Json
+        $schema = Read-StrictJsonFile -Path $resolvedSchema
         if ((Get-JsonType $schema) -ne 'object') {
             Add-ValidationError $errors '$schema' 'schema root must be a JSON object'
         }
@@ -318,7 +638,7 @@ function Test-JsonSchemaSubset {
 
     try {
         $resolvedInstance = (Resolve-Path -LiteralPath $InstancePath -ErrorAction Stop).Path
-        $instance = Get-Content -LiteralPath $resolvedInstance -Raw -Encoding utf8 -ErrorAction Stop | ConvertFrom-Json
+        $instance = Read-StrictJsonFile -Path $resolvedInstance
         $instanceLoaded = $true
     }
     catch {
@@ -338,4 +658,4 @@ function Test-JsonSchemaSubset {
     }
 }
 
-Export-ModuleMember -Function Test-JsonSchemaSubset
+Export-ModuleMember -Function Test-JsonSchemaSubset, Read-StrictJsonFile

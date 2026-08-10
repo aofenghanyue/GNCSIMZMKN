@@ -16,7 +16,9 @@ R0 需要在科学与 legacy bundle 扩展前冻结 fixture、oracle 和 `PlanPr
 
 R0 契约采用 JSON Schema draft 2020-12 文档，并在每个 instance 中要求稳定的 `schema_version`。fixture 与 oracle schema 显式要求 provenance、expected facts 和 tolerance policy；proof schema 使用蓝图定义的七类 `proof_kind`，并统一结果为 `Proven | Rejected | DeferredUnsupported`。
 
-仓库提供 PowerShell 5.1/7 兼容的验证工具，执行本阶段 schema 使用到的确定子集。验证器遇到未知 schema 关键字时失败。正例、反例和实际 manifests 使用同一命令验证；跨条目的稳定 ID 唯一性由契约级语义检查补充。
+仓库提供 PowerShell 5.1/7 兼容的验证工具，执行本阶段 schema 使用到的确定子集。验证器遇到未知 schema 关键字时失败。原始 schema/instance JSON 先经过严格读取，拒绝解码后重复的 object key 与非标准 `NaN`、`Infinity`、`-Infinity` token，再交给同一 schema path 验证。
+
+正例、带预期 diagnostic 的反例和实际 manifests 使用同一命令验证；跨实际 manifests 的稳定 ID 唯一性由契约级语义检查补充。fixture authority 必须解析到 role registry，`open_tasks` 只允许解析到未完成 backlog task。`executable`/`qualified` fixture/oracle 的已有 artifact/evidence 字段必须解析到仓库文件；这只是 R0 evidence completeness check，不冻结未来公共 reference URI grammar。
 
 这些 schema 的成熟度为 `Fixture`。R2 可以在真实 Compiler consumer 和 compatibility evidence 完成后通过后续 ADR 晋升或发布新的 schema version。
 
@@ -36,11 +38,12 @@ R0 契约采用 JSON Schema draft 2020-12 文档，并在每个 instance 中要�
 
 ## Verification
 
-- 每份 schema 至少有一个 valid 与两个关键 invalid examples；
-- 实际 fixture/oracle manifests 全部通过；
-- unsupported schema keyword、invalid-accepted 和 valid-rejected 都使命令失败；
+- 3 份 schema 共有 6 个 valid 与 16 个带预期 diagnostic 的 invalid examples；
+- 5 份实际 fixture/oracle manifests、25 个实际 manifest stable identities 全部通过；
+- 9 个 validator failure cases 覆盖 unsupported keyword、损坏/null/array-root JSON、原始/escaped duplicate key 与 `NaN`/`Infinity`/`-Infinity`；
+- 5 个 identity mutations 覆盖 fixture、expected fact、oracle set、oracle 与 proof 重复；
 - CTest 与 `tools/verify-repository.ps1` 调用 schema conformance suite；
-- `tools/bootstrap.ps1` 在 Windows 和 CI 平台通过。
+- `tools/bootstrap.ps1` 在 Windows Debug/Release 通过；当前 commit 的 PowerShell 7/hosted CI 证据在 push 前保持 pending。
 
 ## Supersession rule
 
