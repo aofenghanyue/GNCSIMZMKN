@@ -1,0 +1,42 @@
+{
+  "schema_version": "gnczmkn.provenance-register/1",
+  "updated_at": "2026-08-09",
+  "policy_ref": "docs/adr/0004-internal-license-and-provenance-policy.md",
+  "records": [
+    {
+      "record_id": "prov.invalid.inherit-false@1",
+      "subject": {
+        "type": "source-code",
+        "scientific_context_required": false,
+        "identity": "invalid restricted source",
+        "path_or_uri": "repo://tests/invalid-source"
+      },
+      "origin": {
+        "kind": "third-party",
+        "source": "https://invalid.example/source",
+        "version_or_date": "1"
+      },
+      "integrity": {
+        "algorithm": "sha256",
+        "value": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "rights": {
+        "status": "restricted",
+        "license_expression": null,
+        "basis_ref": "docs/adr/0004-internal-license-and-provenance-policy.md",
+        "allowed_uses": ["internal-test"],
+        "prohibited_uses": ["external-publication"]
+      },
+      "classification": "internal-restricted",
+      "propagation": {
+        "inherit_restrictions": false,
+        "requirements": ["block-external-sharing"]
+      },
+      "review": {
+        "decision": "approved-internal-only",
+        "reviewer": "fixture-reviewer",
+        "reviewed_at": "2026-08-09"
+      }
+    }
+  ]
+}

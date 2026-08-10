@@ -1,0 +1,52 @@
+{
+  "schema_version": "gnczmkn.provenance-register/1",
+  "updated_at": "2026-08-09",
+  "policy_ref": "docs/adr/0004-internal-license-and-provenance-policy.md",
+  "records": [
+    {
+      "record_id": "prov.invalid.independent-reference@1",
+      "subject": {
+        "type": "parameter",
+        "scientific_context_required": true,
+        "identity": "invalid parameter fixture",
+        "path_or_uri": "repo://tests/invalid-parameter"
+      },
+      "origin": {
+        "kind": "third-party",
+        "source": "https://invalid.example/parameter",
+        "version_or_date": "1"
+      },
+      "integrity": {
+        "algorithm": "sha256",
+        "value": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "rights": {
+        "status": "restricted",
+        "license_expression": null,
+        "basis_ref": "docs/adr/0004-internal-license-and-provenance-policy.md",
+        "allowed_uses": ["internal-test"],
+        "prohibited_uses": ["external-publication"]
+      },
+      "classification": "internal-restricted",
+      "scientific_context": {
+        "applicable_domain": "invalid fixture",
+        "units": "dimensionless",
+        "frames": "not-applicable",
+        "time_convention": "not-applicable",
+        "reference_or_oracle_refs": ["same implementation output"],
+        "independent_reference_confirmed": false,
+        "independence_basis": "The claimed reference reuses the implementation under test.",
+        "target_identity": "test.provenance.invalid-parameter@1"
+      },
+      "propagation": {
+        "inherit_restrictions": true,
+        "requirements": ["block-external-sharing"]
+      },
+      "review": {
+        "decision": "blocked",
+        "reviewer": "fixture-reviewer",
+        "reviewed_at": "2026-08-09"
+      }
+    }
+  ]
+}

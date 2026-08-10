@@ -1,0 +1,63 @@
+========================================
+  GNC Simulation Summary Report
+========================================
+
+Generated: Sun Aug 09 16:14:47 2026
+
+--- Simulation Parameters ---
+  Time step (dt):      0.02 s
+  Configured duration: 2 s
+  Actual final time:   2 s
+  Total steps:         100
+  Termination reason:  max_time_s
+  Wall clock time:     0.008 s
+  Real-time ratio:     246.2x
+
+--- Components (24) ---
+  [env.cgcs2000] type=custom.environment.c6.cgcs2000 category=project origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/environment_cgcs2000.hpp phase=none priority=0
+  [env.wind] type=custom.environment.c6.wind.constant category=project origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/environment_wind_field.hpp phase=environment priority=0 rate_hz=0 step_interval=1
+  [interceptor.perturbation] type=perturbation.static category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=none priority=0
+  [interceptor.dynamics] type=custom.form.c6.rigid_body category=project origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/form_rigid_body_6dof.hpp phase=none priority=0
+  [interceptor.standard_trajectory] type=custom.common.c6.standard_trajectory category=project origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/common_standard_trajectory.hpp phase=none priority=0
+  [interceptor.imu] type=custom.input.c6.imu category=project origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/input_imu.hpp phase=input priority=0 rate_hz=50 step_interval=1
+  [interceptor.satnav] type=custom.input.c6.satnav category=project origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/input_satnav.hpp phase=input priority=0 rate_hz=10 step_interval=5
+  [interceptor.air_data] type=custom.input.c6.air_data category=project origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/input_air_data.hpp phase=input priority=0 rate_hz=50 step_interval=1
+  [interceptor.sequencer] type=custom.process.c6.sequencer category=project origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/process_sequencer.hpp phase=process priority=0 rate_hz=0 step_interval=1
+  [interceptor.navigation] type=custom.process.c6.navigation category=project origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/process_navigation.hpp phase=process priority=10 rate_hz=0 step_interval=1
+  [interceptor.trajectory_planner] type=custom.process.c6.trajectory_planner category=project origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/process_trajectory_planner.hpp phase=process priority=15 rate_hz=0 step_interval=1
+  [interceptor.target_manager] type=custom.process.c6.target_manager category=project origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/process_target_manager.hpp phase=process priority=20 rate_hz=0 step_interval=1
+  [interceptor.onboard_state] type=custom.process.c6.onboard_state category=project origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/process_onboard_state.hpp phase=process priority=30 rate_hz=0 step_interval=1
+  [interceptor.guidance] type=custom.process.c6.guidance category=project origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/process_guidance.hpp phase=process priority=40 rate_hz=10 step_interval=5
+  [interceptor.flight_control] type=custom.process.c6.flight_control category=project origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/process_flight_control.hpp phase=process priority=50 rate_hz=50 step_interval=1
+  [interceptor.control_allocation] type=custom.process.c6.control_allocation category=project origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/process_control_allocation.hpp phase=process priority=60 rate_hz=50 step_interval=1
+  [interceptor.actuator] type=custom.output.c6.actuator category=project origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/output_actuator.hpp phase=output priority=0 rate_hz=0 step_interval=1
+  [interceptor.propulsion] type=custom.output.c6.propulsion category=project origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/output_propulsion.hpp phase=output priority=10 rate_hz=0 step_interval=1
+  [interceptor.mass] type=custom.output.c6.mass_properties category=project origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/output_mass_properties.hpp phase=output priority=20 rate_hz=0 step_interval=1
+  [interceptor.aero] type=custom.output.c6.aerodynamics category=project origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/output_aerodynamics.hpp phase=output priority=30 rate_hz=0 step_interval=1
+  [interceptor.interaction] type=custom.interaction.c6.force_moment category=project origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/interaction_force_moment_6dof.hpp phase=none priority=0
+  [target.truth] type=form.target_point.kinematic category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=none priority=0
+  [mission.termination] type=custom.termination.c6.state_metric category=project origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/termination_state_metric.hpp phase=none priority=0
+  [mission.summary] type=custom.summary.c6.basic_metrics category=project origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/summary_basic_metrics.hpp phase=evaluation priority=0 rate_hz=0 step_interval=1
+
+--- Component Inventory ---
+  Builtin types: form.target_point.kinematic, perturbation.static
+  Project types: custom.common.c6.standard_trajectory, custom.environment.c6.cgcs2000, custom.environment.c6.wind.constant, custom.form.c6.rigid_body, custom.input.c6.air_data, custom.input.c6.imu, custom.input.c6.satnav, custom.interaction.c6.force_moment, custom.output.c6.actuator, custom.output.c6.aerodynamics, custom.output.c6.mass_properties, custom.output.c6.propulsion, custom.process.c6.control_allocation, custom.process.c6.flight_control, custom.process.c6.guidance, custom.process.c6.navigation, custom.process.c6.onboard_state, custom.process.c6.sequencer, custom.process.c6.target_manager, custom.process.c6.trajectory_planner, custom.summary.c6.basic_metrics, custom.termination.c6.state_metric
+
+--- Data Recording ---
+  Status:  ENABLED
+  Fields:  201
+  Output:  user/outputs/yyz_cartesian_6dof_framework_9/2026-08-09_161447
+
+--- Project Summary ---
+[mission.summary]
+YYZ Cartesian 6DoF Basic Metrics
+final_time_s: 2
+final_altitude_m: 1020.39291059
+final_speed_mps: 257.136370413
+final_mass_kg: 119.6
+maximum_dynamic_pressure_pa: 34876.3595524
+maximum_acceleration_mps2: 10.1936950768
+minimum_target_range_m: 988.648047664
+
+
+========================================

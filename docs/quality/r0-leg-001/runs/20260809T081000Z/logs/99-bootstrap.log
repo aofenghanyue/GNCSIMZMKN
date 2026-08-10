@@ -1,0 +1,46 @@
+started_at_utc: 2026-08-09T08:23:58.2916567Z
+working_directory: C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT
+command: powershell -NoProfile -ExecutionPolicy Bypass -File tools/bootstrap.ps1
+--- output ---
+-- Configuring done (0.3s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/dev
+ninja: no work to do.
+Test project C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/dev
+    Start 1: skeleton.library
+1/5 Test #1: skeleton.library ..........................   Passed    0.01 sec
+    Start 2: skeleton.cli
+2/5 Test #2: skeleton.cli ..............................   Passed    0.01 sec
+    Start 3: scientific_conventions.properties
+3/5 Test #3: scientific_conventions.properties .........   Passed    0.01 sec
+    Start 4: scientific_conventions.python_reference
+4/5 Test #4: scientific_conventions.python_reference ...   Passed    0.11 sec
+    Start 5: scientific_conventions.cross_tool
+5/5 Test #5: scientific_conventions.cross_tool .........   Passed    0.21 sec
+
+100% tests passed, 0 tests failed out of 5
+
+Label Time Summary:
+r0         =   0.33 sec*proc (3 tests)
+science    =   0.33 sec*proc (3 tests)
+
+Total Test time (real) =   0.36 sec
+Repository verification passed.
+Validated JSON files: 34
+Validated task entries: 65
+Validated Markdown files: 83
+Expected pass: docs/quality/provenance-register.json
+Expected pass: tests/provenance-record-valid-scientific.json
+Expected rejection: tests/provenance-record-invalid-missing-rights.json (missing 'rights')
+Expected rejection: tests/provenance-record-invalid-scientific-data.json (scientific_context)
+Expected rejection: tests/provenance-record-invalid-independent-reference.json (independent_reference_confirmed=true)
+Expected rejection: tests/provenance-record-invalid-inherit-false.json (inherit_restrictions=true)
+Expected rejection: tests/provenance-record-invalid-generated-upstream.json (upstream_record_refs)
+Expected rejection: tests/provenance-record-invalid-generated-upstream.json (classification 'public-candidate' is weaker)
+Expected rejection: tests/provenance-record-invalid-subject-type.json (subject type)
+Expected rejection: tests/provenance-record-invalid-noassertion.json (cannot authorize external sharing)
+Provenance policy conformance checks passed.
+Bootstrap checks passed for preset 'dev'.
+--- result ---
+exit_code: 0
+finished_at_utc: 2026-08-09T08:24:03.2212466Z

@@ -1,0 +1,100 @@
+{
+  "schema_version": "gnczmkn.oracle-manifest/1",
+  "oracle_set_id": "ORACLE-R0-SCI-CONVENTIONS-001",
+  "status": "executable",
+  "provenance_refs": [
+    "prov.oracle.r0-scientific-conventions@1"
+  ],
+  "oracles": [
+    {
+      "id": "ORACLE-R0-SCI-SI-001",
+      "level": "math",
+      "status": "executable",
+      "claim": "Declared boundary conversions produce finite canonical SI values and reject unknown, non-finite, or domain-invalid inputs.",
+      "expected_facts": [
+        {
+          "fact_id": "FACT-R0-SCI-SI-001",
+          "statement": "Declared boundary conversions produce finite canonical SI values and reject unknown, non-finite, or domain-invalid inputs.",
+          "comparison": "predicate"
+        }
+      ],
+      "reference_kind": "BIPM SI convention plus independent Python standard-library implementation",
+      "tolerance_policy": "analytic identities use 1e-12 absolute plus 1e-12 relative tolerance; domain failures are exact",
+      "source_refs": [
+        "docs/adr/0005-si-unit-and-numeric-conventions.md",
+        "oracles/scientific-conventions/reference.py"
+      ],
+      "artifact_refs": [
+        "oracles/scientific-conventions/evidence/cross-tool-report.json"
+      ]
+    },
+    {
+      "id": "ORACLE-R0-SCI-FRAME-001",
+      "level": "math",
+      "status": "executable",
+      "claim": "Column-vector R_to_from transforms are proper, compose as R_c_b times R_b_a, and keep point translation separate from free-vector rotation.",
+      "expected_facts": [
+        {
+          "fact_id": "FACT-R0-SCI-FRAME-001",
+          "statement": "Column-vector R_to_from transforms are proper, compose as R_c_b times R_b_a, and keep point translation separate from free-vector rotation.",
+          "comparison": "numeric"
+        }
+      ],
+      "reference_kind": "analytic SO(3) identities plus independent Python standard-library implementation",
+      "tolerance_policy": "1e-12 absolute plus 1e-12 relative cross-tool tolerance; determinant and orthogonality use 2e-12 property tolerance",
+      "source_refs": [
+        "docs/adr/0006-frame-transform-conventions.md",
+        "oracles/scientific-conventions/cases.csv",
+        "oracles/scientific-conventions/reference.py"
+      ],
+      "artifact_refs": [
+        "oracles/scientific-conventions/evidence/cross-tool-report.json"
+      ]
+    },
+    {
+      "id": "ORACLE-R0-SCI-TIME-001",
+      "level": "math",
+      "status": "executable",
+      "claim": "Scientific time kinds remain typed, use finite SI seconds, use half-open validity intervals, and reject implicit clock-domain mixing.",
+      "expected_facts": [
+        {
+          "fact_id": "FACT-R0-SCI-TIME-001",
+          "statement": "Scientific time kinds remain typed, use finite SI seconds, use half-open validity intervals, and reject implicit clock-domain mixing.",
+          "comparison": "predicate"
+        }
+      ],
+      "reference_kind": "target architecture semantic convention plus independent Python standard-library implementation",
+      "tolerance_policy": "time-kind, interval, and clock-domain outcomes are exact",
+      "source_refs": [
+        "docs/adr/0007-time-value-conventions.md",
+        "oracles/scientific-conventions/reference.py"
+      ],
+      "artifact_refs": [
+        "oracles/scientific-conventions/evidence/cross-tool-report.json"
+      ]
+    },
+    {
+      "id": "ORACLE-R0-SCI-QUATERNION-001",
+      "level": "math",
+      "status": "executable",
+      "claim": "Hamilton scalar-first q_to_from values serialize as wxyz, rotate passively through inverse(q) times v times q, and compose as q_b_a times q_c_b.",
+      "expected_facts": [
+        {
+          "fact_id": "FACT-R0-SCI-QUATERNION-001",
+          "statement": "Hamilton scalar-first q_to_from values serialize as wxyz, rotate passively through inverse(q) times v times q, and compose as q_b_a times q_c_b.",
+          "comparison": "numeric"
+        }
+      ],
+      "reference_kind": "analytic quaternion identities plus independent Python standard-library implementation",
+      "tolerance_policy": "1e-12 absolute plus 1e-12 relative cross-tool tolerance; malformed input failures are exact",
+      "source_refs": [
+        "docs/adr/0008-quaternion-conventions.md",
+        "oracles/scientific-conventions/cases.csv",
+        "oracles/scientific-conventions/reference.py"
+      ],
+      "artifact_refs": [
+        "oracles/scientific-conventions/evidence/cross-tool-report.json"
+      ]
+    }
+  ]
+}

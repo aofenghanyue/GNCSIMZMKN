@@ -1,0 +1,63 @@
+{
+  "schema_version": "gnczmkn.r0-spec-existing-manifest-classification/1",
+  "schema_contract_ref": "docs/adr/0009-r0-bundle-and-plan-proof-schemas.md",
+  "manifests": [
+    {
+      "path": "fixtures/ref-cavh-formula/fixture-manifest.json",
+      "document_kind": "fixture",
+      "disposition": "placeholder_gate_blocked",
+      "declared_schema_version": "gnczmkn.fixture-manifest.placeholder/0",
+      "retained_identity": "REF-CAVH-FORMULA-001",
+      "owner_task": "R0-SCI-004",
+      "blockers": [
+        "paper and formula provenance are not closed",
+        "stable expected facts and approved tolerances are not closed"
+      ]
+    },
+    {
+      "path": "fixtures/ref-minimal-3dof/fixture-manifest.json",
+      "document_kind": "fixture",
+      "disposition": "placeholder_gate_blocked",
+      "declared_schema_version": "gnczmkn.fixture-manifest.placeholder/0",
+      "retained_identity": "REF-MINIMAL-3DOF-001",
+      "owner_task": "R0-SCI-002",
+      "blockers": [
+        "independent trajectory provenance is not closed",
+        "stable expected facts and oracle references are not closed"
+      ]
+    },
+    {
+      "path": "fixtures/ref-yyz-001/fixture-manifest.json",
+      "document_kind": "fixture",
+      "disposition": "placeholder_gate_blocked",
+      "declared_schema_version": "gnczmkn.fixture-manifest.placeholder/0",
+      "retained_identity": "REF-YYZ-001",
+      "owner_task": "R0-SCI-003",
+      "blockers": [
+        "authoritative mission and scientific asset provenance are not closed",
+        "stable expected facts and approved difference evidence are not closed"
+      ]
+    },
+    {
+      "path": "oracles/oracle-manifest.json",
+      "document_kind": "oracle",
+      "disposition": "placeholder_gate_blocked",
+      "declared_schema_version": "gnczmkn.oracle-manifest.placeholder/0",
+      "retained_identity": "ORACLE-GNCZMKN-R0-001",
+      "owner_task": "R0-LEG-002",
+      "blockers": [
+        "per-oracle stable expected facts are not closed",
+        "per-oracle provenance and final tolerances are not closed"
+      ]
+    },
+    {
+      "path": "oracles/scientific-conventions/oracle-manifest.json",
+      "document_kind": "oracle",
+      "disposition": "conforming_v1",
+      "declared_schema_version": "gnczmkn.oracle-manifest/1",
+      "retained_identity": "ORACLE-R0-SCI-CONVENTIONS-001",
+      "owner_task": "R0-SCI-001",
+      "blockers": []
+    }
+  ]
+}

@@ -1,0 +1,669 @@
+{
+    "schema_version":  "gnczmkn.r0-architecture-baseline/1",
+    "document_kind":  "legacy_to_target_ownership_map",
+    "task_id":  "R0-ARCH-001",
+    "baseline_date":  "2026-08-09",
+    "maturity":  "Accepted R0 governance baseline governed by ADR-0010 and ADR-0011",
+    "registry":  {
+                     "id":  "legacy-ownership-registry",
+                     "authority_path":  "design-notes/gnczmkn-architecture-roadmap/reference-glossary.md",
+                     "owner_role":  "architecture_lead",
+                     "ownership_rule":  "each target responsibility has one AuthorityDomain, one accountable role, and one target module"
+                 },
+    "source_snapshots":  [
+                             {
+                                 "path":  "design-notes/gnczmkn-architecture-roadmap/reference-glossary.md",
+                                 "sha256":  "69b119abfb933c05a4c603385f80c6a6ccee49e3916a6f29cda0e0d1b956f572",
+                                 "locator":  "all Legacy terms and section 9"
+                             },
+                             {
+                                 "path":  "design-notes/gnczmkn-architecture-roadmap/01-current-architecture-deep-audit.md",
+                                 "sha256":  "8fe4c76b353a5fb5699da5348d6340cb6a75fe63766b189a9c1e136efdd3a763",
+                                 "locator":  "section 16"
+                             },
+                             {
+                                 "path":  "docs/adr/0010-r0-architecture-baseline-format.md",
+                                 "sha256":  "5a239f0e57d68b22f42931987e818837236bad2baba7cbf76f5e30c473a9bc1c",
+                                 "locator":  "Decision and verification"
+                             }
+                         ],
+    "mappings":  [
+                     {
+                         "legacy_name":  "AssemblyContext",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "assembly-context-lowering",
+                                                      "authority_domain":  "Design/Plan",
+                                                      "owner_role":  "compiler_lead",
+                                                      "target_module":  "compiler",
+                                                      "target_terms":  [
+                                                                           "BindingPlan",
+                                                                           "ExecutionPlanImage"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "AutoDataLogger",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "auto-data-recording",
+                                                      "authority_domain":  "Artifact",
+                                                      "owner_role":  "evidence_workflow_lead",
+                                                      "target_module":  "evidence",
+                                                      "target_terms":  [
+                                                                           "RecordPipeline",
+                                                                           "DatasetSink",
+                                                                           "EncodingPlan"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "ConfigManager",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "config-manager-compile",
+                                                      "authority_domain":  "Design/Plan",
+                                                      "owner_role":  "compiler_lead",
+                                                      "target_module":  "compiler",
+                                                      "target_terms":  [
+                                                                           "SourceFrontend",
+                                                                           "MissionIR",
+                                                                           "CompilationOutcome"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "ConfigNode",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "config-node-source",
+                                                      "authority_domain":  "Design/Plan",
+                                                      "owner_role":  "compiler_lead",
+                                                      "target_module":  "compiler",
+                                                      "target_terms":  [
+                                                                           "SourceTree",
+                                                                           "CompiledModelOccurrence"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "ConfigReader",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "config-reader-frontend",
+                                                      "authority_domain":  "Design/Plan",
+                                                      "owner_role":  "compiler_lead",
+                                                      "target_module":  "compiler",
+                                                      "target_terms":  [
+                                                                           "SourceFrontend",
+                                                                           "ModelDefinition"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "DiscreteNode",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "discrete-node-descriptor",
+                                                      "authority_domain":  "Design/Plan",
+                                                      "owner_role":  "model_sdk_lead",
+                                                      "target_module":  "model_sdk",
+                                                      "target_terms":  [
+                                                                           "RuntimeComponentDescriptor",
+                                                                           "BoundaryEvaluation"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "ExecutionPhaseManager",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "execution-phase-plan",
+                                                      "authority_domain":  "Design/Plan",
+                                                      "owner_role":  "compiler_lead",
+                                                      "target_module":  "compiler",
+                                                      "target_terms":  [
+                                                                           "ExecutionRegionPlan",
+                                                                           "BoundaryDagPlan"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  },
+                                                  {
+                                                      "id":  "execution-phase-transaction",
+                                                      "authority_domain":  "Model",
+                                                      "owner_role":  "runtime_numerics_lead",
+                                                      "target_module":  "kernel",
+                                                      "target_terms":  [
+                                                                           "StepTransaction",
+                                                                           "StepOutcome"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "FrameworkCatalog",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "framework-catalog-view",
+                                                      "authority_domain":  "Design/Plan",
+                                                      "owner_role":  "compiler_lead",
+                                                      "target_module":  "compiler",
+                                                      "target_terms":  [
+                                                                           "ModelPackage",
+                                                                           "PackageManifest",
+                                                                           "DefinitionRef"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "GuidanceProcess",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "guidance-process-recipe",
+                                                      "authority_domain":  "Design/Plan",
+                                                      "owner_role":  "model_sdk_lead",
+                                                      "target_module":  "packages_user",
+                                                      "target_terms":  [
+                                                                           "AlgorithmKernel",
+                                                                           "RuntimeCellRecipe",
+                                                                           "GuidanceCommand"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "IContinuousGroup",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "continuous-group-plan",
+                                                      "authority_domain":  "Design/Plan",
+                                                      "owner_role":  "compiler_lead",
+                                                      "target_module":  "compiler",
+                                                      "target_terms":  [
+                                                                           "IntegrationScopePlan",
+                                                                           "ClosurePlan",
+                                                                           "SolverIslandPlan"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "IDiscreteTask",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "discrete-task-obligation",
+                                                      "authority_domain":  "Design/Plan",
+                                                      "owner_role":  "model_sdk_lead",
+                                                      "target_module":  "model_sdk",
+                                                      "target_terms":  [
+                                                                           "BoundaryEvaluation",
+                                                                           "RuntimeComponentDescriptor"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "IIntegrator",
+                         "registry_status":  "audit-only",
+                         "source_refs":  "01 section 16",
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "integrator-plan",
+                                                      "authority_domain":  "Design/Plan",
+                                                      "owner_role":  "compiler_lead",
+                                                      "target_module":  "compiler",
+                                                      "target_terms":  [
+                                                                           "IntegrationScopePlan",
+                                                                           "NumericalPolicy"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  },
+                                                  {
+                                                      "id":  "integrator-outcome",
+                                                      "authority_domain":  "Model",
+                                                      "owner_role":  "runtime_numerics_lead",
+                                                      "target_module":  "foundation",
+                                                      "target_terms":  [
+                                                                           "NumericalOutcome"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "IObservable",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "observable-projection-plan",
+                                                      "authority_domain":  "Design/Plan",
+                                                      "owner_role":  "compiler_lead",
+                                                      "target_module":  "compiler",
+                                                      "target_terms":  [
+                                                                           "ObservationProjectionPlan",
+                                                                           "FieldDescriptor"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "IRecordSink",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "record-sink-port",
+                                                      "authority_domain":  "Artifact",
+                                                      "owner_role":  "evidence_workflow_lead",
+                                                      "target_module":  "evidence",
+                                                      "target_terms":  [
+                                                                           "RecordSink",
+                                                                           "RecordOutcome"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "ISummaryObserver",
+                         "registry_status":  "audit-only",
+                         "source_refs":  "01 section 16",
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "summary-observer-metrics",
+                                                      "authority_domain":  "Artifact",
+                                                      "owner_role":  "evidence_workflow_lead",
+                                                      "target_module":  "evidence",
+                                                      "target_terms":  [
+                                                                           "MetricResult",
+                                                                           "Artifact",
+                                                                           "EvidenceBundle"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "math_types.hpp",
+                         "registry_status":  "audit-only",
+                         "source_refs":  "01 section 16",
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "math-types-contract-boundaries",
+                                                      "authority_domain":  "Design/Plan",
+                                                      "owner_role":  "architecture_lead",
+                                                      "target_module":  "contracts",
+                                                      "target_terms":  [
+                                                                           "StateSchema",
+                                                                           "PortDescriptor",
+                                                                           "FieldDescriptor"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "MissionAssembler",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "mission-assembler-passes",
+                                                      "authority_domain":  "Design/Plan",
+                                                      "owner_role":  "compiler_lead",
+                                                      "target_module":  "compiler",
+                                                      "target_terms":  [
+                                                                           "MissionIR",
+                                                                           "ExecutionPlanDescriptor",
+                                                                           "LinkOutcome"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "NodeFactory",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "node-factory-contribution",
+                                                      "authority_domain":  "Design/Plan",
+                                                      "owner_role":  "model_sdk_lead",
+                                                      "target_module":  "packages_user",
+                                                      "target_terms":  [
+                                                                           "PackageManifest",
+                                                                           "ModelDefinition",
+                                                                           "ModelPrepareFactory",
+                                                                           "RuntimeCellFactory"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "NodeRegistry",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "node-registry-plan-handles",
+                                                      "authority_domain":  "Design/Plan",
+                                                      "owner_role":  "compiler_lead",
+                                                      "target_module":  "compiler",
+                                                      "target_terms":  [
+                                                                           "ExecutionPlanImage",
+                                                                           "BindingPlan"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  },
+                                                  {
+                                                      "id":  "node-registry-session-state",
+                                                      "authority_domain":  "Model",
+                                                      "owner_role":  "runtime_numerics_lead",
+                                                      "target_module":  "kernel",
+                                                      "target_terms":  [
+                                                                           "SessionRuntimeBindings",
+                                                                           "CommittedStateStore",
+                                                                           "CommittedOutputStore"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "ObservableField",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "observable-field-contract",
+                                                      "authority_domain":  "Artifact",
+                                                      "owner_role":  "evidence_workflow_lead",
+                                                      "target_module":  "evidence",
+                                                      "target_terms":  [
+                                                                           "FieldDescriptor",
+                                                                           "FieldId"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "OnboardState",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "onboard-state-contracts",
+                                                      "authority_domain":  "Design/Plan",
+                                                      "owner_role":  "architecture_lead",
+                                                      "target_module":  "contracts",
+                                                      "target_terms":  [
+                                                                           "NavigationEstimate",
+                                                                           "GuidanceCommand",
+                                                                           "ActuatorCommand"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "OnboardStateProcess",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "onboard-state-input-view",
+                                                      "authority_domain":  "Design/Plan",
+                                                      "owner_role":  "compiler_lead",
+                                                      "target_module":  "compiler",
+                                                      "target_terms":  [
+                                                                           "InputBundleView",
+                                                                           "BindingPlan"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "SimFlow",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "simflow-experiment",
+                                                      "authority_domain":  "Operation",
+                                                      "owner_role":  "evidence_workflow_lead",
+                                                      "target_module":  "workflow",
+                                                      "target_terms":  [
+                                                                           "ExperimentDefinition",
+                                                                           "CaseMaterialization",
+                                                                           "WorkflowPlan",
+                                                                           "TaskOutcome"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "SimulationBuilder",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "simulation-builder-plan",
+                                                      "authority_domain":  "Design/Plan",
+                                                      "owner_role":  "compiler_lead",
+                                                      "target_module":  "compiler",
+                                                      "target_terms":  [
+                                                                           "CompilationOutcome",
+                                                                           "LinkOutcome"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  },
+                                                  {
+                                                      "id":  "simulation-builder-operation",
+                                                      "authority_domain":  "Operation",
+                                                      "owner_role":  "application_lead",
+                                                      "target_module":  "application",
+                                                      "target_terms":  [
+                                                                           "ApplicationControlPlane",
+                                                                           "SessionCreateOutcome",
+                                                                           "OperationReceipt"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "SimulationNode",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "simulation-node-definition",
+                                                      "authority_domain":  "Design/Plan",
+                                                      "owner_role":  "model_sdk_lead",
+                                                      "target_module":  "model_sdk",
+                                                      "target_terms":  [
+                                                                           "ModelDefinition",
+                                                                           "RuntimeComponent",
+                                                                           "RuntimeCellRecipe"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "SimulationSummary",
+                         "registry_status":  "audit-only",
+                         "source_refs":  "01 section 16",
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "simulation-summary-workflow",
+                                                      "authority_domain":  "Artifact",
+                                                      "owner_role":  "evidence_workflow_lead",
+                                                      "target_module":  "workflow",
+                                                      "target_terms":  [
+                                                                           "MetricResult",
+                                                                           "EvidenceBundle"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     },
+                     {
+                         "legacy_name":  "Simulator",
+                         "registry_status":  "registered",
+                         "source_refs":  [
+                                             "reference-glossary Legacy registry",
+                                             "01 section 16"
+                                         ],
+                         "responsibilities":  [
+                                                  {
+                                                      "id":  "simulator-session",
+                                                      "authority_domain":  "Model",
+                                                      "owner_role":  "runtime_numerics_lead",
+                                                      "target_module":  "kernel",
+                                                      "target_terms":  [
+                                                                           "SessionRuntimeBindings",
+                                                                           "StepTransaction",
+                                                                           "RunOutcome"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  },
+                                                  {
+                                                      "id":  "simulator-control",
+                                                      "authority_domain":  "Operation",
+                                                      "owner_role":  "application_lead",
+                                                      "target_module":  "application",
+                                                      "target_terms":  [
+                                                                           "SessionCreateOutcome",
+                                                                           "SessionHandle"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  },
+                                                  {
+                                                      "id":  "simulator-comparison",
+                                                      "authority_domain":  "Operation",
+                                                      "owner_role":  "evidence_workflow_lead",
+                                                      "target_module":  "workflow",
+                                                      "target_terms":  [
+                                                                           "WorkflowPlan",
+                                                                           "TaskOutcome"
+                                                                       ],
+                                                      "authority_ref":  "legacy-ownership-registry"
+                                                  }
+                                              ]
+                     }
+                 ]
+}

@@ -1,0 +1,78 @@
+[archive-verification]
+working_directory=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT
+command=Get-FileHash -Algorithm SHA256 C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\reference\legacy\legacy-source.zip
+exit_code=0
+log=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\docs\quality\r0-leg-001\runs\20260809T081000Z\logs\01-archive-verification.log
+
+[clean-extraction]
+working_directory=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT
+command=Expand-Archive twice from C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\reference\legacy\legacy-source.zip
+exit_code=0
+log=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\docs\quality\r0-leg-001\runs\20260809T081000Z\logs\02-extraction.log
+
+[legacy-configure-25-tests]
+working_directory=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT
+command=C:\Users\17721\Documents\Soft\MSYS64\mingw64\bin\cmake.exe -S C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\build\r0-leg-001\runs\20260809T081000Z\test-extraction\GNCZMKN-legacy-a63621c -B C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\build\r0-leg-001\runs\20260809T081000Z\build-tests -G "MinGW Makefiles" -DBUILD_TESTS=ON -DGNC_BUILD_EXAMPLE_TESTS=ON -DGNC_BUILD_PROJECT_TESTS=OFF -DGNC_BUILD_ARCHITECTURE_GUARDS=ON -DCMAKE_BUILD_TYPE=Release
+exit_code=0
+log=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\docs\quality\r0-leg-001\runs\20260809T081000Z\logs\03-configure.log
+
+[legacy-build-25-tests]
+working_directory=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT
+command=C:\Users\17721\Documents\Soft\MSYS64\mingw64\bin\cmake.exe --build C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\build\r0-leg-001\runs\20260809T081000Z\build-tests --parallel 4
+exit_code=0
+log=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\docs\quality\r0-leg-001\runs\20260809T081000Z\logs\04-build.log
+
+[legacy-ctest-25-tests]
+working_directory=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT
+command=C:\Users\17721\Documents\Soft\MSYS64\mingw64\bin\ctest.exe --test-dir C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\build\r0-leg-001\runs\20260809T081000Z\build-tests --output-on-failure --no-tests=error
+exit_code=0
+log=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\docs\quality\r0-leg-001\runs\20260809T081000Z\logs\05-ctest.log
+
+[direct-test_ideal_cartesian_3dof_mission]
+working_directory=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\build\r0-leg-001\runs\20260809T081000Z\test-extraction\GNCZMKN-legacy-a63621c
+command=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\build\r0-leg-001\runs\20260809T081000Z\build-tests\bin\test_ideal_cartesian_3dof_mission.exe
+exit_code=0
+log=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\docs\quality\r0-leg-001\runs\20260809T081000Z\logs\06-direct-test_ideal_cartesian_3dof_mission.log
+
+[direct-test_ideal_cartesian_6dof_mission]
+working_directory=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\build\r0-leg-001\runs\20260809T081000Z\test-extraction\GNCZMKN-legacy-a63621c
+command=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\build\r0-leg-001\runs\20260809T081000Z\build-tests\bin\test_ideal_cartesian_6dof_mission.exe
+exit_code=0
+log=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\docs\quality\r0-leg-001\runs\20260809T081000Z\logs\06-direct-test_ideal_cartesian_6dof_mission.log
+
+[baseline-mission-configure]
+working_directory=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT
+command=C:\Users\17721\Documents\Soft\MSYS64\mingw64\bin\cmake.exe -S C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\build\r0-leg-001\runs\20260809T081000Z\mission-extraction\GNCZMKN-legacy-a63621c -B C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\build\r0-leg-001\runs\20260809T081000Z\build-mission-baseline -G "MinGW Makefiles" -DBUILD_TESTS=OFF -DGNC_ACTIVE_PROJECT=example_05_ideal_3dof_geographic_baseline -DCMAKE_BUILD_TYPE=Release
+exit_code=0
+log=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\docs\quality\r0-leg-001\runs\20260809T081000Z\logs\10-baseline-configure.log
+
+[baseline-mission-build]
+working_directory=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT
+command=C:\Users\17721\Documents\Soft\MSYS64\mingw64\bin\cmake.exe --build C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\build\r0-leg-001\runs\20260809T081000Z\build-mission-baseline --target gnc_sim --parallel 4
+exit_code=0
+log=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\docs\quality\r0-leg-001\runs\20260809T081000Z\logs\11-baseline-build.log
+
+[baseline-geographic-3dof-run]
+working_directory=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\build\r0-leg-001\runs\20260809T081000Z\mission-extraction\GNCZMKN-legacy-a63621c
+command=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\build\r0-leg-001\runs\20260809T081000Z\build-mission-baseline\bin\gnc_sim.exe --config user/example_05_ideal_3dof_geographic_baseline/config/mission.json
+exit_code=0
+log=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\docs\quality\r0-leg-001\runs\20260809T081000Z\logs\12-baseline-run.log
+
+[yyz-mission-configure]
+working_directory=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT
+command=C:\Users\17721\Documents\Soft\MSYS64\mingw64\bin\cmake.exe -S C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\build\r0-leg-001\runs\20260809T081000Z\mission-extraction\GNCZMKN-legacy-a63621c -B C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\build\r0-leg-001\runs\20260809T081000Z\build-mission-yyz -G "MinGW Makefiles" -DBUILD_TESTS=OFF -DGNC_ACTIVE_PROJECT=yyz_cartesian_6dof_framework_9 -DCMAKE_BUILD_TYPE=Release
+exit_code=0
+log=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\docs\quality\r0-leg-001\runs\20260809T081000Z\logs\20-yyz-configure.log
+
+[yyz-mission-build]
+working_directory=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT
+command=C:\Users\17721\Documents\Soft\MSYS64\mingw64\bin\cmake.exe --build C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\build\r0-leg-001\runs\20260809T081000Z\build-mission-yyz --target gnc_sim --parallel 4
+exit_code=0
+log=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\docs\quality\r0-leg-001\runs\20260809T081000Z\logs\21-yyz-build.log
+
+[yyz-cartesian-6dof-run]
+working_directory=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\build\r0-leg-001\runs\20260809T081000Z\mission-extraction\GNCZMKN-legacy-a63621c
+command=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\build\r0-leg-001\runs\20260809T081000Z\build-mission-yyz\bin\gnc_sim.exe --config user/yyz_cartesian_6dof_framework_9/config/mission.json
+exit_code=0
+log=C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\docs\quality\r0-leg-001\runs\20260809T081000Z\logs\22-yyz-run.log
+

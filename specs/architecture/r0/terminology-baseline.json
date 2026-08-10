@@ -1,0 +1,2923 @@
+{
+    "schema_version":  "gnczmkn.r0-architecture-baseline/1",
+    "document_kind":  "terminology_baseline",
+    "task_id":  "R0-ARCH-001",
+    "baseline_date":  "2026-08-09",
+    "maturity":  "Accepted R0 governance baseline governed by ADR-0010 and ADR-0011",
+    "registry":  {
+                     "id":  "terminology-registry",
+                     "authority_path":  "docs/adr/0011-r0-scientific-terminology-overlay.md",
+                     "imported_registry_path":  "design-notes/gnczmkn-architecture-roadmap/reference-glossary.md",
+                     "owner_role":  "architecture_lead",
+                     "authority_rule":  "canonical spelling and registry identity are singular; detail_authorities are informative semantic references"
+                 },
+    "source_snapshots":  [
+                             {
+                                 "path":  "design-notes/gnczmkn-architecture-roadmap/reference-glossary.md",
+                                 "sha256":  "69b119abfb933c05a4c603385f80c6a6ccee49e3916a6f29cda0e0d1b956f572",
+                                 "locator":  "sections 1 through 9"
+                             },
+                             {
+                                 "path":  "design-notes/gnczmkn-architecture-roadmap/02-layered-reference-architecture.md",
+                                 "sha256":  "a5c6610d52edca947912368a122937c1f43fdc3347f94a5380e6dc574568f4d3",
+                                 "locator":  "sections 1.2, 1.3, 9, and 13"
+                             },
+                             {
+                                 "path":  "docs/adr/0010-r0-architecture-baseline-format.md",
+                                 "sha256":  "5a239f0e57d68b22f42931987e818837236bad2baba7cbf76f5e30c473a9bc1c",
+                                 "locator":  "Decision and verification"
+                             },
+                             {
+                                 "path":  "docs/adr/0011-r0-scientific-terminology-overlay.md",
+                                 "sha256":  "38bca6f241d75378a19ee2e78ccfce58d9bc335429685adedab9c4b1c1e4fd3b",
+                                 "locator":  "Decision and verification"
+                             },
+                             {
+                                 "path":  "docs/adr/0005-si-unit-and-numeric-conventions.md",
+                                 "sha256":  "a9e42f8ff0f15d1b6bb778dfffabcc66d7718366212077f4cd0d6c5cd89c5a56",
+                                 "locator":  "Decision"
+                             },
+                             {
+                                 "path":  "docs/adr/0006-frame-transform-conventions.md",
+                                 "sha256":  "55b1e6785f556ff02c4fdfebf46b29b0fe3a49c18aaec4eacce541e989bf111c",
+                                 "locator":  "Decision"
+                             },
+                             {
+                                 "path":  "docs/adr/0007-time-value-conventions.md",
+                                 "sha256":  "eb3749371d334b9f0dfdf2c029ba2ff5acee82acbb64ed88268a6de84d5da24d",
+                                 "locator":  "Decision"
+                             },
+                             {
+                                 "path":  "docs/adr/0008-quaternion-conventions.md",
+                                 "sha256":  "a6f9e2fac58a3c4b3df6e2f0e99bec3ed0a94b383a1925bb76190023c3e498ea",
+                                 "locator":  "Decision"
+                             }
+                         ],
+    "terms":  [
+                  {
+                      "canonical_name":  "ResearchWorkbench",
+                      "status":  "Stable",
+                      "definition":  "覆盖问题定义、模型供给、编译、执行、分析、论证和报告的整体产品",
+                      "detail_authorities":  "00",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "AuthorityDomain",
+                      "status":  "Stable",
+                      "definition":  "Design/Plan、Model、Operation、Artifact 四类权威提交边界",
+                      "detail_authorities":  "02",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "StateOwner",
+                      "status":  "Stable",
+                      "definition":  "对一份可变模型事实拥有唯一写入与提交责任的对象",
+                      "detail_authorities":  "02、12、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "DecisionAuthority",
+                      "status":  "V1",
+                      "definition":  "对导航源、飞行阶段、构型等共享选择拥有唯一决策责任的窄 owner",
+                      "detail_authorities":  "13",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "PermissionGrant",
+                      "status":  "V1",
+                      "definition":  "允许 actor 对明确资源执行明确操作的授权凭证",
+                      "detail_authorities":  "10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CapabilitySlice",
+                      "status":  "Stable",
+                      "definition":  "复杂需求按权威事实拆出的最小架构分析单元",
+                      "detail_authorities":  "02",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ChangeVector",
+                      "status":  "Stable",
+                      "definition":  "`\u003cV,G,S,T,I,R,X\u003e` 七维语义变化描述",
+                      "detail_authorities":  "02",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ChangeCard",
+                      "status":  "V1",
+                      "definition":  "A–E 类普通变化使用的简化评审记录，包含 owner、接缝、非零维度、稳定区和证据",
+                      "detail_authorities":  "README、02",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "KernelCapability",
+                      "status":  "Stable",
+                      "definition":  "Model Authority 现有算子无法表达的新通用时间、原子性、rollback 或 effect 语义",
+                      "detail_authorities":  "02",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "BackendCapability",
+                      "status":  "V1",
+                      "definition":  "执行后端声明的线程、设备、deadline、rollback、transport 等能力",
+                      "detail_authorities":  "02、10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CapabilityStatus",
+                      "status":  "V1",
+                      "definition":  "`V1 \\| Stable \\| PressureOnly \\| Deferred \\| Legacy` 的交付状态",
+                      "detail_authorities":  "README、11",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "PlanFirewall",
+                      "status":  "Stable",
+                      "definition":  "作者输入与 executor 之间只能通过已编译计划交接",
+                      "detail_authorities":  "00、02、05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CommitFirewall",
+                      "status":  "Stable",
+                      "definition":  "每个 owner 只能通过本域事务提交权威事实",
+                      "detail_authorities":  "00、02、06、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ArtifactControlFirewall",
+                      "status":  "Stable",
+                      "definition":  "执行路径只通过 typed command、receipt、Outcome、Observation 与 ArtifactRef 连接",
+                      "detail_authorities":  "00、02、08–10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "MissionSource",
+                      "status":  "V1",
+                      "definition":  "人或工具编写的场景、模型、参数、运行和观测配置文档集合",
+                      "detail_authorities":  "05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "SourceFrontend",
+                      "status":  "V1",
+                      "definition":  "把 JSON/YAML/受限 INI/蓝图/API 解析为语法中性的 SourceTree/SourceMap",
+                      "detail_authorities":  "05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "SourceFrontendPort",
+                      "status":  "V1",
+                      "definition":  "SourceFrontend 向 Compiler 交付 SourceTree、SourceMap、SourceBlob refs 与 ParseOutcome 的格式中性端口",
+                      "detail_authorities":  "05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "SourceTree",
+                      "status":  "V1",
+                      "definition":  "与输入编码解耦的作者结构树",
+                      "detail_authorities":  "05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "SourceMap",
+                      "status":  "V1",
+                      "definition":  "SourceTree 节点到原文 URI、路径和 span 的映射",
+                      "detail_authorities":  "05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "MissionSourcePatch",
+                      "status":  "V1",
+                      "definition":  "针对 versioned MissionSource 的 typed authoring proposal",
+                      "detail_authorities":  "05、10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CompilePatch",
+                      "status":  "V1",
+                      "definition":  "经批准并由 Experiment/case materializer 物化、在编译前作用于允许路径的 typed patch",
+                      "detail_authorities":  "05、09",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "DefinitionRef",
+                      "status":  "Stable",
+                      "definition":  "对带 id/version 的 Model、Algorithm、Task 或其他 Definition 的稳定引用",
+                      "detail_authorities":  "05、08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "EntityId",
+                      "status":  "Stable",
+                      "definition":  "Model Graph 与运行证据中一项物理或逻辑实体的稳定身份",
+                      "detail_authorities":  "04、05、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ModelOccurrenceId",
+                      "status":  "Stable",
+                      "definition":  "Mission/IR 中一次 ModelDefinition 选择的稳定身份；不等同于运行实例",
+                      "detail_authorities":  "05、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "SessionId",
+                      "status":  "Stable",
+                      "definition":  "一次 Simulation Session 实例的稳定身份",
+                      "detail_authorities":  "05、06",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RunId",
+                      "status":  "Stable",
+                      "definition":  "Session 中一次 initialize/reset/restore attempt 及其成功 run 的全局唯一身份",
+                      "detail_authorities":  "06、08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RuntimeInstanceId",
+                      "status":  "Stable",
+                      "definition":  "ExecutionPlanDescriptor 为 RuntimeComponent occurrence 分配的 plan-local slot id；与 SessionId 组成 RuntimeCell identity",
+                      "detail_authorities":  "04、05、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ParameterId",
+                      "status":  "Stable",
+                      "definition":  "跨 Experiment、RunBinding、command、manifest 与 lineage 保持稳定的参数身份",
+                      "detail_authorities":  "05、09",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ParameterSet",
+                      "status":  "V1",
+                      "definition":  "物理、资产和算法参数的可复用作者输入",
+                      "detail_authorities":  "05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RunProfile",
+                      "status":  "V1",
+                      "definition":  "dt、duration、数值、确定性和资源策略的作者输入",
+                      "detail_authorities":  "05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ObservationPlan",
+                      "status":  "V1",
+                      "definition":  "观测字段、采样、criticality、sink 和指标意图的完整计划",
+                      "detail_authorities":  "05、08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CanonicalModelGraph",
+                      "status":  "Stable",
+                      "definition":  "实体、ModelOccurrence、owner、关系、绑定意图与研究意图的规范图",
+                      "detail_authorities":  "02、05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "MissionIR",
+                      "status":  "V1",
+                      "definition":  "CanonicalModelGraph 的 typed、版本化、可持久化中间表示",
+                      "detail_authorities":  "05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ModelPackage",
+                      "status":  "V1",
+                      "definition":  "带版本、依赖、资产、Definition、测试和成熟度声明的发布单元",
+                      "detail_authorities":  "05、10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "PackageManifest",
+                      "status":  "V1",
+                      "definition":  "package identity、依赖、贡献、实现和验证元数据",
+                      "detail_authorities":  "05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ModelDefinition",
+                      "status":  "V1",
+                      "definition":  "Catalog 中可选择模型的稳定配置、端口、执行形式和证据声明",
+                      "detail_authorities":  "05、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "AlgorithmDefinition",
+                      "status":  "V1",
+                      "definition":  "AlgorithmKernel 的不可变参数、公式选择、限制和数值策略引用",
+                      "detail_authorities":  "12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CompiledModelOccurrence",
+                      "status":  "V1",
+                      "definition":  "Mission 中一次模型选择经过归一化、资产绑定和实现锁定后的不可变记录",
+                      "detail_authorities":  "05、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "StateSchema",
+                      "status":  "V1",
+                      "definition":  "owner state blocks 的字段、类型、shape、单位、初始化、codec 与 invariant 契约",
+                      "detail_authorities":  "05、12、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "EntitySelectorDescriptor",
+                      "status":  "V1",
+                      "definition":  "跨实体读取的 selector、cardinality、visibility、inactive policy、frame 与 temporal contract",
+                      "detail_authorities":  "04、05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "VariationTargetDescriptor",
+                      "status":  "V1",
+                      "definition":  "拉偏、扰动或故障目标的 ParameterId、单位、合法域、物化时机、owner 与恢复规则",
+                      "detail_authorities":  "05、09",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "OutputSchema",
+                      "status":  "V1",
+                      "definition":  "RuntimeComponent 可发布 output 的稳定字段、类型、单位、time 与 quality 契约",
+                      "detail_authorities":  "08、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "PortDescriptor",
+                      "status":  "V1",
+                      "definition":  "typed endpoint 的 contract、direction、cardinality、scope、time、unit/frame 与 quality 声明",
+                      "detail_authorities":  "04、05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "PureQuery",
+                      "status":  "V1",
+                      "definition":  "对 immutable PreparedModel 的显式只读查询语义；无 Session state、schedule 或副作用",
+                      "detail_authorities":  "04、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "PureQueryDescriptor",
+                      "status":  "V1",
+                      "definition":  "ModelDefinition 中声明 PureQuery execution form 的 tagged descriptor",
+                      "detail_authorities":  "05、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RuntimeComponentDescriptor",
+                      "status":  "V1",
+                      "definition":  "独立运行边界的 state、port、obligation、lifecycle 和 resource 声明",
+                      "detail_authorities":  "05、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RuntimeCellRecipe",
+                      "status":  "V1",
+                      "definition":  "把 AlgorithmKernel、StateFragment、mechanism、port 与 obligation 合成为一个运行边界的 package 定义",
+                      "detail_authorities":  "12、13",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RuntimeCellProfile",
+                      "status":  "V1",
+                      "definition":  "SDK 提供的 recipe 组合模板；Compiler 最终展开为 obligations",
+                      "detail_authorities":  "12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RuntimeComponent",
+                      "status":  "V1",
+                      "definition":  "execution form 声明的独立运行边界",
+                      "detail_authorities":  "12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RuntimeCell",
+                      "status":  "V1",
+                      "definition":  "RuntimeComponent 在某个 Session 中的实例，identity 为 `(SessionId, RuntimeInstanceId)`",
+                      "detail_authorities":  "12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "BindingPlan",
+                      "status":  "V1",
+                      "definition":  "已解析的 typed producer-consumer edge、adapter、cardinality、time 与 handle 计划",
+                      "detail_authorities":  "04、05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ExecutionPlanDescriptor",
+                      "status":  "V1",
+                      "definition":  "portable、immutable、可序列化的完整执行语义与 proof refs",
+                      "detail_authorities":  "05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ExecutionPlanImage",
+                      "status":  "V1",
+                      "definition":  "Descriptor 与精确实现 link 后形成的进程内只读 entry/handle 布局",
+                      "detail_authorities":  "05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "PlanRef",
+                      "status":  "V1",
+                      "definition":  "对 immutable plan descriptor/image identity 的稳定引用",
+                      "detail_authorities":  "02、05、10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "PlanProofRecord",
+                      "status":  "V1",
+                      "definition":  "Compiler 对一项 identity/owner/causality/time/state/resource/evidence 断言的结构化结果",
+                      "detail_authorities":  "05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "PlanProofIndex",
+                      "status":  "V1",
+                      "definition":  "graph element、plan element、source span 与 PlanProofRecord 之间的可查询索引",
+                      "detail_authorities":  "05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "PreparedModel",
+                      "status":  "V1",
+                      "definition":  "prepare 阶段生成、immutable、可由多个 Session 安全共享的模型数据产品",
+                      "detail_authorities":  "05、06、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "PreparedModelKey",
+                      "status":  "V1",
+                      "definition":  "PreparedModel cache identity；字段固定为 definition id/version、canonical occurrence config hash、asset-set hash、implementation id/version、numerical-policy hash、preparation-policy hash",
+                      "detail_authorities":  "05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "SessionRuntimeBindings",
+                      "status":  "V1",
+                      "definition":  "Session 私有的 RuntimeCell、state、workspace、resource handle 与 prepared refs",
+                      "detail_authorities":  "05、06",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RunBindingSchema",
+                      "status":  "V1",
+                      "definition":  "Descriptor 允许的单次运行输入字段、类型、单位、约束和 identity 规则",
+                      "detail_authorities":  "05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RunBinding",
+                      "status":  "V1",
+                      "definition":  "经 RunBindingSchema 验证的初态、seed、time origin、ParameterState 与输入引用",
+                      "detail_authorities":  "05、06",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "AlgorithmKernel",
+                      "status":  "V1",
+                      "definition":  "只接收显式 definition/state/input/workspace 并返回 result/delta 的纯模型计算",
+                      "detail_authorities":  "12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ClosureKernel",
+                      "status":  "V1",
+                      "definition":  "在显式 sample/candidate context 上求物理闭合、无可变实例状态与副作用的纯 kernel",
+                      "detail_authorities":  "12、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RuntimeState",
+                      "status":  "V1",
+                      "definition":  "某 Session 中会影响未来模型结果、必须支持 reset/checkpoint/replay 的 owner 状态",
+                      "detail_authorities":  "12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "StateFragment",
+                      "status":  "V1",
+                      "definition":  "嵌入宿主 RuntimeCell、并入其 StateSchema 的局部行为状态片段",
+                      "detail_authorities":  "13",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "FaultStateFragment",
+                      "status":  "V1",
+                      "definition":  "宿主 RuntimeCell 内记录 fault mode、触发、恢复和局部退化历史的 StateFragment",
+                      "detail_authorities":  "13",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "EmbeddedMechanism",
+                      "status":  "V1",
+                      "definition":  "无独立 Session identity、port、schedule 和 lifecycle 的局部行为工具",
+                      "detail_authorities":  "13",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ModeState",
+                      "status":  "V1",
+                      "definition":  "宿主 owner 内记录当前离散 mode、进入 tick 与局部 transition history 的 StateFragment",
+                      "detail_authorities":  "13",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ComponentDelta",
+                      "status":  "V1",
+                      "definition":  "一个 obligation invocation 提议的 owner state patch、output、event、telemetry 和 diagnostic drafts",
+                      "detail_authorities":  "12、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "AlgorithmResult",
+                      "status":  "V1",
+                      "definition":  "AlgorithmKernel 返回的 typed output、next local state、telemetry 与 diagnostic facts",
+                      "detail_authorities":  "12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "StateReplacement",
+                      "status":  "V1",
+                      "definition":  "带 state block handle、base epoch、invocation id 和 commit class 的完整 owner-block replacement payload",
+                      "detail_authorities":  "12、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "InstantPatch",
+                      "status":  "V1",
+                      "definition":  "commit class 为 InstantAtTk、在当前 committed boundary 原子替换 owner state 的 StateReplacement",
+                      "detail_authorities":  "14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "IntervalCandidate",
+                      "status":  "V1",
+                      "definition":  "commit class 为 IntervalAtTk1、描述 `[t_k,t_{k+1}]` 演化后候选 owner state 的 StateReplacement",
+                      "detail_authorities":  "14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ContinuousCandidate",
+                      "status":  "V1",
+                      "definition":  "integrator/solver 对连续 state block 产生的候选状态",
+                      "detail_authorities":  "14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CommittedModelState",
+                      "status":  "Stable",
+                      "definition":  "某个 state_epoch/tick 上已原子提交的物理、离散、控制与实体生命周期事实",
+                      "detail_authorities":  "02、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CommittedStateStore",
+                      "status":  "V1",
+                      "definition":  "保存 owner committed state blocks 的 Session store",
+                      "detail_authorities":  "06、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CommittedOutputStore",
+                      "status":  "V1",
+                      "definition":  "保存跨 tick held sampled outputs 的 Session store",
+                      "detail_authorities":  "06、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CommittedCommandLedger",
+                      "status":  "V1",
+                      "definition":  "保存 command admission/maintenance 的 committed sequence 与状态、不属于模型 state block 的控制存储",
+                      "detail_authorities":  "06、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "SessionCommandQueue",
+                      "status":  "V1",
+                      "definition":  "保存已受理且尚未终结的 command entries，并在 safe point 提供冻结 cutoff view 的控制存储",
+                      "detail_authorities":  "06、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "EventQueue",
+                      "status":  "V1",
+                      "definition":  "按 EventDeliveryPlan 保存、排序和消费事件的可 checkpoint 控制存储",
+                      "detail_authorities":  "06、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "SourceRuntimeState",
+                      "status":  "V1",
+                      "definition":  "ExternalEndpoint 中会影响下一批 payload/quality 的 cursor、dedup watermark 与重放状态",
+                      "detail_authorities":  "06、12、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CycleFrame",
+                      "status":  "V1",
+                      "definition":  "单个 StepTransaction 内由编译 handle 访问的 typed signal/interval slot frame",
+                      "detail_authorities":  "14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "InputFrameView",
+                      "status":  "V1",
+                      "definition":  "Session 为一个 obligation callsite 授权的 CycleFrame slot-handle 只读视图，随 StepTransaction 失效",
+                      "detail_authorities":  "06、08、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "InputBundleView",
+                      "status":  "V1",
+                      "definition":  "Runtime Cell entry 从 InputFrameView 投影出的领域 typed 输入视图，直接传给 AlgorithmKernel",
+                      "detail_authorities":  "12、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "OutputWriterSet",
+                      "status":  "V1",
+                      "definition":  "一个 obligation callsite 获得的 Descriptor-authorized CycleFrame writer tokens 集合",
+                      "detail_authorities":  "14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "QueryHandleSpec",
+                      "status":  "V1",
+                      "definition":  "Descriptor 中 query occurrence、contract 与 workspace layout 的 portable handle 规格",
+                      "detail_authorities":  "04、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "LinkedQueryEntry",
+                      "status":  "V1",
+                      "definition":  "ExecutionPlanImage 中已解析到精确 query kernel implementation 的只读 entry",
+                      "detail_authorities":  "04、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "BoundQueryHandle",
+                      "status":  "V1",
+                      "definition":  "ExecutionPlanImage 中绑定 QueryPlan、PreparedModel 与纯 kernel 的运行期只读 handle",
+                      "detail_authorities":  "04、12、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "BoundQuerySet",
+                      "status":  "V1",
+                      "definition":  "一个 plan callsite 获得的窄 query handle 集合，只允许调用 Descriptor 授权的 queries",
+                      "detail_authorities":  "04、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ClosureHandleSpec",
+                      "status":  "V1",
+                      "definition":  "Descriptor 中 closure occurrence、contract 与 workspace layout 的 portable handle 规格",
+                      "detail_authorities":  "12、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "LinkedClosureEntry",
+                      "status":  "V1",
+                      "definition":  "ExecutionPlanImage 中已解析到精确 ClosureKernel implementation 的只读 entry",
+                      "detail_authorities":  "12、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "BoundClosureHandle",
+                      "status":  "V1",
+                      "definition":  "SessionRuntimeBindings 将 ClosureHandleSpec、LinkedClosureEntry 与 PreparedModel 组合后的只读 handle",
+                      "detail_authorities":  "12、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "StateCodecEntry",
+                      "status":  "V1",
+                      "definition":  "ExecutionPlanImage 中 state block 的 size/alignment/clone/swap/validate/encode/decode/project 函数表",
+                      "detail_authorities":  "12、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "SlotCodecEntry",
+                      "status":  "V1",
+                      "definition":  "ExecutionPlanImage 中 CycleFrame slot 的 size/alignment/copy/validate/project 函数表",
+                      "detail_authorities":  "14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "StepJournal",
+                      "status":  "V1",
+                      "definition":  "本 step 的 staged patch、event、receipt、diagnostic 与 commit 决策记录",
+                      "detail_authorities":  "14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "StepTransaction",
+                      "status":  "Stable",
+                      "definition":  "从一个 committed boundary 到下一个 boundary 的整步原子事务",
+                      "detail_authorities":  "06、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ModelCommit",
+                      "status":  "Stable",
+                      "definition":  "将已验证 owner state/output、tick 与相关 staged receipt 原子发布为新 state_epoch 的提交",
+                      "detail_authorities":  "02、06、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "InitializationCommit",
+                      "status":  "V1",
+                      "definition":  "首次 initialize 成功后原子建立 run、初态、初始 output 与 state_epoch=0 的提交",
+                      "detail_authorities":  "06",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ResetCommit",
+                      "status":  "V1",
+                      "definition":  "reset 成功后原子建立新 RunId、替换初态并重置 tick 的提交",
+                      "detail_authorities":  "06",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RestoreCommit",
+                      "status":  "V1",
+                      "definition":  "checkpoint 候选 store 全部验证后原子建立分支 run 的提交",
+                      "detail_authorities":  "06",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CommandLedgerCommit",
+                      "status":  "V1",
+                      "definition":  "提交 command admission、expiry 或 supersession，只推进 ledger sequence、不改变 state_epoch",
+                      "detail_authorities":  "06、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CommandSubmissionOutcome",
+                      "status":  "V1",
+                      "definition":  "command 入口的 `Enqueued \\| SubmissionRejected` 与关联 Diagnostic；不证明模型已应用",
+                      "detail_authorities":  "04、06",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CommandLedgerMaintenanceReceipt",
+                      "status":  "V1",
+                      "definition":  "safe point 上 Expired/Superseded 等 command queue 维护回执",
+                      "detail_authorities":  "04、06",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CommandApplicationReceipt",
+                      "status":  "V1",
+                      "definition":  "owner 在 due tick 产生并随 ModelCommit 提交的 Applied/Rejected/Deferred 回执",
+                      "detail_authorities":  "04、06、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "state_epoch",
+                      "status":  "Stable",
+                      "definition":  "每次成功 ModelCommit 单调递增的模型状态 revision",
+                      "detail_authorities":  "06、08、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "tick",
+                      "status":  "Stable",
+                      "definition":  "当前 run 内 committed grid boundary 的逻辑步序号",
+                      "detail_authorities":  "06、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ExecutionObligation",
+                      "status":  "Stable",
+                      "definition":  "Kernel 可执行的 `PublishProjection \\| BoundaryEvaluation \\| IntervalEvolution \\| DerivativeEvaluation \\| SourceFreeze \\| PostCommitEffect \\| ResourceLease` 基础义务",
+                      "detail_authorities":  "02、04、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "PublishProjection",
+                      "status":  "V1",
+                      "definition":  "从 committed owner state 生成 t_k truth/state projection 的 ExecutionObligation",
+                      "detail_authorities":  "02、04、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "BoundaryEvaluation",
+                      "status":  "V1",
+                      "definition":  "在 boundary DAG 上以 committed state 与 typed inputs 产生 ComponentDelta 的 ExecutionObligation",
+                      "detail_authorities":  "02、04、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "IntervalEvolution",
+                      "status":  "V1",
+                      "definition":  "为 `[t_k,t_{k+1}]` 产生离散区间演化候选的 ExecutionObligation",
+                      "detail_authorities":  "02、04、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "DerivativeEvaluation",
+                      "status":  "V1",
+                      "definition":  "在 IntegrationScopePlan candidate stage 求导数或 closure outcome 的 ExecutionObligation",
+                      "detail_authorities":  "02、04、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "SourceFreeze",
+                      "status":  "V1",
+                      "definition":  "在 safe point 截止 ExternalEndpoint 输入并产生 immutable batch/cursor candidate 的 ExecutionObligation",
+                      "detail_authorities":  "02、04、12、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "PostCommitEffect",
+                      "status":  "PressureOnly",
+                      "definition":  "只消费 committed Outcome/effect intent 并生成幂等外部效果 receipt 的 ExecutionObligation",
+                      "detail_authorities":  "02、04、10、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ResourceLease",
+                      "status":  "V1",
+                      "definition":  "在 session/run lifecycle 内显式登记 acquire、rollback 与 close 的 ExecutionObligation",
+                      "detail_authorities":  "02、04、06、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ExecutionRegionPlan",
+                      "status":  "V1",
+                      "definition":  "`Publish \\| Boundary \\| Integration \\| Commit \\| PostCommit` 区域的有序 obligation callsites、safe point 与 transaction branch 计划",
+                      "detail_authorities":  "05、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ObligationCallsitePlan",
+                      "status":  "V1",
+                      "definition":  "一个已编译 obligation 调用点的 cell、entry、handle、state access 与稳定调用序号",
+                      "detail_authorities":  "05、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "BoundaryDagPlan",
+                      "status":  "V1",
+                      "definition":  "同一 boundary 上 current-cycle typed edges 的拓扑执行计划",
+                      "detail_authorities":  "05、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "TemporalBindingPlan",
+                      "status":  "V1",
+                      "definition":  "edge 的 TemporalRelation、rate、freshness、latency、hold 与 adapter 计划",
+                      "detail_authorities":  "05、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "PortSlotPlan",
+                      "status":  "V1",
+                      "definition":  "CycleFrame typed slot 的 writer、readers、storage 与 hold policy",
+                      "detail_authorities":  "14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "StateBlockPlan",
+                      "status":  "V1",
+                      "definition":  "state block 的 schema、StateOwner、初始化与 delta kind 计划",
+                      "detail_authorities":  "05、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "PreparedModelPlan",
+                      "status":  "V1",
+                      "definition":  "occurrence 到 prepare factory、PreparedModelKey、cache 与 lifetime 的计划",
+                      "detail_authorities":  "05、06、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "QueryPlan",
+                      "status":  "V1",
+                      "definition":  "query contract、prepared handle、pure kernel、workspace 与授权 caller 的编译计划",
+                      "detail_authorities":  "05、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CommandRoutePlan",
+                      "status":  "V1",
+                      "definition":  "command 的 DecisionAuthority、queue、effective point、owner route 与 receipt 计划",
+                      "detail_authorities":  "05、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "EventDeliveryPlan",
+                      "status":  "V1",
+                      "definition":  "event 的 delivery point、稳定排序与 consumer set 计划",
+                      "detail_authorities":  "05、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "EntityTopologyPlan",
+                      "status":  "V1",
+                      "definition":  "entity/group/relation/selector、activation mapping 与 topology revision 计划",
+                      "detail_authorities":  "05、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RegimeMappingPlan",
+                      "status":  "V1",
+                      "definition":  "两个 evolution regime 之间的完整 state mapping、event/time、continuity 与 invariant 计划",
+                      "detail_authorities":  "14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "InterventionPlan",
+                      "status":  "V1",
+                      "definition":  "ParameterId/CommandId 的允许 target、物化类别、domain、recovery 与 evidence 要求",
+                      "detail_authorities":  "05、09、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "TransactionPlan",
+                      "status":  "V1",
+                      "definition":  "terminal/continue/failure 分支的 commit sets、invariants、receipts、seal 与 effect hooks",
+                      "detail_authorities":  "05、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "TemporalRelation",
+                      "status":  "Stable",
+                      "definition":  "`CurrentCycle \\| PreviousCommitted \\| HeldLatest \\| IntervalModel \\| CandidateStateQuery \\| EventAtOrBefore` 数据时序关系",
+                      "detail_authorities":  "04、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "IntervalModel",
+                      "status":  "V1",
+                      "definition":  "对 `[t_k,t_{k+1}]` 有效、通过 TemporalRelation 交付的只读参数或纯 callable contract",
+                      "detail_authorities":  "14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "IntervalModelWrite",
+                      "status":  "V1",
+                      "definition":  "ComponentDelta 或 ClosureOutcome 对 transaction-local IntervalModel slot 的受权写入",
+                      "detail_authorities":  "14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "SampledSignal",
+                      "status":  "V1",
+                      "definition":  "带 sample/effective time、quality 与 hold/freshness 规则的 typed port kind",
+                      "detail_authorities":  "04、05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "AssetBinding",
+                      "status":  "V1",
+                      "definition":  "Model occurrence 到 immutable、versioned asset ArtifactRef 的编译绑定种类",
+                      "detail_authorities":  "04、05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "AtGrid",
+                      "status":  "V1",
+                      "definition":  "事件或转换只在已提交 grid boundary 生效的首版定位策略",
+                      "detail_authorities":  "06、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "IntegrationScopePlan",
+                      "status":  "V1",
+                      "definition":  "由一个 integrator 协同推进并在同一事务提交的连续 state members、closure、events、workspace 和 policy",
+                      "detail_authorities":  "03、06、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "SolverIslandPlan",
+                      "status":  "V1",
+                      "definition":  "IntegrationScopePlan 或 boundary region 内需要联立求解 residual/constraints 的封闭子计划",
+                      "detail_authorities":  "02、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "IContinuousGroup",
+                      "status":  "Legacy",
+                      "definition":  "当前源码中声明 RK 子步共享候选状态的接口；R3 切换后退出目标 API",
+                      "detail_authorities":  "01、11",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ClosureDescriptor",
+                      "status":  "V1",
+                      "definition":  "package/model 侧纯 closure kernel 的配置、输入、适用策略和验证声明",
+                      "detail_authorities":  "12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ContinuousClosureLink",
+                      "status":  "V1",
+                      "definition":  "BindingPlan 中把 candidate state、query kernel 和 held inputs 接入 IntegrationScopePlan 的边类型",
+                      "detail_authorities":  "04、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ClosureStrategy",
+                      "status":  "V1",
+                      "definition":  "`FrozenInterval \\| CandidateState \\| AlgebraicSolve` 三种连续闭合策略",
+                      "detail_authorities":  "14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ClosurePlan",
+                      "status":  "V1",
+                      "definition":  "Compiler 对 ClosureDescriptor、link 和 strategy 的已解析调用计划",
+                      "detail_authorities":  "05、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "NumericalPolicy",
+                      "status":  "V1",
+                      "definition":  "容差、迭代上限、外推、非有限值、确定性等数值选择",
+                      "detail_authorities":  "03",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "NumericalStatus",
+                      "status":  "V1",
+                      "definition":  "Ok/Converged、DomainError、NoPhysicalSolution、NotConverged、NonFinite、InternalFailure 等数值结果分类",
+                      "detail_authorities":  "03",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "NumericalOutcome",
+                      "status":  "V1",
+                      "definition":  "数值算法统一返回的 status、value、residual、iteration、flags 和 diagnostics facts",
+                      "detail_authorities":  "03",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RootProblem",
+                      "status":  "V1",
+                      "definition":  "求根问题的函数、导数、区间/初值、scale 和 policy 定义",
+                      "detail_authorities":  "03",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "QueryResult",
+                      "status":  "V1",
+                      "definition":  "纯查询返回的 value、domain status、quality、gradient 和 telemetry",
+                      "detail_authorities":  "03、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "Quality",
+                      "status":  "Stable",
+                      "definition":  "数据在来源、时效、有效域、故障和估计置信度方面的 typed 状态",
+                      "detail_authorities":  "04",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "FidelityLevel",
+                      "status":  "V1",
+                      "definition":  "模型或分析的物理/数值保真度选择及其适用域",
+                      "detail_authorities":  "03、10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ControlAnalysisResult",
+                      "status":  "V1",
+                      "definition":  "带 plant/controller/operating-point identity、线化矩阵、特征量、裕度、适用域和诊断的控制分析 Artifact payload",
+                      "detail_authorities":  "03",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "Evaluator",
+                      "status":  "V1",
+                      "definition":  "产生 EvaluationResult、metrics、Event 或 TerminationDecision 的 RuntimeCellProfile",
+                      "detail_authorities":  "04、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "TerminationDecision",
+                      "status":  "V1",
+                      "definition":  "evaluator 对 Continue/Complete/Abort/Invalidate 的结构化模型判定，带稳定 reason、time、subject 和 metrics",
+                      "detail_authorities":  "06",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ParameterState",
+                      "status":  "V1",
+                      "definition":  "Session 中由唯一 StateOwner 持有、可经受控 command 更新的运行期参数状态",
+                      "detail_authorities":  "05、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "TunableParameterDescriptor",
+                      "status":  "V1",
+                      "definition":  "ParameterState 中允许在线修改字段的 id、type、unit、range、effective point 与 policy 声明",
+                      "detail_authorities":  "05、10、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ParameterUpdateReducer",
+                      "status":  "V1",
+                      "definition":  "校验调参 command，并为 ParameterState 产生事务 patch 的纯 reducer",
+                      "detail_authorities":  "10、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RunResourceOpenHook",
+                      "status":  "V1",
+                      "definition":  "initialize/reset/restore attempt 中建立 run-scoped resource lease 并登记 rollback/close action 的 hook",
+                      "detail_authorities":  "04、06",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RunFinalizeHook",
+                      "status":  "V1",
+                      "definition":  "已提交 run 结束时执行领域 flush/protocol 并返回 Outcome、但不拥有 lease close 的 hook",
+                      "detail_authorities":  "04、06",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ModelPrepareFactory",
+                      "status":  "V1",
+                      "definition":  "从 CompiledModelOccurrence 与 immutable assets 构造 PreparedModel 的 package factory",
+                      "detail_authorities":  "04、06",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RuntimeCellFactory",
+                      "status":  "V1",
+                      "definition":  "从 descriptor、PreparedModel 与 compiled handles 创建 Session-local RuntimeCell 的 package factory",
+                      "detail_authorities":  "04、06",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "InstanceResourcePrepareHook",
+                      "status":  "V1",
+                      "definition":  "建立 run-invariant、session-scoped endpoint/resource 的 lifecycle hook",
+                      "detail_authorities":  "04、06",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "InitialStateBuilder",
+                      "status":  "V1",
+                      "definition":  "从 validated RunBinding 无副作用地构造首次 run 候选 state/output 的 builder",
+                      "detail_authorities":  "04、06",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ResetStateBuilder",
+                      "status":  "V1",
+                      "definition":  "从新 RunBinding 无副作用地构造 reset 候选 replacement state/output 的 builder",
+                      "detail_authorities":  "04、06",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "DisposeHook",
+                      "status":  "V1",
+                      "definition":  "释放 session-scoped resource、不得创建新 run 或改写 RunOutcome 的 lifecycle hook",
+                      "detail_authorities":  "04、06",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "SampledTransform",
+                      "status":  "V1",
+                      "definition":  "读取当前 inputs/state 并产生 sampled output 的 RuntimeCellProfile",
+                      "detail_authorities":  "12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "DiscreteStateProcessor",
+                      "status":  "V1",
+                      "definition":  "在 boundary 上更新离散 owner state 与 output 的 RuntimeCellProfile",
+                      "detail_authorities":  "12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ContinuousStateOwner",
+                      "status":  "V1",
+                      "definition":  "拥有连续 state block，并通过 IntegrationScopePlan 推进的 RuntimeCellProfile",
+                      "detail_authorities":  "12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "Coordinator",
+                      "status":  "V1",
+                      "definition":  "汇聚多个 candidate/command 并持有窄 DecisionAuthority 的 RuntimeCellProfile",
+                      "detail_authorities":  "12、13",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "FlightPhaseDecisionCell",
+                      "status":  "V1",
+                      "definition":  "持有共享飞行阶段 StateOwner/DecisionAuthority，并发布 revisioned phase snapshot 的参考 RuntimeCell",
+                      "detail_authorities":  "12、13、15",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "VehicleConfigurationDecisionCell",
+                      "status":  "V1",
+                      "definition":  "持有共享构型 StateOwner/DecisionAuthority，并发布 ConfigurationSnapshot 的参考 RuntimeCell",
+                      "detail_authorities":  "13、15",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "NavigationDecisionCell",
+                      "status":  "V1",
+                      "definition":  "在多个导航 candidate 间执行唯一交班 DecisionAuthority，并发布 NavigationEstimate/source snapshot 的参考 RuntimeCell",
+                      "detail_authorities":  "13、15",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "PreparedAeroModel",
+                      "status":  "V1",
+                      "definition":  "prepare 阶段生成的 immutable 气动网格、索引、插值系数与适用域产品",
+                      "detail_authorities":  "03、12、15",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "FaultCommand",
+                      "status":  "V1",
+                      "definition":  "触发、恢复或调整模拟故障的 typed command；只能由目标 owner/reducer 应用",
+                      "detail_authorities":  "04、13",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "NavigationEstimate",
+                      "status":  "V1",
+                      "definition":  "导航链对状态、协方差/quality、frame、sample time 与 source revision 的唯一正式估计输出",
+                      "detail_authorities":  "04、13、15",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "NavigationCandidate",
+                      "status":  "V1",
+                      "definition":  "单个导航器件或算法发布的 estimate candidate、health、coverage、covariance 与 freshness contract",
+                      "detail_authorities":  "13、15",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "NavigationSourceSnapshot",
+                      "status":  "V1",
+                      "definition":  "NavigationDecisionCell 发布的当前 source、handover state 与 revision 快照",
+                      "detail_authorities":  "13、15",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "GuidanceCommand",
+                      "status":  "V1",
+                      "definition":  "guidance 到 controller 的 tagged、带 basis revision/time/quality 的正式命令 contract",
+                      "detail_authorities":  "04、12、15",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ActuatorCommand",
+                      "status":  "V1",
+                      "definition":  "allocator/controller 到 actuator 的 typed command contract，携带构型 basis revision",
+                      "detail_authorities":  "13、15",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ActuatorCommandDisposition",
+                      "status":  "V1",
+                      "definition":  "actuator 对旧构型命令执行 reject、neutralize 或 typed remap 后发布的结构化结果",
+                      "detail_authorities":  "13、15",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ConfigurationSnapshot",
+                      "status":  "V1",
+                      "definition":  "VehicleConfigurationDecisionCell 发布的 configuration id、phase/progress 与单调 revision 快照",
+                      "detail_authorities":  "13–15",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ActivateEntityRequest",
+                      "status":  "V1",
+                      "definition":  "v1 对预编译 inactive EntityId 提交的原子激活 intent；随 ModelCommit 生效",
+                      "detail_authorities":  "13–15",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "TemporalContract",
+                      "status":  "V1",
+                      "definition":  "port/endpoint 对 sample/effective time、rate、freshness、latency、hold 与 clock 的声明",
+                      "detail_authorities":  "04、06",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "PublishedClosureSample",
+                      "status":  "V1",
+                      "definition":  "在声明 sample point 物化、可供 observation/diagnostics 使用且不受 RK stage 次数影响的闭合样本",
+                      "detail_authorities":  "01、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ContinuousLocated",
+                      "status":  "Deferred",
+                      "definition":  "需要 SegmentTransaction 才可对模型产生步内 jump 的连续事件定位策略",
+                      "detail_authorities":  "06、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "DiagnosticCodeSpec",
+                      "status":  "V1",
+                      "definition":  "code、message key、参数/evidence schema、默认 severity/disposition、waiver policy 和文档链接的静态定义",
+                      "detail_authorities":  "07",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "DiagnosticDraft",
+                      "status":  "V1",
+                      "definition":  "单次 kernel/compiler/tool 调用产生的 call-local 问题事实",
+                      "detail_authorities":  "07",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "DiagnosticRecord",
+                      "status":  "V1",
+                      "definition":  "经 context enrich、获得稳定 id 后不可变的结构化问题事实；不拥有最终 severity、处置或 validity effect",
+                      "detail_authorities":  "07",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "DiagnosticBatch",
+                      "status":  "V1",
+                      "definition":  "Compilation/Step/Task transaction 内稳定排序的 DiagnosticRecord ids 与 primary candidate",
+                      "detail_authorities":  "07",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "DiagnosticBundleArtifact",
+                      "status":  "V1",
+                      "definition":  "持久化 records、batches、policy decisions、code refs 与可选 RenderedDiagnostic 的 Artifact",
+                      "detail_authorities":  "07、08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RenderedDiagnostic",
+                      "status":  "V1",
+                      "definition":  "指定 locale/template version 下从 DiagnosticRecord、DiagnosticCodeSpec 与可选 PolicyDecision 派生的展示结果",
+                      "detail_authorities":  "07",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "DiagnosticPolicy",
+                      "status":  "V1",
+                      "definition":  "DiagnosticRecord + operation state 到 PolicyDecision 的纯规则集",
+                      "detail_authorities":  "07",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "DiagnosticAggregationPolicy",
+                      "status":  "V1",
+                      "definition":  "高频相同问题的 dedup key、bucket、首次/阈值/摘要发射规则",
+                      "detail_authorities":  "07",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "PolicyDecision",
+                      "status":  "V1",
+                      "definition":  "DiagnosticPolicy 派生的 matched rule、最终 severity、disposition、validity effect 和 action payload",
+                      "detail_authorities":  "07",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "Waiver",
+                      "status":  "V1",
+                      "definition":  "对明确 code/scope/version/期限和风险接受人的受控 policy 例外",
+                      "detail_authorities":  "07",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "OutcomeEnvelope\u003cT\u003e",
+                      "status":  "V1",
+                      "definition":  "status、optional value、primary/related diagnostics、validity 与 artifact refs 的通用结果",
+                      "detail_authorities":  "07",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ParseOutcome",
+                      "status":  "V1",
+                      "definition":  "SourceFrontend 的 `Parsed \\| Failed`、SourceTree/SourceMap refs 与 diagnostics",
+                      "detail_authorities":  "05、07",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CompilationOutcome",
+                      "status":  "V1",
+                      "definition":  "一次 Mission/Workflow compile 的 `Succeeded \\| SucceededWithWarnings \\| Failed`、PlanRef、proof index、diagnostics 与 source refs",
+                      "detail_authorities":  "05、07",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "LinkOutcome",
+                      "status":  "V1",
+                      "definition":  "Descriptor 与 exact implementations link 成 ExecutionPlanImage 的结构化结果",
+                      "detail_authorities":  "05、07",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "QueryOutcome",
+                      "status":  "V1",
+                      "definition":  "PureQuery/Closure 调用的 status、optional QueryResult、quality 与 diagnostics 结果",
+                      "detail_authorities":  "04、07、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "PreparationOutcome",
+                      "status":  "V1",
+                      "definition":  "model/resource prepare 的 `Prepared \\| Partial \\| Failed \\| Cancelled` 与 cleanup journal 摘要",
+                      "detail_authorities":  "06、07",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "SessionCreateOutcome",
+                      "status":  "V1",
+                      "definition":  "PlanRef 成功 link 并建立 Created Session 时返回 SessionHandle；失败时携带 diagnostics",
+                      "detail_authorities":  "06、07、10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "InitializationOutcome",
+                      "status":  "V1",
+                      "definition":  "initialize attempt 是否形成 InitializationCommit、RunId、initial observation 与 diagnostics 的结果",
+                      "detail_authorities":  "06、07",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ResetOutcome",
+                      "status":  "V1",
+                      "definition":  "reset attempt 是否形成 ResetCommit、新 RunId 与 initial observation 的结果",
+                      "detail_authorities":  "06、07",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RestoreOutcome",
+                      "status":  "V1",
+                      "definition":  "checkpoint restore attempt 是否形成 RestoreCommit 与 branch Session 的结果",
+                      "detail_authorities":  "06、07",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CheckpointOutcome",
+                      "status":  "V1",
+                      "definition":  "CheckpointBarrier 与 checkpoint Artifact 是否成功提交的结果",
+                      "detail_authorities":  "06、07",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "FinalizationOutcome",
+                      "status":  "V1",
+                      "definition":  "run finalize/lease close 的 `Succeeded \\| Failed`、primary/related diagnostics 与 evidence impact",
+                      "detail_authorities":  "06、07",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RecordOutcome",
+                      "status":  "V1",
+                      "definition":  "RecordSink reserve/enqueue/write/flush/close 调用的 durability、drop 与 diagnostics 结果",
+                      "detail_authorities":  "07、08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ExternalEffectOutcome",
+                      "status":  "PressureOnly",
+                      "definition":  "ExternalEffectCommit 的 applied/failed/unknown 与 idempotency receipt 结果",
+                      "detail_authorities":  "06、07",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "EvidenceOutcome",
+                      "status":  "V1",
+                      "definition":  "Observation/Artifact durability、coverage、validity 与 related ArtifactRefs 的证据域结果",
+                      "detail_authorities":  "06、08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RunOutcome",
+                      "status":  "V1",
+                      "definition":  "一次 run 的 lifecycle status、terminal reason、last commit、validity、diagnostics 和 ArtifactRefs",
+                      "detail_authorities":  "06、07",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "StepOutcome",
+                      "status":  "V1",
+                      "definition":  "一个 StepTransaction 的 commit/rollback/cancel 结果与 diagnostics",
+                      "detail_authorities":  "06、07、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "TaskOutcome",
+                      "status":  "V1",
+                      "definition":  "一个 Workflow Task 的状态、attempt、receipts、validity 和 output ArtifactRefs",
+                      "detail_authorities":  "09",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "WorkflowOutcome",
+                      "status":  "V1",
+                      "definition":  "Workflow Plan 的最终/部分完成状态及 required outputs",
+                      "detail_authorities":  "09",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "EvidenceValidity",
+                      "status":  "Stable",
+                      "definition":  "`Valid \\| ValidWithCaveats \\| Partial \\| Invalid \\| Unknown`；所有 Observation、Outcome 和 Artifact 共用",
+                      "detail_authorities":  "07",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "EvidenceCriticality",
+                      "status":  "Stable",
+                      "definition":  "`CriticalEvidence \\| RequiredMetricInput \\| OperationalTelemetry \\| BestEffortDisplay \\| DebugOnly`",
+                      "detail_authorities":  "08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ObservationKind",
+                      "status":  "V1",
+                      "definition":  "`InitialAtT0 \\| CycleAtTk \\| RestoredAtCheckpoint`；terminal step 仍使用 CycleAtTk，区分同一采样时刻的 batch 语义",
+                      "detail_authorities":  "08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ObservationDraft",
+                      "status":  "V1",
+                      "definition":  "seal 前、transaction-owned 的观测候选 buffer 与 metadata",
+                      "detail_authorities":  "08、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ObservationBatch",
+                      "status":  "V1",
+                      "definition":  "与一个 commit/采样窗口绑定、sealed immutable 的列式观测单元",
+                      "detail_authorities":  "08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ObservationProjectionPlan",
+                      "status":  "V1",
+                      "definition":  "ObservationPlan 编译出的 field handles、projectors、schema 和 commit binding 子计划",
+                      "detail_authorities":  "05、08、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ObservationSeal",
+                      "status":  "V1",
+                      "definition":  "把 ObservationDraft 与 ModelCommit 原子关联并形成 ObservationBatch 的动作",
+                      "detail_authorities":  "06、08、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ExternalEffectCommit",
+                      "status":  "PressureOnly",
+                      "definition":  "ModelCommit 后执行受计划约束的外部效果并产生幂等 receipt/outcome 的提交边界",
+                      "detail_authorities":  "06、10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "EvidenceCommit",
+                      "status":  "V1",
+                      "definition":  "将 sealed observation/outcome/manifest 的 durability 状态提交到证据域的边界",
+                      "detail_authorities":  "02、06、08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ArtifactCommit",
+                      "status":  "V1",
+                      "definition":  "Artifact Store 对 staged payload 执行验证、hash、lineage 写入与原子 publish 的提交",
+                      "detail_authorities":  "02、08、09",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "FieldDescriptor",
+                      "status":  "V1",
+                      "definition":  "FieldId、类型、shape、unit、frame、time、quality 与 stability 元数据",
+                      "detail_authorities":  "08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "FieldId",
+                      "status":  "Stable",
+                      "definition":  "跨编码、报告和查询保持稳定的观测字段身份",
+                      "detail_authorities":  "08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "EncodingPlan",
+                      "status":  "V1",
+                      "definition":  "Observation schema 到 CSV/MAT/HDF5/stream payload 的确定映射",
+                      "detail_authorities":  "08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RecordSink",
+                      "status":  "V1",
+                      "definition":  "异步消费 sealed ObservationBatch 或相关 Outcome，并声明 reservation、backpressure、flush 与 failure 语义的端口",
+                      "detail_authorities":  "08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "DatasetSink",
+                      "status":  "V1",
+                      "definition":  "使用 EncodingPlan 写入 durable dataset payload，并在 ArtifactCommit 后发布 ArtifactRef 的 RecordSink",
+                      "detail_authorities":  "08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "InMemoryObservationSink",
+                      "status":  "V1",
+                      "definition":  "提供有界 process-local batch/ring buffer 或只读数组 view、不自动提交 Artifact 的 RecordSink",
+                      "detail_authorities":  "08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "LiveObservationSink",
+                      "status":  "PressureOnly",
+                      "definition":  "发布带 schema/time/sequence 的 best-effort 或 operational 传输帧、不拥有模型状态的 RecordSink",
+                      "detail_authorities":  "08、10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "OnlineMetricSink",
+                      "status":  "V1",
+                      "definition":  "按 MetricDefinition 累积 MetricResult draft，并在 finalize 后提交 metric Artifact 的 RecordSink",
+                      "detail_authorities":  "08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RecordPipeline",
+                      "status":  "V1",
+                      "definition":  "在 ObservationSeal 后路由 immutable batches/outcomes 到 RecordSink，并协调 backpressure 与 EvidenceCommit 的管线",
+                      "detail_authorities":  "08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "MetricDefinition",
+                      "status":  "V1",
+                      "definition":  "metric 的输入 FieldId/Artifact、窗口、算法版本、单位、适用域与判据定义",
+                      "detail_authorities":  "08、09",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "MetricResult",
+                      "status":  "V1",
+                      "definition":  "MetricDefinition 求值后带 value、unit、coverage、validity、diagnostics 与 lineage 的结果",
+                      "detail_authorities":  "08、09",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "Artifact",
+                      "status":  "Stable",
+                      "definition":  "可寻址、带 schema、hash、validity 与 lineage 的研究产物",
+                      "detail_authorities":  "08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ArtifactRef",
+                      "status":  "Stable",
+                      "definition":  "只指向 committed Artifact 的不可变引用",
+                      "detail_authorities":  "08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "PublishRef",
+                      "status":  "V1",
+                      "definition":  "对 ModelCommit、ObservationSeal、ArtifactCommit 等已发布事实的 typed reference",
+                      "detail_authorities":  "02、08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ArtifactDescriptor",
+                      "status":  "V1",
+                      "definition":  "Artifact identity、type、schema、hash、producer、inputs、validity 与 storage metadata",
+                      "detail_authorities":  "08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "LineageEdge",
+                      "status":  "V1",
+                      "definition":  "从 input ArtifactRef 到 output ArtifactRef 的 typed provenance edge，含 role、producer operation、parameters 和 commit refs",
+                      "detail_authorities":  "08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "EvidenceGraph",
+                      "status":  "Stable",
+                      "definition":  "Observation、Outcome、Artifact 和 LineageEdge 组成的研究证据权威图",
+                      "detail_authorities":  "02、08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RunManifest",
+                      "status":  "V1",
+                      "definition":  "run/session identity、source/plan/proof/binding/package/build/commit/outcome/artifact 的运行复现清单",
+                      "detail_authorities":  "08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "EvidenceBundle",
+                      "status":  "V1",
+                      "definition":  "面向交付的输入、计划、运行、分析、报告、manifest 和 lineage 集合",
+                      "detail_authorities":  "08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "WorkflowDefinition",
+                      "status":  "V1",
+                      "definition":  "research purpose、typed inputs、task graph、policy 和 expected outputs 的作者定义",
+                      "detail_authorities":  "09",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "WorkflowPlan",
+                      "status":  "V1",
+                      "definition":  "经 task/tool 解析、DAG/proof/resource 检查后冻结的 immutable 计划",
+                      "detail_authorities":  "09",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "TaskDefinition",
+                      "status":  "V1",
+                      "definition":  "一个可复用工作流任务的输入输出、参数、执行、资源、失败和 assurance 声明",
+                      "detail_authorities":  "09",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "WorkflowTask",
+                      "status":  "V1",
+                      "definition":  "TaskDefinition 在某个 Workflow operation 中的计划节点/attempt",
+                      "detail_authorities":  "09",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ToolDescriptor",
+                      "status":  "V1",
+                      "definition":  "外部工具身份、版本、平台、许可证和能力声明",
+                      "detail_authorities":  "09",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ToolAdapter",
+                      "status":  "V1",
+                      "definition":  "InputRenderer、InvocationBuilder、ProcessRunner、OutputCollector、OutputParser、ScientificValidator、Normalizer 等窄部件组合",
+                      "detail_authorities":  "09",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ProjectModelExtension",
+                      "status":  "V1",
+                      "definition":  "项目私有模型、算法与可选 RuntimeComponent 的扩展面",
+                      "detail_authorities":  "10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ModelPackageExtension",
+                      "status":  "V1",
+                      "definition":  "通过 PackageManifest 与 Catalog 贡献稳定组件、资产和验证的扩展面",
+                      "detail_authorities":  "10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "DomainPackageExtension",
+                      "status":  "V1",
+                      "definition":  "按真实项目贡献领域契约、模型包、模板和验证套件的扩展面",
+                      "detail_authorities":  "10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "NumericalExtension",
+                      "status":  "V1",
+                      "definition":  "通过 Numerical Descriptor 接入数值算法后端的扩展面",
+                      "detail_authorities":  "03、10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "WorkflowTaskExtension",
+                      "status":  "V1",
+                      "definition":  "通过 TaskDefinition 与 Artifact contract 增加分析、工具或报告任务的扩展面",
+                      "detail_authorities":  "09、10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ToolAdapterExtension",
+                      "status":  "V1",
+                      "definition":  "通过 ToolAdapter 窄部件接入 DATCOM、MATLAB、GPOPS2 等外部工具的扩展面",
+                      "detail_authorities":  "09、10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "LanguageAdapterExtension",
+                      "status":  "V1",
+                      "definition":  "通过 Application API 或受限 RuntimeCell Adapter 接入 Python/Lua 的扩展面",
+                      "detail_authorities":  "10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "FrontendAdapterExtension",
+                      "status":  "PressureOnly",
+                      "definition":  "通过 Control API 与 read-model/stream 边界接入 CLI、GUI 或游戏引擎的扩展面",
+                      "detail_authorities":  "10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ApplicationControlPlane",
+                      "status":  "V1",
+                      "definition":  "向 CLI/Python/LLM/Studio/实时前端提供统一 command、query、event 和 operation lifecycle",
+                      "detail_authorities":  "10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "OperationId",
+                      "status":  "V1",
+                      "definition":  "长操作的稳定 identity",
+                      "detail_authorities":  "10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "OperationReceipt",
+                      "status":  "V1",
+                      "definition":  "compile/run 等长操作的受理结果、OperationId 与后续 Outcome 查询入口",
+                      "detail_authorities":  "10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "SessionHandle",
+                      "status":  "V1",
+                      "definition":  "Application API 暴露的 opaque Session 引用；不泄露 Runtime Cell 或 store 地址",
+                      "detail_authorities":  "10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CommandLedger",
+                      "status":  "V1",
+                      "definition":  "Application command 的 admission、dedup、queue 与 receipt 权威记录",
+                      "detail_authorities":  "10、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ResearchProposal",
+                      "status":  "V1",
+                      "definition":  "actor 提交的 typed 研究/authoring/operation 提案封套",
+                      "detail_authorities":  "10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ResearchQuestion",
+                      "status":  "V1",
+                      "definition":  "研究目标、假设、比较对象、判据与所需证据的结构化定义",
+                      "detail_authorities":  "05、08、09",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "TrainingProfile",
+                      "status":  "V1",
+                      "definition":  "RL 训练时的 randomization、observation、reward 和 resource 配置",
+                      "detail_authorities":  "10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RenderSnapshot",
+                      "status":  "PressureOnly",
+                      "definition":  "committed model state 的实时只读投影；不拥有模型状态",
+                      "detail_authorities":  "10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ClockPlan",
+                      "status":  "PressureOnly",
+                      "definition":  "多 clock domain 的 rate、offset、hold/interpolation 与同步关系计划；待异步纵向案例冻结字段",
+                      "detail_authorities":  "04、15",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "TimeScale",
+                      "status":  "PressureOnly",
+                      "definition":  "UTC/TAI/TT/TDB 等时标 identity、epoch 与转换 provenance contract；待卫星项目冻结",
+                      "detail_authorities":  "03、10、15",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "Ephemeris",
+                      "status":  "PressureOnly",
+                      "definition":  "带 body/frame/time-scale identity 与 provenance 的星历查询 contract；待卫星项目冻结",
+                      "detail_authorities":  "04、10、15",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "EntityPrototype",
+                      "status":  "Deferred",
+                      "definition":  "TopologyTransaction 可创建实体的计划锁定 prototype、package 与资源边界",
+                      "detail_authorities":  "14、15",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ExternalEndpoint",
+                      "status":  "V1",
+                      "definition":  "受计划约束的外部 source/effect 资源边界",
+                      "detail_authorities":  "06、10、12",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "Experiment",
+                      "status":  "V1",
+                      "definition":  "一组共享研究问题、参数空间和比较规则的运行集合",
+                      "detail_authorities":  "08、09",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ExperimentDefinition",
+                      "status":  "V1",
+                      "definition":  "Experiment 的 base source/plan、ParameterSpace、采样、target、资源、聚合与完成规则",
+                      "detail_authorities":  "09、10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CaseId",
+                      "status":  "Stable",
+                      "definition":  "由 ExperimentDefinition hash、规范化参数值与 replicate key 派生的 case 身份",
+                      "detail_authorities":  "09、10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CaseMaterialization",
+                      "status":  "V1",
+                      "definition":  "一个 case 的规范参数、CompilePatch、RunBinding、command schedule、seed 与 provenance 记录",
+                      "detail_authorities":  "09、10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CaseParameterTarget",
+                      "status":  "V1",
+                      "definition":  "ParameterId 到 CompilePatch、RunBindingPatch 或 RuntimeCommandSchedule 的唯一物化分类与约束",
+                      "detail_authorities":  "08–10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "CaseManifest",
+                      "status":  "V1",
+                      "definition":  "一个 Experiment case 的参数、patch、binding、seed、plan/run identity 和结果",
+                      "detail_authorities":  "08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RunBindingPatch",
+                      "status":  "V1",
+                      "definition":  "只改变 RunBindingSchema 允许字段的 case 变化",
+                      "detail_authorities":  "09、10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "RuntimeCommandSchedule",
+                      "status":  "V1",
+                      "definition":  "不改 plan/binding、按时间提交 typed command 的可复现输入流",
+                      "detail_authorities":  "09、10",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "SegmentTransaction",
+                      "status":  "Deferred",
+                      "definition":  "保留 unsupported diagnostic 和 capability gate Opening condition: located jump 真实纵向案例",
+                      "detail_authorities":  "06、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "TopologyTransaction",
+                      "status":  "Deferred",
+                      "definition":  "v1 使用预声明 entity activation Opening condition: 未知实例/动态 solver membership 案例",
+                      "detail_authorities":  "06、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "SimulationNode",
+                      "status":  "Legacy",
+                      "definition":  "`ModelDefinition` + execution form + `RuntimeCellRecipe`",
+                      "detail_authorities":  "01、迁移治理",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "NodeFactory",
+                      "status":  "Legacy",
+                      "definition":  "Package Catalog 中的 definition/factory contribution",
+                      "detail_authorities":  "01、05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "NodeRegistry",
+                      "status":  "Legacy",
+                      "definition":  "`ExecutionPlanImage` 的 typed handles 与 Session-local stores",
+                      "detail_authorities":  "01、迁移治理",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "FrameworkCatalog",
+                      "status":  "Legacy",
+                      "definition":  "versioned Package/Catalog snapshot",
+                      "detail_authorities":  "01、05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "AssemblyContext",
+                      "status":  "Legacy",
+                      "definition":  "Compiler lowering contexts + `BindingPlan` / plan handles",
+                      "detail_authorities":  "01、迁移治理",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ConfigNode",
+                      "status":  "Legacy",
+                      "definition":  "`SourceTree`、typed definitions 与 compiled occurrence config",
+                      "detail_authorities":  "01、05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ConfigReader",
+                      "status":  "Legacy",
+                      "definition":  "SourceFrontend schema validation + package definition builder",
+                      "detail_authorities":  "01、迁移治理",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ConfigManager",
+                      "status":  "Legacy",
+                      "definition":  "SourceFrontend + Mission Compiler",
+                      "detail_authorities":  "01、迁移治理",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "MissionAssembler",
+                      "status":  "Legacy",
+                      "definition":  "Mission Compiler passes + plan linker",
+                      "detail_authorities":  "01、05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "SimulationBuilder",
+                      "status":  "Legacy",
+                      "definition":  "Application compile/link/create-session use case",
+                      "detail_authorities":  "01、05",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ExecutionPhaseManager",
+                      "status":  "Legacy",
+                      "definition":  "`ExecutionRegionPlan` + `BoundaryDagPlan` executor",
+                      "detail_authorities":  "01、14",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "IDiscreteTask",
+                      "status":  "Legacy",
+                      "definition":  "`BoundaryEvaluation` obligation",
+                      "detail_authorities":  "01、迁移治理",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "DiscreteNode",
+                      "status":  "Legacy",
+                      "definition":  "`RuntimeComponentDescriptor` + sampled obligations",
+                      "detail_authorities":  "01、迁移治理",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "IObservable",
+                      "status":  "Legacy",
+                      "definition":  "`ObservationProjectionPlan` + typed projectors",
+                      "detail_authorities":  "01、08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "ObservableField",
+                      "status":  "Legacy",
+                      "definition":  "`FieldDescriptor` / `FieldId`",
+                      "detail_authorities":  "01、08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "IRecordSink",
+                      "status":  "Legacy",
+                      "definition":  "`RecordSink`",
+                      "detail_authorities":  "01、08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "AutoDataLogger",
+                      "status":  "Legacy",
+                      "definition":  "`RecordPipeline` + `DatasetSink`",
+                      "detail_authorities":  "01、08",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "SimFlow",
+                      "status":  "Legacy",
+                      "definition":  "`ExperimentDefinition` + case materialization + workflow executor",
+                      "detail_authorities":  "01、09",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "OnboardState",
+                      "status":  "Legacy",
+                      "definition":  "typed Measurement/Estimate/Command contracts",
+                      "detail_authorities":  "01、15",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "OnboardStateProcess",
+                      "status":  "Legacy",
+                      "definition":  "Navigation/Guidance/Control Runtime Cells 与 typed edges",
+                      "detail_authorities":  "01、15",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "GuidanceProcess",
+                      "status":  "Legacy",
+                      "definition":  "guidance six-piece + `RuntimeCellRecipe`",
+                      "detail_authorities":  "01、12、15",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "Simulator",
+                      "status":  "Legacy",
+                      "definition":  "Simulation Session collaborators + scientific comparison runner；纵向切换后退出",
+                      "detail_authorities":  "01、06、迁移治理",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "reference-glossary"
+                  },
+                  {
+                      "canonical_name":  "UnitId",
+                      "status":  "V1",
+                      "definition":  "ASCII, case-sensitive identity of a declared unit at a scientific boundary",
+                      "detail_authorities":  "ADR-0005",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "ADR-0011 scientific overlay"
+                  },
+                  {
+                      "canonical_name":  "FrameId",
+                      "status":  "V1",
+                      "definition":  "Namespace-qualified, versioned semantic frame identity with instance ownership recorded separately",
+                      "detail_authorities":  "ADR-0006",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "ADR-0011 scientific overlay"
+                  },
+                  {
+                      "canonical_name":  "SimulationTime",
+                      "status":  "V1",
+                      "definition":  "Logical time in a declared simulation clock domain with origin or epoch held in run metadata",
+                      "detail_authorities":  "ADR-0007",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "ADR-0011 scientific overlay"
+                  },
+                  {
+                      "canonical_name":  "Duration",
+                      "status":  "V1",
+                      "definition":  "Signed time interval expressed in canonical SI seconds",
+                      "detail_authorities":  "ADR-0007",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "ADR-0011 scientific overlay"
+                  },
+                  {
+                      "canonical_name":  "SampleTime",
+                      "status":  "V1",
+                      "definition":  "Time at which data was sampled or computed",
+                      "detail_authorities":  "ADR-0007",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "ADR-0011 scientific overlay"
+                  },
+                  {
+                      "canonical_name":  "ValidTime",
+                      "status":  "V1",
+                      "definition":  "Time or half-open interval during which data applies",
+                      "detail_authorities":  "ADR-0007",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "ADR-0011 scientific overlay"
+                  },
+                  {
+                      "canonical_name":  "WallTime",
+                      "status":  "V1",
+                      "definition":  "Real-world audit time isolated from scientific simulation time",
+                      "detail_authorities":  "ADR-0007",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "ADR-0011 scientific overlay"
+                  },
+                  {
+                      "canonical_name":  "R_to_from",
+                      "status":  "V1",
+                      "definition":  "Proper orthogonal matrix mapping coordinates of a free vector from the from frame into the to frame",
+                      "detail_authorities":  "ADR-0006",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "ADR-0011 scientific overlay"
+                  },
+                  {
+                      "canonical_name":  "q_to_from",
+                      "status":  "V1",
+                      "definition":  "Hamilton quaternion representing the passive coordinate transformation paired with R_to_from",
+                      "detail_authorities":  "ADR-0008",
+                      "authority_ref":  "terminology-registry",
+                      "registration_origin":  "ADR-0011 scientific overlay"
+                  }
+              ],
+    "retired_aliases":  [
+                            {
+                                "retired_expression":  "Component Recipe",
+                                "canonical_relation":  "`RuntimeCellRecipe`",
+                                "decision":  "全库统一改名",
+                                "authority_ref":  "terminology-registry"
+                            },
+                            {
+                                "retired_expression":  "PortBindingPlan",
+                                "canonical_relation":  "`BindingPlan`",
+                                "decision":  "全库统一改名",
+                                "authority_ref":  "terminology-registry"
+                            },
+                            {
+                                "retired_expression":  "ContinuousClosureGroup",
+                                "canonical_relation":  "`IntegrationScopePlan`",
+                                "decision":  "目标对象退出；连续成员和 closure 进入 scope plan",
+                                "authority_ref":  "terminology-registry"
+                            },
+                            {
+                                "retired_expression":  "IContinuousGroup",
+                                "canonical_relation":  "`IContinuousGroup`（Legacy）→ `IntegrationScopePlan`",
+                                "decision":  "当前源码迁移源，不能出现在目标 API",
+                                "authority_ref":  "terminology-registry"
+                            },
+                            {
+                                "retired_expression":  "Solver Island",
+                                "canonical_relation":  "`SolverIslandPlan`",
+                                "decision":  "保留为 scope 内可选联立求解子计划，不与 IntegrationScopePlan 合并",
+                                "authority_ref":  "terminology-registry"
+                            },
+                            {
+                                "retired_expression":  "InstantStateEffect",
+                                "canonical_relation":  "`InstantPatch`",
+                                "decision":  "全库统一改名",
+                                "authority_ref":  "terminology-registry"
+                            },
+                            {
+                                "retired_expression":  "IntervalStateEffect",
+                                "canonical_relation":  "`IntervalCandidate`",
+                                "decision":  "全库统一改名",
+                                "authority_ref":  "terminology-registry"
+                            },
+                            {
+                                "retired_expression":  "StepDiagnostic",
+                                "canonical_relation":  "`DiagnosticDraft`",
+                                "decision":  "数值/模型边界先生成 draft",
+                                "authority_ref":  "terminology-registry"
+                            },
+                            {
+                                "retired_expression":  "RenderedDiagnosticSnapshot",
+                                "canonical_relation":  "`RenderedDiagnostic`",
+                                "decision":  "全库统一改名",
+                                "authority_ref":  "terminology-registry"
+                            },
+                            {
+                                "retired_expression":  "diagnostic bundle",
+                                "canonical_relation":  "`DiagnosticBundleArtifact`",
+                                "decision":  "语义对象；物理 artifact type 为 `diagnostic-bundle`",
+                                "authority_ref":  "terminology-registry"
+                            },
+                            {
+                                "retired_expression":  "ObservationBatch draft",
+                                "canonical_relation":  "`ObservationDraft`",
+                                "decision":  "seal 前对象",
+                                "authority_ref":  "terminology-registry"
+                            },
+                            {
+                                "retired_expression":  "ObservationProjectionPlan vs ObservationPlan",
+                                "canonical_relation":  "父子关系",
+                                "decision":  "前者是后者编译后用于 projector 的精确子计划",
+                                "authority_ref":  "terminology-registry"
+                            },
+                            {
+                                "retired_expression":  "MissionPatch",
+                                "canonical_relation":  "`MissionSourcePatch`",
+                                "decision":  "authoring proposal；批准并物化后可产生 `CompilePatch`",
+                                "authority_ref":  "terminology-registry"
+                            },
+                            {
+                                "retired_expression":  "RequiredOperational",
+                                "canonical_relation":  "`OperationalTelemetry` 或 `RequiredMetricInput`",
+                                "decision":  "按数据用途拆分",
+                                "authority_ref":  "terminology-registry"
+                            },
+                            {
+                                "retired_expression":  "Invalidated / Incomplete",
+                                "canonical_relation":  "`EvidenceValidity` + reason",
+                                "decision":  "只作状态变化原因，不能作枚举成员",
+                                "authority_ref":  "terminology-registry"
+                            },
+                            {
+                                "retired_expression":  "closure proof",
+                                "canonical_relation":  "`PlanProofRecord` / `PlanProofIndex`",
+                                "decision":  "证明语义与物理 Closure 词族分离",
+                                "authority_ref":  "terminology-registry"
+                            },
+                            {
+                                "retired_expression":  "authority（裸词）",
+                                "canonical_relation":  "`AuthorityDomain` / `StateOwner` / `DecisionAuthority` / `PermissionGrant`",
+                                "decision":  "按语义限定",
+                                "authority_ref":  "terminology-registry"
+                            },
+                            {
+                                "retired_expression":  "profile（裸词）",
+                                "canonical_relation":  "`RuntimeCellProfile` / `RunProfile` / `TrainingProfile` / `FidelityLevel`",
+                                "decision":  "按使用场景限定",
+                                "authority_ref":  "terminology-registry"
+                            },
+                            {
+                                "retired_expression":  "capability（权限语义）",
+                                "canonical_relation":  "`PermissionGrant`",
+                                "decision":  "`KernelCapability`、`BackendCapability` 保留技术语义",
+                                "authority_ref":  "terminology-registry"
+                            },
+                            {
+                                "retired_expression":  "Execution Plan Descriptor",
+                                "canonical_relation":  "`ExecutionPlanDescriptor`",
+                                "decision":  "前者只作中文正文的空格排版，不形成第二类型",
+                                "authority_ref":  "terminology-registry"
+                            }
+                        ],
+    "enums":  [
+                  {
+                      "name":  "CapabilityStatus",
+                      "values":  [
+                                     "V1",
+                                     "Stable",
+                                     "PressureOnly",
+                                     "Deferred",
+                                     "Legacy"
+                                 ],
+                      "authority_ref":  "terminology-registry",
+                      "owner_role":  "architecture_lead",
+                      "source_locator":  "reference-glossary section 1"
+                  },
+                  {
+                      "name":  "AuthorityDomain",
+                      "values":  [
+                                     "Design/Plan",
+                                     "Model",
+                                     "Operation",
+                                     "Artifact"
+                                 ],
+                      "authority_ref":  "terminology-registry",
+                      "owner_role":  "architecture_lead",
+                      "source_locator":  "02 section 1.3"
+                  },
+                  {
+                      "name":  "ChangeVectorDimension",
+                      "values":  [
+                                     "V",
+                                     "G",
+                                     "S",
+                                     "T",
+                                     "I",
+                                     "R",
+                                     "X"
+                                 ],
+                      "authority_ref":  "terminology-registry",
+                      "owner_role":  "architecture_lead",
+                      "source_locator":  "02 section 1.2"
+                  },
+                  {
+                      "name":  "ChangeClass",
+                      "values":  [
+                                     "A",
+                                     "B",
+                                     "C",
+                                     "D",
+                                     "E",
+                                     "F"
+                                 ],
+                      "authority_ref":  "terminology-registry",
+                      "owner_role":  "architecture_lead",
+                      "source_locator":  "02 section 9"
+                  },
+                  {
+                      "name":  "EvidenceValidity",
+                      "values":  [
+                                     "Valid",
+                                     "ValidWithCaveats",
+                                     "Partial",
+                                     "Invalid",
+                                     "Unknown"
+                                 ],
+                      "authority_ref":  "terminology-registry",
+                      "owner_role":  "evidence_workflow_lead",
+                      "source_locator":  "reference-glossary EvidenceValidity"
+                  },
+                  {
+                      "name":  "EvidenceCriticality",
+                      "values":  [
+                                     "CriticalEvidence",
+                                     "RequiredMetricInput",
+                                     "OperationalTelemetry",
+                                     "BestEffortDisplay",
+                                     "DebugOnly"
+                                 ],
+                      "authority_ref":  "terminology-registry",
+                      "owner_role":  "evidence_workflow_lead",
+                      "source_locator":  "reference-glossary EvidenceCriticality"
+                  },
+                  {
+                      "name":  "ObservationKind",
+                      "values":  [
+                                     "InitialAtT0",
+                                     "CycleAtTk",
+                                     "RestoredAtCheckpoint"
+                                 ],
+                      "authority_ref":  "terminology-registry",
+                      "owner_role":  "evidence_workflow_lead",
+                      "source_locator":  "reference-glossary ObservationKind"
+                  },
+                  {
+                      "name":  "TemporalRelation",
+                      "values":  [
+                                     "CurrentCycle",
+                                     "PreviousCommitted",
+                                     "HeldLatest",
+                                     "IntervalModel",
+                                     "CandidateStateQuery",
+                                     "EventAtOrBefore"
+                                 ],
+                      "authority_ref":  "terminology-registry",
+                      "owner_role":  "architecture_lead",
+                      "source_locator":  "reference-glossary TemporalRelation"
+                  },
+                  {
+                      "name":  "ExecutionObligation",
+                      "values":  [
+                                     "PublishProjection",
+                                     "BoundaryEvaluation",
+                                     "IntervalEvolution",
+                                     "DerivativeEvaluation",
+                                     "SourceFreeze",
+                                     "PostCommitEffect",
+                                     "ResourceLease"
+                                 ],
+                      "authority_ref":  "terminology-registry",
+                      "owner_role":  "runtime_numerics_lead",
+                      "source_locator":  "reference-glossary ExecutionObligation"
+                  },
+                  {
+                      "name":  "ExecutionRegion",
+                      "values":  [
+                                     "Publish",
+                                     "Boundary",
+                                     "Integration",
+                                     "Commit",
+                                     "PostCommit"
+                                 ],
+                      "authority_ref":  "terminology-registry",
+                      "owner_role":  "runtime_numerics_lead",
+                      "source_locator":  "reference-glossary ExecutionRegionPlan"
+                  },
+                  {
+                      "name":  "ClosureStrategy",
+                      "values":  [
+                                     "FrozenInterval",
+                                     "CandidateState",
+                                     "AlgebraicSolve"
+                                 ],
+                      "authority_ref":  "terminology-registry",
+                      "owner_role":  "runtime_numerics_lead",
+                      "source_locator":  "reference-glossary ClosureStrategy"
+                  },
+                  {
+                      "name":  "CanonicalSIUnitId",
+                      "values":  [
+                                     "m",
+                                     "s",
+                                     "kg",
+                                     "rad",
+                                     "m/s",
+                                     "m/s^2",
+                                     "rad/s",
+                                     "N",
+                                     "N*m",
+                                     "Pa",
+                                     "K"
+                                 ],
+                      "authority_ref":  "terminology-registry",
+                      "owner_role":  "scientific_authority",
+                      "source_locator":  "ADR-0005 Decision 3"
+                  },
+                  {
+                      "name":  "ScientificTimeKind",
+                      "values":  [
+                                     "SimulationTime",
+                                     "Duration",
+                                     "SampleTime",
+                                     "ValidTime",
+                                     "WallTime"
+                                 ],
+                      "authority_ref":  "terminology-registry",
+                      "owner_role":  "scientific_authority",
+                      "source_locator":  "ADR-0007 Decision 1"
+                  }
+              ],
+    "keys":  [
+                 {
+                     "name":  "RuntimeCellIdentity",
+                     "components":  [
+                                        "SessionId",
+                                        "RuntimeInstanceId"
+                                    ],
+                     "derivation":  "ordered tuple",
+                     "authority_ref":  "terminology-registry",
+                     "owner_role":  "architecture_lead",
+                     "source_locator":  "reference-glossary RuntimeCell"
+                 },
+                 {
+                     "name":  "PreparedModelKey",
+                     "components":  [
+                                        "definition_id",
+                                        "definition_version",
+                                        "canonical_occurrence_config_hash",
+                                        "asset_set_hash",
+                                        "implementation_id",
+                                        "implementation_version",
+                                        "numerical_policy_hash",
+                                        "preparation_policy_hash"
+                                    ],
+                     "derivation":  "canonical ordered field set",
+                     "authority_ref":  "terminology-registry",
+                     "owner_role":  "compiler_lead",
+                     "source_locator":  "reference-glossary PreparedModelKey"
+                 },
+                 {
+                     "name":  "CaseIdDerivation",
+                     "components":  [
+                                        "ExperimentDefinitionHash",
+                                        "CanonicalParameterValues",
+                                        "ReplicateKey"
+                                    ],
+                     "derivation":  "deterministic derivation",
+                     "authority_ref":  "terminology-registry",
+                     "owner_role":  "evidence_workflow_lead",
+                     "source_locator":  "reference-glossary CaseId"
+                 },
+                 {
+                     "name":  "QuaternionCoefficientOrder",
+                     "components":  [
+                                        "w",
+                                        "x",
+                                        "y",
+                                        "z"
+                                    ],
+                     "derivation":  "ordered serialized coefficient sequence",
+                     "authority_ref":  "terminology-registry",
+                     "owner_role":  "scientific_authority",
+                     "source_locator":  "ADR-0008 Decision 5"
+                 }
+             ],
+    "authority_domains":  [
+                              {
+                                  "name":  "Design/Plan",
+                                  "authoritative_fact":  "versioned definitions, canonical graphs, bindings, execution choices, and version locks",
+                                  "typical_owner":  "Package/Catalog and Mission/Workflow Compiler",
+                                  "commit_result":  "definition release or immutable plan plus proof index",
+                                  "authority_ref":  "terminology-registry",
+                                  "owner_role":  "architecture_lead",
+                                  "source_locator":  "02 section 1.3"
+                              },
+                              {
+                                  "name":  "Model",
+                                  "authoritative_fact":  "physical, discrete, control, and entity lifecycle state",
+                                  "typical_owner":  "Simulation Session transaction",
+                                  "commit_result":  "ModelCommit plus state or topology revision",
+                                  "authority_ref":  "terminology-registry",
+                                  "owner_role":  "runtime_numerics_lead",
+                                  "source_locator":  "02 section 1.3"
+                              },
+                              {
+                                  "name":  "Operation",
+                                  "authoritative_fact":  "command ledger, task or operation lifecycle, approval, and resource occupancy",
+                                  "typical_owner":  "Application or Workflow operation owner",
+                                  "commit_result":  "acceptance, application, or task receipt plus Outcome",
+                                  "authority_ref":  "terminology-registry",
+                                  "owner_role":  "application_lead",
+                                  "source_locator":  "02 section 1.3"
+                              },
+                              {
+                                  "name":  "Artifact",
+                                  "authoritative_fact":  "immutable payload, dataset, manifest, lineage, and validity",
+                                  "typical_owner":  "RecordPipeline or Artifact Store",
+                                  "commit_result":  "EvidenceCommit or ArtifactCommit plus durability receipt",
+                                  "authority_ref":  "terminology-registry",
+                                  "owner_role":  "evidence_workflow_lead",
+                                  "source_locator":  "02 section 1.3"
+                              }
+                          ]
+}

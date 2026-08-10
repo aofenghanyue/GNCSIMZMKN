@@ -1,0 +1,10 @@
+[
+    {
+        "id":  "LEG-GAP-02",
+        "stage":  "ctest",
+        "classification":  "baseline-difference",
+        "detail":  "The clean archive produced 25/25 CTest passes. The imported existing-tree report recorded 23/25 with two Cartesian output-path failures.",
+        "impact":  "The two imported path-sensitive failures do not reproduce on this clean host/toolchain run.",
+        "disposition":  "Preserve both outcomes. Use this clean-run evidence for host reproduction and keep the imported report as historical evidence."
+    }
+]

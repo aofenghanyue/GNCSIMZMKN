@@ -1,19 +1,148 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://internal.gnczmkn/schemas/fixture-manifest.schema.json",
-  "title": "GNCZMKN reference fixture manifest",
+  "$id": "urn:gnczmkn:schema:r0:fixture-manifest:1",
+  "title": "GNCZMKN R0 reference fixture manifest",
+  "description": "R0 evidence-governance schema. It is not a production runtime contract.",
+  "x-stage": "R0",
+  "x-maturity": "Fixture",
   "type": "object",
-  "required": ["schema_version", "fixture_id", "status", "purpose", "authority", "required_artifacts", "acceptance"],
+  "required": [
+    "schema_version",
+    "fixture_id",
+    "status",
+    "purpose",
+    "authority",
+    "provenance_refs",
+    "source_refs",
+    "required_artifacts",
+    "expected_facts",
+    "oracle_refs",
+    "acceptance"
+  ],
   "properties": {
-    "schema_version": {"const": "gnczmkn.fixture-manifest/1"},
-    "fixture_id": {"type": "string"},
-    "status": {"enum": ["specification_only", "capturing", "executable", "qualified", "retired"]},
-    "purpose": {"type": "string"},
-    "authority": {"type": "string"},
-    "source_refs": {"type": "array", "items": {"type": "string"}},
-    "required_artifacts": {"type": "array", "items": {"type": "string"}, "minItems": 1},
-    "acceptance": {"type": "array", "items": {"type": "string"}, "minItems": 1},
-    "open_tasks": {"type": "array", "items": {"type": "string"}}
+    "schema_version": {
+      "const": "gnczmkn.fixture-manifest/1"
+    },
+    "fixture_id": {
+      "type": "string",
+      "pattern": "^REF-[A-Z0-9]+(?:-[A-Z0-9]+)+$"
+    },
+    "status": {
+      "enum": [
+        "specification_only",
+        "capturing",
+        "executable",
+        "qualified",
+        "retired"
+      ]
+    },
+    "purpose": {
+      "type": "string",
+      "minLength": 1
+    },
+    "authority": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9_]*$"
+    },
+    "provenance_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^prov\\.[a-z0-9][a-z0-9._-]*@[A-Za-z0-9._-]+$"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "source_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "required_artifacts": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "expected_facts": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/expected_fact"
+      },
+      "minItems": 1
+    },
+    "oracle_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^ORACLE-[A-Z0-9]+(?:-[A-Z0-9]+)+$"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "acceptance": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "open_tasks": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^[A-Z][A-Z0-9]+(?:-[A-Z0-9]+)+$"
+      },
+      "uniqueItems": true
+    }
+  },
+  "$defs": {
+    "expected_fact": {
+      "type": "object",
+      "required": [
+        "fact_id",
+        "statement",
+        "comparison"
+      ],
+      "properties": {
+        "fact_id": {
+          "type": "string",
+          "pattern": "^FACT-[A-Z0-9]+(?:-[A-Z0-9]+)+$"
+        },
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "comparison": {
+          "enum": [
+            "exact",
+            "numeric",
+            "ordered",
+            "set_equality",
+            "predicate"
+          ]
+        },
+        "field_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    }
   },
   "additionalProperties": false
 }

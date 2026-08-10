@@ -1,0 +1,185 @@
+{
+  "approval": {
+    "owner_role": "scientific_authority",
+    "reviewed_at": "2026-08-09",
+    "reviewer_assignee": "codex-r0-architecture",
+    "reviewer_role": "architecture_lead",
+    "status": "approved"
+  },
+  "authority_refs": [
+    "docs/adr/0005-si-unit-and-numeric-conventions.md",
+    "docs/adr/0006-frame-transform-conventions.md",
+    "docs/adr/0007-time-value-conventions.md",
+    "docs/adr/0008-quaternion-conventions.md",
+    "design-notes/gnczmkn-architecture-roadmap/03-mathematics-and-numerical-foundation.md \u00a76-\u00a79, \u00a722"
+  ],
+  "comparison": {
+    "case_count": 6,
+    "cases": [
+      {
+        "case_id": "identity",
+        "compared_values": 17,
+        "failed_fields": [],
+        "max_abs_error": 0.0,
+        "max_tolerance_ratio": 0.0,
+        "status": "passed",
+        "worst_field": ""
+      },
+      {
+        "case_id": "z_plus_90",
+        "compared_values": 17,
+        "failed_fields": [],
+        "max_abs_error": 2.220446049250313e-16,
+        "max_tolerance_ratio": 0.00022204460492503128,
+        "status": "passed",
+        "worst_field": "vector_to_x"
+      },
+      {
+        "case_id": "x_plus_180",
+        "compared_values": 17,
+        "failed_fields": [],
+        "max_abs_error": 2.022266248797448e-21,
+        "max_tolerance_ratio": 2.022266248797448e-09,
+        "status": "passed",
+        "worst_field": "q_w"
+      },
+      {
+        "case_id": "oblique_plus_60",
+        "compared_values": 17,
+        "failed_fields": [],
+        "max_abs_error": 0.0,
+        "max_tolerance_ratio": 0.0,
+        "status": "passed",
+        "worst_field": ""
+      },
+      {
+        "case_id": "y_minus_120",
+        "compared_values": 17,
+        "failed_fields": [],
+        "max_abs_error": 0.0,
+        "max_tolerance_ratio": 0.0,
+        "status": "passed",
+        "worst_field": ""
+      },
+      {
+        "case_id": "near_pi",
+        "compared_values": 17,
+        "failed_fields": [],
+        "max_abs_error": 2.0222498025390144e-21,
+        "max_tolerance_ratio": 2.022249801527889e-09,
+        "status": "passed",
+        "worst_field": "q_w"
+      }
+    ],
+    "errors": [],
+    "max_abs_error": 2.220446049250313e-16,
+    "max_tolerance_ratio": 0.00022204460492503128,
+    "status": "passed",
+    "values_per_case": 17
+  },
+  "environment": {
+    "cmake_cache": {
+      "CMAKE_BUILD_TYPE": "Debug",
+      "CMAKE_CXX_COMPILER": "C:/Users/17721/Documents/Soft/MSYS64/mingw64/bin/c++.exe",
+      "CMAKE_CXX_FLAGS": "",
+      "CMAKE_CXX_FLAGS_DEBUG": "-g",
+      "CMAKE_CXX_FLAGS_RELEASE": "-O3 -DNDEBUG",
+      "CMAKE_GENERATOR": "Ninja",
+      "GNC_WARNINGS_AS_ERRORS": "OFF"
+    },
+    "deterministic_property_seed": 20260809,
+    "platform": "Windows-11-10.0.26100-SP0",
+    "python_implementation": "CPython",
+    "python_version": "3.12.7",
+    "target_compile_options_source": "CMakeLists.txt + cmake/GncWarnings.cmake"
+  },
+  "generated_at": "2026-08-09T08:22:03+00:00",
+  "hashes": {
+    "case_set_sha256": "0f403f1f7355ce3173563c2f096c1b2b452bdc662891824eb125682dea966656",
+    "cmake_cache_sha256": "545e3669b4583cfe91a39711efa80a2faf5c5cb93f07ce76a0ed3ba5bc5510ca",
+    "cpp_binary_sha256": "ec305d2ff3a379bb30569340ec7e8244aaa1e86fb488ed1791d07d54a40e3a8d",
+    "cpp_source_sha256": "0ff18ce21b4943a5eb0fa09be5afd8be52e9fe9b3eaef630467fc8056a9f603f",
+    "cross_tool_check_sha256": "5893232b58b183f44b79ef8f0359089ecc79fbd5260c17f022493555241978a2",
+    "python_reference_sha256": "7f0ac6ed9682854cce12c8b04381aed2c9f82d633884e0fdf047cb261259e05b"
+  },
+  "implementations": {
+    "cpp": {
+      "identity": "gnczmkn.scientific-conventions.cpp-test/1",
+      "metadata": {
+        "binary64_iec559": true,
+        "compiler": "GCC 15.1.0",
+        "fast_math_defined": false,
+        "implementation_id": "gnczmkn.scientific-conventions.cpp-test/1",
+        "language_standard": "C++17",
+        "ndebug_defined": false
+      },
+      "property_checks": 559,
+      "self_test_output": "properties_passed=559"
+    },
+    "python": {
+      "identity": "gnczmkn.scientific-conventions.python/1",
+      "self_test": {
+        "failures": [],
+        "oracle_id": "ORACLE-R0-SCI-CONVENTIONS-001",
+        "property_checks": 554,
+        "reference_id": "gnczmkn.scientific-conventions.python/1",
+        "status": "passed"
+      },
+      "standard_library_only": true
+    }
+  },
+  "input": {
+    "applicable_domain": "finite proper 3D axis-angle rotations with finite vectors and translations",
+    "case_count": 6,
+    "identity": "gnczmkn.scientific-conventions.cases/1",
+    "repository_ref": "oracles/scientific-conventions/cases.csv"
+  },
+  "oracle_set_id": "ORACLE-R0-SCI-CONVENTIONS-001",
+  "report_id": "EVIDENCE-R0-SCI-001-CROSS-TOOL-001",
+  "result": "passed",
+  "schema_version": "gnczmkn.scientific-cross-tool-report/1",
+  "scope": [
+    "binary64",
+    "SI",
+    "frame transforms",
+    "scientific time",
+    "Hamilton passive quaternion"
+  ],
+  "tolerance_policy": {
+    "absolute_tolerance": 1e-12,
+    "formula": "abs(cpp-python) <= atol + rtol * max(abs(cpp), abs(python))",
+    "relative_tolerance": 1e-12
+  },
+  "verification_coverage": {
+    "frame": [
+      "column-vector R_to_from",
+      "proper rotation",
+      "inverse and composition",
+      "point versus free-vector translation"
+    ],
+    "numeric_and_si": [
+      "IEEE-754 binary64 assumptions",
+      "km to m",
+      "degree to radian",
+      "degree Celsius to kelvin",
+      "unknown and non-finite unit rejection",
+      "below-zero kelvin rejection"
+    ],
+    "quaternion": [
+      "Hamilton multiplication",
+      "passive inverse(q) times v times q",
+      "q_b_a times q_c_b composition",
+      "wxyz serialization",
+      "q and negative q equivalence",
+      "malformed, zero, non-finite, and rejected non-unit failure paths",
+      "qualified Euler metadata"
+    ],
+    "time": [
+      "five distinct semantic kinds",
+      "finite SI seconds",
+      "typed arithmetic",
+      "half-open validity interval",
+      "clock-domain mismatch rejection"
+    ]
+  }
+}

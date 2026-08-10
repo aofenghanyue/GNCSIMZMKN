@@ -1,0 +1,30 @@
+{
+  "schema_version": "gnczmkn.plan-proof-record/1",
+  "proof_id": "proof:time-lifecycle:r0-spec:0002",
+  "proof_kind": "TimeLifecycle",
+  "subject_refs": [
+    "fixture:invalid-rate"
+  ],
+  "assertion_code": "GNC.PLAN.RATE.INTEGER_INTERVAL",
+  "source_refs": [
+    "design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md#34-planproofrecord"
+  ],
+  "premises": [
+    {
+      "kind": "Fact",
+      "premise_id": "base_rate_hz",
+      "value": 100
+    },
+    {
+      "kind": "Fact",
+      "premise_id": "requested_rate_hz",
+      "value": 60
+    }
+  ],
+  "result": "Rejected",
+  "diagnostic_ids": [
+    "diag:compile:0007"
+  ],
+  "lowered_operator_refs": [],
+  "generated_by_pass": "schedule-lowering@1"
+}

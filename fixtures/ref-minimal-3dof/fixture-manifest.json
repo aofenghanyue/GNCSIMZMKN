@@ -1,5 +1,5 @@
 {
-  "schema_version": "gnczmkn.fixture-manifest/1",
+  "schema_version": "gnczmkn.fixture-manifest.placeholder/0",
   "fixture_id": "REF-MINIMAL-3DOF-001",
   "status": "specification_only",
   "purpose": "Provide an analytic or independently computed fixed-step dynamics reference.",

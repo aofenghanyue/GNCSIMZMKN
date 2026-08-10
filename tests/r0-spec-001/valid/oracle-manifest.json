@@ -1,0 +1,33 @@
+{
+  "schema_version": "gnczmkn.oracle-manifest/1",
+  "oracle_set_id": "ORACLE-R0-SPEC-SCHEMA-SET-001",
+  "status": "executable",
+  "provenance_refs": [
+    "prov.gnczmkn-next.bootstrap-source@1"
+  ],
+  "oracles": [
+    {
+      "id": "ORACLE-R0-SPEC-SCHEMA-001",
+      "level": "component",
+      "status": "executable",
+      "claim": "The task-local validator rejects a fixture that lacks required identity or provenance.",
+      "expected_facts": [
+        {
+          "fact_id": "FACT-R0-SPEC-ORACLE-001",
+          "statement": "Missing fixture identity and provenance each produce a validation failure.",
+          "comparison": "exact",
+          "field_refs": [
+            "fixture.identity",
+            "fixture.provenance"
+          ]
+        }
+      ],
+      "reference_kind": "independent committed positive and negative schema examples",
+      "tolerance_policy": "exact pass or reject outcome; no numeric tolerance applies",
+      "source_refs": [
+        "docs/quality/r0-spec-001/acceptance-and-failure-plan.md#required-failure-paths"
+      ],
+      "artifact_refs": []
+    }
+  ]
+}

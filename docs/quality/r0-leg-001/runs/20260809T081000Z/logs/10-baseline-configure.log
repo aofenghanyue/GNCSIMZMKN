@@ -1,0 +1,25 @@
+name: baseline-mission-configure
+started_at_utc: 2026-08-09T08:13:25.5142638Z
+working_directory: C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT
+command: C:\Users\17721\Documents\Soft\MSYS64\mingw64\bin\cmake.exe -S C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\build\r0-leg-001\runs\20260809T081000Z\mission-extraction\GNCZMKN-legacy-a63621c -B C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\build\r0-leg-001\runs\20260809T081000Z\build-mission-baseline -G "MinGW Makefiles" -DBUILD_TESTS=OFF -DGNC_ACTIVE_PROJECT=example_05_ideal_3dof_geographic_baseline -DCMAKE_BUILD_TYPE=Release
+--- output ---
+-- The CXX compiler identification is GNU 15.1.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Users/17721/Documents/Soft/MSYS64/mingw64/bin/c++.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Component discovery mode: user project
+-- Active project: example_05_ideal_3dof_geographic_baseline
+-- Auto-registered user project component headers: 0
+-- GNC Simulation Framework v2.0.0
+-- C++ Standard: 17
+-- Build Type: Release
+-- User project components dir: C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/user/example_05_ideal_3dof_geographic_baseline/components
+-- Auto-register file: C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/build-mission-baseline/generated/auto_registered_nodes.hpp
+-- Configuring done (0.8s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/build-mission-baseline
+--- result ---
+exit_code: 0
+finished_at_utc: 2026-08-09T08:13:26.3576205Z

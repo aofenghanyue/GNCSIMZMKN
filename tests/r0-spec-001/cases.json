@@ -1,0 +1,426 @@
+{
+  "schema_version": "gnczmkn.r0-spec-conformance-cases/1",
+  "reference_documents": [
+    "tests/r0-spec-001/valid/fixture-manifest.json",
+    "tests/r0-spec-001/valid/oracle-manifest.json",
+    "tests/r0-spec-001/valid/plan-proof-proven.json",
+    "tests/r0-spec-001/valid/plan-proof-rejected.json",
+    "tests/r0-spec-001/valid/plan-proof-deferred.json",
+    "tests/r0-spec-001/valid/plan-proof-reference.json"
+  ],
+  "schema_negative_cases": [
+    {
+      "name": "unsupported schema keyword",
+      "schema": "tests/r0-spec-001/invalid-schema/unsupported-keyword.schema.json",
+      "expected_error_contains": "unsupported schema keyword"
+    }
+  ],
+  "cases": [
+    {
+      "name": "valid fixture manifest",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/valid/fixture-manifest.json",
+      "expected_valid": true
+    },
+    {
+      "name": "valid oracle manifest",
+      "schema": "specs/oracle-manifest.schema.json",
+      "document": "tests/r0-spec-001/valid/oracle-manifest.json",
+      "expected_valid": true
+    },
+    {
+      "name": "valid proven proof",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/valid/plan-proof-proven.json",
+      "expected_valid": true
+    },
+    {
+      "name": "valid rejected proof",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/valid/plan-proof-rejected.json",
+      "expected_valid": true
+    },
+    {
+      "name": "valid deferred proof",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/valid/plan-proof-deferred.json",
+      "expected_valid": true
+    },
+    {
+      "name": "valid proof reference and YYZ premise mapping",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/valid/plan-proof-reference.json",
+      "expected_valid": true
+    },
+    {
+      "name": "fixture missing identity",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-missing-identity.json",
+      "expected_valid": false,
+      "expected_error_contains": "missing required property 'fixture_id'"
+    },
+    {
+      "name": "fixture missing provenance",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-missing-provenance.json",
+      "expected_valid": false,
+      "expected_error_contains": "missing required property 'provenance_refs'"
+    },
+    {
+      "name": "fixture missing expected facts",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-missing-expected-facts.json",
+      "expected_valid": false,
+      "expected_error_contains": "missing required property 'expected_facts'"
+    },
+    {
+      "name": "fixture unknown version",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-unknown-version.json",
+      "expected_valid": false,
+      "expected_error_contains": "expected constant"
+    },
+    {
+      "name": "fixture unknown status enum",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-unknown-status.json",
+      "expected_valid": false,
+      "expected_error_contains": "outside the closed enum"
+    },
+    {
+      "name": "fixture unresolved oracle reference",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-unresolved-oracle.json",
+      "expected_valid": false,
+      "expected_error_contains": "oracle reference does not resolve"
+    },
+    {
+      "name": "fixture source path traversal",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-path-traversal.json",
+      "expected_valid": false,
+      "expected_error_contains": "escapes repository"
+    },
+    {
+      "name": "fixture Windows absolute path",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-absolute-path.json",
+      "expected_valid": false,
+      "expected_error_contains": "Windows drive source reference is forbidden"
+    },
+    {
+      "name": "fixture Windows drive-relative path",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-drive-relative-path.json",
+      "expected_valid": false,
+      "expected_error_contains": "Windows drive source reference is forbidden"
+    },
+    {
+      "name": "fixture POSIX absolute path",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-posix-absolute-path.json",
+      "expected_valid": false,
+      "expected_error_contains": "absolute source path is forbidden"
+    },
+    {
+      "name": "fixture file URI",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-file-uri.json",
+      "expected_valid": false,
+      "expected_error_contains": "file URI source reference is forbidden"
+    },
+    {
+      "name": "fixture repo-wrapped Windows drive-relative path",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-repo-wrapped-drive.json",
+      "expected_valid": false,
+      "expected_error_contains": "Windows drive source reference is forbidden"
+    },
+    {
+      "name": "fixture repo-wrapped file URI",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-repo-wrapped-file-uri.json",
+      "expected_valid": false,
+      "expected_error_contains": "file URI source reference is forbidden"
+    },
+    {
+      "name": "fixture uppercase repo scheme still closes locally",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-uppercase-repo-missing.json",
+      "expected_valid": false,
+      "expected_error_contains": "source reference does not resolve to a file"
+    },
+    {
+      "name": "fixture malformed reserved repo scheme",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-malformed-repo-scheme.json",
+      "expected_valid": false,
+      "expected_error_contains": "malformed repository source scheme"
+    },
+    {
+      "name": "fixture missing source after fragment removal",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-missing-source-fragment.json",
+      "expected_valid": false,
+      "expected_error_contains": "source reference does not resolve"
+    },
+    {
+      "name": "fixture malformed stable identity",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-malformed-id.json",
+      "expected_valid": false,
+      "expected_error_contains": "required pattern"
+    },
+    {
+      "name": "duplicate fixture identity across validation set",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-duplicate-id.json",
+      "expected_valid": false,
+      "expected_error_contains": "duplicate fixture_id identity"
+    },
+    {
+      "name": "fixture empty required list",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-empty-required-list.json",
+      "expected_valid": false,
+      "expected_error_contains": "expected at least 1 items"
+    },
+    {
+      "name": "fixture authority outside role registry",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-unknown-authority.json",
+      "expected_valid": false,
+      "expected_error_contains": "fixture authority does not resolve to a repository role"
+    },
+    {
+      "name": "fixture open task outside backlog",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-unresolved-open-task.json",
+      "expected_valid": false,
+      "expected_error_contains": "fixture open task does not resolve to a non-done backlog task"
+    },
+    {
+      "name": "fixture completed task cannot remain open",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-completed-open-task.json",
+      "expected_valid": false,
+      "expected_error_contains": "fixture open task does not resolve to a non-done backlog task"
+    },
+    {
+      "name": "fixture duplicate JSON key",
+      "schema": "specs/fixture-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/fixture-duplicate-json-key.json",
+      "expected_valid": false,
+      "expected_error_contains": "duplicate JSON object key"
+    },
+    {
+      "name": "oracle missing tolerance",
+      "schema": "specs/oracle-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/oracle-missing-tolerance.json",
+      "expected_valid": false,
+      "expected_error_contains": "missing required property 'tolerance_policy'"
+    },
+    {
+      "name": "oracle missing expected facts",
+      "schema": "specs/oracle-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/oracle-missing-expected-facts.json",
+      "expected_valid": false,
+      "expected_error_contains": "missing required property 'expected_facts'"
+    },
+    {
+      "name": "oracle unresolved provenance",
+      "schema": "specs/oracle-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/oracle-unresolved-provenance.json",
+      "expected_valid": false,
+      "expected_error_contains": "provenance reference does not resolve"
+    },
+    {
+      "name": "oracle unresolved local artifact reference",
+      "schema": "specs/oracle-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/oracle-unresolved-artifact.json",
+      "expected_valid": false,
+      "expected_error_contains": "source reference does not resolve"
+    },
+    {
+      "name": "oracle local artifact directory is rejected",
+      "schema": "specs/oracle-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/oracle-artifact-directory.json",
+      "expected_valid": false,
+      "expected_error_contains": "source reference does not resolve to a file"
+    },
+    {
+      "name": "oracle duplicate fact identity",
+      "schema": "specs/oracle-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/oracle-duplicate-fact-id.json",
+      "expected_valid": false,
+      "expected_error_contains": "duplicate fact_id identity"
+    },
+    {
+      "name": "oracle duplicate oracle identity",
+      "schema": "specs/oracle-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/oracle-duplicate-oracle-id.json",
+      "expected_valid": false,
+      "expected_error_contains": "duplicate oracle_id identity"
+    },
+    {
+      "name": "oracle unknown level enum",
+      "schema": "specs/oracle-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/oracle-unknown-level.json",
+      "expected_valid": false,
+      "expected_error_contains": "outside the closed enum"
+    },
+    {
+      "name": "oracle unknown status enum",
+      "schema": "specs/oracle-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/oracle-unknown-status.json",
+      "expected_valid": false,
+      "expected_error_contains": "outside the closed enum"
+    },
+    {
+      "name": "oracle unknown expected-fact comparison enum",
+      "schema": "specs/oracle-manifest.schema.json",
+      "document": "tests/r0-spec-001/invalid/oracle-unknown-comparison.json",
+      "expected_valid": false,
+      "expected_error_contains": "outside the closed enum"
+    },
+    {
+      "name": "proof invalid class",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/invalid/plan-proof-invalid-class.json",
+      "expected_valid": false,
+      "expected_error_contains": "outside the closed enum"
+    },
+    {
+      "name": "proof missing assertion",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/invalid/plan-proof-missing-assertion.json",
+      "expected_valid": false,
+      "expected_error_contains": "missing required property 'assertion_code'"
+    },
+    {
+      "name": "proof unknown version",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/invalid/plan-proof-unknown-version.json",
+      "expected_valid": false,
+      "expected_error_contains": "expected constant"
+    },
+    {
+      "name": "proof unknown result enum",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/invalid/plan-proof-unknown-result.json",
+      "expected_valid": false,
+      "expected_error_contains": "outside the closed enum"
+    },
+    {
+      "name": "proof unknown premise kind",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/invalid/plan-proof-unknown-premise-kind.json",
+      "expected_valid": false,
+      "expected_error_contains": "expected exactly one schema match"
+    },
+    {
+      "name": "rejected proof missing diagnostic",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/invalid/plan-proof-rejected-missing-diagnostic.json",
+      "expected_valid": false,
+      "expected_error_contains": "expected at least 1 items"
+    },
+    {
+      "name": "deferred proof missing diagnostic",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/invalid/plan-proof-deferred-missing-diagnostic.json",
+      "expected_valid": false,
+      "expected_error_contains": "expected at least 1 items"
+    },
+    {
+      "name": "deferred proof carries operator",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/invalid/plan-proof-deferred-with-operator.json",
+      "expected_valid": false,
+      "expected_error_contains": "expected at most 0 items"
+    },
+    {
+      "name": "rejected proof carries operator",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/invalid/plan-proof-rejected-with-operator.json",
+      "expected_valid": false,
+      "expected_error_contains": "expected at most 0 items"
+    },
+    {
+      "name": "proven proof missing operator",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/invalid/plan-proof-proven-missing-operator.json",
+      "expected_valid": false,
+      "expected_error_contains": "expected at least 1 items"
+    },
+    {
+      "name": "proven proof carries diagnostic",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/invalid/plan-proof-proven-with-diagnostic.json",
+      "expected_valid": false,
+      "expected_error_contains": "expected at most 0 items"
+    },
+    {
+      "name": "duplicate proof identity across validation set",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/invalid/plan-proof-duplicate-id.json",
+      "expected_valid": false,
+      "expected_error_contains": "duplicate proof_id identity"
+    },
+    {
+      "name": "proof self reference",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/invalid/plan-proof-self-reference.json",
+      "expected_valid": false,
+      "expected_error_contains": "proof cannot reference itself"
+    },
+    {
+      "name": "proof unresolved prerequisite",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/invalid/plan-proof-unresolved-reference.json",
+      "expected_valid": false,
+      "expected_error_contains": "proof prerequisite does not resolve"
+    },
+    {
+      "name": "two-record proof cycle from A",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/invalid/plan-proof-cycle-a.json",
+      "additional_reference_documents": [
+        "tests/r0-spec-001/invalid/plan-proof-cycle-b.json"
+      ],
+      "expected_valid": false,
+      "expected_error_contains": "proof prerequisite cycle includes"
+    },
+    {
+      "name": "two-record proof cycle from B",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/invalid/plan-proof-cycle-b.json",
+      "additional_reference_documents": [
+        "tests/r0-spec-001/invalid/plan-proof-cycle-a.json"
+      ],
+      "expected_valid": false,
+      "expected_error_contains": "proof prerequisite cycle includes"
+    },
+    {
+      "name": "duplicate premise identity",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/invalid/plan-proof-duplicate-premise-id.json",
+      "expected_valid": false,
+      "expected_error_contains": "duplicate premise identity"
+    },
+    {
+      "name": "non-finite premise JSON number",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/invalid/plan-proof-non-finite.json",
+      "expected_valid": false,
+      "expected_error_contains": "non-finite JSON number"
+    },
+    {
+      "name": "unknown proof property",
+      "schema": "specs/plan-proof-record.schema.json",
+      "document": "tests/r0-spec-001/invalid/plan-proof-unknown-property.json",
+      "expected_valid": false,
+      "expected_error_contains": "unknown property 'runtime_hook'"
+    }
+  ]
+}

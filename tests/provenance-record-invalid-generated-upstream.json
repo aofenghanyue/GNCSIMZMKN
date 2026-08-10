@@ -1,0 +1,115 @@
+{
+  "schema_version": "gnczmkn.provenance-register/1",
+  "updated_at": "2026-08-09",
+  "policy_ref": "docs/adr/0004-internal-license-and-provenance-policy.md",
+  "records": [
+    {
+      "record_id": "prov.fixture.restricted-input@1",
+      "subject": {
+        "type": "source-code",
+        "scientific_context_required": false,
+        "identity": "restricted input fixture",
+        "path_or_uri": "repo://tests/restricted-input"
+      },
+      "origin": {
+        "kind": "third-party",
+        "source": "https://invalid.example/restricted",
+        "version_or_date": "1"
+      },
+      "integrity": {
+        "algorithm": "sha256",
+        "value": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "rights": {
+        "status": "restricted",
+        "license_expression": null,
+        "basis_ref": "docs/adr/0004-internal-license-and-provenance-policy.md",
+        "allowed_uses": ["internal-test"],
+        "prohibited_uses": ["external-publication"]
+      },
+      "classification": "internal-restricted",
+      "propagation": {
+        "inherit_restrictions": true,
+        "requirements": ["block-external-sharing", "retain-attribution"]
+      },
+      "review": {
+        "decision": "approved-internal-only",
+        "reviewer": "fixture-reviewer",
+        "reviewed_at": "2026-08-09"
+      }
+    },
+    {
+      "record_id": "prov.invalid.generated-output@1",
+      "subject": {
+        "type": "generated-artifact",
+        "scientific_context_required": false,
+        "identity": "generated output missing upstream refs",
+        "path_or_uri": "repo://tests/generated-output"
+      },
+      "origin": {
+        "kind": "generated",
+        "source": "test renderer",
+        "version_or_date": "1"
+      },
+      "integrity": {
+        "algorithm": "sha256",
+        "value": "1111111111111111111111111111111111111111111111111111111111111111"
+      },
+      "rights": {
+        "status": "restricted",
+        "license_expression": null,
+        "basis_ref": "docs/adr/0004-internal-license-and-provenance-policy.md",
+        "allowed_uses": ["internal-test"],
+        "prohibited_uses": ["external-publication"]
+      },
+      "classification": "public-candidate",
+      "propagation": {
+        "inherit_restrictions": true,
+        "requirements": ["block-external-sharing"],
+        "lineage_refs": ["lineage:fixture:generated"]
+      },
+      "review": {
+        "decision": "approved-internal-only",
+        "reviewer": "fixture-reviewer",
+        "reviewed_at": "2026-08-09"
+      }
+    },
+    {
+      "record_id": "prov.invalid.generated-weaker@1",
+      "subject": {
+        "type": "generated-artifact",
+        "scientific_context_required": false,
+        "identity": "generated output with weaker classification",
+        "path_or_uri": "repo://tests/generated-weaker"
+      },
+      "origin": {
+        "kind": "generated",
+        "source": "test renderer",
+        "version_or_date": "1"
+      },
+      "integrity": {
+        "algorithm": "sha256",
+        "value": "2222222222222222222222222222222222222222222222222222222222222222"
+      },
+      "rights": {
+        "status": "restricted",
+        "license_expression": null,
+        "basis_ref": "docs/adr/0004-internal-license-and-provenance-policy.md",
+        "allowed_uses": ["internal-test"],
+        "prohibited_uses": ["external-publication"]
+      },
+      "classification": "public-candidate",
+      "propagation": {
+        "inherit_restrictions": true,
+        "requirements": ["block-external-sharing"],
+        "upstream_record_refs": ["prov.fixture.restricted-input@1"],
+        "lineage_refs": ["lineage:fixture:generated-weaker"]
+      },
+      "review": {
+        "decision": "approved-internal-only",
+        "reviewer": "fixture-reviewer",
+        "reviewed_at": "2026-08-09"
+      }
+    }
+  ]
+}

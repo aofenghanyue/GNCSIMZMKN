@@ -1,0 +1,192 @@
+{
+  "schema_version": "gnczmkn.provenance-register/1",
+  "updated_at": "2026-08-09",
+  "policy_ref": "docs/adr/0004-internal-license-and-provenance-policy.md",
+  "records": [
+    {
+      "record_id": "prov.gnczmkn-next.bootstrap-source@1",
+      "subject": {
+        "type": "source-code",
+        "scientific_context_required": false,
+        "identity": "GNCZMKN Next 0.0.0-bootstrap",
+        "path_or_uri": "repo://"
+      },
+      "origin": {
+        "kind": "first-party",
+        "source": "GNCZMKNBLUEPRINT repository",
+        "version_or_date": "git:7b05c29f5863d6230fad9285371dc98bd2a30c0d"
+      },
+      "integrity": {
+        "algorithm": "git-commit-sha1",
+        "value": "7b05c29f5863d6230fad9285371dc98bd2a30c0d"
+      },
+      "rights": {
+        "status": "restricted",
+        "license_expression": null,
+        "basis_ref": "docs/adr/0004-internal-license-and-provenance-policy.md",
+        "allowed_uses": ["internal-build", "internal-test", "internal-research", "internal-review"],
+        "prohibited_uses": ["external-publication", "redistribution", "sublicensing"]
+      },
+      "classification": "internal-research",
+      "propagation": {
+        "inherit_restrictions": true,
+        "requirements": ["retain-provenance", "block-external-sharing"]
+      },
+      "review": {
+        "decision": "approved-internal-only",
+        "reviewer": "codex-r0-coordinator",
+        "reviewed_at": "2026-08-09"
+      }
+    },
+    {
+      "record_id": "prov.gnczmkn.legacy-source-archive@a63621c",
+      "subject": {
+        "type": "reference-archive",
+        "scientific_context_required": false,
+        "identity": "GNCZMKN legacy tracked tree a63621c368aa8e7889547689bcce9c7686b886ac",
+        "path_or_uri": "repo://reference/legacy/legacy-source.zip"
+      },
+      "origin": {
+        "kind": "legacy-reference",
+        "source": "reference/legacy/source-manifest.json",
+        "version_or_date": "git:a63621c368aa8e7889547689bcce9c7686b886ac"
+      },
+      "integrity": {
+        "algorithm": "sha256",
+        "value": "2159a324fd897e4bd508c140a36c9165d744e4e4e61861c5b568201707f988e5"
+      },
+      "rights": {
+        "status": "unreviewed",
+        "license_expression": null,
+        "basis_ref": "docs/adr/0001-greenfield-and-legacy-reference.md",
+        "allowed_uses": ["internal-evidence-extraction", "internal-test-reproduction", "internal-semantic-comparison"],
+        "prohibited_uses": ["external-publication", "redistribution", "production-dependency"]
+      },
+      "classification": "internal-restricted",
+      "propagation": {
+        "inherit_restrictions": true,
+        "requirements": ["retain-legacy-commit", "retain-archive-sha256", "new-target-identity-for-migrated-science", "block-external-sharing"]
+      },
+      "review": {
+        "decision": "approved-internal-only",
+        "reviewer": "codex-r0-coordinator",
+        "reviewed_at": "2026-08-09"
+      }
+    },
+    {
+      "record_id": "prov.oracle.r0-scientific-conventions@1",
+      "subject": {
+        "type": "scientific-fixture",
+        "scientific_context_required": true,
+        "identity": "ORACLE-R0-SCI-CONVENTIONS-001",
+        "path_or_uri": "repo://oracles/scientific-conventions/oracle-manifest.json"
+      },
+      "origin": {
+        "kind": "first-party",
+        "source": "R0-SCI-001 independent C++ and Python convention suite",
+        "version_or_date": "2026-08-09"
+      },
+      "integrity": {
+        "algorithm": "sha256",
+        "value": "36533390b59dac37657ae13f39759d1538e950457a4e383f48eafc62dd376a69",
+        "component_hashes": {
+          "cases.csv": "0f403f1f7355ce3173563c2f096c1b2b452bdc662891824eb125682dea966656",
+          "reference.py": "7f0ac6ed9682854cce12c8b04381aed2c9f82d633884e0fdf047cb261259e05b",
+          "cross_tool_check.py": "5893232b58b183f44b79ef8f0359089ecc79fbd5260c17f022493555241978a2",
+          "scientific_conventions_properties.cpp": "0ff18ce21b4943a5eb0fa09be5afd8be52e9fe9b3eaef630467fc8056a9f603f",
+          "cross-tool-report.json": "ce51c79895a52df11ddece4f670d7b838458686f23b86c7224612e12461bd0af"
+        }
+      },
+      "rights": {
+        "status": "restricted",
+        "license_expression": null,
+        "basis_ref": "docs/adr/0004-internal-license-and-provenance-policy.md",
+        "allowed_uses": ["internal-test", "internal-scientific-reference", "internal-architecture-review"],
+        "prohibited_uses": ["external-publication", "redistribution", "sublicensing"]
+      },
+      "classification": "internal-research",
+      "scientific_context": {
+        "applicable_domain": "finite proper 3D rotations, declared SI boundary conversions, and finite typed scientific times",
+        "units": "rad, dimensionless quaternion coefficients, and SI identifiers in ADR-0005",
+        "frames": "generic right-handed from/to frames following ADR-0006",
+        "time_convention": "five typed time values and half-open validity intervals following ADR-0007",
+        "reference_or_oracle_refs": [
+          "oracles/scientific-conventions/reference.py",
+          "oracles/scientific-conventions/cases.csv",
+          "oracles/scientific-conventions/evidence/cross-tool-report.json"
+        ],
+        "independent_reference_confirmed": true,
+        "independence_basis": "Analytic SO(3), Hamilton quaternion, SI conversion, and typed-time identities are implemented with the Python standard library separately from the C++ property implementation.",
+        "target_identity": "ORACLE-R0-SCI-CONVENTIONS-001"
+      },
+      "propagation": {
+        "inherit_restrictions": true,
+        "requirements": ["retain-provenance", "retain-oracle-manifest", "retain-cross-tool-evidence", "block-external-sharing"]
+      },
+      "review": {
+        "decision": "approved-internal-only",
+        "reviewer": "codex-r0-architecture",
+        "reviewed_at": "2026-08-09",
+        "conditions": ["future external sharing requires a separate rights review and license decision"]
+      }
+    },
+    {
+      "record_id": "prov.evidence.r0-leg-001@20260809T081000Z",
+      "subject": {
+        "type": "evidence-bundle",
+        "scientific_context_required": false,
+        "identity": "R0-LEG-001 legacy reproduction run 20260809T081000Z",
+        "path_or_uri": "repo://docs/quality/r0-leg-001/runs/20260809T081000Z/result-summary.json"
+      },
+      "origin": {
+        "kind": "generated-from-legacy-reference",
+        "source": "tools/reproduce-r0-leg-001.ps1",
+        "version_or_date": "2026-08-09T08:10:00Z"
+      },
+      "integrity": {
+        "algorithm": "sha256",
+        "value": "63faef25b16f4b599647ee055303d3ac2675287962d2c2300870c93eab20b1ac",
+        "component_hashes": {
+          "artifact-hashes.sha256": "71c901c0a6d69ab110ca75b780071a66ed42a55d84b0b77a75d0cd1f6245f5c0",
+          "example_05_csv": "8f62c3f9f8c2f06a2d5e9baa9f61b42fad21fd8c683cf44005cb8cc8a655ee37",
+          "example_05_summary": "a8dd56c3bca29cbaad8b67c39be8d667d9240f2d1e450abdf2f6678645390a6c",
+          "yyz_summary": "4a57ee8f72698b61ec35eb39ea98254cc586b07365752c44612137ced0caf577",
+          "yyz_trajectory": "fe8b60dffd65635d9a7d330f1d7a20dda2e0666ecc56f39711d5db1e68eec0e2"
+        }
+      },
+      "rights": {
+        "status": "unreviewed",
+        "license_expression": null,
+        "basis_ref": "docs/adr/0001-greenfield-and-legacy-reference.md",
+        "allowed_uses": ["internal-evidence-review", "internal-test-reproduction", "internal-semantic-comparison"],
+        "prohibited_uses": ["external-publication", "redistribution", "production-dependency"]
+      },
+      "classification": "internal-restricted",
+      "propagation": {
+        "inherit_restrictions": true,
+        "requirements": [
+          "retain-legacy-commit",
+          "retain-archive-sha256",
+          "new-target-identity-for-migrated-science",
+          "block-external-sharing",
+          "retain-run-id",
+          "retain-artifact-hash-manifest"
+        ],
+        "upstream_record_refs": ["prov.gnczmkn.legacy-source-archive@a63621c"],
+        "lineage_refs": [
+          "R0-LEG-001 clean archive verification and paired extraction",
+          "R0-LEG-001 build, CTest, direct rerun, and representative mission capture"
+        ]
+      },
+      "review": {
+        "decision": "approved-internal-only",
+        "reviewer": "codex-r0-science",
+        "reviewed_at": "2026-08-09",
+        "conditions": [
+          "LEG-GAP-02 remains open as a documented environment difference",
+          "the bundle is legacy behavior evidence and does not claim independent scientific authority"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,199 @@
+{
+    "schema_version":  "gnczmkn.r0-architecture-baseline/1",
+    "document_kind":  "module_dependency_map",
+    "task_id":  "R0-ARCH-001",
+    "baseline_date":  "2026-08-09",
+    "maturity":  "Accepted R0 governance baseline governed by ADR-0010 and ADR-0011",
+    "registry":  {
+                     "id":  "module-dependency-registry",
+                     "authority_path":  "docs/adr/0003-initial-module-dependency-dag.md",
+                     "owner_role":  "architecture_lead",
+                     "edge_direction":  "consumer_to_dependency"
+                 },
+    "source_snapshots":  [
+                             {
+                                 "path":  "design-notes/gnczmkn-architecture-roadmap/02-layered-reference-architecture.md",
+                                 "sha256":  "a5c6610d52edca947912368a122937c1f43fdc3347f94a5380e6dc574568f4d3",
+                                 "locator":  "section 13"
+                             },
+                             {
+                                 "path":  "docs/adr/0003-initial-module-dependency-dag.md",
+                                 "sha256":  "52b6197eb01645b79edafc5eb9984590fe59e8523c6e309e99631d1241f83542",
+                                 "locator":  "Decision and Verification"
+                             },
+                             {
+                                 "path":  "docs/adr/0010-r0-architecture-baseline-format.md",
+                                 "sha256":  "5a239f0e57d68b22f42931987e818837236bad2baba7cbf76f5e30c473a9bc1c",
+                                 "locator":  "Decision and verification"
+                             },
+                             {
+                                 "path":  "project-manifest.json",
+                                 "sha256":  "eb8a1145d95c92396073a4a9ece7d5d41f84b2e286c0842331c1d9e8653ca5ad",
+                                 "locator":  "modules"
+                             },
+                             {
+                                 "path":  "CMakeLists.txt",
+                                 "sha256":  "182aaf9b34daab3436bd195f422d896c30acdd57e83cc64fe84d48c708e57465",
+                                 "locator":  "interface module declarations and links"
+                             }
+                         ],
+    "modules":  [
+                    {
+                        "id":  "foundation",
+                        "kind":  "cmake_interface",
+                        "owner_role":  "runtime_numerics_lead",
+                        "authority_ref":  "module-dependency-registry",
+                        "direct_dependencies":  [
+
+                                                ],
+                        "cmake_target":  "foundation",
+                        "declared_in_project_manifest":  true
+                    },
+                    {
+                        "id":  "contracts",
+                        "kind":  "cmake_interface",
+                        "owner_role":  "architecture_lead",
+                        "authority_ref":  "module-dependency-registry",
+                        "direct_dependencies":  [
+                                                    "foundation"
+                                                ],
+                        "cmake_target":  "contracts",
+                        "declared_in_project_manifest":  true
+                    },
+                    {
+                        "id":  "model_sdk",
+                        "kind":  "cmake_interface",
+                        "owner_role":  "model_sdk_lead",
+                        "authority_ref":  "module-dependency-registry",
+                        "direct_dependencies":  [
+                                                    "foundation",
+                                                    "contracts"
+                                                ],
+                        "cmake_target":  "model_sdk",
+                        "declared_in_project_manifest":  true
+                    },
+                    {
+                        "id":  "compiler",
+                        "kind":  "cmake_interface",
+                        "owner_role":  "compiler_lead",
+                        "authority_ref":  "module-dependency-registry",
+                        "direct_dependencies":  [
+                                                    "foundation",
+                                                    "contracts",
+                                                    "model_sdk"
+                                                ],
+                        "cmake_target":  "compiler",
+                        "declared_in_project_manifest":  true
+                    },
+                    {
+                        "id":  "kernel",
+                        "kind":  "cmake_interface",
+                        "owner_role":  "runtime_numerics_lead",
+                        "authority_ref":  "module-dependency-registry",
+                        "direct_dependencies":  [
+                                                    "foundation",
+                                                    "contracts"
+                                                ],
+                        "cmake_target":  "kernel",
+                        "declared_in_project_manifest":  true
+                    },
+                    {
+                        "id":  "evidence",
+                        "kind":  "cmake_interface",
+                        "owner_role":  "evidence_workflow_lead",
+                        "authority_ref":  "module-dependency-registry",
+                        "direct_dependencies":  [
+                                                    "foundation",
+                                                    "contracts"
+                                                ],
+                        "cmake_target":  "evidence",
+                        "declared_in_project_manifest":  true
+                    },
+                    {
+                        "id":  "workflow",
+                        "kind":  "cmake_interface",
+                        "owner_role":  "evidence_workflow_lead",
+                        "authority_ref":  "module-dependency-registry",
+                        "direct_dependencies":  [
+                                                    "foundation",
+                                                    "contracts",
+                                                    "evidence"
+                                                ],
+                        "cmake_target":  "workflow",
+                        "declared_in_project_manifest":  true
+                    },
+                    {
+                        "id":  "application",
+                        "kind":  "cmake_interface",
+                        "owner_role":  "application_lead",
+                        "authority_ref":  "module-dependency-registry",
+                        "direct_dependencies":  [
+                                                    "foundation",
+                                                    "contracts",
+                                                    "compiler",
+                                                    "kernel",
+                                                    "evidence",
+                                                    "workflow"
+                                                ],
+                        "cmake_target":  "application",
+                        "declared_in_project_manifest":  true
+                    },
+                    {
+                        "id":  "adapters",
+                        "kind":  "cmake_interface",
+                        "owner_role":  "application_lead",
+                        "authority_ref":  "module-dependency-registry",
+                        "direct_dependencies":  [
+                                                    "foundation",
+                                                    "contracts",
+                                                    "application"
+                                                ],
+                        "cmake_target":  "adapters",
+                        "declared_in_project_manifest":  true
+                    },
+                    {
+                        "id":  "packages_user",
+                        "kind":  "logical_contribution_boundary",
+                        "owner_role":  "model_sdk_lead",
+                        "authority_ref":  "module-dependency-registry",
+                        "direct_dependencies":  [
+                                                    "model_sdk"
+                                                ],
+                        "cmake_target":  null,
+                        "declared_in_project_manifest":  false
+                    },
+                    {
+                        "id":  "composition_root",
+                        "kind":  "logical_composition_boundary",
+                        "owner_role":  "application_lead",
+                        "authority_ref":  "module-dependency-registry",
+                        "direct_dependencies":  [
+                                                    "application",
+                                                    "adapters",
+                                                    "packages_user"
+                                                ],
+                        "cmake_target":  null,
+                        "declared_in_project_manifest":  false
+                    }
+                ],
+    "forbidden_reachability":  [
+                                   {
+                                       "from":  "kernel",
+                                       "to":  "compiler",
+                                       "reason":  "Kernel cannot depend on Compiler.",
+                                       "authority_ref":  "module-dependency-registry"
+                                   },
+                                   {
+                                       "from":  "compiler",
+                                       "to":  "packages_user",
+                                       "reason":  "Compiler consumes descriptor protocols without package implementations.",
+                                       "authority_ref":  "module-dependency-registry"
+                                   },
+                                   {
+                                       "from":  "workflow",
+                                       "to":  "kernel",
+                                       "reason":  "Workflow cannot consume Session internals.",
+                                       "authority_ref":  "module-dependency-registry"
+                                   }
+                               ]
+}

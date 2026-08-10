@@ -1,0 +1,132 @@
+[
+    {
+        "name":  "archive-verification",
+        "command":  "Get-FileHash -Algorithm SHA256 C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\reference\\legacy\\legacy-source.zip",
+        "working_directory":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT",
+        "exit_code":  0,
+        "started_at_utc":  "2026-08-09T08:07:22.7781402Z",
+        "finished_at_utc":  "2026-08-09T08:07:22.7796422Z",
+        "duration_seconds":  0.002,
+        "log":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\docs\\quality\\r0-leg-001\\runs\\20260809T081000Z\\logs\\01-archive-verification.log"
+    },
+    {
+        "name":  "clean-extraction",
+        "command":  "Expand-Archive twice from C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\reference\\legacy\\legacy-source.zip",
+        "working_directory":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT",
+        "exit_code":  0,
+        "started_at_utc":  "2026-08-09T08:07:22.8019228Z",
+        "finished_at_utc":  "2026-08-09T08:07:39.5040637Z",
+        "duration_seconds":  16.702,
+        "log":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\docs\\quality\\r0-leg-001\\runs\\20260809T081000Z\\logs\\02-extraction.log"
+    },
+    {
+        "name":  "legacy-configure-25-tests",
+        "command":  "C:\\Users\\17721\\Documents\\Soft\\MSYS64\\mingw64\\bin\\cmake.exe -S C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\build\\r0-leg-001\\runs\\20260809T081000Z\\test-extraction\\GNCZMKN-legacy-a63621c -B C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\build\\r0-leg-001\\runs\\20260809T081000Z\\build-tests -G \"MinGW Makefiles\" -DBUILD_TESTS=ON -DGNC_BUILD_EXAMPLE_TESTS=ON -DGNC_BUILD_PROJECT_TESTS=OFF -DGNC_BUILD_ARCHITECTURE_GUARDS=ON -DCMAKE_BUILD_TYPE=Release",
+        "working_directory":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT",
+        "exit_code":  0,
+        "started_at_utc":  "2026-08-09T08:07:41.4009134Z",
+        "finished_at_utc":  "2026-08-09T08:07:44.0324325Z",
+        "duration_seconds":  2.632,
+        "log":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\docs\\quality\\r0-leg-001\\runs\\20260809T081000Z\\logs\\03-configure.log"
+    },
+    {
+        "name":  "legacy-build-25-tests",
+        "command":  "C:\\Users\\17721\\Documents\\Soft\\MSYS64\\mingw64\\bin\\cmake.exe --build C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\build\\r0-leg-001\\runs\\20260809T081000Z\\build-tests --parallel 4",
+        "working_directory":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT",
+        "exit_code":  0,
+        "started_at_utc":  "2026-08-09T08:07:44.2827336Z",
+        "finished_at_utc":  "2026-08-09T08:13:16.1789083Z",
+        "duration_seconds":  331.896,
+        "log":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\docs\\quality\\r0-leg-001\\runs\\20260809T081000Z\\logs\\04-build.log"
+    },
+    {
+        "name":  "legacy-ctest-25-tests",
+        "command":  "C:\\Users\\17721\\Documents\\Soft\\MSYS64\\mingw64\\bin\\ctest.exe --test-dir C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\build\\r0-leg-001\\runs\\20260809T081000Z\\build-tests --output-on-failure --no-tests=error",
+        "working_directory":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT",
+        "exit_code":  0,
+        "started_at_utc":  "2026-08-09T08:13:16.1824137Z",
+        "finished_at_utc":  "2026-08-09T08:13:25.2050055Z",
+        "duration_seconds":  9.023,
+        "log":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\docs\\quality\\r0-leg-001\\runs\\20260809T081000Z\\logs\\05-ctest.log"
+    },
+    {
+        "name":  "direct-test_ideal_cartesian_3dof_mission",
+        "command":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\build\\r0-leg-001\\runs\\20260809T081000Z\\build-tests\\bin\\test_ideal_cartesian_3dof_mission.exe",
+        "working_directory":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\build\\r0-leg-001\\runs\\20260809T081000Z\\test-extraction\\GNCZMKN-legacy-a63621c",
+        "exit_code":  0,
+        "started_at_utc":  "2026-08-09T08:13:25.2325198Z",
+        "finished_at_utc":  "2026-08-09T08:13:25.3574114Z",
+        "duration_seconds":  0.125,
+        "log":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\docs\\quality\\r0-leg-001\\runs\\20260809T081000Z\\logs\\06-direct-test_ideal_cartesian_3dof_mission.log"
+    },
+    {
+        "name":  "direct-test_ideal_cartesian_6dof_mission",
+        "command":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\build\\r0-leg-001\\runs\\20260809T081000Z\\build-tests\\bin\\test_ideal_cartesian_6dof_mission.exe",
+        "working_directory":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\build\\r0-leg-001\\runs\\20260809T081000Z\\test-extraction\\GNCZMKN-legacy-a63621c",
+        "exit_code":  0,
+        "started_at_utc":  "2026-08-09T08:13:25.3584117Z",
+        "finished_at_utc":  "2026-08-09T08:13:25.4815239Z",
+        "duration_seconds":  0.123,
+        "log":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\docs\\quality\\r0-leg-001\\runs\\20260809T081000Z\\logs\\06-direct-test_ideal_cartesian_6dof_mission.log"
+    },
+    {
+        "name":  "baseline-mission-configure",
+        "command":  "C:\\Users\\17721\\Documents\\Soft\\MSYS64\\mingw64\\bin\\cmake.exe -S C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\build\\r0-leg-001\\runs\\20260809T081000Z\\mission-extraction\\GNCZMKN-legacy-a63621c -B C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\build\\r0-leg-001\\runs\\20260809T081000Z\\build-mission-baseline -G \"MinGW Makefiles\" -DBUILD_TESTS=OFF -DGNC_ACTIVE_PROJECT=example_05_ideal_3dof_geographic_baseline -DCMAKE_BUILD_TYPE=Release",
+        "working_directory":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT",
+        "exit_code":  0,
+        "started_at_utc":  "2026-08-09T08:13:25.5142638Z",
+        "finished_at_utc":  "2026-08-09T08:13:26.3576205Z",
+        "duration_seconds":  0.843,
+        "log":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\docs\\quality\\r0-leg-001\\runs\\20260809T081000Z\\logs\\10-baseline-configure.log"
+    },
+    {
+        "name":  "baseline-mission-build",
+        "command":  "C:\\Users\\17721\\Documents\\Soft\\MSYS64\\mingw64\\bin\\cmake.exe --build C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\build\\r0-leg-001\\runs\\20260809T081000Z\\build-mission-baseline --target gnc_sim --parallel 4",
+        "working_directory":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT",
+        "exit_code":  0,
+        "started_at_utc":  "2026-08-09T08:13:26.3612365Z",
+        "finished_at_utc":  "2026-08-09T08:13:56.6078354Z",
+        "duration_seconds":  30.247,
+        "log":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\docs\\quality\\r0-leg-001\\runs\\20260809T081000Z\\logs\\11-baseline-build.log"
+    },
+    {
+        "name":  "baseline-geographic-3dof-run",
+        "command":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\build\\r0-leg-001\\runs\\20260809T081000Z\\build-mission-baseline\\bin\\gnc_sim.exe --config user/example_05_ideal_3dof_geographic_baseline/config/mission.json",
+        "working_directory":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\build\\r0-leg-001\\runs\\20260809T081000Z\\mission-extraction\\GNCZMKN-legacy-a63621c",
+        "exit_code":  0,
+        "started_at_utc":  "2026-08-09T08:13:56.6108867Z",
+        "finished_at_utc":  "2026-08-09T08:13:59.8821411Z",
+        "duration_seconds":  3.271,
+        "log":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\docs\\quality\\r0-leg-001\\runs\\20260809T081000Z\\logs\\12-baseline-run.log"
+    },
+    {
+        "name":  "yyz-mission-configure",
+        "command":  "C:\\Users\\17721\\Documents\\Soft\\MSYS64\\mingw64\\bin\\cmake.exe -S C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\build\\r0-leg-001\\runs\\20260809T081000Z\\mission-extraction\\GNCZMKN-legacy-a63621c -B C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\build\\r0-leg-001\\runs\\20260809T081000Z\\build-mission-yyz -G \"MinGW Makefiles\" -DBUILD_TESTS=OFF -DGNC_ACTIVE_PROJECT=yyz_cartesian_6dof_framework_9 -DCMAKE_BUILD_TYPE=Release",
+        "working_directory":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT",
+        "exit_code":  0,
+        "started_at_utc":  "2026-08-09T08:14:00.0995534Z",
+        "finished_at_utc":  "2026-08-09T08:14:01.3580886Z",
+        "duration_seconds":  1.259,
+        "log":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\docs\\quality\\r0-leg-001\\runs\\20260809T081000Z\\logs\\20-yyz-configure.log"
+    },
+    {
+        "name":  "yyz-mission-build",
+        "command":  "C:\\Users\\17721\\Documents\\Soft\\MSYS64\\mingw64\\bin\\cmake.exe --build C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\build\\r0-leg-001\\runs\\20260809T081000Z\\build-mission-yyz --target gnc_sim --parallel 4",
+        "working_directory":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT",
+        "exit_code":  0,
+        "started_at_utc":  "2026-08-09T08:14:01.3791127Z",
+        "finished_at_utc":  "2026-08-09T08:14:47.4843818Z",
+        "duration_seconds":  46.105,
+        "log":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\docs\\quality\\r0-leg-001\\runs\\20260809T081000Z\\logs\\21-yyz-build.log"
+    },
+    {
+        "name":  "yyz-cartesian-6dof-run",
+        "command":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\build\\r0-leg-001\\runs\\20260809T081000Z\\build-mission-yyz\\bin\\gnc_sim.exe --config user/yyz_cartesian_6dof_framework_9/config/mission.json",
+        "working_directory":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\build\\r0-leg-001\\runs\\20260809T081000Z\\mission-extraction\\GNCZMKN-legacy-a63621c",
+        "exit_code":  0,
+        "started_at_utc":  "2026-08-09T08:14:47.4863845Z",
+        "finished_at_utc":  "2026-08-09T08:14:47.8930409Z",
+        "duration_seconds":  0.407,
+        "log":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\docs\\quality\\r0-leg-001\\runs\\20260809T081000Z\\logs\\22-yyz-run.log"
+    }
+]

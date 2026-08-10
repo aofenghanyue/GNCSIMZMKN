@@ -22,6 +22,12 @@ try {
 
     & (Join-Path $PSScriptRoot 'verify-repository.ps1')
     if ($LASTEXITCODE -ne 0) { throw "Repository verification failed with exit code $LASTEXITCODE." }
+
+    & (Join-Path $PSScriptRoot 'test-provenance-policy.ps1')
+    if ($LASTEXITCODE -ne 0) { throw "Provenance policy checks failed with exit code $LASTEXITCODE." }
+
+    & (Join-Path $PSScriptRoot 'verify-r0-spec-001.ps1')
+    if ($LASTEXITCODE -ne 0) { throw "R0-SPEC-001 schema checks failed with exit code $LASTEXITCODE." }
 }
 finally {
     Pop-Location

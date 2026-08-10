@@ -1,0 +1,193 @@
+{
+    "schema_version":  "gnczmkn.r0-architecture-conformance-report/1",
+    "task_id":  "R0-ARCH-001",
+    "generated_at_utc":  "2026-08-09T08:35:42.1998507Z",
+    "status":  "passed",
+    "adr":  {
+                "path":  "docs/adr/0010-r0-architecture-baseline-format.md",
+                "status":  "Accepted"
+            },
+    "overlay_adr":  {
+                        "path":  "docs/adr/0011-r0-scientific-terminology-overlay.md",
+                        "status":  "Accepted"
+                    },
+    "counts":  {
+                   "canonical_terms":  309,
+                   "retired_aliases":  20,
+                   "enums":  13,
+                   "keys":  4,
+                   "authority_domains":  4,
+                   "modules":  11,
+                   "registered_legacy_mappings":  23,
+                   "audit_only_legacy_mappings":  4,
+                   "target_responsibilities":  33
+               },
+    "checks":  [
+                   "authoritative source snapshot conformance",
+                   "canonical term and alias uniqueness",
+                   "single authority and owner cardinality",
+                   "complete enum and key composition",
+                   "R0 scientific terminology overlay coverage",
+                   "ASCII canonical SI unit identifiers",
+                   "scientific time kind and quaternion order conformance",
+                   "acyclic module graph",
+                   "root CMake direct dependency conformance",
+                   "ADR-0003 forbidden reachability",
+                   "registered legacy coverage",
+                   "canonical target term resolution"
+               ],
+    "negative_self_tests":  [
+                                {
+                                    "id":  "ARCH-TERM-001",
+                                    "status":  "passed",
+                                    "detected_issues":  1
+                                },
+                                {
+                                    "id":  "ARCH-TERM-002",
+                                    "status":  "passed",
+                                    "detected_issues":  2
+                                },
+                                {
+                                    "id":  "ARCH-TERM-003",
+                                    "status":  "passed",
+                                    "detected_issues":  1
+                                },
+                                {
+                                    "id":  "ARCH-TERM-004",
+                                    "status":  "passed",
+                                    "detected_issues":  5
+                                },
+                                {
+                                    "id":  "ARCH-DAG-001",
+                                    "status":  "passed",
+                                    "detected_issues":  5
+                                },
+                                {
+                                    "id":  "ARCH-DAG-002",
+                                    "status":  "passed",
+                                    "detected_issues":  1
+                                },
+                                {
+                                    "id":  "ARCH-DAG-003",
+                                    "status":  "passed",
+                                    "detected_issues":  1
+                                },
+                                {
+                                    "id":  "ARCH-LEG-002",
+                                    "status":  "passed",
+                                    "detected_issues":  1
+                                },
+                                {
+                                    "id":  "ARCH-LEG-001",
+                                    "status":  "passed",
+                                    "detected_issues":  1
+                                },
+                                {
+                                    "id":  "ARCH-LEG-003",
+                                    "status":  "passed",
+                                    "detected_issues":  1
+                                }
+                            ],
+    "source_snapshots":  [
+                             {
+                                 "path":  "design-notes/gnczmkn-architecture-roadmap/reference-glossary.md",
+                                 "sha256":  "69b119abfb933c05a4c603385f80c6a6ccee49e3916a6f29cda0e0d1b956f572",
+                                 "locator":  "sections 1 through 9"
+                             },
+                             {
+                                 "path":  "design-notes/gnczmkn-architecture-roadmap/02-layered-reference-architecture.md",
+                                 "sha256":  "a5c6610d52edca947912368a122937c1f43fdc3347f94a5380e6dc574568f4d3",
+                                 "locator":  "sections 1.2, 1.3, 9, and 13"
+                             },
+                             {
+                                 "path":  "docs/adr/0010-r0-architecture-baseline-format.md",
+                                 "sha256":  "5a239f0e57d68b22f42931987e818837236bad2baba7cbf76f5e30c473a9bc1c",
+                                 "locator":  "Decision and verification"
+                             },
+                             {
+                                 "path":  "docs/adr/0011-r0-scientific-terminology-overlay.md",
+                                 "sha256":  "38bca6f241d75378a19ee2e78ccfce58d9bc335429685adedab9c4b1c1e4fd3b",
+                                 "locator":  "Decision and verification"
+                             },
+                             {
+                                 "path":  "docs/adr/0005-si-unit-and-numeric-conventions.md",
+                                 "sha256":  "a9e42f8ff0f15d1b6bb778dfffabcc66d7718366212077f4cd0d6c5cd89c5a56",
+                                 "locator":  "Decision"
+                             },
+                             {
+                                 "path":  "docs/adr/0006-frame-transform-conventions.md",
+                                 "sha256":  "55b1e6785f556ff02c4fdfebf46b29b0fe3a49c18aaec4eacce541e989bf111c",
+                                 "locator":  "Decision"
+                             },
+                             {
+                                 "path":  "docs/adr/0007-time-value-conventions.md",
+                                 "sha256":  "eb3749371d334b9f0dfdf2c029ba2ff5acee82acbb64ed88268a6de84d5da24d",
+                                 "locator":  "Decision"
+                             },
+                             {
+                                 "path":  "docs/adr/0008-quaternion-conventions.md",
+                                 "sha256":  "a6f9e2fac58a3c4b3df6e2f0e99bec3ed0a94b383a1925bb76190023c3e498ea",
+                                 "locator":  "Decision"
+                             },
+                             {
+                                 "path":  "docs/adr/0003-initial-module-dependency-dag.md",
+                                 "sha256":  "52b6197eb01645b79edafc5eb9984590fe59e8523c6e309e99631d1241f83542",
+                                 "locator":  "Decision and Verification"
+                             },
+                             {
+                                 "path":  "project-manifest.json",
+                                 "sha256":  "eb8a1145d95c92396073a4a9ece7d5d41f84b2e286c0842331c1d9e8653ca5ad",
+                                 "locator":  "modules"
+                             },
+                             {
+                                 "path":  "CMakeLists.txt",
+                                 "sha256":  "182aaf9b34daab3436bd195f422d896c30acdd57e83cc64fe84d48c708e57465",
+                                 "locator":  "interface module declarations and links"
+                             },
+                             {
+                                 "path":  "design-notes/gnczmkn-architecture-roadmap/01-current-architecture-deep-audit.md",
+                                 "sha256":  "8fe4c76b353a5fb5699da5348d6340cb6a75fe63766b189a9c1e136efdd3a763",
+                                 "locator":  "section 16"
+                             }
+                         ],
+    "artifact_hashes":  [
+                            {
+                                "path":  "specs/architecture/r0/terminology-baseline.json",
+                                "sha256":  "3aef1736adb3a4d9599786341dbf9fef08ed9ab9312e84a4169c6d3301ebf5c6"
+                            },
+                            {
+                                "path":  "specs/architecture/r0/module-dependency-map.json",
+                                "sha256":  "949040aaed0ca27aa29164571c4049916c3378530d13d13989348bf45be6ec0a"
+                            },
+                            {
+                                "path":  "specs/architecture/r0/legacy-to-target-ownership-map.json",
+                                "sha256":  "f834462ca5e9ea0cacaf9e0f0cdf090d307458678b7bc1f4323c3908dd7deeb0"
+                            },
+                            {
+                                "path":  "tools/verify-r0-arch-001.ps1",
+                                "sha256":  "2f7bd4f30d0dc7f3df9293cdacbbcc4afd6374e6515758e792bc1c4f044c5179"
+                            },
+                            {
+                                "path":  "docs/adr/0010-r0-architecture-baseline-format.md",
+                                "sha256":  "5a239f0e57d68b22f42931987e818837236bad2baba7cbf76f5e30c473a9bc1c"
+                            },
+                            {
+                                "path":  "docs/adr/0011-r0-scientific-terminology-overlay.md",
+                                "sha256":  "38bca6f241d75378a19ee2e78ccfce58d9bc335429685adedab9c4b1c1e4fd3b"
+                            },
+                            {
+                                "path":  "docs/quality/r0-arch-001/acceptance-and-failure-plan.md",
+                                "sha256":  "8879fa43998dab84ceb2f32809bbdbf37971daf264492a7c2b385638635df3aa"
+                            },
+                            {
+                                "path":  "docs/quality/r0-arch-001/verification-summary.md",
+                                "sha256":  "8c828578ac7885e9d988208c6ad37418ff47cb5dd7021d8948efad6eac05684f"
+                            }
+                        ],
+    "limits":  [
+                   "ADR-0010 status is Accepted.",
+                   "ADR-0011 status is Accepted.",
+                   "These documents are R0 governance metadata and are not production runtime schemas.",
+                   "Detailed semantics remain governed by the architecture sources in detail_authorities."
+               ]
+}

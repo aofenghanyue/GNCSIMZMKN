@@ -1,5 +1,5 @@
 {
-  "schema_version": "gnczmkn.fixture-manifest/1",
+  "schema_version": "gnczmkn.fixture-manifest.placeholder/0",
   "fixture_id": "REF-CAVH-FORMULA-001",
   "status": "specification_only",
   "purpose": "Validate CAVH glide-range guidance at formula and kernel boundaries before closed-loop use.",

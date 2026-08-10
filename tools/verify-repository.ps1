@@ -97,6 +97,22 @@ if ($null -ne $projectManifest -and $null -ne $backlog) {
             else {
                 $roleById[$role.id] = $role
             }
+
+            if ([bool]$role.required) {
+                $assignee = [string]$role.assignee
+                $reviewerProperty = $role.PSObject.Properties['reviewer']
+                $reviewer = if ($null -eq $reviewerProperty) { '' } else { [string]$reviewerProperty.Value }
+
+                if ([string]::IsNullOrWhiteSpace($assignee)) {
+                    Add-Error "Required team role $($role.id) has no assignee."
+                }
+                if ([string]::IsNullOrWhiteSpace($reviewer)) {
+                    Add-Error "Required team role $($role.id) has no reviewer."
+                }
+                elseif ($reviewer -eq $assignee) {
+                    Add-Error "Required team role $($role.id) must use a reviewer distinct from its assignee."
+                }
+            }
         }
     }
 
@@ -183,6 +199,16 @@ foreach ($file in $productionFiles) {
 $cmakeText = Get-Content -LiteralPath (Join-Path $repoRoot 'CMakeLists.txt') -Raw -Encoding utf8
 if ($cmakeText -match 'target_link_libraries\(kernel[^\)]*compiler') {
     Add-Error "Kernel must not link Compiler."
+}
+
+$provenanceValidator = Join-Path $PSScriptRoot 'verify-provenance-record.ps1'
+$provenanceRegister = Join-Path $repoRoot 'docs\quality\provenance-register.json'
+if ((Test-Path -LiteralPath $provenanceValidator) -and (Test-Path -LiteralPath $provenanceRegister)) {
+    $powershellEngine = (Get-Process -Id $PID).Path
+    $provenanceOutput = & $powershellEngine -NoProfile -ExecutionPolicy Bypass -File $provenanceValidator -Path $provenanceRegister 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Add-Error "Provenance register validation failed: $(($provenanceOutput | Out-String).Trim())"
+    }
 }
 
 $authoredMarkdown = @(

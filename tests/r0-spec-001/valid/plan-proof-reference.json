@@ -1,0 +1,25 @@
+{
+  "schema_version": "gnczmkn.plan-proof-record/1",
+  "proof_id": "proof:evidence:r0-spec:0004",
+  "proof_kind": "Evidence",
+  "subject_refs": [
+    "REF-R0-SPEC-001"
+  ],
+  "assertion_code": "GNC.PLAN.EVIDENCE.IDENTITY_CLOSED",
+  "source_refs": [
+    "docs/adr/0009-r0-bundle-and-plan-proof-schemas.md#reference-closure"
+  ],
+  "premises": [
+    {
+      "kind": "ProofReference",
+      "premise_id": "guidance_rate_proof",
+      "proof_ref": "proof:temporal:guidance-rate:4fd0"
+    }
+  ],
+  "result": "Proven",
+  "diagnostic_ids": [],
+  "lowered_operator_refs": [
+    "guard:r0-spec-reference-closure"
+  ],
+  "generated_by_pass": "r0-spec-fixture@1"
+}

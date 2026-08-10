@@ -1,22 +1,195 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://internal.gnczmkn/schemas/plan-proof-record.schema.json",
-  "title": "PlanProofRecord fixture schema",
-  "description": "R0 fixture schema. R2 owns the implemented compiler contract.",
+  "$id": "urn:gnczmkn:schema:r0:plan-proof-record:1",
+  "title": "GNCZMKN R0 PlanProofRecord fixture",
+  "description": "R0 proof evidence schema. R2 owns any implemented compiler contract.",
+  "x-stage": "R0",
   "x-maturity": "Fixture",
   "type": "object",
-  "required": ["proof_id", "proof_kind", "subject_refs", "assertion_code", "source_refs", "premises", "result", "diagnostic_ids", "lowered_operator_refs", "generated_by_pass"],
+  "required": [
+    "schema_version",
+    "proof_id",
+    "proof_kind",
+    "subject_refs",
+    "assertion_code",
+    "source_refs",
+    "premises",
+    "result",
+    "diagnostic_ids",
+    "lowered_operator_refs",
+    "generated_by_pass"
+  ],
   "properties": {
-    "proof_id": {"type": "string"},
-    "proof_kind": {"enum": ["Identity", "Ownership", "Causality", "TimeLifecycle", "StateTransition", "ResourceEffect", "Evidence"]},
-    "subject_refs": {"type": "array", "items": {"type": "string"}, "minItems": 1},
-    "assertion_code": {"type": "string", "pattern": "^GNC\\.PLAN\\.[A-Z0-9_.-]+$"},
-    "source_refs": {"type": "array", "items": {"type": "string"}, "minItems": 1},
-    "premises": {"type": "object"},
-    "result": {"enum": ["Proven", "Rejected", "Unsupported"]},
-    "diagnostic_ids": {"type": "array", "items": {"type": "string"}},
-    "lowered_operator_refs": {"type": "array", "items": {"type": "string"}},
-    "generated_by_pass": {"type": "string"}
+    "schema_version": {
+      "const": "gnczmkn.plan-proof-record/1"
+    },
+    "proof_id": {
+      "type": "string",
+      "pattern": "^proof:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*){2,}$"
+    },
+    "proof_kind": {
+      "enum": [
+        "Identity",
+        "Ownership",
+        "Causality",
+        "TimeLifecycle",
+        "StateTransition",
+        "ResourceEffect",
+        "Evidence"
+      ]
+    },
+    "subject_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "assertion_code": {
+      "type": "string",
+      "pattern": "^GNC\\.PLAN\\.[A-Z0-9_.-]+$"
+    },
+    "source_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
+    "premises": {
+      "type": "array",
+      "items": {
+        "$ref": "#/$defs/premise"
+      },
+      "minItems": 1
+    },
+    "result": {
+      "enum": [
+        "Proven",
+        "Rejected",
+        "DeferredUnsupported"
+      ]
+    },
+    "diagnostic_ids": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "lowered_operator_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "minLength": 1
+      },
+      "uniqueItems": true
+    },
+    "generated_by_pass": {
+      "type": "string",
+      "pattern": "^[a-z][a-z0-9.-]*@[1-9][0-9]*$"
+    }
   },
+  "$defs": {
+    "premise": {
+      "oneOf": [
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "premise_id",
+            "value"
+          ],
+          "properties": {
+            "kind": {
+              "const": "Fact"
+            },
+            "premise_id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_.-]*$"
+            },
+            "value": {}
+          },
+          "additionalProperties": false
+        },
+        {
+          "type": "object",
+          "required": [
+            "kind",
+            "premise_id",
+            "proof_ref"
+          ],
+          "properties": {
+            "kind": {
+              "const": "ProofReference"
+            },
+            "premise_id": {
+              "type": "string",
+              "pattern": "^[a-z][a-z0-9_.-]*$"
+            },
+            "proof_ref": {
+              "type": "string",
+              "pattern": "^proof:[a-z0-9][a-z0-9._-]*(?::[a-z0-9][a-z0-9._-]*){2,}$"
+            }
+          },
+          "additionalProperties": false
+        }
+      ]
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "result": {
+            "const": "Proven"
+          }
+        },
+        "required": [
+          "result"
+        ]
+      },
+      "then": {
+        "properties": {
+          "diagnostic_ids": {
+            "maxItems": 0
+          },
+          "lowered_operator_refs": {
+            "minItems": 1
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "result": {
+            "enum": [
+              "Rejected",
+              "DeferredUnsupported"
+            ]
+          }
+        },
+        "required": [
+          "result"
+        ]
+      },
+      "then": {
+        "properties": {
+          "diagnostic_ids": {
+            "minItems": 1
+          },
+          "lowered_operator_refs": {
+            "maxItems": 0
+          }
+        }
+      }
+    }
+  ],
   "additionalProperties": false
 }

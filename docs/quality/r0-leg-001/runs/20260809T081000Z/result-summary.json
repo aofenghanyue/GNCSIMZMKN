@@ -1,0 +1,89 @@
+{
+    "schema_version":  "gnczmkn.r0-leg-001-result/1",
+    "task":  "R0-LEG-001",
+    "run_id":  "20260809T081000Z",
+    "status":  "complete_with_documented_gaps",
+    "fatal_message":  null,
+    "archive_verified":  true,
+    "clean_extractions_match":  true,
+    "tests":  {
+                  "expected_total":  25,
+                  "expected_passed":  23,
+                  "expected_failed":  2,
+                  "expected_path_sensitive_failures":  [
+                                                           "test_ideal_cartesian_3dof_mission",
+                                                           "test_ideal_cartesian_6dof_mission"
+                                                       ],
+                  "observed_total":  25,
+                  "observed_passed":  25,
+                  "observed_failed":  0,
+                  "observed_failed_tests":  [
+
+                                            ],
+                  "ctest_exit_code":  0,
+                  "direct_reruns":  [
+                                        {
+                                            "test":  "test_ideal_cartesian_3dof_mission",
+                                            "working_directory":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\build\\r0-leg-001\\runs\\20260809T081000Z\\test-extraction\\GNCZMKN-legacy-a63621c",
+                                            "exit_code":  0,
+                                            "log":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\docs\\quality\\r0-leg-001\\runs\\20260809T081000Z\\logs\\06-direct-test_ideal_cartesian_3dof_mission.log"
+                                        },
+                                        {
+                                            "test":  "test_ideal_cartesian_6dof_mission",
+                                            "working_directory":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\build\\r0-leg-001\\runs\\20260809T081000Z\\test-extraction\\GNCZMKN-legacy-a63621c",
+                                            "exit_code":  0,
+                                            "log":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\docs\\quality\\r0-leg-001\\runs\\20260809T081000Z\\logs\\06-direct-test_ideal_cartesian_6dof_mission.log"
+                                        }
+                                    ],
+                  "baseline_matched":  false,
+                  "acceptance_satisfied":  true
+              },
+    "representative_runs":  [
+                                {
+                                    "id":  "example_05_ideal_3dof_geographic_baseline",
+                                    "source_commit":  "a63621c368aa8e7889547689bcce9c7686b886ac",
+                                    "config":  "user/example_05_ideal_3dof_geographic_baseline/config/mission.json",
+                                    "working_directory":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\build\\r0-leg-001\\runs\\20260809T081000Z\\mission-extraction\\GNCZMKN-legacy-a63621c",
+                                    "exit_code":  0,
+                                    "log":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\docs\\quality\\r0-leg-001\\runs\\20260809T081000Z\\logs\\12-baseline-run.log",
+                                    "captured_artifacts":  [
+                                                               "docs/quality/r0-leg-001/runs/20260809T081000Z/artifacts/example_05_ideal_3dof_geographic_baseline/ideal_3dof_geographic_baseline.csv",
+                                                               "docs/quality/r0-leg-001/runs/20260809T081000Z/artifacts/example_05_ideal_3dof_geographic_baseline/summary.txt"
+                                                           ]
+                                },
+                                {
+                                    "id":  "yyz_cartesian_6dof_framework_9",
+                                    "source_commit":  "a63621c368aa8e7889547689bcce9c7686b886ac",
+                                    "config":  "user/yyz_cartesian_6dof_framework_9/config/mission.json",
+                                    "working_directory":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\build\\r0-leg-001\\runs\\20260809T081000Z\\mission-extraction\\GNCZMKN-legacy-a63621c",
+                                    "exit_code":  0,
+                                    "log":  "C:\\Users\\17721\\Documents\\workwork\\GNCZMKNBLUEPRINT\\docs\\quality\\r0-leg-001\\runs\\20260809T081000Z\\logs\\22-yyz-run.log",
+                                    "captured_artifacts":  [
+                                                               "docs/quality/r0-leg-001/runs/20260809T081000Z/artifacts/yyz_cartesian_6dof_framework_9/2026-08-09_161447/summary.txt",
+                                                               "docs/quality/r0-leg-001/runs/20260809T081000Z/artifacts/yyz_cartesian_6dof_framework_9/2026-08-09_161447/trajectory_nominal.csv"
+                                                           ]
+                                }
+                            ],
+    "environment_gap_ids":  [
+                                "LEG-GAP-02"
+                            ],
+    "repository_verification":  {
+                                    "command":  "powershell -NoProfile -ExecutionPolicy Bypass -File tools/bootstrap.ps1",
+                                    "exit_code":  0,
+                                    "new_framework_ctest_total":  5,
+                                    "new_framework_ctest_passed":  5,
+                                    "repository_verification_passed":  true,
+                                    "provenance_policy_conformance_passed":  true,
+                                    "log":  "logs/99-bootstrap.log"
+                                },
+    "evidence":  {
+                     "environment_manifest":  "environment-manifest.json",
+                     "commands":  [
+                                      "commands.txt",
+                                      "commands.json"
+                                  ],
+                     "raw_logs":  "logs/",
+                     "environment_gaps":  "environment-gaps.json",
+                     "artifact_hashes":  "artifact-hashes.sha256"
+                 }
+}

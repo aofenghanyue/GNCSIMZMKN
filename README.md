@@ -19,6 +19,9 @@
 
 ## 构建空骨架
 
+R0 验证需要 CMake 3.20+、Ninja、支持 C++17 的编译器和 Python 3.10+；
+Python 仅用于独立科学 oracle 与 schema conformance 工具。
+
 ```powershell
 cmake --preset dev
 cmake --build --preset dev

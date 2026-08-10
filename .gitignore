@@ -10,6 +10,9 @@ compile_commands.json
 *.tmp
 *.log
 
+# R0-LEG-001 raw logs are promoted review evidence for the frozen legacy run.
+!docs/quality/r0-leg-001/runs/*/logs/*.log
+
 # Generated research outputs stay outside version control unless promoted to a fixture.
 /user/outputs/
 /artifacts/

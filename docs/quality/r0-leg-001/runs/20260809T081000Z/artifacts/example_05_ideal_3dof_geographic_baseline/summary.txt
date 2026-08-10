@@ -1,0 +1,64 @@
+========================================
+  GNC Simulation Summary Report
+========================================
+
+Generated: Sun Aug 09 16:13:58 2026
+
+--- Simulation Parameters ---
+  Time step (dt):      0.1 s
+  Configured duration: 0.2 s
+  Actual final time:   0.1 s
+  Total steps:         1
+  Termination reason:  time limit reached
+  Wall clock time:     0.000 s
+  Real-time ratio:     504.0x
+
+--- Components (25) ---
+  [env.earth] type=environment.spherical_earth category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=none priority=0
+  [env.atmosphere] type=environment.standard_atmosphere category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=none priority=0
+  [env.gravity] type=environment.spherical_gravity category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=none priority=0
+  [interceptor.perturbation] type=perturbation.static category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=none priority=0
+  [interceptor.dynamics] type=form.local_spherical_3dof.point_mass category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=none priority=0
+  [interceptor.aero_assets] type=vehicle.common.aero_assets_3dof.zero category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=none priority=0
+  [interceptor.imu] type=vehicle.input.local_spherical_imu_3dof.ideal category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=input priority=0 rate_hz=0 step_interval=1
+  [interceptor.satnav] type=vehicle.input.local_spherical_satellite_nav_3dof.ideal category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=input priority=0 rate_hz=0 step_interval=1
+  [interceptor.air_data] type=vehicle.input.local_spherical_air_data_3dof.ideal category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=input priority=0 rate_hz=0 step_interval=1
+  [interceptor.seeker] type=vehicle.input.local_spherical_seeker_3dof.ideal category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=input priority=0 rate_hz=0 step_interval=1
+  [interceptor.phase] type=vehicle.process.local_spherical_phase_sequencer_3dof.ideal category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=process priority=0 rate_hz=0 step_interval=1
+  [interceptor.planner] type=vehicle.process.local_spherical_trajectory_planner_3dof.ideal category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=process priority=0 rate_hz=0 step_interval=1
+  [interceptor.navigation] type=vehicle.process.local_spherical_navigation_3dof.ideal category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=process priority=0 rate_hz=0 step_interval=1
+  [interceptor.tracking] type=vehicle.process.local_spherical_target_tracking_3dof.ideal category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=process priority=0 rate_hz=0 step_interval=1
+  [interceptor.guidance] type=vehicle.process.local_spherical_guidance_3dof.ideal category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=process priority=0 rate_hz=0 step_interval=1
+  [interceptor.flight_control] type=vehicle.process.local_spherical_flight_control_3dof.ideal category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=process priority=0 rate_hz=0 step_interval=1
+  [interceptor.control_allocation] type=vehicle.process.local_spherical_control_allocation_3dof.ideal category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=process priority=0 rate_hz=0 step_interval=1
+  [interceptor.mass] type=vehicle.output.mass_3dof.constant category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=none priority=0
+  [interceptor.propulsion] type=vehicle.output.propulsion_3dof.zero category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=none priority=0
+  [interceptor.actuator] type=vehicle.output.actuator_3dof.ideal category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=output priority=0 rate_hz=0 step_interval=1
+  [interceptor.aero] type=vehicle.output.aerodynamics_3dof.zero category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=output priority=10 rate_hz=0 step_interval=1
+  [interceptor.interaction] type=interaction.local_spherical_3dof.standard category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=interaction priority=0 rate_hz=0 step_interval=1
+  [target.truth] type=form.target_point.kinematic category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=none priority=0
+  [mission.termination] type=termination.engagement_local_spherical_3dof category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=evaluation priority=0 rate_hz=0 step_interval=1
+  [mission.summary] type=summary.engagement_local_spherical_3dof.ideal category=builtin origin=C:/Users/17721/Documents/workwork/GNCZMKNBLUEPRINT/build/r0-leg-001/runs/20260809T081000Z/mission-extraction/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp phase=evaluation priority=0 rate_hz=0 step_interval=1
+
+--- Component Inventory ---
+  Builtin types: environment.spherical_earth, environment.spherical_gravity, environment.standard_atmosphere, form.local_spherical_3dof.point_mass, form.target_point.kinematic, interaction.local_spherical_3dof.standard, perturbation.static, summary.engagement_local_spherical_3dof.ideal, termination.engagement_local_spherical_3dof, vehicle.common.aero_assets_3dof.zero, vehicle.input.local_spherical_air_data_3dof.ideal, vehicle.input.local_spherical_imu_3dof.ideal, vehicle.input.local_spherical_satellite_nav_3dof.ideal, vehicle.input.local_spherical_seeker_3dof.ideal, vehicle.output.actuator_3dof.ideal, vehicle.output.aerodynamics_3dof.zero, vehicle.output.mass_3dof.constant, vehicle.output.propulsion_3dof.zero, vehicle.process.local_spherical_control_allocation_3dof.ideal, vehicle.process.local_spherical_flight_control_3dof.ideal, vehicle.process.local_spherical_guidance_3dof.ideal, vehicle.process.local_spherical_navigation_3dof.ideal, vehicle.process.local_spherical_phase_sequencer_3dof.ideal, vehicle.process.local_spherical_target_tracking_3dof.ideal, vehicle.process.local_spherical_trajectory_planner_3dof.ideal
+  Project types: (none)
+
+--- Data Recording ---
+  Status:  ENABLED
+  Fields:  126
+  Output:  user/outputs/example_05_ideal_3dof_geographic_baseline
+
+--- Project Summary ---
+[mission.summary]
+Ideal 3DOF Engagement Summary
+minimum_range_m: 3162.27766017
+maximum_dynamic_pressure_pa: 34750.0010519
+maximum_acceleration_magnitude_mps2: 0
+final_interceptor_altitude_m: 999.999697324
+final_interceptor_speed_mps: 250.000000041
+final_target_position_ecef_m: 6373000, 3000, 0
+final_mass_kg: 100
+
+
+========================================

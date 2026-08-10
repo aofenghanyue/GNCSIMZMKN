@@ -1,0 +1,52 @@
+{
+  "schema_version": "gnczmkn.provenance-register/1",
+  "updated_at": "2026-08-09",
+  "policy_ref": "docs/adr/0004-internal-license-and-provenance-policy.md",
+  "records": [
+    {
+      "record_id": "prov.fixture.valid-scientific@1",
+      "subject": {
+        "type": "scientific-fixture",
+        "scientific_context_required": true,
+        "identity": "provenance validator scientific fixture",
+        "path_or_uri": "repo://tests/provenance-record-valid-scientific.json"
+      },
+      "origin": {
+        "kind": "first-party",
+        "source": "R0-GOV-002 validator fixture",
+        "version_or_date": "2026-08-09"
+      },
+      "integrity": {
+        "algorithm": "fixture-sentinel",
+        "value": "valid-scientific-record-v1"
+      },
+      "rights": {
+        "status": "restricted",
+        "license_expression": null,
+        "basis_ref": "docs/adr/0004-internal-license-and-provenance-policy.md",
+        "allowed_uses": ["internal-test"],
+        "prohibited_uses": ["external-publication"]
+      },
+      "classification": "internal-research",
+      "scientific_context": {
+        "applicable_domain": "provenance validator conformance only",
+        "units": "dimensionless",
+        "frames": "not-applicable",
+        "time_convention": "not-applicable",
+        "reference_or_oracle_refs": ["analytic identity: y=x"],
+        "independent_reference_confirmed": true,
+        "independence_basis": "The expected identity is specified independently from validator control flow.",
+        "target_identity": "test.provenance.scientific@1"
+      },
+      "propagation": {
+        "inherit_restrictions": true,
+        "requirements": ["block-external-sharing"]
+      },
+      "review": {
+        "decision": "approved-internal-only",
+        "reviewer": "fixture-reviewer",
+        "reviewed_at": "2026-08-09"
+      }
+    }
+  ]
+}

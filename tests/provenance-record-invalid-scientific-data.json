@@ -1,0 +1,42 @@
+{
+  "schema_version": "gnczmkn.provenance-register/1",
+  "updated_at": "2026-08-09",
+  "policy_ref": "docs/adr/0004-internal-license-and-provenance-policy.md",
+  "records": [
+    {
+      "record_id": "prov.invalid.scientific-data@1",
+      "subject": {
+        "type": "dataset",
+        "scientific_context_required": true,
+        "identity": "invalid scientific fixture",
+        "path_or_uri": "repo://tests/invalid-data"
+      },
+      "origin": {
+        "kind": "third-party",
+        "source": "https://invalid.example/data",
+        "version_or_date": "2026-08-09"
+      },
+      "integrity": {
+        "algorithm": "sha256",
+        "value": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "rights": {
+        "status": "cleared",
+        "license_expression": "CC-BY-4.0",
+        "basis_ref": "https://invalid.example/license",
+        "allowed_uses": ["external-publication"],
+        "prohibited_uses": []
+      },
+      "classification": "public-candidate",
+      "propagation": {
+        "inherit_restrictions": true,
+        "requirements": ["retain-attribution"]
+      },
+      "review": {
+        "decision": "approved-external",
+        "reviewer": "fixture-reviewer",
+        "reviewed_at": "2026-08-09"
+      }
+    }
+  ]
+}

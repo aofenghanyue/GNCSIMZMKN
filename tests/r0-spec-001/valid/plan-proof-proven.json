@@ -1,0 +1,36 @@
+{
+  "schema_version": "gnczmkn.plan-proof-record/1",
+  "proof_id": "proof:temporal:guidance-rate:4fd0",
+  "proof_kind": "TimeLifecycle",
+  "subject_refs": [
+    "occ:guidance",
+    "region:boundary"
+  ],
+  "assertion_code": "GNC.PLAN.RATE.INTEGER_INTERVAL",
+  "source_refs": [
+    "design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md#34-planproofrecord"
+  ],
+  "premises": [
+    {
+      "kind": "Fact",
+      "premise_id": "base_rate_hz",
+      "value": 100
+    },
+    {
+      "kind": "Fact",
+      "premise_id": "requested_rate_hz",
+      "value": 20
+    },
+    {
+      "kind": "Fact",
+      "premise_id": "interval_ticks",
+      "value": 5
+    }
+  ],
+  "result": "Proven",
+  "diagnostic_ids": [],
+  "lowered_operator_refs": [
+    "invoke:occ:guidance@every-5-ticks"
+  ],
+  "generated_by_pass": "schedule-lowering@1"
+}

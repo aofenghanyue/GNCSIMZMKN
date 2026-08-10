@@ -1,0 +1,8 @@
+archive_prefix: GNCZMKN-legacy-a63621c/
+test_source: C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\build\r0-leg-001\runs\20260809T081000Z\test-extraction\GNCZMKN-legacy-a63621c
+mission_source: C:\Users\17721\Documents\workwork\GNCZMKNBLUEPRINT\build\r0-leg-001\runs\20260809T081000Z\mission-extraction\GNCZMKN-legacy-a63621c
+test_file_count: 391
+mission_file_count: 391
+test_tree_digest_sha256: 0fd87fdfcc4bc2634669196ba70b11985de161095f7b820df0f46ac5ad2fa598
+mission_tree_digest_sha256: 0fd87fdfcc4bc2634669196ba70b11985de161095f7b820df0f46ac5ad2fa598
+matching_clean_extractions: True

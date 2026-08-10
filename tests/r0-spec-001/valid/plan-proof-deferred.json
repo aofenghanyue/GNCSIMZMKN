@@ -1,0 +1,25 @@
+{
+  "schema_version": "gnczmkn.plan-proof-record/1",
+  "proof_id": "proof:resource-effect:r0-spec:0003",
+  "proof_kind": "ResourceEffect",
+  "subject_refs": [
+    "capability:future-topology"
+  ],
+  "assertion_code": "GNC.PLAN.CAPABILITY.DEFERRED_UNSUPPORTED",
+  "source_refs": [
+    "design-notes/gnczmkn-architecture-roadmap/05-component-catalog-and-mission-compiler.md#106-planproofrecord-与-planproofindex"
+  ],
+  "premises": [
+    {
+      "kind": "Fact",
+      "premise_id": "kernel_capability",
+      "value": "future_topology"
+    }
+  ],
+  "result": "DeferredUnsupported",
+  "diagnostic_ids": [
+    "diag:compile:unsupported-topology"
+  ],
+  "lowered_operator_refs": [],
+  "generated_by_pass": "capability-check@1"
+}

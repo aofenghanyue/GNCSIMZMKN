@@ -1,30 +1,165 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://internal.gnczmkn/schemas/oracle-manifest.schema.json",
-  "title": "GNCZMKN oracle manifest",
+  "$id": "urn:gnczmkn:schema:r0:oracle-manifest:1",
+  "title": "GNCZMKN R0 oracle manifest",
+  "description": "R0 evidence-governance schema. It is not a production runtime contract.",
+  "x-stage": "R0",
+  "x-maturity": "Fixture",
   "type": "object",
-  "required": ["schema_version", "oracle_set_id", "status", "oracles"],
+  "required": [
+    "schema_version",
+    "oracle_set_id",
+    "status",
+    "provenance_refs",
+    "oracles"
+  ],
   "properties": {
-    "schema_version": {"const": "gnczmkn.oracle-manifest/1"},
-    "oracle_set_id": {"type": "string"},
-    "status": {"enum": ["planned", "capturing", "executable", "qualified", "retired"]},
+    "schema_version": {
+      "const": "gnczmkn.oracle-manifest/1"
+    },
+    "oracle_set_id": {
+      "type": "string",
+      "pattern": "^ORACLE-[A-Z0-9]+(?:-[A-Z0-9]+)+$"
+    },
+    "status": {
+      "enum": [
+        "planned",
+        "capturing",
+        "executable",
+        "qualified",
+        "retired"
+      ]
+    },
+    "provenance_refs": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "pattern": "^prov\\.[a-z0-9][a-z0-9._-]*@[A-Za-z0-9._-]+$"
+      },
+      "minItems": 1,
+      "uniqueItems": true
+    },
     "oracles": {
       "type": "array",
       "items": {
-        "type": "object",
-        "required": ["id", "level", "status", "claim", "reference_kind", "tolerance_policy", "source_refs"],
-        "properties": {
-          "id": {"type": "string"},
-          "level": {"enum": ["math", "numerical", "model", "component", "closure", "mission", "workflow"]},
-          "status": {"enum": ["planned", "capturing", "executable", "qualified", "retired"]},
-          "claim": {"type": "string"},
-          "reference_kind": {"type": "string"},
-          "tolerance_policy": {"type": "string"},
-          "source_refs": {"type": "array", "items": {"type": "string"}, "minItems": 1},
-          "artifact_refs": {"type": "array", "items": {"type": "string"}}
+        "$ref": "#/$defs/oracle"
+      },
+      "minItems": 1
+    }
+  },
+  "$defs": {
+    "expected_fact": {
+      "type": "object",
+      "required": [
+        "fact_id",
+        "statement",
+        "comparison"
+      ],
+      "properties": {
+        "fact_id": {
+          "type": "string",
+          "pattern": "^FACT-[A-Z0-9]+(?:-[A-Z0-9]+)+$"
         },
-        "additionalProperties": false
-      }
+        "statement": {
+          "type": "string",
+          "minLength": 1
+        },
+        "comparison": {
+          "enum": [
+            "exact",
+            "numeric",
+            "ordered",
+            "set_equality",
+            "predicate"
+          ]
+        },
+        "field_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
+    },
+    "oracle": {
+      "type": "object",
+      "required": [
+        "id",
+        "level",
+        "status",
+        "claim",
+        "expected_facts",
+        "reference_kind",
+        "tolerance_policy",
+        "source_refs"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^ORACLE-[A-Z0-9]+(?:-[A-Z0-9]+)+$"
+        },
+        "level": {
+          "enum": [
+            "math",
+            "numerical",
+            "model",
+            "component",
+            "closure",
+            "mission",
+            "workflow"
+          ]
+        },
+        "status": {
+          "enum": [
+            "planned",
+            "capturing",
+            "executable",
+            "qualified",
+            "retired"
+          ]
+        },
+        "claim": {
+          "type": "string",
+          "minLength": 1
+        },
+        "expected_facts": {
+          "type": "array",
+          "items": {
+            "$ref": "#/$defs/expected_fact"
+          },
+          "minItems": 1
+        },
+        "reference_kind": {
+          "type": "string",
+          "minLength": 1
+        },
+        "tolerance_policy": {
+          "type": "string",
+          "minLength": 1
+        },
+        "source_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "minItems": 1,
+          "uniqueItems": true
+        },
+        "artifact_refs": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "minLength": 1
+          },
+          "uniqueItems": true
+        }
+      },
+      "additionalProperties": false
     }
   },
   "additionalProperties": false

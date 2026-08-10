@@ -1,0 +1,35 @@
+{
+  "schema_version": "gnczmkn.provenance-register/1",
+  "updated_at": "2026-08-09",
+  "policy_ref": "docs/adr/0004-internal-license-and-provenance-policy.md",
+  "records": [
+    {
+      "record_id": "prov.invalid.missing-rights@1",
+      "subject": {
+        "type": "source-code",
+        "scientific_context_required": false,
+        "identity": "invalid fixture",
+        "path_or_uri": "repo://tests/invalid"
+      },
+      "origin": {
+        "kind": "third-party",
+        "source": "https://invalid.example/source",
+        "version_or_date": "1.0"
+      },
+      "integrity": {
+        "algorithm": "sha256",
+        "value": "0000000000000000000000000000000000000000000000000000000000000000"
+      },
+      "classification": "internal-restricted",
+      "propagation": {
+        "inherit_restrictions": true,
+        "requirements": ["block-external-sharing"]
+      },
+      "review": {
+        "decision": "approved-internal-only",
+        "reviewer": "fixture-reviewer",
+        "reviewed_at": "2026-08-09"
+      }
+    }
+  ]
+}

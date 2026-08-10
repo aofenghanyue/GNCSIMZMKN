@@ -1,0 +1,1 @@
+{"schema_version":"gnczmkn.plan-proof-record/1","proof_id":"proof:invalid:assertion:202","proof_kind":"Identity","subject_refs":["subject:202"],"source_refs":["README.md"],"premises":[{"kind":"Fact","premise_id":"input","value":1}],"result":"Proven","diagnostic_ids":[],"lowered_operator_refs":["operator:202"],"generated_by_pass":"negative-fixture@1"}

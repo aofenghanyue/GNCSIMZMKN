@@ -58,11 +58,42 @@ gnc_enable_warnings(gnc_sim)
 if(GNC_BUILD_TESTS)
     include(CTest)
     enable_testing()
+    find_package(Python3 3.10 COMPONENTS Interpreter REQUIRED)
 
     add_executable(gnc_skeleton_smoke tests/skeleton_smoke.cpp)
     target_link_libraries(gnc_skeleton_smoke PRIVATE foundation)
     gnc_enable_warnings(gnc_skeleton_smoke)
 
+    add_executable(
+        gnc_scientific_conventions_properties
+        tests/scientific_conventions_properties.cpp)
+    target_link_libraries(gnc_scientific_conventions_properties PRIVATE foundation)
+    gnc_enable_warnings(gnc_scientific_conventions_properties)
+
     add_test(NAME skeleton.library COMMAND gnc_skeleton_smoke)
     add_test(NAME skeleton.cli COMMAND gnc_sim --self-check)
+    add_test(
+        NAME scientific_conventions.properties
+        COMMAND gnc_scientific_conventions_properties)
+    add_test(
+        NAME scientific_conventions.python_reference
+        COMMAND
+            ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/scientific-conventions/reference.py
+            --self-test)
+    add_test(
+        NAME scientific_conventions.cross_tool
+        COMMAND
+            ${Python3_EXECUTABLE}
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/scientific-conventions/cross_tool_check.py
+            --cpp $<TARGET_FILE:gnc_scientific_conventions_properties>
+            --cases ${CMAKE_CURRENT_SOURCE_DIR}/oracles/scientific-conventions/cases.csv
+            --cpp-source ${CMAKE_CURRENT_SOURCE_DIR}/tests/scientific_conventions_properties.cpp
+            --cmake-cache ${CMAKE_BINARY_DIR}/CMakeCache.txt
+            --output ${CMAKE_CURRENT_BINARY_DIR}/evidence/r0-sci-001-cross-tool-report.json)
+    set_tests_properties(
+        scientific_conventions.properties
+        scientific_conventions.python_reference
+        scientific_conventions.cross_tool
+        PROPERTIES LABELS "r0;science")
 endif()
