@@ -1,0 +1,162 @@
+# R0-LEG-002 Legacy 行为 oracle 捕获计划
+
+- 文档状态：Preparation design
+- 实现成熟度：未实现；不得作为 G1 或 runtime migration pass evidence
+- 任务：`R0-LEG-002`（backlog 保持 `planned`）
+- 日期：2026-08-10
+- Authority owner role：Validation Lead
+- 协作 owner roles：Runtime Numerics Lead、Scientific Authority、Architecture Lead
+
+## 1. 目标与证据边界
+
+本计划把冻结 Legacy 中值得迁移的运行时事实转成可执行、可复核的 oracle bundle，同时明确退出旧类名、节点数量、priority/registration 偶然顺序、CSV 列序、free-text reason、目录命名和 old Mission shape。oracle 的目标是保护科学、时间、事务和重放语义，不是保存旧实现拓扑。
+
+每条证据分三层：冻结来源事实、隔离 probe 的运行时观察、经 owner 批准的迁移处置。源码阅读可以解释 trace，但不能代替 trace；Legacy 运行结果可以证明旧路径，却不能伪造尚未实现的 target `RunOutcome`、`IntegrationScopePlan` 或 deterministic CaseId。
+
+本计划不修改冻结 Legacy、不定义新的产品 runtime 契约，也不批准任何数值 tolerance 或 Preserve/Fix/Retire 决策。
+
+## 2. 冻结来源与 entry 身份
+
+来源 archive：
+
+- Git head：`a63621c368aa8e7889547689bcce9c7686b886ac`；
+- ZIP SHA-256：`2159a324fd897e4bd508c140a36c9165d744e4e4e61861c5b568201707f988e5`；
+- ZIP prefix：`GNCZMKN-legacy-a63621c/`；
+- 来源索引：[`reference/legacy/source-index.md`](../../reference/legacy/source-index.md)；
+- 干净复现：[`r0-leg-001-20260810-07`](../../reference/legacy/reproduction/r0-leg-001-20260810-07/evidence-index.json)，27/27 CTest 通过。
+
+捕获前必须从 ZIP 重新解压并核对下列 raw entry。哈希是 2026-08-10 对冻结解压 byte stream 的 SHA-256；路径相对于 archive prefix。
+
+| Archive entry | Bytes | Raw SHA-256 | 用途 |
+| --- | ---: | --- | --- |
+| `framework/include/gnc/core/simulator.hpp` | 21,226 | `455b22e68fdd4511a85f9a1c20547d022261cdf3397aabfd5f85115764edae78` | step 顺序、phase、candidate/commit、publish |
+| `tests/test_publish_semantics.cpp` | 27,073 | `48c5b86ea7a88a3c7702d5abdf89bcebaf8e8dfa331289317453a698f3802e08` | publish/CSV/stop/sync 种子事实 |
+| `tests/test_continuous_group.cpp` | 11,404 | `6d6f01098b1b606c5e1a23eaceb501ba99f07370fc51d22fb6f5cea06b2d9d46` | shared RK candidate 和 ownership 失败 |
+| `tests/test_simflow_materializer.cpp` | 6,504 | `89ea1e58e91c4a3c7c1173b3ee768c7d88cf2987ef223ca9894a0d03377bedeb` | case 物化与输入注入 |
+| `tests/test_simflow_runner.cpp` | 8,091 | `9289f7710e68d0a1679a12b3adcb69ee8a8a05890e5bb1750f90c4e266354a6e` | effective mission 普通 CLI 重放 |
+
+单个 entry hash 不能代替 archive identity；archive identity、entry identity、probe/input identity 必须同时进入 capture provenance。
+
+canonical Legacy 捕获候选应优先复用 `R0-LEG-001` 已成功验证的 Windows x64 / w64devkit GCC 16.2.0 / CMake 4.4.2 / Ninja 1.13.2 / Eigen 3.4.0 环境，并逐项校验已记录的第三方 archive hash。任何工具链变化都要产生独立 environment identity 和 comparison finding；已有 MSVC 19.50 编译 gap 未经 Validation Lead 审查不能被当作等价 canonical 环境。未来 target 的固定平台证据与 Legacy capture provenance 分开记录，不能通过让产品 target link Legacy 来消除工具链差异。
+
+## 3. Bundle 的概念性最小内容
+
+以下是验收信息需求，不是已批准的新 schema：
+
+| 信息组 | 必需内容 |
+| --- | --- |
+| Identity | oracle id、bundle revision、capture run id、source commit/archive/entry hashes |
+| Input | 带逻辑路径的 probe、mission、asset 与 policy 清单；每项 byte hash；聚合 input hash |
+| Environment | OS/arch、compiler、CMake、generator、build type、依赖身份、命令、working directory |
+| Observation | raw append-only trace/dataset、exit code、stdout/stderr、开始/结束状态、双跑标识 |
+| Expected | 事实 id、比较字段、事件顺序/数值/语义值、来源 ref、派生器版本 |
+| Tolerance | exact/absolute/relative/invariant/convergence 类型、参数、authority owner、批准 ref |
+| Disposition | 每个事实的 Preserve/Fix/Retire、五类 difference rationale、owner、approval ref |
+| Mapping | legacy observable、target semantic object、target evidence 状态；未实现时显式 `pending` |
+| Integrity | raw/derived/artifact index 的 SHA-256、缺失/漂移 verdict、deterministic rerun verdict |
+
+### 3.1 尚未闭合的 schema 决策
+
+现有 `gnczmkn.oracle-manifest/1` 有 id、claim、expected facts、tolerance policy、source refs 和 artifact refs，但没有显式 input hash 或 classification。`R0-LEG-002` 不得把二者塞进自由文本来绕过机器验收。
+
+激活前由 R0-SPEC-001/Architecture Lead 在以下路由中明确选择：
+
+1. 使用已批准的通用 fixture/evidence contract 作为 sidecar，并让 oracle manifest 只引用它；或
+2. 提交 ADR，定义新的 oracle/evidence schema version、hash canonicalization、兼容与迁移规则。
+
+无论选择哪条路，hash 都必须覆盖逻辑路径与原始 bytes，排序/聚合规则必须跨平台确定；分类必须是枚举并带 owner/approval，不能用 notes 代替。
+
+## 4. 分类模型
+
+迁移处置和差异理由是两个正交维度：
+
+| 处置 | 允许的主要理由 | 语义 |
+| --- | --- | --- |
+| Preserve | `ScientificInvariant` 或已批准 `DeclaredModelChoice` | target 必须满足同一事实；实现形状可不同 |
+| Fix | `ImplementationDefect` | target 明确不复现旧缺陷，必须有 defect/decision 和差异证据 |
+| Retire | `AccidentalStructure` | 不进入 target expected facts，并有 guard 防止误锁定 |
+| 未决 | `NeedsDecision` | 不能算 pass；阻断关联 target/gate |
+
+一个 oracle 可同时包含 Preserve 与 Retire 事实。例如 CSV oracle 保留 `t_k` 和字段边界，却退出列序。oracle 级汇总不得掩盖事实级未决项。
+
+## 5. 七条 oracle 捕获矩阵
+
+| Oracle | 最小隔离输入 | 冻结种子事实 | 必须新增的 capture | 比较/容差边界 | 候选处置（待 owner 审批） |
+| --- | --- | --- | --- | --- | --- |
+| `ORACLE-YYZ-PUBLISH-01` | dt=0.5 的单连续状态 + truth publisher + before/after probe | run 在每步先 publish；t0 before 见 altitude=1000/sample_time=0；t0 after 见 altitude=1004.75 但 sample_time 仍为 0 | initial/previous-commit hash 与 publish 完成后的 state bytes/hash、epoch、tick、truth sample time；双跑 | state hash/epoch/tick exact；time exact 或已批准时间 tolerance | Preserve：publish 不推进连续状态（ScientificInvariant）；Retire：Legacy callback/class surface |
+| `ORACLE-YYZ-PHASE-02` | 每个 phase 一个无状态 trace probe，单 tick | 宏顺序为 environment→perturbation→input→process→output→interaction→evaluation；同 phase 用 priority 后 registration order | 七 phase 全 trace，含 tick/time/phase/probe id；每 phase 恰好一次 | exact ordered phase sequence；不比较 priority 数值 | Preserve：宏 phase temporal convention（DeclaredModelChoice 候选）；Retire：priority 数值及 registration/config tie-break |
+| `ORACLE-YYZ-SYNC-03` | mass'=−2、position'=mass 的两个独立连续系统，RK4，dt=1 | 最终 mass=8、position=10；源码先完成全部 pending candidate 再 setState | derivative/candidate-complete/commit journal，带 system id、step、stage、pre/post state；证明首个 commit 晚于全部 candidate-complete | event partial order exact；种子 scalar 当前断言 1e-9 仅作 Legacy capture threshold，target tolerance 待批准 | Preserve：候选后统一提交（ScientificInvariant）；Retire：`pending_states` 容器及 setState 循环形状 |
+| `ORACLE-YYZ-GROUP-04` | mass'=−2、position'=candidate mass 的二元连续组，RK4，dt=1 | 最终 mass=8、position=9，当前断言 1e-12；拒绝未注册成员和重复 group ownership | RK stage candidate set、member observation、group commit trace；valid/invalid membership cases | membership/order exact；种子 scalar 1e-12 只证明旧测试；YYZ trajectory tolerance 由 R0-SCI-003 冻结 | Preserve：共享候选闭包（DeclaredModelChoice/closure invariant）；Retire：`IContinuousGroup` 名称与接口形状 |
+| `ORACLE-YYZ-CSV-05` | constant-acceleration mission，dt=0.5/duration=1，record initial | rows: t0=(0,1000)、t1=(0.5,1004.75,vz=9)、t2=(1,1009)；time 1e-12、state 1e-9 | 按 header 解析后生成 semantic FieldId sidecar；记录每字段 publish/update boundary、unit/frame/time relation 和 dataset hash | time/identity metadata exact；字段级数值 tolerance 由 scientific owner 批准；禁止全文件 byte equality 作为唯一判据 | Preserve：`t_k` 与 semantic boundary；Retire：CSV 列序、列名拼接、格式/目录；target encoding 可变 |
+| `ORACLE-YYZ-STOP-06` | t0 即满足的 altitude stop，record initial | termination reason 为 `stop at t0`；header + 一行，row time=0；run 中 record 在 checkTermination 前 | publish/record/termination-evaluate/terminal-observation trace；Legacy terminal facts与 target-pending mapping 分开 | observation-before-terminal exact；free text 不比较 | Preserve：停止状态先观察再终态；Retire：free-text reason；target `RunOutcome` 是新证据，不是 Legacy 事实 |
+| `ORACLE-SIMFLOW-07` | base mission + 两行 variation matrix + numeric perturbation materializer | `hot` case id 被物化；effective mission 含注入值；`effective_mission.json` 可由普通 `gnc_sim --config` 重放 | base/matrix/materializer/effective mission 语义 hash、命令路径、普通 replay exit/artifacts；target CaseId 映射显式 pending | canonical semantic input equality；replay result 按所选 mission oracle；CaseId 规则待 target authority | Preserve：预运行物化 + ordinary compile/run replay；Retire：`case_000001`、不生成 case manifest、old Mission shape；deterministic target CaseId 为新契约 |
+
+### 5.1 当前没有可自动批准的 Fix
+
+七条主事实中没有一个已由有权 owner 分类为 `ImplementationDefect`。捕获若暴露缺陷，runner 必须产生 unresolved finding，而不是自动更新 expected 或放宽 tolerance。只有带 defect id、影响范围、独立复现、owner 决策和 target evidence 的事实才能转为 Fix。
+
+## 6. Probe 设计与非侵入性
+
+所有 probe 在从冻结 ZIP 创建的新隔离 workspace 内编译。首选独立 harness 和 Legacy 已有测试扩展面：
+
+- publish：以 run 前初态/上一 step after-commit hash 对照下一次 `before_step`，在 publish 已完成但离散更新尚未发生的位置观察；
+- phase：注册七个无状态 `IDiscreteTask` probe，各属一个 phase，只向 append-only trace 写自身事件；
+- sync：测试连续系统在 derivative/candidate 完成与 `setState` 时写 journal；probe 不读写对方 state；
+- group：由 group harness 记录每个 RK stage 的共享 candidate 与一次 group commit；
+- CSV：事后解析输出并映射 semantic field，不改变 logger 或列顺序；
+- stop：termination evaluator、recorded dataset 与 simulator ordering 共同证明 Legacy half；
+- SimFlow：捕获实际 CLI 命令，并用 materialized effective mission 调普通 runner。
+
+禁止修改 frozen ZIP、tracked extracted tree 或生产 tree。若公开测试扩展面无法观察所需事实，先记录 instrumentation gap；任何临时 source overlay 必须在 ADR/owner 批准后才可使用，且记录 overlay diff/hash，不能冒充未修改 Legacy 的 canonical trace。
+
+## 7. Trace 语义
+
+raw trace 至少使用以下稳定概念字段；具体 schema 名称待第 3.1 节决策：
+
+- `oracle_id`、`capture_run_id`、`rerun_index`；
+- `step_index`、`t_k`、可选 `rk_stage`；
+- `event_kind`：publish-start/end、phase-invoke、candidate-start/end、commit、record、termination-evaluate、terminal-observation、ordinary-replay；
+- stable probe/system/semantic-field identity；
+- pre/post state hash 或明确数值字段；
+- source input/artifact ref；
+- monotonic event sequence 只表达该进程内观察顺序，不冒充 wall-clock time。
+
+跨进程 SimFlow 不使用本地 event sequence 比较全局顺序；它以命令、输入语义 hash、exit、effective mission 与产物 lineage 建立因果链。
+
+## 8. 确定性与派生纪律
+
+1. 每条 oracle 在同一隔离输入上连续运行两次；
+2. raw trace 去除前必须声明的非语义字段后，生成 normalized semantic trace；默认不允许任意忽略字段；
+3. raw 与 normalized 两者都保留并分别 hash；
+4. expected facts 只能由版本固定的派生器从 raw evidence 生成，或由 reviewer 明确手工签署；
+5. rerun semantic hash 不同即失败，不可取平均或更新 golden；
+6. tolerance 只作用于声明的数值字段，不作用于 event identity、顺序、source/input hash 或分类；
+7. Legacy 与未来 target 的输出分别运行，再由 comparator 读取；target 不 link/call Legacy。
+
+## 9. 同一 evaluator 的故障矩阵
+
+生产 validator 和 mutation tests 必须调用同一组 identity、completeness、trace、comparison、classification 与 integrity evaluator。最小 mutation 集为工作包中的 `LEG-ORACLE-MUT-001`～`014`，并补充以下单元级边界：
+
+- 重复/未知 oracle id、fact id 或 artifact ref；
+- input 清单排序或 path separator 改变导致跨平台 hash 不一致；
+- tolerance 作用到未声明字段、NaN 或无穷值；
+- Preserve fact 缺 target semantic mapping；
+- Retire fact 被复制进 expected comparison；
+- Fix 缺 defect/approval，或 NeedsDecision 被记为 pass；
+- raw trace 有事件而 expected 派生器静默丢弃；
+- 双跑只保留第二次，无法证明 deterministic comparison；
+- capture workspace 指向 `reference/legacy/extracted/` 或产品 build target 依赖 Legacy。
+
+## 10. 退出检查
+
+- 七个 oracle id 均有输入、观察、expected、tolerance、处置、mapping 和 integrity 设计；
+- preserved science/time/transaction facts 与 accidental structure 逐事实分离；
+- source archive + 五个关键 entry 的 identity 可独立复核；
+- 现有 test tolerance 被标记为 Legacy seed，没有越权冻结 target scientific policy；
+- schema 缺口、owner 和 ADR gate 显式保留；
+- canonical Legacy capture 环境与 target 平台证据分离，MSVC gap 没有被掩盖；
+- capture 仅发生于隔离 build workspace，产品 tree 与冻结 Legacy 零修改；
+- 14 个代表 failure mutation 和额外 completeness 边界已定义；
+- target 尚不存在的对象显式为 pending，没有 vacuous pass；
+- backlog 仍为 `planned`、assignee 为空、依赖仍为 `review`；
+- UTF-8、Markdown links、repository verification 与 `git diff --check` 通过。
