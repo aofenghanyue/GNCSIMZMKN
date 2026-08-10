@@ -351,15 +351,15 @@ The URL and result should be retained in the reconciliation evidence index. Curr
 
 ## 13. Selective implementation plan
 
-### Slice 0 — accountable role identity hardening
+### Slice 0 — accountable role identity hardening（implemented）
 
 Scope：`R0-GOV-001` review amendment。
 
-1. make placeholder identity matching reject known `codex-*` process seats, not only the exact string `Codex`；
-2. add a mutation that fills every required role with distinct `codex-r0-*` assignee/reviewer strings and otherwise forces apparent readiness；
-3. prove governance remains false and every virtual identity is reported；
-4. keep real role assignments null and do not select human identities；
-5. regenerate the readiness report, run Debug/Release and commit independently。
+1. placeholder identity matching rejects known `codex-*` process seats, not only the exact string `Codex`；
+2. `distinct-codex-seat-assignments` fills every role with distinct `codex-r0-*` assignee/reviewer strings and forces apparent completion；
+3. the production validator rejects the mutation and reports every virtual identity；
+4. real role assignments remain null；no human identity is selected；
+5. readiness report、Debug/Release and repository verification are regenerated/reviewed in the amendment commit。
 
 ### Slice A — strict R0 contract parsing and registry semantics
 

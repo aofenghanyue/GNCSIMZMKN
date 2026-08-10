@@ -18,7 +18,7 @@ Windows 本机已观察到 MSVC 19.50.35725、CMake 4.1.2-msvc8 与 Ninja 1.12.1
 
 ## Decision
 
-`docs/team/role-assignments.json` 升级为 `gnczmkn.team-roles/2`。每个角色都显式包含 `assignee`、`reviewer` 与 `required`。同一角色的 assignee/reviewer 必须不同；Scientific Authority 与 Architecture Lead 的 assignee 也必须不同，以维持高风险科学/架构签字独立性。空值表示真实空缺；Codex、TBD、unknown 等占位身份不能满足就绪条件。
+`docs/team/role-assignments.json` 升级为 `gnczmkn.team-roles/2`。每个角色都显式包含 `assignee`、`reviewer` 与 `required`。同一角色的 assignee/reviewer 必须不同；Scientific Authority 与 Architecture Lead 的 assignee 也必须不同，以维持高风险科学/架构签字独立性。空值表示真实空缺；Codex、`codex-*` namespaced execution seat、TBD、unknown 等占位身份不能满足就绪条件。字符串不同只证明结构分离，不能替代真实人员的身份与授权证据。
 
 `docs/governance/toolchain-support-matrix.json` 是 R0 治理证据，不是运行时或发布兼容性 schema。矩阵只设两个 `candidate-primary` profile：
 
@@ -56,7 +56,7 @@ w64devkit/GCC 16.2 只服务冻结 Legacy 复现，保持 `evidence-only` 且不
 - 静态 validator 检查角色 schema、双人评审、科学/架构独立性和占位身份；
 - validator 对齐 C++17、CMake 3.20、preset schema 2、两个 compiler range 与所有排除项；
 - workflow 检查固定 runner label、checkout commit、Release、warnings-as-errors、CTest、repository verification 和 identity 输出；
-- mutation suite 拒绝缺 reviewer、同人评审、无签字 Accepted、preset 漂移、latest runner、浮动 action、无上界 compiler、Legacy 晋升和虚假 readiness；
+- mutation suite 拒绝缺 reviewer、同人评审、无签字 Accepted、preset 漂移、latest runner、浮动 action、无上界 compiler、Legacy 晋升、空角色虚假 readiness 和互不相同的 `codex-r0-*` 虚拟席位；
 - 本地 Windows Debug/Release 与 Linux GCC smoke 的命令和结果记录在工作包；新 hosted CI run 在 push 前保持显式 pending。
 
 ## Acceptance and supersession

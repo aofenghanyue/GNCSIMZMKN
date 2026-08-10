@@ -52,7 +52,7 @@ function Test-HasField([object]$Object, [string]$Name) {
 function Test-Identity([object]$Value) {
     $text = [string]$Value
     if ([string]::IsNullOrWhiteSpace($text)) { return $false }
-    return $text.Trim() -notmatch '^(?i:codex|unassigned|tbd|todo|unknown|n/?a|none|null|placeholder)$'
+    return $text.Trim() -notmatch '^(?i:codex(?:[\s_-].*)?|unassigned|tbd|todo|unknown|n/?a|none|null|placeholder)$'
 }
 
 function Get-NormalizedTextSha256([string]$Path) {
@@ -601,6 +601,16 @@ if ($null -ne $roles -and $null -ne $matrix -and $null -ne $backlog -and
     }
     Invoke-Mutation 'virtual-role-readiness' {
         param($value)
+        $value.roles.decision_status = 'complete'
+    }
+    Invoke-Mutation 'distinct-codex-seat-assignments' {
+        param($value)
+        $index = 0
+        foreach ($role in @($value.roles.roles)) {
+            $role.assignee = "codex-r0-seat-$index-assignee"
+            $role.reviewer = "codex-r0-seat-$index-reviewer"
+            ++$index
+        }
         $value.roles.decision_status = 'complete'
     }
     Invoke-Mutation 'premature-task-completion' {

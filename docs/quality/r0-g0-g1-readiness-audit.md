@@ -86,7 +86,7 @@ G1 只有科学约定 bundle 达到 `executable`，且其技术 cross-tool compa
 | `docs/tasks/README.md` | `082367084a54b50dcaa886596e0badc643e59222cf6ece425e4cf79d9cbce110` |
 | `project-manifest.json` | `eb8a1145d95c92396073a4a9ece7d5d41f84b2e286c0842331c1d9e8653ca5ad` |
 | `docs/team/role-assignments.json` | `4ede05482e214268cc7cf0dc139c17f0e92b9bf9e8c773b090ce83d6fe678f0e` |
-| `docs/quality/team-toolchain-readiness-report.json` | `66baec53e7077a880aaa7b971ff13fbbd6bcaf69576aecd6110b5ec04aedb5c1` |
+| `docs/quality/team-toolchain-readiness-report.json` | `40d0ce185e49f2a63a74f05802a48462f9e75490fe2f2e825d37d4c3bcec4849` |
 | `docs/architecture/architecture-baseline.json` | `237d721a1cbd6737b293472475e2233f89e56fa58a3f62c7feb3c89506d76f7b` |
 | `docs/quality/terminology-conformance-report.json` | `fdba6dba1c0f802da2fd86df86c8b6c549edfaa1d093626e3685974f0816bf82` |
 | `oracles/oracle-manifest.json` | `eade78296e7b102db4e2ca59aec503df8b2a63db1d2810851909a375bd64d0b8` |
@@ -106,7 +106,7 @@ G1 只有科学约定 bundle 达到 `executable`，且其技术 cross-tool compa
 
 | Task | Owner role | Backlog / assignee | 当前切片 | 可验证事实 | 关闭前缺口 |
 | --- | --- | --- | --- | --- | --- |
-| `R0-GOV-001` | Product Owner | `review` / Codex | `75af0c1` | 配置 validator 通过；candidate profiles 固定；11 mutations rejected | 16 role slots、ADR-0009、hosted CI run |
+| `R0-GOV-001` | Product Owner | `review` / Codex | `75af0c1` + reconciliation amendment | 配置 validator 通过；candidate profiles 固定；12 mutations rejected，包括互不相同的 `codex-r0-*` 虚拟席位 | 16 role slots、ADR-0009、hosted CI run |
 | `R0-GOV-002` | Product Owner | `review` / Codex | `2796dbc` | inventory/policy validator 通过；Legacy/source pins；8 mutations rejected | ADR-0008、license/share authority decisions |
 | `R0-ARCH-002` | Architecture Lead | `planned` / null | prep `f3b2bc1` | guard coverage、实施分层和 mutations 已设计 | production guard、test、CI evidence |
 | `R0-LEG-002` | Validation Lead | `planned` / null | prep `4c62bc2` | 7 类 capture/probe/comparator/disposition 已设计 | executable oracle artifact refs 全部缺失 |

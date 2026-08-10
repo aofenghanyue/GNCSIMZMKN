@@ -43,7 +43,7 @@
 
 | Task | Backlog | 已有可用证据 | 未闭合项 | Gate 资格 |
 | --- | --- | --- | --- | --- |
-| `R0-GOV-001` | `review` | 角色/工具链 validator、候选 CI profile、11 个 mutation | 16 个 required role slots；ADR-0009；hosted run | 不合格 |
+| `R0-GOV-001` | `review` | 角色/工具链 validator、候选 CI profile、12 个 mutation | 16 个 required role slots；ADR-0009；hosted run | 不合格 |
 | `R0-GOV-002` | `review` | provenance inventory、policy validator、8 个 mutation | ADR-0008；Product Owner 决策；distribution license 未选 | 不合格 |
 | `R0-ARCH-002` | `planned` | fitness coverage 设计和 20 个 mutation 设计 | production guards、positive/negative suite、CI integration | 不合格 |
 | `R0-LEG-002` | `planned` | 7 类 oracle capture 设计 | executable artifacts、tolerance、Preserve/Fix/Retire 审批 | 不合格 |
@@ -63,7 +63,7 @@
 - release gates raw SHA-256：`99fcaa4e387e90b233554d54d50ff8ace4575298524d20eac198d737aed7a22b`
 - gate template raw SHA-256：`143c656914b6ff577e0ad06a4f5613e5c81c596daf7dba031134f9fbf94cc2d9`
 - role assignments raw SHA-256：`4ede05482e214268cc7cf0dc139c17f0e92b9bf9e8c773b090ce83d6fe678f0e`
-- team/toolchain report raw SHA-256：`66baec53e7077a880aaa7b971ff13fbbd6bcaf69576aecd6110b5ec04aedb5c1`
+- team/toolchain report raw SHA-256：`40d0ce185e49f2a63a74f05802a48462f9e75490fe2f2e825d37d4c3bcec4849`
 - architecture baseline raw SHA-256：`237d721a1cbd6737b293472475e2233f89e56fa58a3f62c7feb3c89506d76f7b`
 - terminology report raw SHA-256：`fdba6dba1c0f802da2fd86df86c8b6c549edfaa1d093626e3685974f0816bf82`
 - oracle manifest raw SHA-256：`eade78296e7b102db4e2ca59aec503df8b2a63db1d2810851909a375bd64d0b8`

@@ -127,6 +127,11 @@
                                "detected_issue_count":  1
                            },
                            {
+                               "name":  "distinct-codex-seat-assignments",
+                               "rejected":  true,
+                               "detected_issue_count":  19
+                           },
+                           {
                                "name":  "premature-task-completion",
                                "rejected":  true,
                                "detected_issue_count":  1
@@ -145,12 +150,12 @@
                          },
                          {
                              "path":  "docs/adr/0009-accountable-roles-and-candidate-toolchain.md",
-                             "sha256":  "95711fe1b33e2d8017384ff3d505b59f2a2b7d8bb74cc0c208ccef5971d51085",
+                             "sha256":  "b86e2daa37cda5ae2e2a508d15fdb7427625e1734c3135d972aedb6fbbb39cd9",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
                              "path":  "docs/tasks/work-packages/R0-GOV-001.md",
-                             "sha256":  "ca452540da087c3f37ab24ca92d3096aac87ec8daa1e89075e209904cb7cf075",
+                             "sha256":  "1b688a78f58c40acf47d7dd76fcbc631ded11fb8a6edb92894c184564da0ea94",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
@@ -190,7 +195,7 @@
                          },
                          {
                              "path":  "tools/validate-team-toolchain.ps1",
-                             "sha256":  "c224a49b5e8aa958758356ac1d82a7d18c4654533eec154afbfffa15818cf597",
+                             "sha256":  "30e4ac724f049203efbeafbd595afca1a9958fe38dd73e4bf34c212a5cc18436",
                              "hash_normalization":  "utf8-lf-no-bom"
                          }
                      ]
