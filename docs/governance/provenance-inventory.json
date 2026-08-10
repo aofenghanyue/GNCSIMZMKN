@@ -226,6 +226,32 @@
         "follow_up": "Record executable hashes and exact vendor terms if a tool, runtime, container or generated component will be redistributed."
       },
       "lineage_parents": []
+    },
+    {
+      "id": "github-actions-checkout-6.0.2",
+      "category": "external-ci-action",
+      "scope": {"mode": "workflow-reference", "include": [".github/workflows/ci.yml"], "exclude": []},
+      "owner_role": "validation_lead",
+      "purpose": "Fetch the reviewed repository commit in GitHub-hosted validation jobs",
+      "source_refs": [
+        "https://github.com/actions/checkout/releases/tag/v6.0.2",
+        "https://github.com/actions/checkout/commit/de0fac2e4500dabe0009e67214ff5f5447ce83dd"
+      ],
+      "version": "6.0.2",
+      "integrity": {"kind": "git-commit", "value": "de0fac2e4500dabe0009e67214ff5f5447ce83dd"},
+      "repository_presence": "external-untracked",
+      "internal_handling": "subject-to-upstream-terms",
+      "external_distribution": "not-redistributed",
+      "classification": "external-tool",
+      "license": {
+        "scan_result": "license-information-present",
+        "detected_expression": "MIT",
+        "concluded_expression": "NOASSERTION",
+        "evidence_refs": ["https://github.com/actions/checkout/blob/de0fac2e4500dabe0009e67214ff5f5447ce83dd/LICENSE"],
+        "scope_note": "The workflow invokes the pinned upstream action; its source is not copied into this repository or project distributions.",
+        "follow_up": "Review the exact action dependency bundle and upstream terms before any redistribution or license conclusion."
+      },
+      "lineage_parents": []
     }
   ]
 }

@@ -43,10 +43,13 @@ $requiredPaths = @(
     'docs/quality/terminology-conformance-report.json',
     'docs/adr/0001-greenfield-and-legacy-reference.md',
     'docs/adr/0008-internal-default-license-and-provenance-gate.md',
+    'docs/adr/0009-accountable-roles-and-candidate-toolchain.md',
     'docs/governance/license-and-provenance-policy.md',
     'docs/governance/provenance-inventory.json',
+    'docs/governance/toolchain-support-matrix.json',
     'docs/quality/provenance-review-checklist.md',
     'docs/quality/license-provenance-conformance-report.json',
+    'docs/quality/team-toolchain-readiness-report.json',
     'reference/legacy/source-manifest.json',
     'reference/legacy/legacy-source.zip',
     'reference/legacy/legacy-source.sha256',
@@ -281,6 +284,12 @@ if ($LASTEXITCODE -ne 0) {
     Add-Error "R0 license/provenance evidence failed: $($licenseProvenanceValidatorOutput -join [Environment]::NewLine)"
 }
 
+$teamToolchainValidatorPath = Join-Path $PSScriptRoot 'validate-team-toolchain.ps1'
+$teamToolchainValidatorOutput = & $powerShellHost -NoLogo -NoProfile -ExecutionPolicy Bypass -File $teamToolchainValidatorPath -Quiet 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Add-Error "R0 team/toolchain readiness evidence failed: $($teamToolchainValidatorOutput -join [Environment]::NewLine)"
+}
+
 if ($errors.Count -gt 0) {
     Write-Host "Repository verification failed with $($errors.Count) issue(s):"
     foreach ($errorMessage in $errors) {
@@ -299,3 +308,4 @@ Write-Host "Validated R0 architecture baseline: 1"
 Write-Host "Validated R0 legacy reproduction: 1"
 Write-Host "Validated R0 scientific convention bundle: 1"
 Write-Host "Validated R0 license/provenance bundle: 1"
+Write-Host "Validated R0 team/toolchain readiness bundle: 1"

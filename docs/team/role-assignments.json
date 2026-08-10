@@ -1,15 +1,25 @@
 {
-  "schema_version": "gnczmkn.team-roles/1",
-  "updated_at": "2026-08-09",
+  "schema_version": "gnczmkn.team-roles/2",
+  "updated_at": "2026-08-10",
+  "decision_status": "incomplete",
+  "assignment_policy": {
+    "required_fields": ["assignee", "reviewer"],
+    "reviewer_must_differ_from_assignee": true,
+    "placeholder_assignments_forbidden": true,
+    "high_risk_independence": {
+      "roles": ["scientific_authority", "architecture_lead"],
+      "assignees_must_differ": true
+    }
+  },
   "roles": [
-    {"id": "product_owner", "assignee": null, "required": true},
-    {"id": "scientific_authority", "assignee": null, "required": true},
-    {"id": "architecture_lead", "assignee": null, "required": true},
-    {"id": "model_sdk_lead", "assignee": null, "required": true},
-    {"id": "compiler_lead", "assignee": null, "required": true},
-    {"id": "runtime_numerics_lead", "assignee": null, "required": true},
-    {"id": "evidence_workflow_lead", "assignee": null, "required": true},
-    {"id": "application_lead", "assignee": null, "required": false},
-    {"id": "validation_lead", "assignee": null, "required": true}
+    {"id": "product_owner", "assignee": null, "reviewer": null, "required": true},
+    {"id": "scientific_authority", "assignee": null, "reviewer": null, "required": true},
+    {"id": "architecture_lead", "assignee": null, "reviewer": null, "required": true},
+    {"id": "model_sdk_lead", "assignee": null, "reviewer": null, "required": true},
+    {"id": "compiler_lead", "assignee": null, "reviewer": null, "required": true},
+    {"id": "runtime_numerics_lead", "assignee": null, "reviewer": null, "required": true},
+    {"id": "evidence_workflow_lead", "assignee": null, "reviewer": null, "required": true},
+    {"id": "application_lead", "assignee": null, "reviewer": null, "required": false},
+    {"id": "validation_lead", "assignee": null, "reviewer": null, "required": true}
   ]
 }

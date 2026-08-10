@@ -1,0 +1,197 @@
+{
+    "schema_version":  "gnczmkn.team-toolchain-readiness/1",
+    "task_id":  "R0-GOV-001",
+    "reviewed_on":  "2026-08-10",
+    "status":  "conformant-with-blockers",
+    "configuration_validation":  "passed",
+    "governance_ready":  false,
+    "blockers":  [
+                     {
+                         "code":  "ROLE-ASSIGNMENTS-MISSING",
+                         "owner_role":  "product_owner",
+                         "condition":  "16 required assignee/reviewer slots remain empty or invalid."
+                     },
+                     {
+                         "code":  "ADR-NOT-ACCEPTED",
+                         "owner_role":  "architecture_lead",
+                         "condition":  "ADR-0009 remains Proposed pending Product Owner and Architecture Lead acceptance."
+                     },
+                     {
+                         "code":  "HOSTED-CI-PENDING",
+                         "owner_role":  "validation_lead",
+                         "condition":  "The fixed-runner workflow has not been pushed and completed with retained run evidence."
+                     }
+                 ],
+    "roles":  {
+                  "required_role_count":  8,
+                  "assigned_required_roles":  0,
+                  "reviewed_required_roles":  0,
+                  "valid_required_pairs":  0,
+                  "missing_required_slots":  16,
+                  "high_risk_assignees_independent":  false,
+                  "ready":  false
+              },
+    "toolchain":  {
+                      "adr_status":  "Proposed",
+                      "decision_status":  "proposed",
+                      "qualification_status":  "candidate-not-supported",
+                      "language_standard":  "C++17",
+                      "cmake_declared_minimum":  "3.20.0",
+                      "preset_schema_version":  2,
+                      "hosted_ci_status":  "pending-push-and-run",
+                      "candidate_primary_profiles":  [
+                                                         {
+                                                             "id":  "windows-x64-msvc-19.5x",
+                                                             "runner":  "windows-2025-vs2026",
+                                                             "compiler_family":  "MSVC",
+                                                             "compiler_range":  "\u003e=19.50.0 \u003c19.60.0"
+                                                         },
+                                                         {
+                                                             "id":  "ubuntu-24.04-x64-gcc-13",
+                                                             "runner":  "ubuntu-24.04",
+                                                             "compiler_family":  "GCC",
+                                                             "compiler_range":  "\u003e=13.0.0 \u003c14.0.0"
+                                                         }
+                                                     ],
+                      "evidence_only_profile_count":  1,
+                      "not_qualified":  [
+                                            "clang",
+                                            "macos",
+                                            "arm",
+                                            "mingw-product-build",
+                                            "sanitizers",
+                                            "dynamic-package-abi",
+                                            "python-wheels"
+                                        ]
+                  },
+    "workflow":  {
+                     "runner_labels":  [
+                                           "ubuntu-24.04",
+                                           "windows-2025-vs2026"
+                                       ],
+                     "checkout_version":  "6.0.2",
+                     "checkout_commit":  "de0fac2e4500dabe0009e67214ff5f5447ce83dd",
+                     "configuration":  "Release",
+                     "warnings_as_errors":  true,
+                     "exact_identity_recording":  true
+                 },
+    "mutation_tests":  [
+                           {
+                               "name":  "missing-reviewer-field",
+                               "rejected":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "same-assignee-and-reviewer",
+                               "rejected":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "shared-science-architecture-assignee",
+                               "rejected":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "accepted-adr-without-roles",
+                               "rejected":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "preset-schema-exceeds-declared-floor",
+                               "rejected":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "latest-runner-label",
+                               "rejected":  true,
+                               "detected_issue_count":  2
+                           },
+                           {
+                               "name":  "floating-checkout-action",
+                               "rejected":  true,
+                               "detected_issue_count":  2
+                           },
+                           {
+                               "name":  "unbounded-compiler-range",
+                               "rejected":  true,
+                               "detected_issue_count":  2
+                           },
+                           {
+                               "name":  "legacy-toolchain-promoted",
+                               "rejected":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "virtual-role-readiness",
+                               "rejected":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "premature-task-completion",
+                               "rejected":  true,
+                               "detected_issue_count":  1
+                           }
+                       ],
+    "input_hashes":  [
+                         {
+                             "path":  "docs/team/role-assignments.json",
+                             "sha256":  "4ede05482e214268cc7cf0dc139c17f0e92b9bf9e8c773b090ce83d6fe678f0e",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
+                             "path":  "docs/governance/toolchain-support-matrix.json",
+                             "sha256":  "1923a2f4045e215638c7bc19518cd6d2be356769527be8f6e4cacdc4fefc1bbb",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
+                             "path":  "docs/adr/0009-accountable-roles-and-candidate-toolchain.md",
+                             "sha256":  "95711fe1b33e2d8017384ff3d505b59f2a2b7d8bb74cc0c208ccef5971d51085",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
+                             "path":  "docs/tasks/work-packages/R0-GOV-001.md",
+                             "sha256":  "ca452540da087c3f37ab24ca92d3096aac87ec8daa1e89075e209904cb7cf075",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
+                             "path":  "docs/tasks/backlog.json",
+                             "sha256":  "8627b65f1d655f09043833eb23965c3bf72772e554eedc9e920429d131f3a06c",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
+                             "path":  "docs/handoff/team-operating-model.md",
+                             "sha256":  "c8aaf65e70f7674d450f19aa3530e3763639e82230f74ac90e79fdf2252f8810",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
+                             "path":  "docs/handoff/open-decisions.md",
+                             "sha256":  "4c959ad3bf6c1d125949a185f9e2c0fd5dfa60f7ce3128a747384e240ca38cfd",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
+                             "path":  "CMakeLists.txt",
+                             "sha256":  "23cb5111dae0da437747742db6432906c0f84c2f60437b6dacd450302c3e783d",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
+                             "path":  "CMakePresets.json",
+                             "sha256":  "721b850065c230644d8e9ab1986608e1a62cee1404c39d82df6677d5f9c7dd0e",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
+                             "path":  "project-manifest.json",
+                             "sha256":  "eb8a1145d95c92396073a4a9ece7d5d41f84b2e286c0842331c1d9e8653ca5ad",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
+                             "path":  ".github/workflows/ci.yml",
+                             "sha256":  "33a6afa5b2adfbcb4143b142fd56cff2ecb10e2625c2f9f79947fbd4e94198e2",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
+                             "path":  "tools/validate-team-toolchain.ps1",
+                             "sha256":  "c224a49b5e8aa958758356ac1d82a7d18c4654533eec154afbfffa15818cf597",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         }
+                     ]
+}

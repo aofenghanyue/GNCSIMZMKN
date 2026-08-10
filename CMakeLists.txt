@@ -114,6 +114,15 @@ if(GNC_BUILD_TESTS)
             -ExecutionPolicy Bypass
             -File ${CMAKE_CURRENT_SOURCE_DIR}/tools/validate-license-provenance.ps1
             -Quiet)
+    add_test(
+        NAME r0.team-toolchain-readiness
+        COMMAND
+            ${GNC_POWERSHELL_EXECUTABLE}
+            -NoLogo
+            -NoProfile
+            -ExecutionPolicy Bypass
+            -File ${CMAKE_CURRENT_SOURCE_DIR}/tools/validate-team-toolchain.ps1
+            -Quiet)
 
     find_package(Python3 3.8 REQUIRED COMPONENTS Interpreter)
     add_test(

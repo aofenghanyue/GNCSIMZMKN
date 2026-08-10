@@ -14,10 +14,10 @@
                                       }
                },
     "inventory":  {
-                      "item_count":  7,
-                      "noassertion_count":  7,
+                      "item_count":  8,
+                      "noassertion_count":  8,
                       "externally_blocked_count":  4,
-                      "external_not_redistributed_count":  3,
+                      "external_not_redistributed_count":  4,
                       "runtime_consumers":  0
                   },
     "legacy_archive_audit":  {
@@ -42,6 +42,13 @@
                                        "id":  "w64devkit-2.9.1-legacy-reproduction",
                                        "version":  "2.9.1",
                                        "sha256":  "9208c19755cd4964b7915b9afcf02c66d493a4c870c4b3e83f6c538d9c1237a5",
+                                       "repository_presence":  "external-untracked",
+                                       "external_distribution":  "not-redistributed"
+                                   },
+                                   {
+                                       "id":  "github-actions-checkout-6.0.2",
+                                       "version":  "6.0.2",
+                                       "git_commit":  "de0fac2e4500dabe0009e67214ff5f5447ce83dd",
                                        "repository_presence":  "external-untracked",
                                        "external_distribution":  "not-redistributed"
                                    }
@@ -81,6 +88,11 @@
                                "name":  "repository-license-status-contradiction",
                                "rejected":  true,
                                "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "checkout-action-pin-drift",
+                               "rejected":  true,
+                               "detected_issue_count":  1
                            }
                        ],
     "input_hashes":  [
@@ -91,7 +103,7 @@
                          },
                          {
                              "path":  "docs/adr/0008-internal-default-license-and-provenance-gate.md",
-                             "sha256":  "c3fc39512b835bd0d4443c1576da72afba0855177e9135c22995dcd83ec610e7",
+                             "sha256":  "c3108333545347396c111c0d5cdb4456434996292aab531d68bc4a85ef076b9b",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
@@ -101,7 +113,7 @@
                          },
                          {
                              "path":  "docs/governance/provenance-inventory.json",
-                             "sha256":  "ed17e6c370941987bc486e1b9d7e4c50dd738cf653b54ac0c41109bc48a2c596",
+                             "sha256":  "8a0d6c0b155fd88b9ff0d5c45c269710c2d35bcdf0b63a44809341ad4d4bfb7d",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
@@ -141,7 +153,7 @@
                          },
                          {
                              "path":  "tools/validate-license-provenance.ps1",
-                             "sha256":  "775489fa9e35e0ebb599e7bd3c195c6c936dadee3200bb6b9dd7707a6ffecea1",
+                             "sha256":  "d9ec8c0a2d6192fe40e812705180bc4ccc6e06dcb59c48140e9bd90c1dcf9366",
                              "hash_normalization":  "utf8-lf-no-bom"
                          }
                      ]

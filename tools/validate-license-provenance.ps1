@@ -236,7 +236,8 @@ function Test-InventoryObject([object]$Inventory) {
         'legacy-source-archive',
         'eigen-3.4.0-legacy-reproduction',
         'w64devkit-2.9.1-legacy-reproduction',
-        'host-validation-toolchain')
+        'host-validation-toolchain',
+        'github-actions-checkout-6.0.2')
     foreach ($requiredId in $requiredIds) {
         if (-not $ids.ContainsKey($requiredId)) {
             $issues.Add("Required inventory item is missing: $requiredId")
@@ -337,6 +338,21 @@ function Test-InventoryObject([object]$Inventory) {
         if ((Get-Field $item 'repository_presence') -ne 'external-untracked' -or
             (Get-Field $item 'external_distribution') -ne 'not-redistributed') {
             $issues.Add("Pinned external item '$id' must remain untracked and not redistributed.")
+        }
+    }
+
+    if ($ids.ContainsKey('github-actions-checkout-6.0.2')) {
+        $checkout = $ids['github-actions-checkout-6.0.2']
+        $integrity = Get-Field $checkout 'integrity'
+        if ((Get-Field $checkout 'version') -ne '6.0.2' -or
+            (Get-Field $integrity 'kind') -ne 'git-commit' -or
+            (Get-Field $integrity 'value') -ne
+            'de0fac2e4500dabe0009e67214ff5f5447ce83dd') {
+            $issues.Add('Pinned actions/checkout identity differs from the reviewed v6.0.2 commit.')
+        }
+        if ((Get-Field $checkout 'repository_presence') -ne 'external-untracked' -or
+            (Get-Field $checkout 'external_distribution') -ne 'not-redistributed') {
+            $issues.Add('Pinned actions/checkout must remain untracked and not redistributed.')
         }
     }
 
@@ -574,6 +590,13 @@ if ($null -ne $inventory) {
         param($value)
         $value.repository_license.selected = $true
     }
+    Invoke-Mutation 'checkout-action-pin-drift' {
+        param($value)
+        $checkout = @($value.items | Where-Object {
+                $_.id -eq 'github-actions-checkout-6.0.2'
+            }) | Select-Object -First 1
+        $checkout.integrity.value = ('0' * 40)
+    }
 }
 
 $roles = Read-Json (Join-Path $repoRoot 'docs\team\role-assignments.json')
@@ -662,6 +685,13 @@ $expectedReport = [pscustomobject][ordered]@{
             id = 'w64devkit-2.9.1-legacy-reproduction'
             version = '2.9.1'
             sha256 = '9208c19755cd4964b7915b9afcf02c66d493a4c870c4b3e83f6c538d9c1237a5'
+            repository_presence = 'external-untracked'
+            external_distribution = 'not-redistributed'
+        },
+        [ordered]@{
+            id = 'github-actions-checkout-6.0.2'
+            version = '6.0.2'
+            git_commit = 'de0fac2e4500dabe0009e67214ff5f5447ce83dd'
             repository_presence = 'external-untracked'
             external_distribution = 'not-redistributed'
         })

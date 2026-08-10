@@ -52,7 +52,7 @@ R0-GOV-002 需要先建立 fail-closed 治理和可审计 inventory。最终仓�
 ## Verification
 
 - `LICENSE-STATUS.md` 明确非授权性质、内部处理边界与外部导出门禁；
-- inventory 覆盖 repository、blueprint、research evidence、Legacy archive、Eigen、w64devkit 与宿主验证工具链；
+- inventory 覆盖 repository、blueprint、research evidence、Legacy archive、Eigen、w64devkit、宿主验证工具链与固定 CI action；
 - validator 复核 Legacy hash、字节数、510 个 ZIP entries、391 个 file entries 和零 license signal；
 - validator 检查 required fields、唯一 identity、来源、状态 vocabulary、SPDX 结论与外部分发一致性；
 - in-memory mutation suite 拒绝重复 identity、缺失来源、`NOASSERTION` 外部分发、Legacy hash 漂移、错误许可证结论、无文本 `LicenseRef-*` 和 repository status 矛盾；
