@@ -16,6 +16,22 @@ $reportPath = Join-Path $repoRoot 'docs\quality\terminology-conformance-report.j
 
 Import-Module -Name $modulePath -Force
 
+$unicodeSerializerProbe = ([string][char]0x4E2D) + [char]0x6587
+$serializerProbe = [PSCustomObject]([ordered]@{
+    nested = [PSCustomObject]([ordered]@{ answer = 42; enabled = $true })
+    empty_array = [object[]]@()
+    null_value = $null
+    escaped = "quote`" slash\ newline`n <> " + [char]0x01
+    decimal = [decimal]'1.25'
+    unicode = $unicodeSerializerProbe
+})
+$expectedSerializerProbe = '{"nested":{"answer":42,"enabled":true},"empty_array":[],"null_value":null,"escaped":"quote\" slash\\ newline\n <> \u0001","decimal":1.25,"unicode":"' + $unicodeSerializerProbe + '"}' + "`n"
+$actualSerializerProbe = ConvertTo-DeterministicJson -Value $serializerProbe
+if ($actualSerializerProbe -cne $expectedSerializerProbe) {
+    Write-Host 'Architecture deterministic JSON serializer probe failed.'
+    exit 1
+}
+
 try {
     $registry = Get-Content -LiteralPath $registryPath -Raw -Encoding utf8 | ConvertFrom-Json
     $glossaryPath = Join-Path $repoRoot ([string]$registry.terminology_authority)

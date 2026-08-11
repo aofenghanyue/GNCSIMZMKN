@@ -222,7 +222,9 @@ foreach ($file in $authoredMarkdown | Sort-Object FullName -Unique) {
     if ($text.Contains([char]0xFFFD)) {
         Add-Error "UTF-8 replacement character found in $($file.FullName)."
     }
-    if ($text -match '不是.{0,80}而是') {
+    # Keep the source ASCII so Windows PowerShell 5.1 and PowerShell 7 decode
+    # the guard identically when the script has no UTF-8 BOM.
+    if ($text -match '\u4e0d\u662f.{0,80}\u800c\u662f') {
         Add-Error "Forbidden Chinese sentence pattern found in $($file.FullName)."
     }
 }

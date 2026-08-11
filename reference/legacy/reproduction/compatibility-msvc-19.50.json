@@ -23,6 +23,6 @@
   },
   "interpretation": "MSVC rejected references from a captureless lambda to enclosing local constexpr values. The frozen source was not patched; the controlled reproduction uses the legacy MinGW family and passes all tests.",
   "source_mutation": "none",
-  "evidence_log": "reference/legacy/reproduction/msvc-compatibility.log",
+  "evidence_log": "reference/legacy/reproduction/attempt-msvc-001/logs/msvc-compatibility.log",
   "evidence_log_sha256": "d4ae66c86059c95836925e5e347326b8c797143919f94d88e8128a51507bf68c"
 }

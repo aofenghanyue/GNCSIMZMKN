@@ -1,0 +1,23 @@
+# R0-LEG-001 MSVC compatibility attempt
+# attempt: attempt-msvc-001
+# source: a63621c368aa8e7889547689bcce9c7686b886ac
+# archive_sha256: 2159a324fd897e4bd508c140a36c9165d744e4e4e61861c5b568201707f988e5
+# compiler: Microsoft C/C++ 19.50.35725 for x64
+# cmake: 4.1.2-msvc8
+# generator: Ninja 1.12.1
+
+configure_exit_code=0
+build_exit_code=1
+
+tests/test_cavh_glide_range_guidance.cpp(423): error C3493: cannot implicitly capture 'zero_lift_drag' because no default capture mode has been specified
+tests/test_cavh_glide_range_guidance.cpp(424): error C3493: cannot implicitly capture 'zero_lift_drag_slope_per_mach' because no default capture mode has been specified
+tests/test_cavh_glide_range_guidance.cpp(425): error C3493: cannot implicitly capture 'induced_drag_factor' because no default capture mode has been specified
+tests/test_cavh_glide_range_guidance.cpp(427): error C2064: term does not evaluate to a function taking 1 arguments
+tests/test_cavh_glide_range_guidance.cpp(427): error C2737: 'lift_coefficient_star': const object must be initialized
+tests/test_cavh_glide_range_guidance.cpp(434): error C2064: term does not evaluate to a function taking 1 arguments
+tests/test_cavh_glide_range_guidance.cpp(435): error C2064: term does not evaluate to a function taking 1 arguments
+tests/test_cavh_glide_range_guidance.cpp(433): error C2737: 'd_lift_coefficient_d_mach': const object must be initialized
+ninja: build stopped: subcommand failed.
+
+resolution=Document the compatibility gap; preserve the archive; reproduce with the legacy MinGW compiler family.
+source_mutation=none

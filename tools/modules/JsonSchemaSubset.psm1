@@ -316,8 +316,14 @@ function Read-StrictJsonFile {
     $resolved = (Resolve-Path -LiteralPath $Path -ErrorAction Stop).Path
     $text = Get-Content -LiteralPath $resolved -Raw -Encoding utf8 -ErrorAction Stop
     Assert-StrictJsonText -Text $text
-    $value = $text | ConvertFrom-Json -ErrorAction Stop
-    Write-Output -NoEnumerate $value
+    $parseText = $text.TrimStart([char]0xFEFF)
+    # Parse through an object property because PowerShell 7 enumerates JSON array
+    # roots by default while Windows PowerShell 5.1 does not expose -NoEnumerate.
+    $envelope = ('{"value":' + $parseText + '}') | ConvertFrom-Json -ErrorAction Stop
+    $value = $envelope.value
+    # The unary comma preserves array roots without the PowerShell 7.6
+    # List<object> wrapper produced by Write-Output -NoEnumerate for PSCustomObject.
+    return ,$value
 }
 
 function Add-ValidationError {

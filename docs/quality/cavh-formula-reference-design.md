@@ -2,7 +2,7 @@
 
 ## 1. 文档目的与权威边界
 
-本文定义 [`R0-SCI-004`](../tasks/work-packages/R0-SCI-004.md) 在依赖和 owner decision 关闭后应如何构造、验证与审查 [`REF-CAVH-FORMULA-001`](../../fixtures/ref-cavh-formula/fixture-manifest.json)。目标不是在准备阶段宣布某篇论文、某组方程或冻结实现正确，而是让以下失败在 closed-loop execution 之前被稳定隔离：
+本文定义 [`R0-SCI-004`](../tasks/work-packages/R0-SCI-004.md) 在依赖和 owner decision 关闭后应如何构造、验证与审查 [`REF-CAVH-FORMULA-001`](../../fixtures/ref-cavh-formula/fixture-manifest.json)。本文不在准备阶段宣布某篇论文、某组方程或冻结实现正确；目标是让以下失败在 closed-loop execution 之前被稳定隔离：
 
 1. 来源、edition、页码、license 或 equation map 错误；
 2. Eq17/Eq18 转录、符号、单位或 intermediate 错误；

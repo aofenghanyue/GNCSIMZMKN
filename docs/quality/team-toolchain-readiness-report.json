@@ -190,12 +190,12 @@
                          },
                          {
                              "path":  ".github/workflows/ci.yml",
-                             "sha256":  "33a6afa5b2adfbcb4143b142fd56cff2ecb10e2625c2f9f79947fbd4e94198e2",
+                             "sha256":  "e6b53e6cc2cd21b5801c7b0083214e8f53bfbbfd8e96bc6e3bc7877481f41185",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
                              "path":  "tools/validate-team-toolchain.ps1",
-                             "sha256":  "30e4ac724f049203efbeafbd595afca1a9958fe38dd73e4bf34c212a5cc18436",
+                             "sha256":  "6cd2b6c49064cebd1b61a325b03791701e31167c736cfcade7482be2ddc3d0c8",
                              "hash_normalization":  "utf8-lf-no-bom"
                          }
                      ]

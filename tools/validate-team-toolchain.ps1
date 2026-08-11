@@ -390,7 +390,11 @@ function Test-GovernanceObjects(
             'ninja --version',
             'python --version',
             'pwsh --version',
-            'git --version')) {
+            'git --version',
+            'Verify Windows PowerShell 5.1 compatibility',
+            'shell: powershell',
+            './tools/validate-r0-specs.ps1',
+            './tools/validate-architecture-baseline.ps1')) {
         if (-not $WorkflowText.Contains($requiredText)) {
             $issues.Add("CI workflow is missing required evidence/configuration text: $requiredText")
         }

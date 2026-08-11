@@ -785,12 +785,16 @@ function New-ArchitectureBaseline {
 
     $sharedSymbols = @($Registry.shared_symbols | ForEach-Object {
         $term = $termByName[[string]$_.name]
+        $enumValues = @()
+        if ($_.kind -ceq 'enum') {
+            $enumValues = @(Get-TermEnumValues -Definition ([string]$term.definition))
+        }
         [PSCustomObject]([ordered]@{
             name = $_.name
             kind = $_.kind
             status = $term.status
             definition = $term.definition
-            enum_values = if ($_.kind -ceq 'enum') { @(Get-TermEnumValues -Definition ([string]$term.definition)) } else { @() }
+            enum_values = [object[]]$enumValues
             semantic_authority = $_.semantic_authority
             glossary_authority_refs = @($term.authority_refs)
             owner_module = $_.owner_module
@@ -850,13 +854,160 @@ function New-ArchitectureBaseline {
     })
 }
 
+function Add-DeterministicJsonString {
+    param(
+        [Parameter(Mandatory = $true)][System.Text.StringBuilder]$Builder,
+        [Parameter(Mandatory = $true)][AllowEmptyString()][string]$Value
+    )
+
+    [void]$Builder.Append('"')
+    for ($index = 0; $index -lt $Value.Length; ++$index) {
+        $character = [char]$Value[$index]
+        $code = [int]$character
+        if ($code -eq 0x22) { [void]$Builder.Append('\"'); continue }
+        if ($code -eq 0x5C) { [void]$Builder.Append('\\'); continue }
+        if ($code -eq 0x08) { [void]$Builder.Append('\b'); continue }
+        if ($code -eq 0x0C) { [void]$Builder.Append('\f'); continue }
+        if ($code -eq 0x0A) { [void]$Builder.Append('\n'); continue }
+        if ($code -eq 0x0D) { [void]$Builder.Append('\r'); continue }
+        if ($code -eq 0x09) { [void]$Builder.Append('\t'); continue }
+        if ($code -lt 0x20) {
+            [void]$Builder.Append(('\u{0:x4}' -f $code))
+            continue
+        }
+        if ([char]::IsHighSurrogate($character) -and
+            $index + 1 -lt $Value.Length -and
+            [char]::IsLowSurrogate([char]$Value[$index + 1])) {
+            [void]$Builder.Append($character)
+            ++$index
+            [void]$Builder.Append([char]$Value[$index])
+            continue
+        }
+        if ([char]::IsSurrogate($character)) {
+            [void]$Builder.Append(('\u{0:x4}' -f $code))
+            continue
+        }
+        [void]$Builder.Append($character)
+    }
+    [void]$Builder.Append('"')
+}
+
+function Add-DeterministicJsonValue {
+    param(
+        [Parameter(Mandatory = $true)][System.Text.StringBuilder]$Builder,
+        [AllowNull()]$Value,
+        [int]$Depth
+    )
+
+    if ($Depth -gt 100) {
+        throw 'Deterministic JSON nesting exceeds the supported depth of 100.'
+    }
+    if ($null -eq $Value) {
+        [void]$Builder.Append('null')
+        return
+    }
+    if ($Value -is [string] -or $Value -is [char]) {
+        Add-DeterministicJsonString -Builder $Builder -Value ([string]$Value)
+        return
+    }
+    if ($Value -is [bool]) {
+        [void]$Builder.Append($(if ([bool]$Value) { 'true' } else { 'false' }))
+        return
+    }
+    if ($Value -is [byte] -or
+        $Value -is [sbyte] -or
+        $Value -is [int16] -or
+        $Value -is [uint16] -or
+        $Value -is [int32] -or
+        $Value -is [uint32] -or
+        $Value -is [int64] -or
+        $Value -is [uint64]) {
+        [void]$Builder.Append(([System.IFormattable]$Value).ToString(
+                $null,
+                [System.Globalization.CultureInfo]::InvariantCulture))
+        return
+    }
+    if ($Value -is [single]) {
+        $number = [single]$Value
+        if ([single]::IsNaN($number) -or [single]::IsInfinity($number)) {
+            throw 'Deterministic JSON cannot encode a non-finite number.'
+        }
+        [void]$Builder.Append($number.ToString('R', [System.Globalization.CultureInfo]::InvariantCulture))
+        return
+    }
+    if ($Value -is [double]) {
+        $number = [double]$Value
+        if ([double]::IsNaN($number) -or [double]::IsInfinity($number)) {
+            throw 'Deterministic JSON cannot encode a non-finite number.'
+        }
+        [void]$Builder.Append($number.ToString('R', [System.Globalization.CultureInfo]::InvariantCulture))
+        return
+    }
+    if ($Value -is [decimal]) {
+        [void]$Builder.Append(([decimal]$Value).ToString(
+                'G29',
+                [System.Globalization.CultureInfo]::InvariantCulture))
+        return
+    }
+    if ($Value -is [System.Collections.IDictionary]) {
+        $keys = [System.Collections.Generic.List[string]]::new()
+        foreach ($key in $Value.Keys) {
+            if ($key -isnot [string]) {
+                throw "Deterministic JSON object keys must be strings; found '$($key.GetType().FullName)'."
+            }
+            [void]$keys.Add([string]$key)
+        }
+        $keys.Sort([System.StringComparer]::Ordinal)
+
+        [void]$Builder.Append('{')
+        $first = $true
+        foreach ($key in $keys) {
+            if (-not $first) { [void]$Builder.Append(',') }
+            $first = $false
+            Add-DeterministicJsonString -Builder $Builder -Value $key
+            [void]$Builder.Append(':')
+            Add-DeterministicJsonValue -Builder $Builder -Value $Value[$key] -Depth ([int]$Depth + 1)
+        }
+        [void]$Builder.Append('}')
+        return
+    }
+    if ($Value -is [System.Management.Automation.PSCustomObject]) {
+        [void]$Builder.Append('{')
+        $first = $true
+        foreach ($property in @($Value.PSObject.Properties | Where-Object {
+                    $_.MemberType -in @('NoteProperty', 'Property')
+                })) {
+            if (-not $first) { [void]$Builder.Append(',') }
+            $first = $false
+            Add-DeterministicJsonString -Builder $Builder -Value ([string]$property.Name)
+            [void]$Builder.Append(':')
+            Add-DeterministicJsonValue -Builder $Builder -Value $property.Value -Depth ([int]$Depth + 1)
+        }
+        [void]$Builder.Append('}')
+        return
+    }
+    if ($Value -is [System.Collections.IEnumerable]) {
+        [void]$Builder.Append('[')
+        $first = $true
+        foreach ($item in $Value) {
+            if (-not $first) { [void]$Builder.Append(',') }
+            $first = $false
+            Add-DeterministicJsonValue -Builder $Builder -Value $item -Depth ([int]$Depth + 1)
+        }
+        [void]$Builder.Append(']')
+        return
+    }
+
+    throw "Deterministic JSON does not support type '$($Value.GetType().FullName)'."
+}
+
 function ConvertTo-DeterministicJson {
     [CmdletBinding()]
     param([Parameter(Mandatory = $true)]$Value)
 
-    $json = ConvertTo-Json -InputObject $Value -Depth 100 -Compress
-    $json = $json -replace "`r`n", "`n"
-    return $json.TrimEnd("`r", "`n") + "`n"
+    $builder = [System.Text.StringBuilder]::new()
+    Add-DeterministicJsonValue -Builder $builder -Value $Value -Depth 0
+    return $builder.ToString() + "`n"
 }
 
 function Get-TextSha256 {

@@ -71,3 +71,9 @@ jobs:
       - name: Repository checks
         shell: pwsh
         run: ./tools/verify-repository.ps1
+      - name: Verify Windows PowerShell 5.1 compatibility
+        if: runner.os == 'Windows'
+        shell: powershell
+        run: |
+          ./tools/validate-r0-specs.ps1
+          ./tools/validate-architecture-baseline.ps1
