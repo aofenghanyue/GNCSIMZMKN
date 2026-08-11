@@ -96,11 +96,13 @@ prepare-time 绑定 immutable Artifact/PreparedModel。AssetBinding 不进入每
 
 每条 sampled/closure 边必须从下列关系中选择：
 
+`TemporalRelation = CurrentCycle | PreviousCommitted | HeldLatest | IntervalModel | CandidateStateQuery | EventAtOrBefore` 是 compiled binding 的唯一数据时序枚举。
+
 | Relation | consumer 读到的值 | 典型用途 |
 | --- | --- | --- |
-| `CurrentCycleSample` | 本 tick 已由 upstream 发布的 y_k | nav -> guidance -> control |
-| `PreviousCommittedSample` | 上一个成功 step 的输出 | 显式一拍延迟 |
-| `HeldLatestSample` | producer 最近一次有效样本 | 多速率 zero-order hold |
+| `CurrentCycle` | 本 tick 已由 upstream 发布的 y_k | nav -> guidance -> control |
+| `PreviousCommitted` | 上一个成功 step 的输出 | 显式一拍延迟 |
+| `HeldLatest` | producer 最近一次有效样本 | 多速率 zero-order hold |
 | `IntervalModel` | 对 `[t_k,t_{k+1}]` 有效的参数/函数 | mass flow、command hold |
 | `CandidateStateQuery` | RK stage time/candidate state 对应结果 | 高保真 aero/actuator closure |
 | `EventAtOrBefore` | 指定 delivery point 前的事件集 | phase/config transition |
@@ -423,7 +425,7 @@ Compiler 对每个 Boundary region/phase band 建立 current-cycle sampled/event
 
 | 情形 | 编译结果 |
 | --- | --- |
-| provider 在更早 phase | 合法 CurrentCycleSample |
+| provider 在更早 phase | 合法 CurrentCycle |
 | provider 与 consumer 同 phase且无环 | 拓扑排序 |
 | provider 在更晚 phase，consumer 要 current sample | error |
 | 显式 PreviousCommitted/HeldLatest | 合法，写明延迟 |
@@ -485,6 +487,8 @@ GuidanceInputView {
 性能统计由 query caller/integration coordinator 记录。需要缓存时使用显式 `QueryCache` workspace，cache key 覆盖全部语义输入，命中与否不改变 Outcome。
 
 ## 13. 三种连续闭合策略
+
+`ClosureStrategy = FrozenInterval | CandidateState | AlgebraicSolve` 是 `ClosurePlan` 的唯一策略枚举；三种成员分别在下列小节定义，其他分册只引用该枚举。
 
 ### 13.1 `FrozenInterval`
 

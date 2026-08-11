@@ -1,0 +1,24 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-EXAMPLE-004",
+  "status": "specification_only",
+  "purpose": "This example must fail because two expected facts share an identity.",
+  "authority": "validation_lead",
+  "provenance": {
+    "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"]
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-EXAMPLE-DUPLICATE",
+      "claim": "The first fact is true.",
+      "tolerance_policy": "Exact equality."
+    },
+    {
+      "id": "FACT-EXAMPLE-DUPLICATE",
+      "claim": "A different fact reuses the same identity.",
+      "tolerance_policy": "Exact equality."
+    }
+  ],
+  "required_artifacts": ["example result"],
+  "acceptance": ["Duplicate fact identity is rejected."]
+}

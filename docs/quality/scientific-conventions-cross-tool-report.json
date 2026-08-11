@@ -1,0 +1,98 @@
+{
+    "schema_version":  "gnczmkn.scientific-conventions-report/1",
+    "task_id":  "R0-SCI-001",
+    "convention_id":  "SCI-CONVENTIONS-001",
+    "status":  "pass",
+    "generated_at":  "2026-08-10T10:52:11.4291733Z",
+    "environment":  {
+                        "os":  "Microsoft Windows NT 10.0.26200.0",
+                        "architecture":  "X64",
+                        "powershell":  "5.1.26100.8457",
+                        "cpp_runtime":  "MSVC 1950",
+                        "python_runtime":  "CPython 3.13.5"
+                    },
+    "inputs":  [
+                   {
+                       "path":  "CMakeLists.txt",
+                       "sha256_normalized_utf8_lf":  "23cb5111dae0da437747742db6432906c0f84c2f60437b6dacd450302c3e783d"
+                   },
+                   {
+                       "path":  "docs/adr/0006-si-frame-and-simulation-time-conventions.md",
+                       "sha256_normalized_utf8_lf":  "fcfc7bb337a7f692a388cdfaed6132833526731b8e1d0e2607d35e9339537a00"
+                   },
+                   {
+                       "path":  "docs/adr/0007-passive-hamilton-quaternion-convention.md",
+                       "sha256_normalized_utf8_lf":  "dcd80cdf7a20324a8755a3f0c91ece88546ed99da82b916e7e09a09d92f74263"
+                   },
+                   {
+                       "path":  "docs/tasks/work-packages/R0-SCI-001.md",
+                       "sha256_normalized_utf8_lf":  "3584f667d32e2cf35f0d2a2a6131209fa9920fcee603a98b251d33eba67b9850"
+                   },
+                   {
+                       "path":  "fixtures/ref-scientific-conventions/fixture-manifest.json",
+                       "sha256_normalized_utf8_lf":  "446d6700f3e7fc86ae4a6905586b471dea7bd1bec4b0c7a72e8c3777491026ef"
+                   },
+                   {
+                       "path":  "fixtures/ref-scientific-conventions/conventions.json",
+                       "sha256_normalized_utf8_lf":  "7fad08972da00b6998d750ea5e62e5deaa925b8c3eec444873fddbd4d169695c"
+                   },
+                   {
+                       "path":  "fixtures/ref-scientific-conventions/cases.json",
+                       "sha256_normalized_utf8_lf":  "e882877bbfbc6403f9d1498d753efdce5b66c1f54148e59b271ab5e0741cd8c6"
+                   },
+                   {
+                       "path":  "tests/scientific_conventions.cpp",
+                       "sha256_normalized_utf8_lf":  "1419c37d40ebbc06309b7f02f7e811aab6171b8c453f683861bda2897ce23026"
+                   },
+                   {
+                       "path":  "tools/scientific_conventions_reference.py",
+                       "sha256_normalized_utf8_lf":  "1e8f964c332274bc16afdf03aae940e82cbfe62777ef22e26dd6fdca54328fdc"
+                   },
+                   {
+                       "path":  "tools/validate-scientific-conventions.ps1",
+                       "sha256_normalized_utf8_lf":  "54c534811e67e4d75deb69a5e2e89020909a08fb5beeb7806ae7ccacda1c9986"
+                   }
+               ],
+    "execution":  {
+                      "cpp":  {
+                                  "implementation_id":  "cpp17-isolated-property-spike",
+                                  "checks":  23,
+                                  "observations":  16,
+                                  "assertions":  1819,
+                                  "max_property_error":  5.3290705182007514E-15
+                              },
+                      "python":  {
+                                     "implementation_id":  "cpython-stdlib-reference",
+                                     "checks":  23,
+                                     "observations":  16,
+                                     "assertions":  1819,
+                                     "max_property_error":  7.1054273576010019E-15
+                                 }
+                  },
+    "comparison":  {
+                       "observations_compared":  16,
+                       "numeric_values_compared":  48,
+                       "absolute_tolerance":  1E-12,
+                       "relative_tolerance":  1E-12,
+                       "max_abs_difference":  0,
+                       "mismatches":  0
+                   },
+    "failure_path_tests":  {
+                               "cases":  6,
+                               "rejected":  6,
+                               "status":  "pass",
+                               "covered":  [
+                                               "wrong direction",
+                                               "wrong serialization order",
+                                               "missing required check",
+                                               "zero executed assertions",
+                                               "wrong convention identity",
+                                               "cross-tool numeric drift"
+                                           ]
+                           },
+    "isolation":  {
+                      "cpp":  "standard library only; no product or Legacy link",
+                      "python":  "approved CPython standard-library imports only",
+                      "runtime_consumers":  0
+                  }
+}

@@ -1,0 +1,19 @@
+﻿# stage: legacy-ctest-label-project
+# command: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\deps\w64devkit-extracted\w64devkit\bin\ctest.exe --test-dir C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\build-main -L project --output-on-failure
+# working_directory: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07
+# started_utc: 2026-08-10T05:19:52.7107668+00:00
+# elapsed_seconds: 0.267
+# exit_code: 0
+
+Test project C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/build-main
+    Start 25: test_cavh_programmed_aoa_guidance
+1/2 Test #25: test_cavh_programmed_aoa_guidance ...   Passed    0.11 sec
+    Start 26: test_cavh_glide_range_guidance
+2/2 Test #26: test_cavh_glide_range_guidance ......   Passed    0.03 sec
+
+100% tests passed out of 2
+
+Label Time Summary:
+project    =   0.14 sec*proc (2 tests)
+
+Total Test time (real) =   0.14 sec

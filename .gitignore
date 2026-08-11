@@ -10,9 +10,16 @@ compile_commands.json
 *.tmp
 *.log
 
+# Promoted Legacy reproduction logs are immutable, hash-indexed evidence.
+!reference/legacy/reproduction/**/logs/*.log
+
 # Generated research outputs stay outside version control unless promoted to a fixture.
 /user/outputs/
 /artifacts/
 
 # Extracted legacy material is disposable; the checked archive and manifest are authoritative.
 /reference/legacy/extracted/
+
+# Python tool caches
+__pycache__/
+*.py[cod]

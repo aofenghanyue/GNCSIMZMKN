@@ -1,0 +1,159 @@
+﻿# stage: mission-cavh-geographic-3dof-run-2
+# command: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\build-project-example_08_cavh_geographic_3dof_custom\bin\gnc_sim.exe --config user/example_08_cavh_geographic_3dof_custom/config/mission.json
+# working_directory: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\source\GNCZMKN-legacy-a63621c
+# started_utc: 2026-08-10T05:20:41.7217775+00:00
+# elapsed_seconds: 1.773
+# exit_code: 0
+
+[INFO] Factory registered builtin type: environment.spherical_earth
+[INFO] Factory registered builtin type: environment.wgs84_earth
+[INFO] Factory registered builtin type: environment.standard_atmosphere
+[INFO] Factory registered builtin type: environment.spherical_gravity
+[INFO] Factory registered builtin type: vehicle.common.aero_assets_3dof.zero
+[INFO] Factory registered builtin type: vehicle.common.aero_assets_6dof.zero
+[INFO] Factory registered builtin type: vehicle.input.local_spherical_imu_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.local_spherical_satellite_nav_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.local_spherical_air_data_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.local_spherical_seeker_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.cartesian_imu_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.cartesian_satellite_nav_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.cartesian_air_data_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.cartesian_seeker_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.local_spherical_imu_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.local_spherical_satellite_nav_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.local_spherical_air_data_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.local_spherical_seeker_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.cartesian_imu_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.cartesian_satellite_nav_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.cartesian_air_data_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.input.cartesian_seeker_6dof.ideal
+[INFO] Factory registered builtin type: perturbation.static
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_phase_sequencer_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_trajectory_planner_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_navigation_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_target_tracking_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_guidance_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_flight_control_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_control_allocation_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_phase_sequencer_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_trajectory_planner_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_navigation_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_target_tracking_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_guidance_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_flight_control_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_control_allocation_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_phase_sequencer_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_trajectory_planner_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_navigation_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_target_tracking_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_guidance_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_attitude_control_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.local_spherical_control_allocation_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_phase_sequencer_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_trajectory_planner_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_navigation_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_target_tracking_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_guidance_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_attitude_control_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.process.cartesian_control_allocation_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.output.propulsion_3dof.zero
+[INFO] Factory registered builtin type: vehicle.output.mass_3dof.constant
+[INFO] Factory registered builtin type: vehicle.output.actuator_3dof.ideal
+[INFO] Factory registered builtin type: vehicle.output.aerodynamics_3dof.zero
+[INFO] Factory registered builtin type: vehicle.output.mass_properties_6dof.constant
+[INFO] Factory registered builtin type: vehicle.output.propulsion_6dof.zero
+[INFO] Factory registered builtin type: vehicle.output.actuator_6dof.ideal
+[INFO] Factory registered builtin type: vehicle.output.aerodynamics_6dof.zero
+[INFO] Factory registered builtin type: form.cartesian_3dof.point_mass
+[INFO] Factory registered builtin type: form.cartesian_6dof.rigid_body
+[INFO] Factory registered builtin type: form.local_spherical_3dof.point_mass
+[INFO] Factory registered builtin type: form.local_spherical_6dof.rigid_body
+[INFO] Factory registered builtin type: form.target_point.kinematic
+[INFO] Factory registered builtin type: interaction.cartesian_3dof.standard
+[INFO] Factory registered builtin type: interaction.cartesian_6dof.standard
+[INFO] Factory registered builtin type: interaction.local_spherical_3dof.standard
+[INFO] Factory registered builtin type: interaction.local_spherical_6dof.standard
+[INFO] Factory registered builtin type: termination.component_field_below
+[INFO] Factory registered builtin type: termination.component_field_above
+[INFO] Factory registered builtin type: termination.engagement_local_spherical_6dof
+[INFO] Factory registered builtin type: termination.engagement_local_spherical_3dof
+[INFO] Factory registered builtin type: termination.engagement_cartesian_3dof
+[INFO] Factory registered builtin type: termination.engagement_cartesian_6dof
+[INFO] Factory registered builtin type: summary.engagement_local_spherical_3dof.ideal
+[INFO] Factory registered builtin type: summary.engagement_cartesian_3dof.ideal
+[INFO] Factory registered builtin type: summary.engagement_cartesian_6dof.ideal
+[INFO] Factory registered builtin type: summary.engagement_local_spherical_6dof.ideal
+[INFO] Factory registered builtin type: infrastructure.coordinate_tree
+[INFO] Factory registered builtin type: infrastructure.coordinate_frames.local_spherical_3dof.launch_track
+[INFO] Factory registered project type: cavh.interaction.local_spherical_3dof.aero_propulsive
+[INFO] Factory registered project type: cavh.process.local_spherical_guidance_3dof.glide_range_maximizing
+[INFO] Factory registered project type: cavh.common.aero_assets_3dof.paper_parabolic
+[INFO] Factory registered project type: cavh.process.local_spherical_guidance_3dof.programmed_aoa
+[INFO] Factory registered project type: cavh.common.aero_assets_3dof.table2d
+[INFO] === GNC Simulation Framework v2.0 ===
+[INFO] Config: C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/example_08_cavh_geographic_3dof_custom/config/mission.json
+[INFO] Configuration loaded from: C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/example_08_cavh_geographic_3dof_custom/config/mission.json
+[INFO] Registered node: env.earth
+[INFO] Registered node: env.atmosphere
+[INFO] Registered node: env.gravity
+[INFO] Registered node: vehicle.dynamics
+[INFO] Registered node: vehicle.aero_assets
+[INFO] Registered node: vehicle.imu
+[INFO] Registered node: vehicle.satnav
+[INFO] Registered node: vehicle.air_data
+[INFO] Registered node: vehicle.seeker
+[INFO] Registered node: vehicle.phase
+[INFO] Registered node: vehicle.planner
+[INFO] Registered node: vehicle.navigation
+[INFO] Registered node: vehicle.tracking
+[INFO] Registered node: vehicle.guidance
+[INFO] Registered node: vehicle.flight_control
+[INFO] Registered node: vehicle.control_allocation
+[INFO] Registered node: vehicle.mass
+[INFO] Registered node: vehicle.propulsion
+[INFO] Registered node: vehicle.actuator
+[INFO] Registered node: vehicle.aero
+[INFO] Registered node: vehicle.interaction
+[INFO] Registered node: target.truth
+[INFO] Registered node: mission.termination
+[INFO] Registered node: mission.summary
+[INFO] CsvRecordSink recording to 'user/outputs/example_08_cavh_geographic_3dof_custom/time_2026-08-10_132041/cavh_geographic_3dof_custom.csv'
+[INFO] AutoDataLogger enabled with 145 stable field(s). Output directory: 'user/outputs/example_08_cavh_geographic_3dof_custom/time_2026-08-10_132041'
+[INFO] Mission node inventory: builtin types [environment.spherical_earth, environment.spherical_gravity, environment.standard_atmosphere, form.local_spherical_3dof.point_mass, form.target_point.kinematic, summary.engagement_local_spherical_3dof.ideal, termination.component_field_below, vehicle.input.local_spherical_air_data_3dof.ideal, vehicle.input.local_spherical_imu_3dof.ideal, vehicle.input.local_spherical_satellite_nav_3dof.ideal, vehicle.input.local_spherical_seeker_3dof.ideal, vehicle.output.actuator_3dof.ideal, vehicle.output.aerodynamics_3dof.zero, vehicle.output.mass_3dof.constant, vehicle.output.propulsion_3dof.zero, vehicle.process.local_spherical_control_allocation_3dof.ideal, vehicle.process.local_spherical_flight_control_3dof.ideal, vehicle.process.local_spherical_navigation_3dof.ideal, vehicle.process.local_spherical_phase_sequencer_3dof.ideal, vehicle.process.local_spherical_target_tracking_3dof.ideal, vehicle.process.local_spherical_trajectory_planner_3dof.ideal], project types [cavh.common.aero_assets_3dof.table2d, cavh.interaction.local_spherical_3dof.aero_propulsive, cavh.process.local_spherical_guidance_3dof.glide_range_maximizing]
+[INFO] Simulation phase: NotStarted -> Initializing
+[INFO] Initializing simulator...
+[INFO] Initializing node: env.earth
+[INFO] Initializing node: env.atmosphere
+[INFO] Initializing node: env.gravity
+[INFO] Initializing node: vehicle.dynamics
+[INFO] Initializing node: vehicle.aero_assets
+[INFO] Initializing node: vehicle.imu
+[INFO] Initializing node: vehicle.satnav
+[INFO] Initializing node: vehicle.air_data
+[INFO] Initializing node: vehicle.seeker
+[INFO] Initializing node: vehicle.phase
+[INFO] Initializing node: vehicle.planner
+[INFO] Initializing node: vehicle.navigation
+[INFO] Initializing node: vehicle.tracking
+[INFO] Initializing node: vehicle.guidance
+[INFO] Initializing node: vehicle.flight_control
+[INFO] Initializing node: vehicle.control_allocation
+[INFO] Initializing node: vehicle.mass
+[INFO] Initializing node: vehicle.propulsion
+[INFO] Initializing node: vehicle.actuator
+[INFO] Initializing node: vehicle.aero
+[INFO] Initializing node: vehicle.interaction
+[INFO] Initializing node: target.truth
+[INFO] Initializing node: mission.termination
+[INFO] Initializing node: mission.summary
+[INFO] Simulator initialized with 24 nodes using 'rk4' integrator
+[INFO] Starting simulation: dt=0.1, duration=5000
+[INFO] Simulation phase: Initializing -> Running
+[INFO] Simulation terminated early by condition 'Terminate below 10 km altitude' at t=2410.7 s, step=24107
+[INFO] CsvRecordSink file closed
+[INFO] SimulationSummary written to 'user/outputs/example_08_cavh_geographic_3dof_custom/time_2026-08-10_132041/summary.txt'
+[INFO] Simulation phase: Running -> Finalizing
+[INFO] Finalizing simulator...
+[INFO] Simulation phase: Finalizing -> Completed
+[INFO] Simulation completed. Final time: 2410.7, reason: Terminate below 10 km altitude
+[INFO] === Simulation Completed ===

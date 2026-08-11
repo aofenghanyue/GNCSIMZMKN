@@ -1,0 +1,30 @@
+﻿# stage: project-example_08_cavh_geographic_3dof_custom-configure
+# command: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\deps\w64devkit-extracted\w64devkit\bin\cmake.exe -S C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\source\GNCZMKN-legacy-a63621c -G Ninja -DCMAKE_BUILD_TYPE=Release -DCMAKE_CXX_COMPILER=C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\deps\w64devkit-extracted\w64devkit\bin\g++.exe -DEigen3_DIR=C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\deps\eigen-install\share\eigen3\cmake -B C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\build-project-example_08_cavh_geographic_3dof_custom -DBUILD_TESTS=OFF -DGNC_ACTIVE_PROJECT=example_08_cavh_geographic_3dof_custom
+# working_directory: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07
+# started_utc: 2026-08-10T05:19:53.1933570+00:00
+# elapsed_seconds: 0.887
+# exit_code: 0
+
+-- The CXX compiler identification is GNU 16.2.0
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/w64devkit-extracted/w64devkit/bin/g++.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+CMake Warning at CMakeLists.txt:34 (message):
+  GNC_ACTIVE_PROJECT cache value 'example_08_cavh_geographic_3dof_custom'
+  overrides user/active_project value
+  'example_05_ideal_3dof_geographic_baseline'.
+System.Management.Automation.RemoteException
+System.Management.Automation.RemoteException
+-- Component discovery mode: user project
+-- Active project: example_08_cavh_geographic_3dof_custom
+-- Auto-registered user project component headers: 5
+-- GNC Simulation Framework v2.0.0
+-- C++ Standard: 17
+-- Build Type: Release
+-- User project components dir: C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/example_08_cavh_geographic_3dof_custom/components
+-- Auto-register file: C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/build-project-example_08_cavh_geographic_3dof_custom/generated/auto_registered_nodes.hpp
+-- Configuring done (0.8s)
+-- Generating done (0.0s)
+-- Build files have been written to: C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/build-project-example_08_cavh_geographic_3dof_custom

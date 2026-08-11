@@ -1,0 +1,8 @@
+﻿# stage: dependency-eigen-extract
+# command: Expand-Archive -LiteralPath C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\deps\eigen-3.4.0.zip -DestinationPath C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\deps\eigen-source
+# working_directory: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07
+# started_utc: 2026-08-10T05:16:28.9391092+00:00
+# elapsed_seconds: 16.574
+# exit_code: 0
+
+completed

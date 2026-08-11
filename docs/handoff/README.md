@@ -13,6 +13,7 @@
 | 可构建 C++17/CMake 骨架 | `framework/`、`apps/`、`tests/` | 已验证 bootstrap |
 | 阶段任务与依赖 | `docs/tasks/backlog.json` | R0 可领取 |
 | ADR 体系 | `docs/adr/` | 已启用 |
+| 架构机器基线 | `docs/architecture/` | R0 review |
 | Fixture 与 oracle 插槽 | `fixtures/`、`oracles/` | 待 R0 填充 |
 | 旧项目只读快照 | `reference/legacy/` | 行为与科学参照 |
 | 仓库自动检查 | `tools/verify-repository.ps1` | bootstrap gate |
@@ -43,4 +44,5 @@
 - [工作量与人员建议](effort-and-staffing.md)
 - [风险登记](risk-register.md)
 - [开放决策](open-decisions.md)
+- [R0 权威解锁包](r0-authority-unblock-packet.md)
 - [首月安排](first-30-days.md)

@@ -33,15 +33,33 @@ $requiredPaths = @(
     'CMakeLists.txt',
     'CMakePresets.json',
     'project-manifest.json',
+    'LICENSE-STATUS.md',
     'design-notes/gnczmkn-architecture-roadmap/README.md',
     'docs/handoff/README.md',
     'docs/tasks/backlog.json',
     'docs/team/role-assignments.json',
+    'docs/architecture/authority-registry.json',
+    'docs/architecture/architecture-baseline.json',
+    'docs/quality/terminology-conformance-report.json',
     'docs/adr/0001-greenfield-and-legacy-reference.md',
+    'docs/adr/0008-internal-default-license-and-provenance-gate.md',
+    'docs/adr/0009-accountable-roles-and-candidate-toolchain.md',
+    'docs/governance/license-and-provenance-policy.md',
+    'docs/governance/provenance-inventory.json',
+    'docs/governance/toolchain-support-matrix.json',
+    'docs/quality/provenance-review-checklist.md',
+    'docs/quality/license-provenance-conformance-report.json',
+    'docs/quality/team-toolchain-readiness-report.json',
     'reference/legacy/source-manifest.json',
     'reference/legacy/legacy-source.zip',
     'reference/legacy/legacy-source.sha256',
+    'reference/legacy/reproduction/current.json',
+    'reference/legacy/reproduction/compatibility-msvc-19.50.json',
     'fixtures/ref-yyz-001/fixture-manifest.json',
+    'fixtures/ref-scientific-conventions/fixture-manifest.json',
+    'fixtures/ref-scientific-conventions/conventions.json',
+    'fixtures/ref-scientific-conventions/cases.json',
+    'docs/quality/scientific-conventions-cross-tool-report.json',
     'oracles/oracle-manifest.json'
 )
 
@@ -204,7 +222,9 @@ foreach ($file in $authoredMarkdown | Sort-Object FullName -Unique) {
     if ($text.Contains([char]0xFFFD)) {
         Add-Error "UTF-8 replacement character found in $($file.FullName)."
     }
-    if ($text -match '不是.{0,80}而是') {
+    # Keep the source ASCII so Windows PowerShell 5.1 and PowerShell 7 decode
+    # the guard identically when the script has no UTF-8 BOM.
+    if ($text -match '\u4e0d\u662f.{0,80}\u800c\u662f') {
         Add-Error "Forbidden Chinese sentence pattern found in $($file.FullName)."
     }
 }
@@ -229,10 +249,51 @@ foreach ($file in $markdownFiles | Sort-Object FullName -Unique) {
         $pathPart = ($target -split '#')[0]
         if ([string]::IsNullOrWhiteSpace($pathPart)) { continue }
         $resolved = [System.IO.Path]::GetFullPath((Join-Path $file.DirectoryName $pathPart))
+        if (Test-PathBelow $resolved $extractedLegacyRoot) {
+            Add-Error "Markdown link targets disposable extracted Legacy content in $($file.FullName): $target"
+            continue
+        }
         if (-not (Test-Path -LiteralPath $resolved)) {
             Add-Error "Broken Markdown link in $($file.FullName): $target"
         }
     }
+}
+
+$schemaValidatorPath = Join-Path $PSScriptRoot 'validate-r0-specs.ps1'
+$powerShellHost = (Get-Process -Id $PID).Path
+$schemaValidatorOutput = & $powerShellHost -NoLogo -NoProfile -ExecutionPolicy Bypass -File $schemaValidatorPath -Quiet 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Add-Error "R0 schema conformance failed: $($schemaValidatorOutput -join [Environment]::NewLine)"
+}
+
+$architectureValidatorPath = Join-Path $PSScriptRoot 'validate-architecture-baseline.ps1'
+$architectureValidatorOutput = & $powerShellHost -NoLogo -NoProfile -ExecutionPolicy Bypass -File $architectureValidatorPath -Quiet 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Add-Error "R0 architecture baseline conformance failed: $($architectureValidatorOutput -join [Environment]::NewLine)"
+}
+
+$legacyReproductionValidatorPath = Join-Path $PSScriptRoot 'validate-legacy-reproduction.ps1'
+$legacyReproductionValidatorOutput = & $powerShellHost -NoLogo -NoProfile -ExecutionPolicy Bypass -File $legacyReproductionValidatorPath -Quiet 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Add-Error "R0 legacy reproduction evidence failed: $($legacyReproductionValidatorOutput -join [Environment]::NewLine)"
+}
+
+$scientificConventionValidatorPath = Join-Path $PSScriptRoot 'validate-scientific-conventions.ps1'
+$scientificConventionValidatorOutput = & $powerShellHost -NoLogo -NoProfile -ExecutionPolicy Bypass -File $scientificConventionValidatorPath -StaticOnly -Quiet 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Add-Error "R0 scientific convention evidence failed: $($scientificConventionValidatorOutput -join [Environment]::NewLine)"
+}
+
+$licenseProvenanceValidatorPath = Join-Path $PSScriptRoot 'validate-license-provenance.ps1'
+$licenseProvenanceValidatorOutput = & $powerShellHost -NoLogo -NoProfile -ExecutionPolicy Bypass -File $licenseProvenanceValidatorPath -Quiet 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Add-Error "R0 license/provenance evidence failed: $($licenseProvenanceValidatorOutput -join [Environment]::NewLine)"
+}
+
+$teamToolchainValidatorPath = Join-Path $PSScriptRoot 'validate-team-toolchain.ps1'
+$teamToolchainValidatorOutput = & $powerShellHost -NoLogo -NoProfile -ExecutionPolicy Bypass -File $teamToolchainValidatorPath -Quiet 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Add-Error "R0 team/toolchain readiness evidence failed: $($teamToolchainValidatorOutput -join [Environment]::NewLine)"
 }
 
 if ($errors.Count -gt 0) {
@@ -248,3 +309,9 @@ Write-Host "Repository verification passed."
 Write-Host "Validated JSON files: $($jsonFiles.Count)"
 Write-Host "Validated task entries: $taskCount"
 Write-Host "Validated Markdown files: $($markdownFiles.Count)"
+Write-Host "Validated R0 schema contracts: 3"
+Write-Host "Validated R0 architecture baseline: 1"
+Write-Host "Validated R0 legacy reproduction: 1"
+Write-Host "Validated R0 scientific convention bundle: 1"
+Write-Host "Validated R0 license/provenance bundle: 1"
+Write-Host "Validated R0 team/toolchain readiness bundle: 1"

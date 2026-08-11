@@ -1,0 +1,168 @@
+﻿{
+    "schema_version":  "gnczmkn.legacy-evidence-index/1",
+    "run_id":  "r0-leg-001-20260810-07",
+    "status":  "passed",
+    "generated_at_utc":  "2026-08-10T05:20:46.5322299+00:00",
+    "evidence_files":  [
+                           {
+                               "path":  "environment-manifest.json",
+                               "bytes":  5549,
+                               "sha256":  "be340b26caa99033cf63cb1c993690aec18e9750faaff6658be4dba8b6eb3041"
+                           },
+                           {
+                               "path":  "logs/dependency-eigen-configure.log",
+                               "bytes":  22168,
+                               "sha256":  "3aef488766297651bfe88f8a1c1ca519c3c3beecb96ec0c4dd0a9148ff5591d2"
+                           },
+                           {
+                               "path":  "logs/dependency-eigen-extract.log",
+                               "bytes":  504,
+                               "sha256":  "6124cbb72632d59d82a6d739185ac48918f5900d0d62df686f9ddb34ced644a9"
+                           },
+                           {
+                               "path":  "logs/dependency-eigen-install.log",
+                               "bytes":  110158,
+                               "sha256":  "95990e0b004df2cca4208a787b5c5adc93808fb279fbd0c4a75d7d6637307482"
+                           },
+                           {
+                               "path":  "logs/dependency-w64devkit-extract.log",
+                               "bytes":  485,
+                               "sha256":  "fef7c9cf73504a0f9a62c351dd983789c73f76f1ccb07546acef395be8b176fe"
+                           },
+                           {
+                               "path":  "logs/legacy-ctest-all.log",
+                               "bytes":  4131,
+                               "sha256":  "c9b4140b5c6dfe0917036f12ce0dca07005c6913b68751f2649d728d33899c2d"
+                           },
+                           {
+                               "path":  "logs/legacy-ctest-label-architecture-guard.log",
+                               "bytes":  930,
+                               "sha256":  "2076c2f0a55f40ae4a8499c946924134bb1ee42c7255d15d67e2701fcec8fd75"
+                           },
+                           {
+                               "path":  "logs/legacy-ctest-label-core.log",
+                               "bytes":  2832,
+                               "sha256":  "85e8bb4b2cd2e9387b5c3b146d1ee7b4e5d177eda883ef5567f3a9bf947ef65e"
+                           },
+                           {
+                               "path":  "logs/legacy-ctest-label-example.log",
+                               "bytes":  1487,
+                               "sha256":  "a12aacfb6292dd7a22aee6376931da92a205b56e09ecbf3f36d706426f647b65"
+                           },
+                           {
+                               "path":  "logs/legacy-ctest-label-project.log",
+                               "bytes":  1030,
+                               "sha256":  "479f25bc07fc57f557f66feb3aa8844f12c566c879af85e6764289c710b92a4d"
+                           },
+                           {
+                               "path":  "logs/legacy-ctest-list.log",
+                               "bytes":  1677,
+                               "sha256":  "46623462b2b3c68d2ac54052dc323f19fc0bee65579e9a4b6e7e31ad2b96b772"
+                           },
+                           {
+                               "path":  "logs/legacy-direct-test_ideal_cartesian_3dof_mission.log",
+                               "bytes":  16252,
+                               "sha256":  "bf1bc105194ce0e0fc91cd26ff1cffcdb7a670a46afb2fcf0777a35b2ffd9d6f"
+                           },
+                           {
+                               "path":  "logs/legacy-direct-test_ideal_cartesian_6dof_mission.log",
+                               "bytes":  16286,
+                               "sha256":  "18581201eaeb53a3f34ac0c3e2b123da60b60d4af485e353a6d9baa0b624a05c"
+                           },
+                           {
+                               "path":  "logs/legacy-main-build.log",
+                               "bytes":  1169758,
+                               "sha256":  "70f88fa27c639e6eee2cee87b9c1e3ff4e7bdc2028d8c433495ea765b81c0e0e"
+                           },
+                           {
+                               "path":  "logs/legacy-main-configure.log",
+                               "bytes":  2421,
+                               "sha256":  "00b6fe48592a7e8609717b5c33b5ad47ec2dacedfe883f3f93ed7971fba8934d"
+                           },
+                           {
+                               "path":  "logs/legacy-source-extract.log",
+                               "bytes":  477,
+                               "sha256":  "bb9a307a415c3e728923cf86920677f1c2836d4474994062a405c86bb572ffd6"
+                           },
+                           {
+                               "path":  "logs/mission-cartesian-3dof-run-1.log",
+                               "bytes":  12002,
+                               "sha256":  "3ef3bdcbe355f453ca0650d3333c2110a1b38a4536863b28959768f2e0596264"
+                           },
+                           {
+                               "path":  "logs/mission-cartesian-3dof-run-2.log",
+                               "bytes":  12002,
+                               "sha256":  "b6c6ab8199a567afe6a14ee10c881eb9f28136ec14a2d41a9f42e1b2e30df2a7"
+                           },
+                           {
+                               "path":  "logs/mission-cartesian-6dof-run-1.log",
+                               "bytes":  12019,
+                               "sha256":  "5b2b56dad60f173c5305cb0a92b171ba512d9780e4b230298a588f90c3978687"
+                           },
+                           {
+                               "path":  "logs/mission-cartesian-6dof-run-2.log",
+                               "bytes":  12019,
+                               "sha256":  "c5542f384727ba3709e3a92af28aed9fe75960e0351a21a46324955618552e5a"
+                           },
+                           {
+                               "path":  "logs/mission-cavh-geographic-3dof-run-1.log",
+                               "bytes":  12644,
+                               "sha256":  "829e271dfe4d36b83d622afd166eedaa893bb179e3427810151d8d484deb10f0"
+                           },
+                           {
+                               "path":  "logs/mission-cavh-geographic-3dof-run-2.log",
+                               "bytes":  12644,
+                               "sha256":  "7dd20a4cd04e3195834605db1e5762b4c9a6a022828b044390017105b86824bb"
+                           },
+                           {
+                               "path":  "logs/mission-geographic-3dof-run-1.log",
+                               "bytes":  12308,
+                               "sha256":  "ee5c8f8c5fc2d6f84242f435f36b0c11a29156e4de90afa8ec8b0a9809f64f59"
+                           },
+                           {
+                               "path":  "logs/mission-geographic-3dof-run-2.log",
+                               "bytes":  12308,
+                               "sha256":  "0b2e2469e37b07ce65fe657a1165ae6aca6e6b9cb95316df187ab237b1a58b70"
+                           },
+                           {
+                               "path":  "logs/mission-yyz-cartesian-6dof-run-1.log",
+                               "bytes":  13488,
+                               "sha256":  "28ac09f359b078b2ddbb4939994e0654c083ef20848567aa50f21f431223566e"
+                           },
+                           {
+                               "path":  "logs/mission-yyz-cartesian-6dof-run-2.log",
+                               "bytes":  13487,
+                               "sha256":  "d122320916433dd26701f255c955eaaf3dcfbfd8283de77f2671fb6e869368f5"
+                           },
+                           {
+                               "path":  "logs/project-example_08_cavh_geographic_3dof_custom-build.log",
+                               "bytes":  40538,
+                               "sha256":  "40a1cca3fa86eba6e12e9fc8cb8ce4da6a8c45df5e970f763acd6e75eaca71a9"
+                           },
+                           {
+                               "path":  "logs/project-example_08_cavh_geographic_3dof_custom-configure.log",
+                               "bytes":  2683,
+                               "sha256":  "d2caf472fefa51ab7f824cf9955cf7f7223455d0c72897106c9b86ebf0445c94"
+                           },
+                           {
+                               "path":  "logs/project-yyz_cartesian_6dof_framework_9-build.log",
+                               "bytes":  49433,
+                               "sha256":  "30d30c99f8a91d13662e26deaa440ae559f463e9257fd556cda80c0cb8acbe45"
+                           },
+                           {
+                               "path":  "logs/project-yyz_cartesian_6dof_framework_9-configure.log",
+                               "bytes":  2617,
+                               "sha256":  "cf4d516a28493c55c6b174c8adef9af56b357e0f4d7375f59a8eb2efcc2f73ca"
+                           },
+                           {
+                               "path":  "mission-report.json",
+                               "bytes":  26291,
+                               "sha256":  "a9f3c3c9066346430b50b607429c39b41074b8ce6e5b443e354536db8d1d0a1d"
+                           },
+                           {
+                               "path":  "test-report.json",
+                               "bytes":  2921,
+                               "sha256":  "f8eb7847f779a11ea99a7f93a059ab6aa52f5204c35a919cd7aec45c7b705d44"
+                           }
+                       ]
+}

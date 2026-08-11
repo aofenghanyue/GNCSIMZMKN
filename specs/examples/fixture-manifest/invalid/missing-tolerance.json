@@ -1,0 +1,18 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-EXAMPLE-003",
+  "status": "specification_only",
+  "purpose": "This example must fail because an expected fact has no tolerance policy.",
+  "authority": "validation_lead",
+  "provenance": {
+    "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"]
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-EXAMPLE-TOLERANCE",
+      "claim": "A numeric value agrees with its reference."
+    }
+  ],
+  "required_artifacts": ["example result"],
+  "acceptance": ["Missing tolerance is rejected."]
+}

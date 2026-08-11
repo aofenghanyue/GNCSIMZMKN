@@ -4,7 +4,27 @@
   "status": "specification_only",
   "purpose": "Close the target architecture path from mission source to evidence and next proposal.",
   "authority": "scientific_authority",
-  "source_refs": ["design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md", "design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md"],
+  "provenance": {
+    "source_refs": ["design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md", "design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md"],
+    "notes": "Normative architecture fixture; scientific values remain gated by R0-SCI-003."
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-YYZ-PLAN-RATE",
+      "claim": "The 100 Hz base rate lowers the 20 Hz guidance request to an integer interval of five ticks.",
+      "tolerance_policy": "Exact integer equality."
+    },
+    {
+      "id": "FACT-YYZ-STEP-COMMIT",
+      "claim": "A pre-commit failure leaves the state epoch unchanged and a successful step seals observation against its ModelCommit.",
+      "tolerance_policy": "Exact epoch, ordering and commit-reference equality."
+    },
+    {
+      "id": "FACT-YYZ-TRAJECTORY",
+      "claim": "Trajectory and terminal metrics agree with the approved independent or legacy-classified reference.",
+      "tolerance_policy": "Field-specific numeric tolerances to be frozen by R0-SCI-003."
+    }
+  ],
   "required_artifacts": ["authoritative mission source", "aero/propulsion/mass assets", "formula intermediate values", "PlanProofRecord set", "step journal facts", "ObservationBatch", "diagnostic failure case", "trajectory and terminal metrics", "tolerance and difference report"],
   "acceptance": ["All example values have confirmed provenance", "Legacy and target results can be compared by semantic field identity", "Every difference has an approved classification"],
   "open_tasks": ["R0-LEG-002", "R0-SCI-003", "R0-SPEC-001"]

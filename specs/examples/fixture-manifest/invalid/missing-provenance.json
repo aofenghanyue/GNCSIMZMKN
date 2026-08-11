@@ -1,0 +1,16 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-EXAMPLE-002",
+  "status": "specification_only",
+  "purpose": "This example must fail because provenance is absent.",
+  "authority": "validation_lead",
+  "expected_facts": [
+    {
+      "id": "FACT-EXAMPLE-PROVENANCE",
+      "claim": "A source can be located.",
+      "tolerance_policy": "Exact reference identity."
+    }
+  ],
+  "required_artifacts": ["example result"],
+  "acceptance": ["Missing provenance is rejected."]
+}

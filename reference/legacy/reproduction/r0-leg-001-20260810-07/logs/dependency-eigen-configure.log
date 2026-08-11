@@ -1,0 +1,367 @@
+﻿# stage: dependency-eigen-configure
+# command: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\deps\w64devkit-extracted\w64devkit\bin\cmake.exe -S C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\deps\eigen-source\eigen-3.4.0 -B C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\deps\eigen-build -G Ninja -DCMAKE_INSTALL_PREFIX=C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\deps\eigen-install -DBUILD_TESTING=OFF
+# working_directory: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07
+# started_utc: 2026-08-10T05:16:45.5208159+00:00
+# elapsed_seconds: 17.236
+# exit_code: 0
+
+CMake Warning (deprecated) at CMakeLists.txt:2 (cmake_minimum_required):
+  Compatibility with CMake < 3.10 will be removed from a future version of
+  CMake.
+System.Management.Automation.RemoteException
+  Update the VERSION argument <min> value.  Or, use the <min>...<max> syntax
+  to tell CMake that the project requires at least <min> but has been updated
+  to work with policies introduced by <max> or earlier.
+This warning is for project developers.  Use -Wno-author or -Wno-deprecated
+to suppress it.
+System.Management.Automation.RemoteException
+-- The C compiler identification is GNU 16.2.0
+-- The CXX compiler identification is GNU 16.2.0
+-- Detecting C compiler ABI info
+-- Detecting C compiler ABI info - done
+-- Check for working C compiler: C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/w64devkit-extracted/w64devkit/bin/cc.exe - skipped
+-- Detecting C compile features
+-- Detecting C compile features - done
+-- Detecting CXX compiler ABI info
+-- Detecting CXX compiler ABI info - done
+-- Check for working CXX compiler: C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/w64devkit-extracted/w64devkit/bin/c++.exe - skipped
+-- Detecting CXX compile features
+-- Detecting CXX compile features - done
+-- Performing Test EIGEN_COMPILER_SUPPORT_CPP11
+-- Performing Test EIGEN_COMPILER_SUPPORT_CPP11 - Success
+-- Performing Test COMPILER_SUPPORT_std=cpp03
+-- Performing Test COMPILER_SUPPORT_std=cpp03 - Success
+-- Performing Test standard_math_library_linked_to_automatically
+-- Performing Test standard_math_library_linked_to_automatically - Success
+-- Standard libraries to link to explicitly: none
+-- Performing Test COMPILER_SUPPORT_WERROR
+-- Performing Test COMPILER_SUPPORT_WERROR - Success
+-- Performing Test COMPILER_SUPPORT_pedantic
+-- Performing Test COMPILER_SUPPORT_pedantic - Success
+-- Performing Test COMPILER_SUPPORT_Wall
+-- Performing Test COMPILER_SUPPORT_Wall - Success
+-- Performing Test COMPILER_SUPPORT_Wextra
+-- Performing Test COMPILER_SUPPORT_Wextra - Success
+-- Performing Test COMPILER_SUPPORT_Wundef
+-- Performing Test COMPILER_SUPPORT_Wundef - Success
+-- Performing Test COMPILER_SUPPORT_Wcastalign
+-- Performing Test COMPILER_SUPPORT_Wcastalign - Success
+-- Performing Test COMPILER_SUPPORT_Wcharsubscripts
+-- Performing Test COMPILER_SUPPORT_Wcharsubscripts - Success
+-- Performing Test COMPILER_SUPPORT_Wnonvirtualdtor
+-- Performing Test COMPILER_SUPPORT_Wnonvirtualdtor - Success
+-- Performing Test COMPILER_SUPPORT_Wunusedlocaltypedefs
+-- Performing Test COMPILER_SUPPORT_Wunusedlocaltypedefs - Success
+-- Performing Test COMPILER_SUPPORT_Wpointerarith
+-- Performing Test COMPILER_SUPPORT_Wpointerarith - Success
+-- Performing Test COMPILER_SUPPORT_Wwritestrings
+-- Performing Test COMPILER_SUPPORT_Wwritestrings - Success
+-- Performing Test COMPILER_SUPPORT_Wformatsecurity
+-- Performing Test COMPILER_SUPPORT_Wformatsecurity - Success
+-- Performing Test COMPILER_SUPPORT_Wshorten64to32
+-- Performing Test COMPILER_SUPPORT_Wshorten64to32 - Failed
+-- Performing Test COMPILER_SUPPORT_Wlogicalop
+-- Performing Test COMPILER_SUPPORT_Wlogicalop - Success
+-- Performing Test COMPILER_SUPPORT_Wenumconversion
+-- Performing Test COMPILER_SUPPORT_Wenumconversion - Success
+-- Performing Test COMPILER_SUPPORT_Wcpp11extensions
+-- Performing Test COMPILER_SUPPORT_Wcpp11extensions - Success
+-- Performing Test COMPILER_SUPPORT_Wdoublepromotion
+-- Performing Test COMPILER_SUPPORT_Wdoublepromotion - Success
+-- Performing Test COMPILER_SUPPORT_Wshadow
+-- Performing Test COMPILER_SUPPORT_Wshadow - Success
+-- Performing Test COMPILER_SUPPORT_Wnopsabi
+-- Performing Test COMPILER_SUPPORT_Wnopsabi - Success
+-- Performing Test COMPILER_SUPPORT_Wnovariadicmacros
+-- Performing Test COMPILER_SUPPORT_Wnovariadicmacros - Success
+-- Performing Test COMPILER_SUPPORT_Wnolonglong
+-- Performing Test COMPILER_SUPPORT_Wnolonglong - Success
+-- Performing Test COMPILER_SUPPORT_fnochecknew
+-- Performing Test COMPILER_SUPPORT_fnochecknew - Success
+-- Performing Test COMPILER_SUPPORT_fnocommon
+-- Performing Test COMPILER_SUPPORT_fnocommon - Success
+-- Performing Test COMPILER_SUPPORT_fstrictaliasing
+-- Performing Test COMPILER_SUPPORT_fstrictaliasing - Success
+-- Performing Test COMPILER_SUPPORT_wd981
+-- Performing Test COMPILER_SUPPORT_wd981 - Failed
+-- Performing Test COMPILER_SUPPORT_wd2304
+-- Performing Test COMPILER_SUPPORT_wd2304 - Failed
+-- Performing Test COMPILER_SUPPORT_STRICTANSI
+-- Performing Test COMPILER_SUPPORT_STRICTANSI - Failed
+-- Performing Test COMPILER_SUPPORT_Qunusedarguments
+-- Performing Test COMPILER_SUPPORT_Qunusedarguments - Failed
+-- Performing Test COMPILER_SUPPORT_ansi
+-- Performing Test COMPILER_SUPPORT_ansi - Success
+-- Performing Test COMPILER_SUPPORT_OPENMP
+-- Performing Test COMPILER_SUPPORT_OPENMP - Success
+-- Found unsuitable Qt version "5.15.2" from C:/ProgramData/anaconda3/Library/bin/qmake.exe
+-- Looking for a Fortran compiler
+-- Looking for a Fortran compiler - C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/w64devkit-extracted/w64devkit/bin/gfortran.exe
+-- The Fortran compiler identification is GNU 16.2.0
+-- Detecting Fortran compiler ABI info
+-- Detecting Fortran compiler ABI info - done
+-- Check for working Fortran compiler: C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/w64devkit-extracted/w64devkit/bin/gfortran.exe - skipped
+-- Found unsuitable Qt version "5.15.2" from C:/ProgramData/anaconda3/Library/bin/qmake.exe
+-- Qt4 not found, so disabling the mandelbrot and opengl demos
+-- 
+-- Configured Eigen 3.4.0
+-- 
+-- Available targets (use: cmake --build . --target TARGET):
+-- ---------+--------------------------------------------------------------
+-- Target   |   Description
+-- ---------+--------------------------------------------------------------
+-- install  | Install Eigen. Headers will be installed to:
+--          |     <CMAKE_INSTALL_PREFIX>/<INCLUDE_INSTALL_DIR>
+--          |   Using the following values:
+--          |     CMAKE_INSTALL_PREFIX: C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/eigen-install
+--          |     INCLUDE_INSTALL_DIR:  include/eigen3
+--          |   Change the install location of Eigen headers using:
+--          |     cmake . -DCMAKE_INSTALL_PREFIX=yourprefix
+--          |   Or:
+--          |     cmake . -DINCLUDE_INSTALL_DIR=yourdir
+-- doc      | Generate the API documentation, requires Doxygen & LaTeX
+-- blas     | Build BLAS library (not the same thing as Eigen)
+-- uninstall| Remove files installed by the install target
+-- ---------+--------------------------------------------------------------
+-- 
+-- Configuring done (16.4s)
+CMake Warning in doc/examples/CMakeLists.txt:
+  The object file directory
+System.Management.Automation.RemoteException
+    C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/eigen-build/doc/examples/CMakeFiles/Tutorial_ReductionsVisitorsBroadcasting_broadcast_1nn.dir/./
+System.Management.Automation.RemoteException
+  has 191 characters.  The maximum full path to an object file is 250
+  characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+System.Management.Automation.RemoteException
+    Tutorial_ReductionsVisitorsBroadcasting_broadcast_1nn.cpp.obj
+System.Management.Automation.RemoteException
+  cannot be safely placed under this directory.  The build may not work
+  correctly.
+System.Management.Automation.RemoteException
+System.Management.Automation.RemoteException
+CMake Warning in doc/examples/CMakeLists.txt:
+  The object file directory
+System.Management.Automation.RemoteException
+    C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/eigen-build/doc/examples/CMakeFiles/Tutorial_ReductionsVisitorsBroadcasting_broadcast_simple.dir/./
+System.Management.Automation.RemoteException
+  has 194 characters.  The maximum full path to an object file is 250
+  characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+System.Management.Automation.RemoteException
+    Tutorial_ReductionsVisitorsBroadcasting_broadcast_simple.cpp.obj
+System.Management.Automation.RemoteException
+  cannot be safely placed under this directory.  The build may not work
+  correctly.
+System.Management.Automation.RemoteException
+System.Management.Automation.RemoteException
+CMake Warning in doc/examples/CMakeLists.txt:
+  The object file directory
+System.Management.Automation.RemoteException
+    C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/eigen-build/doc/examples/CMakeFiles/Tutorial_ReductionsVisitorsBroadcasting_broadcast_simple_rowwise.dir/./
+System.Management.Automation.RemoteException
+  has 202 characters.  The maximum full path to an object file is 250
+  characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+System.Management.Automation.RemoteException
+    Tutorial_ReductionsVisitorsBroadcasting_broadcast_simple_rowwise.cpp.obj
+System.Management.Automation.RemoteException
+  cannot be safely placed under this directory.  The build may not work
+  correctly.
+System.Management.Automation.RemoteException
+System.Management.Automation.RemoteException
+CMake Warning in doc/examples/CMakeLists.txt:
+  The object file directory
+System.Management.Automation.RemoteException
+    C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/eigen-build/doc/examples/CMakeFiles/Tutorial_ReductionsVisitorsBroadcasting_reductions_bool.dir/./
+System.Management.Automation.RemoteException
+  has 193 characters.  The maximum full path to an object file is 250
+  characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+System.Management.Automation.RemoteException
+    Tutorial_ReductionsVisitorsBroadcasting_reductions_bool.cpp.obj
+System.Management.Automation.RemoteException
+  cannot be safely placed under this directory.  The build may not work
+  correctly.
+System.Management.Automation.RemoteException
+System.Management.Automation.RemoteException
+CMake Warning in doc/examples/CMakeLists.txt:
+  The object file directory
+System.Management.Automation.RemoteException
+    C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/eigen-build/doc/examples/CMakeFiles/Tutorial_ReductionsVisitorsBroadcasting_reductions_norm.dir/./
+System.Management.Automation.RemoteException
+  has 193 characters.  The maximum full path to an object file is 250
+  characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+System.Management.Automation.RemoteException
+    Tutorial_ReductionsVisitorsBroadcasting_reductions_norm.cpp.obj
+System.Management.Automation.RemoteException
+  cannot be safely placed under this directory.  The build may not work
+  correctly.
+System.Management.Automation.RemoteException
+System.Management.Automation.RemoteException
+CMake Warning in doc/examples/CMakeLists.txt:
+  The object file directory
+System.Management.Automation.RemoteException
+    C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/eigen-build/doc/examples/CMakeFiles/Tutorial_ReductionsVisitorsBroadcasting_reductions_operatornorm.dir/./
+System.Management.Automation.RemoteException
+  has 201 characters.  The maximum full path to an object file is 250
+  characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+System.Management.Automation.RemoteException
+    Tutorial_ReductionsVisitorsBroadcasting_reductions_operatornorm.cpp.obj
+System.Management.Automation.RemoteException
+  cannot be safely placed under this directory.  The build may not work
+  correctly.
+System.Management.Automation.RemoteException
+System.Management.Automation.RemoteException
+CMake Warning in doc/snippets/CMakeLists.txt:
+  The object file directory
+System.Management.Automation.RemoteException
+    C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/eigen-build/doc/snippets/CMakeFiles/compile_MatrixBase_template_int_int_block_int_int_int_int.dir/./
+System.Management.Automation.RemoteException
+  has 195 characters.  The maximum full path to an object file is 250
+  characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+System.Management.Automation.RemoteException
+    compile_MatrixBase_template_int_int_block_int_int_int_int.cpp.obj
+System.Management.Automation.RemoteException
+  cannot be safely placed under this directory.  The build may not work
+  correctly.
+System.Management.Automation.RemoteException
+System.Management.Automation.RemoteException
+CMake Warning in doc/snippets/CMakeLists.txt:
+  The object file directory
+System.Management.Automation.RemoteException
+    C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/eigen-build/doc/snippets/CMakeFiles/compile_MatrixBase_template_int_int_bottomLeftCorner_int_int.dir/./
+System.Management.Automation.RemoteException
+  has 198 characters.  The maximum full path to an object file is 250
+  characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+System.Management.Automation.RemoteException
+    compile_MatrixBase_template_int_int_bottomLeftCorner_int_int.cpp.obj
+System.Management.Automation.RemoteException
+  cannot be safely placed under this directory.  The build may not work
+  correctly.
+System.Management.Automation.RemoteException
+System.Management.Automation.RemoteException
+CMake Warning in doc/snippets/CMakeLists.txt:
+  The object file directory
+System.Management.Automation.RemoteException
+    C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/eigen-build/doc/snippets/CMakeFiles/compile_MatrixBase_template_int_int_bottomRightCorner.dir/./
+System.Management.Automation.RemoteException
+  has 191 characters.  The maximum full path to an object file is 250
+  characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+System.Management.Automation.RemoteException
+    compile_MatrixBase_template_int_int_bottomRightCorner.cpp.obj
+System.Management.Automation.RemoteException
+  cannot be safely placed under this directory.  The build may not work
+  correctly.
+System.Management.Automation.RemoteException
+System.Management.Automation.RemoteException
+CMake Warning in doc/snippets/CMakeLists.txt:
+  The object file directory
+System.Management.Automation.RemoteException
+    C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/eigen-build/doc/snippets/CMakeFiles/compile_MatrixBase_template_int_int_bottomRightCorner_int_int.dir/./
+System.Management.Automation.RemoteException
+  has 199 characters.  The maximum full path to an object file is 250
+  characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+System.Management.Automation.RemoteException
+    compile_MatrixBase_template_int_int_bottomRightCorner_int_int.cpp.obj
+System.Management.Automation.RemoteException
+  cannot be safely placed under this directory.  The build may not work
+  correctly.
+System.Management.Automation.RemoteException
+System.Management.Automation.RemoteException
+CMake Warning in doc/snippets/CMakeLists.txt:
+  The object file directory
+System.Management.Automation.RemoteException
+    C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/eigen-build/doc/snippets/CMakeFiles/compile_MatrixBase_template_int_int_topLeftCorner_int_int.dir/./
+System.Management.Automation.RemoteException
+  has 195 characters.  The maximum full path to an object file is 250
+  characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+System.Management.Automation.RemoteException
+    compile_MatrixBase_template_int_int_topLeftCorner_int_int.cpp.obj
+System.Management.Automation.RemoteException
+  cannot be safely placed under this directory.  The build may not work
+  correctly.
+System.Management.Automation.RemoteException
+System.Management.Automation.RemoteException
+CMake Warning in doc/snippets/CMakeLists.txt:
+  The object file directory
+System.Management.Automation.RemoteException
+    C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/eigen-build/doc/snippets/CMakeFiles/compile_MatrixBase_template_int_int_topRightCorner_int_int.dir/./
+System.Management.Automation.RemoteException
+  has 196 characters.  The maximum full path to an object file is 250
+  characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+System.Management.Automation.RemoteException
+    compile_MatrixBase_template_int_int_topRightCorner_int_int.cpp.obj
+System.Management.Automation.RemoteException
+  cannot be safely placed under this directory.  The build may not work
+  correctly.
+System.Management.Automation.RemoteException
+System.Management.Automation.RemoteException
+CMake Warning in doc/snippets/CMakeLists.txt:
+  The object file directory
+System.Management.Automation.RemoteException
+    C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/eigen-build/doc/snippets/CMakeFiles/compile_SelfAdjointEigenSolver_SelfAdjointEigenSolver.dir/./
+System.Management.Automation.RemoteException
+  has 191 characters.  The maximum full path to an object file is 250
+  characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+System.Management.Automation.RemoteException
+    compile_SelfAdjointEigenSolver_SelfAdjointEigenSolver.cpp.obj
+System.Management.Automation.RemoteException
+  cannot be safely placed under this directory.  The build may not work
+  correctly.
+System.Management.Automation.RemoteException
+System.Management.Automation.RemoteException
+CMake Warning in doc/snippets/CMakeLists.txt:
+  The object file directory
+System.Management.Automation.RemoteException
+    C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/eigen-build/doc/snippets/CMakeFiles/compile_SelfAdjointEigenSolver_SelfAdjointEigenSolver_MatrixType.dir/./
+System.Management.Automation.RemoteException
+  has 202 characters.  The maximum full path to an object file is 250
+  characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+System.Management.Automation.RemoteException
+    compile_SelfAdjointEigenSolver_SelfAdjointEigenSolver_MatrixType.cpp.obj
+System.Management.Automation.RemoteException
+  cannot be safely placed under this directory.  The build may not work
+  correctly.
+System.Management.Automation.RemoteException
+System.Management.Automation.RemoteException
+CMake Warning in doc/snippets/CMakeLists.txt:
+  The object file directory
+System.Management.Automation.RemoteException
+    C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/eigen-build/doc/snippets/CMakeFiles/compile_SelfAdjointEigenSolver_SelfAdjointEigenSolver_MatrixType2.dir/./
+System.Management.Automation.RemoteException
+  has 203 characters.  The maximum full path to an object file is 250
+  characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+System.Management.Automation.RemoteException
+    compile_SelfAdjointEigenSolver_SelfAdjointEigenSolver_MatrixType2.cpp.obj
+System.Management.Automation.RemoteException
+  cannot be safely placed under this directory.  The build may not work
+  correctly.
+System.Management.Automation.RemoteException
+System.Management.Automation.RemoteException
+CMake Warning in doc/snippets/CMakeLists.txt:
+  The object file directory
+System.Management.Automation.RemoteException
+    C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/eigen-build/doc/snippets/CMakeFiles/compile_Tridiagonalization_Tridiagonalization_MatrixType.dir/./
+System.Management.Automation.RemoteException
+  has 194 characters.  The maximum full path to an object file is 250
+  characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+System.Management.Automation.RemoteException
+    compile_Tridiagonalization_Tridiagonalization_MatrixType.cpp.obj
+System.Management.Automation.RemoteException
+  cannot be safely placed under this directory.  The build may not work
+  correctly.
+System.Management.Automation.RemoteException
+System.Management.Automation.RemoteException
+CMake Warning in doc/snippets/CMakeLists.txt:
+  The object file directory
+System.Management.Automation.RemoteException
+    C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/eigen-build/doc/snippets/CMakeFiles/compile_Tutorial_AdvancedInitialization_CommaTemporary.dir/./
+System.Management.Automation.RemoteException
+  has 192 characters.  The maximum full path to an object file is 250
+  characters (see CMAKE_OBJECT_PATH_MAX).  Object file
+System.Management.Automation.RemoteException
+    compile_Tutorial_AdvancedInitialization_CommaTemporary.cpp.obj
+System.Management.Automation.RemoteException
+  cannot be safely placed under this directory.  The build may not work
+  correctly.
+System.Management.Automation.RemoteException
+System.Management.Automation.RemoteException
+-- Generating done (0.7s)
+-- Build files have been written to: C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/deps/eigen-build

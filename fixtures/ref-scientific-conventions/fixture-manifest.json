@@ -1,0 +1,62 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-SCIENTIFIC-CONVENTIONS-001",
+  "status": "executable",
+  "purpose": "Freeze executable SI, frame, time and passive Hamilton quaternion conventions before product math types are implemented.",
+  "authority": "scientific_authority",
+  "provenance": {
+    "source_refs": [
+      "design-notes/gnczmkn-architecture-roadmap/03-mathematics-and-numerical-foundation.md#6-单位体系",
+      "design-notes/gnczmkn-architecture-roadmap/03-mathematics-and-numerical-foundation.md#7-坐标系和-frame-体系",
+      "design-notes/gnczmkn-architecture-roadmap/03-mathematics-and-numerical-foundation.md#8-姿态与四元数约定",
+      "design-notes/gnczmkn-architecture-roadmap/03-mathematics-and-numerical-foundation.md#9-时间值与时戳",
+      "design-notes/gnczmkn-architecture-roadmap/06-simulation-kernel-time-and-lifecycle.md#5-时间模型"
+    ],
+    "notes": "ADR-0006 and ADR-0007 narrow the blueprint rules into a fixture-level profile. The bundle is independent of Simulator and legacy output layout."
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-SCI-QUATERNION",
+      "claim": "Column-vector passive transforms use Hamilton multiplication, right-order composition, exact wxyz serialization and explicitly labelled Euler conversion.",
+      "tolerance_policy": "Serialization and check identities are exact; computed rotation values use the tolerance in cases.json.",
+      "evidence_refs": ["conventions.json", "cases.json", "../../docs/quality/scientific-conventions-cross-tool-report.json"]
+    },
+    {
+      "id": "FACT-SCI-UNIT",
+      "claim": "Runtime physical values use SI and radians, with non-SI and offset conversions confined to declared boundaries.",
+      "tolerance_policy": "Converted numeric values use the tolerance in cases.json; unit identities and boundary names are exact.",
+      "evidence_refs": ["conventions.json", "cases.json"]
+    },
+    {
+      "id": "FACT-SCI-FRAME",
+      "claim": "R_to_from has one direction and point transforms differ from free-vector transforms by translation.",
+      "tolerance_policy": "Matrix/vector values use the tolerance in cases.json; frame direction and transform category are exact.",
+      "evidence_refs": ["conventions.json", "cases.json"]
+    },
+    {
+      "id": "FACT-SCI-TIME",
+      "claim": "Fixed-step logical time is derived from integer tick and five public time identities remain distinct.",
+      "tolerance_policy": "Tick identity and policy names are exact; derived seconds use the tolerance in cases.json.",
+      "evidence_refs": ["conventions.json", "cases.json"]
+    },
+    {
+      "id": "FACT-SCI-CROSS-TOOL",
+      "claim": "An isolated C++17 property implementation and a CPython-standard-library reference agree with fixture expectations.",
+      "tolerance_policy": "Every required check passes and every observation satisfies absolute plus relative tolerance.",
+      "evidence_refs": ["../../docs/quality/scientific-conventions-cross-tool-report.json"]
+    }
+  ],
+  "required_artifacts": [
+    "conventions.json",
+    "cases.json",
+    "tests/scientific_conventions.cpp",
+    "tools/scientific_conventions_reference.py",
+    "tools/validate-scientific-conventions.ps1",
+    "docs/quality/scientific-conventions-cross-tool-report.json"
+  ],
+  "acceptance": [
+    "Direction, multiplication, composition, serialization, SI, frame and time policies have executable checks",
+    "C++ and Python implementations do not import or link Legacy or Simulator",
+    "Cross-tool evidence records normalized source hashes and zero mismatches"
+  ]
+}

@@ -1,0 +1,8 @@
+﻿# stage: legacy-source-extract
+# command: Expand-Archive -LiteralPath C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\reference\legacy\legacy-source.zip -DestinationPath C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\source
+# working_directory: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07
+# started_utc: 2026-08-10T05:17:03.3743222+00:00
+# elapsed_seconds: 4.293
+# exit_code: 0
+
+completed

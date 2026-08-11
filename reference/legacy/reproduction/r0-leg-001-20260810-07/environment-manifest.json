@@ -1,0 +1,90 @@
+﻿{
+    "schema_version":  "gnczmkn.legacy-environment/1",
+    "run_id":  "r0-leg-001-20260810-07",
+    "recorded_at_utc":  "2026-08-10T05:20:46.4325589+00:00",
+    "host":  {
+                 "os":  "Microsoft Windows 11 专业版 10.0.26200",
+                 "architecture":  "X64",
+                 "cpu":  "AMD Ryzen 9 9950X 16-Core Processor",
+                 "logical_processors":  32,
+                 "powershell":  "5.1.26100.8457"
+             },
+    "source":  {
+                   "git_head":  "a63621c368aa8e7889547689bcce9c7686b886ac",
+                   "archive_sha256":  "2159a324fd897e4bd508c140a36c9165d744e4e4e61861c5b568201707f988e5",
+                   "archive_bytes":  990450,
+                   "archive_prefix":  "GNCZMKN-legacy-a63621c/",
+                   "fingerprint_before":  {
+                                              "file_count":  390,
+                                              "sha256":  "ce443a79dc491326de45f4bfcbb9332ba5d2d1fcf7b69bdabaf2bd2df002feb1",
+                                              "excluded_paths":  [
+                                                                     "user/outputs/**",
+                                                                     "test_outputs/**"
+                                                                 ]
+                                          },
+                   "fingerprint_after":  {
+                                             "file_count":  390,
+                                             "sha256":  "ce443a79dc491326de45f4bfcbb9332ba5d2d1fcf7b69bdabaf2bd2df002feb1",
+                                             "excluded_paths":  [
+                                                                    "user/outputs/**",
+                                                                    "test_outputs/**"
+                                                                ]
+                                         },
+                   "mutation_check":  "passed"
+               },
+    "dependencies":  {
+                         "w64devkit":  {
+                                           "version":  "2.9.1",
+                                           "archive_sha256":  "9208c19755cd4964b7915b9afcf02c66d493a4c870c4b3e83f6c538d9c1237a5",
+                                           "archive_bytes":  61462208,
+                                           "gcc":  "g++.exe (GCC) 16.2.0",
+                                           "cmake":  "cmake version 4.4.2",
+                                           "ninja":  "1.13.2"
+                                       },
+                         "eigen":  {
+                                       "version":  "3.4.0",
+                                       "archive_sha256":  "eba3f3d414d2f8cba2919c78ec6daab08fc71ba2ba4ae502b7e5d4d99fc02cda",
+                                       "archive_bytes":  3704940,
+                                       "config_directory":  "deps/eigen-install/share/eigen3/cmake"
+                                   }
+                     },
+    "build":  {
+                  "generator":  "Ninja",
+                  "build_type":  "Release",
+                  "cxx_standard":  17,
+                  "parallel":  4,
+                  "test_options":  {
+                                       "BUILD_TESTS":  "ON",
+                                       "GNC_BUILD_EXAMPLE_TESTS":  "ON",
+                                       "GNC_BUILD_PROJECT_TESTS":  "ON",
+                                       "GNC_BUILD_ARCHITECTURE_GUARDS":  "ON"
+                                   },
+                  "environment":  {
+                                      "PATH_prefix":  "deps/w64devkit-extracted/w64devkit/bin",
+                                      "CMAKE_GENERATOR":  null,
+                                      "CC":  null,
+                                      "CXX":  null,
+                                      "Eigen3_DIR":  "deps/eigen-install/share/eigen3/cmake"
+                                  },
+                  "artifacts":  [
+                                    {
+                                        "active_project":  "example_05_ideal_3dof_geographic_baseline",
+                                        "path":  "build-main/bin/gnc_sim.exe",
+                                        "bytes":  6039889,
+                                        "sha256":  "4611e902423fda3c41527faa9091cb01976267ede9128acc35a8182fb484035c"
+                                    },
+                                    {
+                                        "active_project":  "example_08_cavh_geographic_3dof_custom",
+                                        "path":  "build-project-example_08_cavh_geographic_3dof_custom/bin/gnc_sim.exe",
+                                        "bytes":  6346593,
+                                        "sha256":  "bae43c22a41c2108851cbbc9ad6c75c6e0dcb923046da82b6efc7153fa97588e"
+                                    },
+                                    {
+                                        "active_project":  "yyz_cartesian_6dof_framework_9",
+                                        "path":  "build-project-yyz_cartesian_6dof_framework_9/bin/gnc_sim.exe",
+                                        "bytes":  6942803,
+                                        "sha256":  "b952d60be03ecbf64c4c3c0f4e790228b4a5049d9fce2f0d3edf2f00fe40a27a"
+                                    }
+                                ]
+              }
+}

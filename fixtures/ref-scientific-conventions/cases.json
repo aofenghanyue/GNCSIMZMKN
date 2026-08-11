@@ -1,0 +1,117 @@
+{
+  "schema_version": "gnczmkn.scientific-convention-cases/1",
+  "convention_id": "SCI-CONVENTIONS-001",
+  "tolerance": {"absolute": 1e-12, "relative": 1e-12},
+  "observations": [
+    {
+      "id": "quaternion.rotate-z90-x",
+      "operation": "passive_rotate",
+      "input": {"quaternion_wxyz": [0.7071067811865476, 0.0, 0.0, 0.7071067811865476], "vector": [1.0, 0.0, 0.0]},
+      "expected": [0.0, -1.0, 0.0]
+    },
+    {
+      "id": "quaternion.rotate-x180-y",
+      "operation": "passive_rotate",
+      "input": {"quaternion_wxyz": [0.0, 1.0, 0.0, 0.0], "vector": [0.0, 1.0, 0.0]},
+      "expected": [0.0, -1.0, 0.0]
+    },
+    {
+      "id": "quaternion.compose-z90-then-x90",
+      "operation": "composition_rotate",
+      "input": {
+        "q_b_a_wxyz": [0.7071067811865476, 0.0, 0.0, 0.7071067811865476],
+        "q_c_b_wxyz": [0.7071067811865476, 0.7071067811865476, 0.0, 0.0],
+        "vector_a": [1.0, 2.0, 3.0]
+      },
+      "expected": [2.0, 3.0, 1.0]
+    },
+    {
+      "id": "quaternion.hamilton-composition-coefficients",
+      "operation": "hamilton_product",
+      "input": {
+        "lhs_wxyz": [0.7071067811865476, 0.0, 0.0, 0.7071067811865476],
+        "rhs_wxyz": [0.7071067811865476, 0.7071067811865476, 0.0, 0.0]
+      },
+      "expected": [0.5, 0.5, 0.5, 0.5]
+    },
+    {
+      "id": "quaternion.inverse-round-trip",
+      "operation": "inverse_round_trip",
+      "input": {"quaternion_wxyz": [0.7071067811865476, 0.0, 0.0, 0.7071067811865476], "vector": [2.0, -3.0, 5.0]},
+      "expected": [2.0, -3.0, 5.0]
+    },
+    {
+      "id": "quaternion.matrix-row-major-z90",
+      "operation": "passive_matrix_row_major",
+      "input": {"quaternion_wxyz": [0.7071067811865476, 0.0, 0.0, 0.7071067811865476]},
+      "expected": [0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0]
+    },
+    {
+      "id": "quaternion.serialization-wxyz",
+      "operation": "serialize_wxyz",
+      "input": {"quaternion_wxyz": [0.5, -0.5, 0.5, -0.5]},
+      "expected": [0.5, -0.5, 0.5, -0.5]
+    },
+    {
+      "id": "quaternion.body-rate-derivative",
+      "operation": "body_rate_derivative",
+      "input": {"q_i_b_wxyz": [1.0, 0.0, 0.0, 0.0], "omega_bi_b_radps": [0.0, 0.0, 2.0]},
+      "expected": [0.0, 0.0, 0.0, -1.0]
+    },
+    {
+      "id": "quaternion.euler-intrinsic-zyx-round-trip",
+      "operation": "euler_intrinsic_zyx_round_trip",
+      "input": {"yaw_z_rad": 0.7, "pitch_y_rad": -0.4, "roll_x_rad": 0.2},
+      "expected": [0.7, -0.4, 0.2]
+    },
+    {
+      "id": "units.degree-180-to-radian",
+      "operation": "unit_affine",
+      "input": {"value": 180.0, "scale": 0.017453292519943295, "offset": 0.0},
+      "expected": [3.141592653589793]
+    },
+    {
+      "id": "units.kmh-72-to-mps",
+      "operation": "unit_affine",
+      "input": {"value": 72.0, "scale": 0.2777777777777778, "offset": 0.0},
+      "expected": [20.0]
+    },
+    {
+      "id": "units.celsius-25-to-kelvin",
+      "operation": "unit_affine",
+      "input": {"value": 25.0, "scale": 1.0, "offset": 273.15},
+      "expected": [298.15]
+    },
+    {
+      "id": "frames.point-z90-with-translation",
+      "operation": "point_transform",
+      "input": {
+        "matrix_row_major": [0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+        "translation_to": [10.0, 20.0, 30.0],
+        "coordinates_from": [1.0, 2.0, 3.0]
+      },
+      "expected": [12.0, 19.0, 33.0]
+    },
+    {
+      "id": "frames.free-vector-z90",
+      "operation": "free_vector_transform",
+      "input": {
+        "matrix_row_major": [0.0, 1.0, 0.0, -1.0, 0.0, 0.0, 0.0, 0.0, 1.0],
+        "vector_from": [1.0, 2.0, 3.0]
+      },
+      "expected": [2.0, -1.0, 3.0]
+    },
+    {
+      "id": "time.large-integer-tick",
+      "operation": "tick_time",
+      "input": {"time_origin_s": 12.5, "base_dt_s": 0.125, "tick": 10000003},
+      "expected": [1250012.875]
+    },
+    {
+      "id": "time.non-grid-stop-before-after",
+      "operation": "duration_alignment",
+      "input": {"duration_s": 1.01, "base_dt_s": 0.125},
+      "expected": [1.0, 1.125]
+    }
+  ]
+}

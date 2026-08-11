@@ -4,7 +4,27 @@
   "status": "specification_only",
   "purpose": "Validate CAVH glide-range guidance at formula and kernel boundaries before closed-loop use.",
   "authority": "scientific_authority",
-  "source_refs": ["design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md#10-reference-bcavh-滑翔增程制导拆分"],
+  "provenance": {
+    "source_refs": ["design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md#10-reference-bcavh-滑翔增程制导拆分"],
+    "notes": "Paper citation, edition and independent calculation are completed by R0-SCI-004."
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-CAVH-EQ17",
+      "claim": "Eq17 intermediate quantities and final gamma reference agree with the approved independent reference.",
+      "tolerance_policy": "Quantity-specific tolerances and units to be frozen by R0-SCI-004."
+    },
+    {
+      "id": "FACT-CAVH-EQ18",
+      "claim": "Eq18 intermediate quantities and final gamma reference agree with the approved independent reference.",
+      "tolerance_policy": "Quantity-specific tolerances and units to be frozen by R0-SCI-004."
+    },
+    {
+      "id": "FACT-CAVH-DOMAIN",
+      "claim": "Domain, derivative and denominator failures are reported without an undeclared fallback.",
+      "tolerance_policy": "Exact status and fallback-disposition equality."
+    }
+  ],
   "required_artifacts": ["paper citation and version", "assumption ledger", "Eq17 cases", "Eq18 cases", "derivative reference", "glide-envelope reference", "TDCT reference", "closed-loop comparison"],
   "acceptance": ["Each intermediate quantity has units and tolerance", "Independent implementation agrees within approved bounds", "Fallback and domain failures are explicit"],
   "open_tasks": ["R0-SCI-004"]

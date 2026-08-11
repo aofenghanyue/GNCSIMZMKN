@@ -1,0 +1,274 @@
+﻿# stage: project-yyz_cartesian_6dof_framework_9-build
+# command: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\deps\w64devkit-extracted\w64devkit\bin\cmake.exe --build C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\build-project-yyz_cartesian_6dof_framework_9 --parallel 4
+# working_directory: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07
+# started_utc: 2026-08-10T05:20:15.4777008+00:00
+# elapsed_seconds: 23.026
+# exit_code: 0
+
+[0/2] Re-checking globbed directories...
+[1/4] Building CXX object CMakeFiles/gnc_sim.dir/src/runner.cpp.obj
+[2/4] Building CXX object CMakeFiles/gnc_sim.dir/src/runner_component_registration.cpp.obj
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/build-project-yyz_cartesian_6dof_framework_9/generated/auto_registered_nodes.hpp:12,
+                 from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/src/runner_component_registration.cpp:1:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/environment_wind_field.hpp: In member function 'virtual void yyz_c6::components::ConstantWindField::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/environment_wind_field.hpp:47:47: warning: unused parameter 'context' [-Wunused-parameter]
+   47 |     void update(const gnc::core::StepContext& context) override { refreshFromPerturbation(); }
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/build-project-yyz_cartesian_6dof_framework_9/generated/auto_registered_nodes.hpp:20:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/input_air_data.hpp: In member function 'virtual void yyz_c6::components::AirDataInput::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/input_air_data.hpp:48:47: warning: unused parameter 'context' [-Wunused-parameter]
+   48 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/build-project-yyz_cartesian_6dof_framework_9/generated/auto_registered_nodes.hpp:24:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/input_imu.hpp: In member function 'virtual void yyz_c6::components::ImuInput::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/input_imu.hpp:47:47: warning: unused parameter 'context' [-Wunused-parameter]
+   47 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/build-project-yyz_cartesian_6dof_framework_9/generated/auto_registered_nodes.hpp:28:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/input_satnav.hpp: In member function 'virtual void yyz_c6::components::SatelliteNavInput::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/input_satnav.hpp:47:47: warning: unused parameter 'context' [-Wunused-parameter]
+   47 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/build-project-yyz_cartesian_6dof_framework_9/generated/auto_registered_nodes.hpp:40:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/output_aerodynamics.hpp: In member function 'virtual void yyz_c6::components::AerodynamicsOutput::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/output_aerodynamics.hpp:85:47: warning: unused parameter 'context' [-Wunused-parameter]
+   85 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/build-project-yyz_cartesian_6dof_framework_9/generated/auto_registered_nodes.hpp:52:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/process_control_allocation.hpp: In member function 'virtual void yyz_c6::components::ControlAllocationProcess::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/process_control_allocation.hpp:48:47: warning: unused parameter 'context' [-Wunused-parameter]
+   48 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/build-project-yyz_cartesian_6dof_framework_9/generated/auto_registered_nodes.hpp:56:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/process_flight_control.hpp: In member function 'virtual void yyz_c6::components::FlightControlProcess::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/process_flight_control.hpp:52:47: warning: unused parameter 'context' [-Wunused-parameter]
+   52 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/build-project-yyz_cartesian_6dof_framework_9/generated/auto_registered_nodes.hpp:60:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/process_guidance.hpp: In member function 'virtual void yyz_c6::components::GuidanceProcess::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/process_guidance.hpp:65:47: warning: unused parameter 'context' [-Wunused-parameter]
+   65 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/build-project-yyz_cartesian_6dof_framework_9/generated/auto_registered_nodes.hpp:64:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/process_navigation.hpp: In member function 'virtual void yyz_c6::components::NavigationProcess::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/process_navigation.hpp:42:47: warning: unused parameter 'context' [-Wunused-parameter]
+   42 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/build-project-yyz_cartesian_6dof_framework_9/generated/auto_registered_nodes.hpp:68:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/process_onboard_state.hpp: In member function 'virtual void yyz_c6::components::OnboardStateProcess::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/process_onboard_state.hpp:47:47: warning: unused parameter 'context' [-Wunused-parameter]
+   47 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/build-project-yyz_cartesian_6dof_framework_9/generated/auto_registered_nodes.hpp:76:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/process_target_manager.hpp: In member function 'virtual void yyz_c6::components::TargetManagerProcess::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/process_target_manager.hpp:44:47: warning: unused parameter 'context' [-Wunused-parameter]
+   44 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/build-project-yyz_cartesian_6dof_framework_9/generated/auto_registered_nodes.hpp:84:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/summary_basic_metrics.hpp: In member function 'virtual void yyz_c6::components::BasicMetricsSummary::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/user/yyz_cartesian_6dof_framework_9/components/summary_basic_metrics.hpp:58:47: warning: unused parameter 'context' [-Wunused-parameter]
+   58 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:27,
+                 from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_framework_builtins.hpp:3,
+                 from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/src/runner_component_registration.cpp:3:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/interactions/cartesian_3dof/components/standard_closure.hpp: In member function 'virtual void gnc::interactions::cartesian_3dof::StandardClosure::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/interactions/cartesian_3dof/components/standard_closure.hpp:74:47: warning: unused parameter 'context' [-Wunused-parameter]
+   74 |     void update(const gnc::core::StepContext& context) override { refreshDiagnostics(nullptr); }
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:28:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/interactions/cartesian_6dof/components/standard_closure.hpp: In member function 'virtual void gnc::interactions::cartesian_6dof::StandardClosure::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/interactions/cartesian_6dof/components/standard_closure.hpp:67:47: warning: unused parameter 'context' [-Wunused-parameter]
+   67 |     void update(const gnc::core::StepContext& context) override { refreshDiagnostics(); }
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:29:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/interactions/local_spherical_3dof/components/standard_closure.hpp: In member function 'virtual void gnc::interactions::local_spherical_3dof::StandardClosure::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/interactions/local_spherical_3dof/components/standard_closure.hpp:81:47: warning: unused parameter 'context' [-Wunused-parameter]
+   81 |     void update(const gnc::core::StepContext& context) override { refreshDiagnostics(nullptr); }
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:30:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/interactions/local_spherical_6dof/components/standard_closure.hpp: In member function 'virtual void gnc::interactions::local_spherical_6dof::StandardClosure::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/interactions/local_spherical_6dof/components/standard_closure.hpp:70:47: warning: unused parameter 'context' [-Wunused-parameter]
+   70 |     void update(const gnc::core::StepContext& context) override { refreshDiagnostics(nullptr); }
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:39:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/summary/components/ideal_engagement_summary_cartesian_3dof.hpp: In member function 'virtual void gnc::summary::IdealEngagementSummaryCartesian3Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/summary/components/ideal_engagement_summary_cartesian_3dof.hpp:57:47: warning: unused parameter 'context' [-Wunused-parameter]
+   57 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:40:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/summary/components/ideal_engagement_summary_cartesian_6dof.hpp: In member function 'virtual void gnc::summary::IdealEngagementSummaryCartesian6Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/summary/components/ideal_engagement_summary_cartesian_6dof.hpp:55:47: warning: unused parameter 'context' [-Wunused-parameter]
+   55 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:41:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/summary/components/ideal_engagement_summary_3dof.hpp: In member function 'virtual void gnc::summary::IdealEngagementSummary3Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/summary/components/ideal_engagement_summary_3dof.hpp:57:47: warning: unused parameter 'context' [-Wunused-parameter]
+   57 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:42:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/summary/components/ideal_engagement_summary.hpp: In member function 'virtual void gnc::summary::IdealEngagementSummary6Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/summary/components/ideal_engagement_summary.hpp:55:47: warning: unused parameter 'context' [-Wunused-parameter]
+   55 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:43:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_cartesian_air_data_3dof.hpp: In member function 'virtual void gnc::vehicle::input::IdealCartesianAirData3Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_cartesian_air_data_3dof.hpp:42:47: warning: unused parameter 'context' [-Wunused-parameter]
+   42 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:44:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_cartesian_air_data_6dof.hpp: In member function 'virtual void gnc::vehicle::input::IdealCartesianAirData6Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_cartesian_air_data_6dof.hpp:42:47: warning: unused parameter 'context' [-Wunused-parameter]
+   42 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:45:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_cartesian_imu_3dof.hpp: In member function 'virtual void gnc::vehicle::input::IdealCartesianImu3Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_cartesian_imu_3dof.hpp:36:47: warning: unused parameter 'context' [-Wunused-parameter]
+   36 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:46:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_cartesian_imu_6dof.hpp: In member function 'virtual void gnc::vehicle::input::IdealCartesianImu6Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_cartesian_imu_6dof.hpp:33:47: warning: unused parameter 'context' [-Wunused-parameter]
+   33 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:47:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_cartesian_satellite_nav_3dof.hpp: In member function 'virtual void gnc::vehicle::input::IdealCartesianSatelliteNav3Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_cartesian_satellite_nav_3dof.hpp:38:47: warning: unused parameter 'context' [-Wunused-parameter]
+   38 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:48:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_cartesian_satellite_nav_6dof.hpp: In member function 'virtual void gnc::vehicle::input::IdealCartesianSatelliteNav6Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_cartesian_satellite_nav_6dof.hpp:35:47: warning: unused parameter 'context' [-Wunused-parameter]
+   35 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:49:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_cartesian_seeker_3dof.hpp: In member function 'virtual void gnc::vehicle::input::IdealCartesianSeeker3Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_cartesian_seeker_3dof.hpp:39:47: warning: unused parameter 'context' [-Wunused-parameter]
+   39 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:50:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_cartesian_seeker_6dof.hpp: In member function 'virtual void gnc::vehicle::input::IdealCartesianSeeker6Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_cartesian_seeker_6dof.hpp:39:47: warning: unused parameter 'context' [-Wunused-parameter]
+   39 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:51:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_air_data_3dof.hpp: In member function 'virtual void gnc::vehicle::input::IdealAirData3Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_air_data_3dof.hpp:41:47: warning: unused parameter 'context' [-Wunused-parameter]
+   41 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:52:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_air_data_6dof.hpp: In member function 'virtual void gnc::vehicle::input::IdealAirData6Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_air_data_6dof.hpp:41:47: warning: unused parameter 'context' [-Wunused-parameter]
+   41 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:53:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_imu_3dof.hpp: In member function 'virtual void gnc::vehicle::input::IdealImu3Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_imu_3dof.hpp:33:47: warning: unused parameter 'context' [-Wunused-parameter]
+   33 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:54:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_imu_6dof.hpp: In member function 'virtual void gnc::vehicle::input::IdealImu6Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_imu_6dof.hpp:33:47: warning: unused parameter 'context' [-Wunused-parameter]
+   33 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:55:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_satellite_nav_3dof.hpp: In member function 'virtual void gnc::vehicle::input::IdealSatelliteNav3Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_satellite_nav_3dof.hpp:33:47: warning: unused parameter 'context' [-Wunused-parameter]
+   33 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:56:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_satellite_nav_6dof.hpp: In member function 'virtual void gnc::vehicle::input::IdealSatelliteNav6Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_satellite_nav_6dof.hpp:33:47: warning: unused parameter 'context' [-Wunused-parameter]
+   33 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:57:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_seeker_3dof.hpp: In member function 'virtual void gnc::vehicle::input::IdealSeeker3Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_seeker_3dof.hpp:38:47: warning: unused parameter 'context' [-Wunused-parameter]
+   38 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:58:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_seeker_6dof.hpp: In member function 'virtual void gnc::vehicle::input::IdealSeeker6Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/input/components/ideal_seeker_6dof.hpp:40:47: warning: unused parameter 'context' [-Wunused-parameter]
+   40 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:71:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_control_allocation_3dof.hpp: In member function 'virtual void gnc::vehicle::process::IdealControlAllocation3Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_control_allocation_3dof.hpp:37:47: warning: unused parameter 'context' [-Wunused-parameter]
+   37 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:72:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_flight_control_3dof.hpp: In member function 'virtual void gnc::vehicle::process::IdealFlightControl3Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_flight_control_3dof.hpp:33:47: warning: unused parameter 'context' [-Wunused-parameter]
+   33 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:73:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_guidance_3dof.hpp: In member function 'virtual void gnc::vehicle::process::IdealGuidance3Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_guidance_3dof.hpp:38:47: warning: unused parameter 'context' [-Wunused-parameter]
+   38 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:74:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_navigation_3dof.hpp: In member function 'virtual void gnc::vehicle::process::IdealNavigation3Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_navigation_3dof.hpp:38:47: warning: unused parameter 'context' [-Wunused-parameter]
+   38 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:76:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_target_tracking_3dof.hpp: In member function 'virtual void gnc::vehicle::process::IdealTargetTracking3Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_target_tracking_3dof.hpp:35:47: warning: unused parameter 'context' [-Wunused-parameter]
+   35 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:77:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_trajectory_planner_3dof.hpp: In member function 'virtual void gnc::vehicle::process::IdealTrajectoryPlanner3Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_trajectory_planner_3dof.hpp:35:47: warning: unused parameter 'context' [-Wunused-parameter]
+   35 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:78:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_attitude_control_6dof.hpp: In member function 'virtual void gnc::vehicle::process::IdealAttitudeControl6Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_attitude_control_6dof.hpp:34:47: warning: unused parameter 'context' [-Wunused-parameter]
+   34 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:79:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_control_allocation_6dof.hpp: In member function 'virtual void gnc::vehicle::process::IdealControlAllocation6Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_control_allocation_6dof.hpp:36:47: warning: unused parameter 'context' [-Wunused-parameter]
+   36 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:80:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_guidance_6dof.hpp: In member function 'virtual void gnc::vehicle::process::IdealGuidance6Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_guidance_6dof.hpp:33:47: warning: unused parameter 'context' [-Wunused-parameter]
+   33 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:81:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_navigation_6dof.hpp: In member function 'virtual void gnc::vehicle::process::IdealNavigation6Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_navigation_6dof.hpp:38:47: warning: unused parameter 'context' [-Wunused-parameter]
+   38 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:83:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_target_tracking_6dof.hpp: In member function 'virtual void gnc::vehicle::process::IdealTargetTracking6Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_target_tracking_6dof.hpp:34:47: warning: unused parameter 'context' [-Wunused-parameter]
+   34 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:84:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_trajectory_planner_6dof.hpp: In member function 'virtual void gnc::vehicle::process::IdealTrajectoryPlanner6Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/process/components/ideal_trajectory_planner_6dof.hpp:34:47: warning: unused parameter 'context' [-Wunused-parameter]
+   34 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:101:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/output/components/ideal_actuator_3dof.hpp: In member function 'virtual void gnc::vehicle::output::IdealActuator3Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/output/components/ideal_actuator_3dof.hpp:35:47: warning: unused parameter 'context' [-Wunused-parameter]
+   35 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:102:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/output/components/ideal_actuator_6dof.hpp: In member function 'virtual void gnc::vehicle::output::IdealActuator6Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/output/components/ideal_actuator_6dof.hpp:33:47: warning: unused parameter 'context' [-Wunused-parameter]
+   33 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:103:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/output/components/zero_aerodynamics_3dof.hpp: In member function 'virtual void gnc::vehicle::output::ZeroAerodynamics3Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/output/components/zero_aerodynamics_3dof.hpp:42:47: warning: unused parameter 'context' [-Wunused-parameter]
+   42 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+In file included from C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/bootstrap/register_builtin_packages.hpp:104:
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/output/components/zero_aerodynamics_6dof.hpp: In member function 'virtual void gnc::vehicle::output::ZeroAerodynamics6Dof::update(const gnc::core::StepContext&)':
+C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/source/GNCZMKN-legacy-a63621c/framework/include/gnc/vehicle/output/components/zero_aerodynamics_6dof.hpp:37:47: warning: unused parameter 'context' [-Wunused-parameter]
+   37 |     void update(const gnc::core::StepContext& context) override {
+      |                 ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~^~~~~~~
+[3/4] Linking CXX executable bin\gnc_sim.exe

@@ -1,0 +1,28 @@
+{
+  "schema_version": "gnczmkn.legacy-compatibility-gap/1",
+  "attempt_id": "attempt-msvc-001",
+  "source_git_head": "a63621c368aa8e7889547689bcce9c7686b886ac",
+  "source_archive_sha256": "2159a324fd897e4bd508c140a36c9165d744e4e4e61861c5b568201707f988e5",
+  "status": "documented_gap",
+  "environment": {
+    "compiler": "Microsoft C/C++ 19.50.35725 for x64",
+    "toolset_directory": "MSVC 14.50.35717",
+    "cmake": "4.1.2-msvc8",
+    "generator": "Ninja 1.12.1",
+    "eigen": "3.4.0",
+    "build_type": "Release"
+  },
+  "results": {
+    "configure_exit_code": 0,
+    "build_exit_code": 1,
+    "failure_target": "test_cavh_glide_range_guidance",
+    "failure_file": "tests/test_cavh_glide_range_guidance.cpp",
+    "failure_lines": [423, 424, 425, 427, 434, 435],
+    "diagnostic_codes": ["C3493", "C2064", "C2737"],
+    "category": "compiler_compatibility"
+  },
+  "interpretation": "MSVC rejected references from a captureless lambda to enclosing local constexpr values. The frozen source was not patched; the controlled reproduction uses the legacy MinGW family and passes all tests.",
+  "source_mutation": "none",
+  "evidence_log": "reference/legacy/reproduction/attempt-msvc-001/logs/msvc-compatibility.log",
+  "evidence_log_sha256": "d4ae66c86059c95836925e5e347326b8c797143919f94d88e8128a51507bf68c"
+}

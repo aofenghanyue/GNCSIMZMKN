@@ -1,0 +1,5 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-STRICT-001",
+  "fixture_id": "REF-STRICT-002"
+}

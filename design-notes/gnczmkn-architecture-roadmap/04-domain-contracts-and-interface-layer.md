@@ -490,6 +490,8 @@ RunResourceOpenHook 返回的 lease 始终由 Lifecycle Coordinator 拥有。正
 
 ### 10.2 Execution obligations
 
+封闭枚举 `ExecutionObligation = PublishProjection | BoundaryEvaluation | IntervalEvolution | DerivativeEvaluation | SourceFreeze | PostCommitEffect | ResourceLease` 是跨 package、Compiler 与 Session 的唯一 obligation 分类。下表定义每个成员的输入与权威输出。
+
 | Obligation | 输入 | 输出/效果 |
 | --- | --- | --- |
 | PublishProjection | PublishContext + committed state view | 纯投影只读发布视图 |

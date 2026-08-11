@@ -1,0 +1,72 @@
+﻿# stage: legacy-ctest-all
+# command: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\deps\w64devkit-extracted\w64devkit\bin\ctest.exe --test-dir C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\build-main --output-on-failure
+# working_directory: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07
+# started_utc: 2026-08-10T05:19:49.8072362+00:00
+# elapsed_seconds: 2.197
+# exit_code: 0
+
+Test project C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/build-main
+      Start  1: test_coordinate_tree_builder
+ 1/27 Test  #1: test_coordinate_tree_builder ........   Passed    0.07 sec
+      Start  2: test_coordinate_tree_node
+ 2/27 Test  #2: test_coordinate_tree_node ...........   Passed    0.06 sec
+      Start  3: test_environment_packages
+ 3/27 Test  #3: test_environment_packages ...........   Passed    0.06 sec
+      Start  4: test_form_slices
+ 4/27 Test  #4: test_form_slices ....................   Passed    0.06 sec
+      Start  5: test_local_spherical_6dof_form
+ 5/27 Test  #5: test_local_spherical_6dof_form ......   Passed    0.06 sec
+      Start  6: test_form_extension_contract
+ 6/27 Test  #6: test_form_extension_contract ........   Passed    0.07 sec
+      Start  7: test_component_listing
+ 7/27 Test  #7: test_component_listing ..............   Passed    0.06 sec
+      Start  8: test_mission_contract
+ 8/27 Test  #8: test_mission_contract ...............   Passed    0.07 sec
+      Start  9: test_perturbation_contract
+ 9/27 Test  #9: test_perturbation_contract ..........   Passed    0.06 sec
+      Start 10: test_continuous_group
+10/27 Test #10: test_continuous_group ...............   Passed    0.06 sec
+      Start 11: test_publish_semantics
+11/27 Test #11: test_publish_semantics ..............   Passed    0.07 sec
+      Start 12: test_strict_config
+12/27 Test #12: test_strict_config ..................   Passed    0.07 sec
+      Start 13: test_auto_data_logger
+13/27 Test #13: test_auto_data_logger ...............   Passed    0.07 sec
+      Start 14: test_config_preprocessor
+14/27 Test #14: test_config_preprocessor ............   Passed    0.08 sec
+      Start 15: test_preparation_pipeline
+15/27 Test #15: test_preparation_pipeline ...........   Passed    0.07 sec
+      Start 16: test_parser_facade
+16/27 Test #16: test_parser_facade ..................   Passed    0.07 sec
+      Start 17: test_simflow_materializer
+17/27 Test #17: test_simflow_materializer ...........   Passed    0.07 sec
+      Start 18: test_simflow_runner
+18/27 Test #18: test_simflow_runner .................   Passed    0.23 sec
+      Start 19: test_ideal_3dof_mission
+19/27 Test #19: test_ideal_3dof_mission .............   Passed    0.06 sec
+      Start 20: test_ideal_cartesian_3dof_mission
+20/27 Test #20: test_ideal_cartesian_3dof_mission ...   Passed    0.07 sec
+      Start 21: test_ideal_cartesian_6dof_mission
+21/27 Test #21: test_ideal_cartesian_6dof_mission ...   Passed    0.07 sec
+      Start 22: test_ideal_6dof_components
+22/27 Test #22: test_ideal_6dof_components ..........   Passed    0.07 sec
+      Start 23: test_ideal_6dof_process
+23/27 Test #23: test_ideal_6dof_process .............   Passed    0.07 sec
+      Start 24: test_ideal_6dof_mission
+24/27 Test #24: test_ideal_6dof_mission .............   Passed    0.07 sec
+      Start 25: test_cavh_programmed_aoa_guidance
+25/27 Test #25: test_cavh_programmed_aoa_guidance ...   Passed    0.06 sec
+      Start 26: test_cavh_glide_range_guidance
+26/27 Test #26: test_cavh_glide_range_guidance ......   Passed    0.07 sec
+      Start 27: test_architecture_guards
+27/27 Test #27: test_architecture_guards ............   Passed    0.21 sec
+
+100% tests passed out of 27
+
+Label Time Summary:
+architecture-guard    =   0.21 sec*proc (1 test)
+core                  =   1.36 sec*proc (18 tests)
+example               =   0.40 sec*proc (6 tests)
+project               =   0.13 sec*proc (2 tests)
+
+Total Test time (real) =   2.12 sec

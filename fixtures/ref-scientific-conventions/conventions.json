@@ -1,0 +1,130 @@
+{
+  "schema_version": "gnczmkn.scientific-conventions/1",
+  "convention_id": "SCI-CONVENTIONS-001",
+  "maturity": "fixture",
+  "authority": "scientific_authority",
+  "normative_refs": [
+    "docs/adr/0006-si-frame-and-simulation-time-conventions.md",
+    "docs/adr/0007-passive-hamilton-quaternion-convention.md",
+    "design-notes/gnczmkn-architecture-roadmap/03-mathematics-and-numerical-foundation.md#6-单位体系",
+    "design-notes/gnczmkn-architecture-roadmap/03-mathematics-and-numerical-foundation.md#8-姿态与四元数约定",
+    "design-notes/gnczmkn-architecture-roadmap/06-simulation-kernel-time-and-lifecycle.md#5-时间模型"
+  ],
+  "units": {
+    "runtime_system": "SI",
+    "angle_unit": "rad",
+    "canonical": [
+      {"quantity": "length_position", "unit": "m"},
+      {"quantity": "time_duration", "unit": "s"},
+      {"quantity": "mass", "unit": "kg"},
+      {"quantity": "angle", "unit": "rad"},
+      {"quantity": "velocity", "unit": "m/s"},
+      {"quantity": "acceleration", "unit": "m/s^2"},
+      {"quantity": "angular_velocity", "unit": "rad/s"},
+      {"quantity": "force", "unit": "N"},
+      {"quantity": "moment", "unit": "N*m"},
+      {"quantity": "pressure", "unit": "Pa"},
+      {"quantity": "temperature", "unit": "K"}
+    ],
+    "conversion_boundaries": ["ConfigAdapter", "ToolAdapter", "ArtifactAdapter", "DomainConverter"],
+    "offset_units_require_explicit_rule": true,
+    "hot_path_unit_guessing_allowed": false,
+    "domain_policy": {
+      "finite_input_required": true,
+      "absolute_zero_kelvin": 0.0,
+      "below_absolute_zero_disposition": "DomainError",
+      "unknown_unit_disposition": "DomainError"
+    }
+  },
+  "frames": {
+    "vector_layout": "column",
+    "transform_notation": "R_to_from",
+    "coordinate_equation": "v_to = R_to_from * v_from",
+    "frame_id_examples": ["frame.inertial.j2000@1", "frame.earth.ecef@1", "frame.local.nue@1", "frame.vehicle.body@1", "frame.vehicle.wind@1"],
+    "domain_vector_metadata": ["geometry_kind", "expressed_in_frame", "reference_frame", "physical_semantic", "unit", "sample_time", "valid_time"],
+    "point_transform": "rotation_and_translation",
+    "free_vector_transform": "rotation_only",
+    "velocity_transform_requires_kinematics": true,
+    "transform_query_requires_time": true
+  },
+  "quaternion": {
+    "notation": "q_to_from",
+    "semantic": "passive_coordinate_transform",
+    "vector_equation": "v_to = inverse(q_to_from) * pure(v_from) * q_to_from",
+    "algebra": "Hamilton",
+    "storage_order": ["w", "x", "y", "z"],
+    "matrix_composition": "R_c_a = R_c_b * R_b_a",
+    "quaternion_composition": "q_c_a = q_b_a * q_c_b",
+    "zero_norm_disposition": "DomainError",
+    "input_policy": {
+      "coefficient_count": 4,
+      "finite_coefficients_required": true,
+      "non_unit_requires_explicit_policy": true,
+      "supported_normalization_policies": ["Error", "NormalizeWithFlag"],
+      "normalization_correction_flag": "normalized"
+    },
+    "sign_equivalence": true,
+    "euler_metadata_required": ["sequence", "intrinsic_or_extrinsic", "angle_unit", "canonical_range", "singular_interval"],
+    "euler_verification_profile": {
+      "name": "intrinsic_ZYX_yaw_pitch_roll",
+      "runtime_default": false,
+      "sequence": "ZYX",
+      "intrinsic_or_extrinsic": "intrinsic",
+      "component_order": ["yaw_z", "pitch_y", "roll_x"],
+      "angle_unit": "rad",
+      "canonical_ranges": ["yaw_z:[-pi,pi)", "pitch_y:[-pi/2,pi/2]", "roll_x:[-pi,pi)"],
+      "singular_when": "abs(cos(pitch_y)) <= policy_tolerance",
+      "passive_mapping": "q_I_B = inverse(q_z(yaw_z) * q_y(pitch_y) * q_x(roll_x))"
+    },
+    "body_rate_derivative": "q_dot_I_B = -0.5 * pure(omega_BI_B) * q_I_B",
+    "inertial_rate_derivative": "q_dot_I_B = -0.5 * q_I_B * pure(omega_BI_I)"
+  },
+  "time": {
+    "public_types": ["SimulationTime", "Duration", "SampleTime", "ValidTime", "WallTime"],
+    "domain_policy": {
+      "finite_seconds_required": true,
+      "clock_domain_required_for": ["SimulationTime", "SampleTime", "ValidTime"],
+      "cross_clock_arithmetic_disposition": "DomainError",
+      "valid_interval_semantics": "half_open_[valid_from,valid_until)",
+      "reversed_interval_disposition": "DomainError"
+    },
+    "canonical_duration_unit": "s",
+    "fixed_step_authority": "integer_tick",
+    "fixed_step_equation": "t_k = time_origin + tick * base_dt",
+    "repeated_floating_addition_allowed": false,
+    "duration_alignment_supported_v1": ["ExactGrid", "StopBefore", "StopAfter"],
+    "duration_alignment_default": "ExactGrid",
+    "final_partial_step_v1": "unsupported"
+  },
+  "verification": {
+    "absolute_tolerance": 1e-12,
+    "relative_tolerance": 1e-12,
+    "random_rotation_samples": 256,
+    "independent_reference": "CPython standard library only",
+    "required_check_ids": [
+      "quaternion.direction",
+      "quaternion.hamilton-product",
+      "quaternion.composition",
+      "quaternion.inverse",
+      "quaternion.matrix-equivalence",
+      "quaternion.orthogonality",
+      "quaternion.determinant",
+      "quaternion.sign-equivalence",
+      "quaternion.serialization-wxyz",
+      "quaternion.zero-norm-domain-error",
+      "quaternion.coefficient-validation",
+      "quaternion.normalization-policy",
+      "quaternion.body-rate-derivative",
+      "quaternion.euler-round-trip",
+      "quaternion.euler-singularity",
+      "units.si-boundary",
+      "units.domain-validation",
+      "frames.point-versus-free-vector",
+      "time.integer-tick",
+      "time.duration-alignment",
+      "time.type-separation",
+      "time.clock-domain",
+      "time.validity-interval"
+    ]
+  }
+}

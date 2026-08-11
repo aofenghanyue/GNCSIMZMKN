@@ -4,7 +4,22 @@
   "status": "specification_only",
   "purpose": "Provide an analytic or independently computed fixed-step dynamics reference.",
   "authority": "scientific_authority",
-  "source_refs": ["design-notes/gnczmkn-architecture-roadmap/11-roadmap-overview.md#53-退出门-g1科学-oracle-可用"],
+  "provenance": {
+    "source_refs": ["design-notes/gnczmkn-architecture-roadmap/11-roadmap-overview.md#53-退出门-g1科学-oracle-可用"],
+    "notes": "The analytic or independent reference source is selected by R0-SCI-002."
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-3DOF-TRAJECTORY",
+      "claim": "The fixed-step trajectory agrees with an analytic or independently computed reference.",
+      "tolerance_policy": "State-specific absolute and relative tolerances to be frozen by R0-SCI-002."
+    },
+    {
+      "id": "FACT-3DOF-FAILURE",
+      "claim": "A declared numerical failure case terminates with no unreported candidate state.",
+      "tolerance_policy": "Exact status, tick and committed-state identity."
+    }
+  ],
   "required_artifacts": ["mission source", "initial state", "analytic or independent trajectory", "termination facts", "dt convergence report", "tolerance policy"],
   "acceptance": ["Independent of legacy class names and output column ordering", "Covers normal and numerical failure paths"],
   "open_tasks": ["R0-SCI-002"]

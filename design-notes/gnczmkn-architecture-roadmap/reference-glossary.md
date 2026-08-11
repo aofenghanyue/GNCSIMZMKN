@@ -43,7 +43,7 @@
 | 唯一名称 | 状态 | 定义 | 权威 |
 | --- | --- | --- | --- |
 | `ResearchWorkbench`（研究工作台） | Stable | 覆盖问题定义、模型供给、编译、执行、分析、论证和报告的整体产品 | 00 |
-| `AuthorityDomain` | Stable | Design/Plan、Model、Operation、Artifact 四类权威提交边界 | 02 |
+| `AuthorityDomain` | Stable | `Design/Plan \| Model \| Operation \| Artifact` 四类权威提交边界 | 02 |
 | `StateOwner` | Stable | 对一份可变模型事实拥有唯一写入与提交责任的对象 | 02、12、14 |
 | `DecisionAuthority` | V1 | 对导航源、飞行阶段、构型等共享选择拥有唯一决策责任的窄 owner | 13 |
 | `PermissionGrant` | V1 | 允许 actor 对明确资源执行明确操作的授权凭证 | 10 |
@@ -52,7 +52,7 @@
 | `ChangeCard` | V1 | A–E 类普通变化使用的简化评审记录，包含 owner、接缝、非零维度、稳定区和证据 | README、02 |
 | `KernelCapability` | Stable | Model Authority 现有算子无法表达的新通用时间、原子性、rollback 或 effect 语义 | 02 |
 | `BackendCapability` | V1 | 执行后端声明的线程、设备、deadline、rollback、transport 等能力 | 02、10 |
-| `CapabilityStatus` | V1 | `V1 \| Stable \| PressureOnly \| Deferred \| Legacy` 的交付状态 | README、11 |
+| `CapabilityStatus` | V1 | `Stable \| V1 \| PressureOnly \| Deferred \| Legacy` 的交付状态 | README、11 |
 | `PlanFirewall` | Stable | 作者输入与 executor 之间只能通过已编译计划交接 | 00、02、05 |
 | `CommitFirewall` | Stable | 每个 owner 只能通过本域事务提交权威事实 | 00、02、06、14 |
 | `ArtifactControlFirewall` | Stable | 执行路径只通过 typed command、receipt、Outcome、Observation 与 ArtifactRef 连接 | 00、02、08–10 |
@@ -194,7 +194,7 @@
 | `ClosureStrategy` | V1 | `FrozenInterval \| CandidateState \| AlgebraicSolve` 三种连续闭合策略 | 14 |
 | `ClosurePlan` | V1 | Compiler 对 ClosureDescriptor、link 和 strategy 的已解析调用计划 | 05、14 |
 | `NumericalPolicy` | V1 | 容差、迭代上限、外推、非有限值、确定性等数值选择 | 03 |
-| `NumericalStatus` | V1 | Ok/Converged、DomainError、NoPhysicalSolution、NotConverged、NonFinite、InternalFailure 等数值结果分类 | 03 |
+| `NumericalStatus` | V1 | `Success \| Converged \| Approximate \| OutOfRange \| Extrapolated \| NoBracket \| MaxIterations \| Singular \| IllConditioned \| DomainError \| NonFiniteInput \| NonFiniteIntermediate \| NonFiniteOutput \| StepUnderflow \| ToleranceUnreachable \| Cancelled \| InternalFailure` 数值结果分类 | 03 |
 | `NumericalOutcome` | V1 | 数值算法统一返回的 status、value、residual、iteration、flags 和 diagnostics facts | 03 |
 | `RootProblem` | V1 | 求根问题的函数、导数、区间/初值、scale 和 policy 定义 | 03 |
 | `QueryResult` | V1 | 纯查询返回的 value、domain status、quality、gradient 和 telemetry | 03、12 |

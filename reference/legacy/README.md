@@ -9,6 +9,7 @@
 - `source-manifest.json`：来源、commit、范围和测试状态。
 - `source-index.md`：蓝图引用的关键源码与测试索引。
 - `baseline-test-report.md`：导入时的测试事实。
+- `reproduction/`：R0 干净构建、测试、代表任务、输出哈希和工具链兼容性证据。
 
 ## 校验与解包
 
@@ -18,6 +19,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/extract-legacy-referen
 ```
 
 解包内容进入 `reference/legacy/extracted/`，该目录已被忽略。不得把解包目录加入 CMake、include path 或运行时资源搜索路径。
+
+完整受控复现、固定依赖哈希与结果见 [reproduction/README.md](reproduction/README.md)。常规仓库检查只验证已晋升证据；耗时的 Legacy 全量构建需要显式运行 `tools/reproduce-legacy.ps1`。
 
 ## 使用规则
 

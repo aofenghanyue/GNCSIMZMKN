@@ -1,0 +1,257 @@
+{
+  "schema_version": "gnczmkn.provenance-inventory/1",
+  "maturity": "governance-evidence-no-runtime-consumer",
+  "task_id": "R0-GOV-002",
+  "reviewed_on": "2026-08-10",
+  "policy": {
+    "id": "GNC-LIC-PROV-001",
+    "status": "proposed",
+    "adr": "docs/adr/0008-internal-default-license-and-provenance-gate.md",
+    "document": "docs/governance/license-and-provenance-policy.md",
+    "decision_owners": ["product_owner", "architecture_lead"]
+  },
+  "repository_license": {
+    "selected": false,
+    "detected_expression": "NONE",
+    "concluded_expression": "NOASSERTION",
+    "external_distribution": "blocked-pending-accepted-adr",
+    "status_path": "LICENSE-STATUS.md",
+    "origin_remote": "https://github.com/aofenghanyue/GNCSIMZMKN.git",
+    "visibility_note": "Existing remote availability is not treated as a repository license grant."
+  },
+  "vocabulary": {
+    "scan_results": [
+      "no-license-information-found",
+      "license-information-present",
+      "not-scanned-nonredistributed-tool"
+    ],
+    "repository_presence": ["tracked", "embedded-archive", "external-untracked"],
+    "internal_handling": ["existing-access-only", "evidence-only", "subject-to-upstream-terms"],
+    "external_distribution": [
+      "blocked-pending-accepted-adr",
+      "blocked-pending-item-review",
+      "not-redistributed"
+    ]
+  },
+  "items": [
+    {
+      "id": "repository-default-content",
+      "category": "repository-governed-content",
+      "scope": {
+        "mode": "repository-default",
+        "include": ["all tracked files"],
+        "exclude": [
+          "design-notes/**",
+          "fixtures/**",
+          "oracles/**",
+          "docs/quality/*.json",
+          "reference/legacy/**"
+        ]
+      },
+      "owner_role": "product_owner",
+      "purpose": "Greenfield framework source, tests, tools, governance and repository documentation",
+      "source_refs": ["https://github.com/aofenghanyue/GNCSIMZMKN", "LICENSE-STATUS.md"],
+      "version": "git-commit-governed",
+      "integrity": {"kind": "per-file-git-object", "value": "resolved by reviewed commit"},
+      "repository_presence": "tracked",
+      "internal_handling": "existing-access-only",
+      "external_distribution": "blocked-pending-accepted-adr",
+      "classification": "internal-research",
+      "license": {
+        "scan_result": "no-license-information-found",
+        "detected_expression": "NONE",
+        "concluded_expression": "NOASSERTION",
+        "evidence_refs": ["LICENSE-STATUS.md"],
+        "scope_note": "No repository distribution license file is tracked.",
+        "follow_up": "Confirm ownership and contributor rights, then select a repository license through an accepted ADR."
+      },
+      "lineage_parents": []
+    },
+    {
+      "id": "architecture-blueprint",
+      "category": "imported-design-source",
+      "scope": {"mode": "path-globs", "include": ["design-notes/gnczmkn-architecture-roadmap/**"], "exclude": []},
+      "owner_role": "architecture_lead",
+      "purpose": "Team-facing target architecture and roadmap authority",
+      "source_refs": ["reference/legacy/source-manifest.json", "design-notes/gnczmkn-architecture-roadmap/README.md"],
+      "version": "legacy-head-a63621c-plus-recorded-working-tree-blueprint",
+      "integrity": {"kind": "per-file-git-object", "value": "resolved by reviewed commit"},
+      "repository_presence": "tracked",
+      "internal_handling": "existing-access-only",
+      "external_distribution": "blocked-pending-accepted-adr",
+      "classification": "internal-research",
+      "license": {
+        "scan_result": "no-license-information-found",
+        "detected_expression": "NONE",
+        "concluded_expression": "NOASSERTION",
+        "evidence_refs": ["reference/legacy/source-manifest.json", "LICENSE-STATUS.md"],
+        "scope_note": "The source manifest records working-tree blueprint changes that are not fully represented by the frozen archive; ownership and distribution permission are not concluded.",
+        "follow_up": "Identify authors/owners and confirm that the project may license the blueprint."
+      },
+      "lineage_parents": []
+    },
+    {
+      "id": "r0-research-evidence",
+      "category": "fixture-oracle-and-generated-evidence",
+      "scope": {
+        "mode": "path-globs",
+        "include": ["fixtures/**", "oracles/**", "docs/quality/*.json", "reference/legacy/reproduction/**"],
+        "exclude": []
+      },
+      "owner_role": "evidence_workflow_lead",
+      "purpose": "R0 executable references, conformance reports and reproduction evidence",
+      "source_refs": ["fixtures/README.md", "oracles/oracle-manifest.json", "reference/legacy/reproduction/current.json"],
+      "version": "r0-reviewed-commit",
+      "integrity": {"kind": "manifest-and-per-file-sha256", "value": "resolved by fixture/evidence indices"},
+      "repository_presence": "tracked",
+      "internal_handling": "existing-access-only",
+      "external_distribution": "blocked-pending-accepted-adr",
+      "classification": "internal-research",
+      "license": {
+        "scan_result": "no-license-information-found",
+        "detected_expression": "NONE",
+        "concluded_expression": "NOASSERTION",
+        "evidence_refs": ["LICENSE-STATUS.md", "docs/quality/provenance-review-checklist.md"],
+        "scope_note": "Generated evidence inherits every source, data, archive and tool restriction in its lineage.",
+        "follow_up": "Resolve parent rights and create an export manifest before any external sharing."
+      },
+      "lineage_parents": ["repository-default-content", "architecture-blueprint", "legacy-source-archive", "eigen-3.4.0-legacy-reproduction", "w64devkit-2.9.1-legacy-reproduction", "host-validation-toolchain"]
+    },
+    {
+      "id": "legacy-source-archive",
+      "category": "frozen-reference-archive",
+      "scope": {"mode": "exact-paths", "include": ["reference/legacy/legacy-source.zip"], "exclude": []},
+      "owner_role": "architecture_lead",
+      "purpose": "Read-only behavioral and architecture evidence",
+      "source_refs": ["reference/legacy/source-manifest.json"],
+      "version": "git-a63621c368aa8e7889547689bcce9c7686b886ac",
+      "integrity": {
+        "kind": "sha256-zip-audit",
+        "sha256": "2159a324fd897e4bd508c140a36c9165d744e4e4e61861c5b568201707f988e5",
+        "bytes": 990450,
+        "zip_entries": 510,
+        "file_entries": 391,
+        "directory_entries": 119,
+        "uncompressed_file_bytes": 2708191,
+        "license_named_entries": 0,
+        "license_text_signal_entries": 0
+      },
+      "repository_presence": "embedded-archive",
+      "internal_handling": "evidence-only",
+      "external_distribution": "blocked-pending-item-review",
+      "classification": "internal-research",
+      "license": {
+        "scan_result": "no-license-information-found",
+        "detected_expression": "NONE",
+        "concluded_expression": "NOASSERTION",
+        "evidence_refs": ["reference/legacy/source-manifest.json", "reference/legacy/legacy-source.sha256"],
+        "scope_note": "The scan found no license-named entry or strong standard license/copyright text signal; absence is not permission.",
+        "follow_up": "Obtain ownership and license evidence from the source owner before copying or redistributing any entry."
+      },
+      "lineage_parents": []
+    },
+    {
+      "id": "eigen-3.4.0-legacy-reproduction",
+      "category": "external-build-dependency",
+      "scope": {"mode": "external-artifact", "include": ["eigen-3.4.0.zip"], "exclude": []},
+      "owner_role": "architecture_lead",
+      "purpose": "Header-only dependency used only in the isolated Legacy reproduction workspace",
+      "source_refs": [
+        "https://gitlab.com/libeigen/eigen/-/releases/3.4.0",
+        "https://gitlab.com/libeigen/eigen/-/raw/3.4.0/COPYING.README",
+        "reference/legacy/reproduction/current.json"
+      ],
+      "version": "3.4.0",
+      "integrity": {"kind": "sha256", "sha256": "eba3f3d414d2f8cba2919c78ec6daab08fc71ba2ba4ae502b7e5d4d99fc02cda", "bytes": 3704940},
+      "repository_presence": "external-untracked",
+      "internal_handling": "subject-to-upstream-terms",
+      "external_distribution": "not-redistributed",
+      "classification": "external-dependency",
+      "license": {
+        "scan_result": "license-information-present",
+        "detected_expression": "NOASSERTION",
+        "concluded_expression": "NOASSERTION",
+        "evidence_refs": ["https://gitlab.com/libeigen/eigen/-/raw/3.4.0/COPYING.README"],
+        "scope_note": "Upstream says primarily MPL-2.0 with some BSD or LGPL-2.1-only/or-later files; this is not a whole-archive single-license conclusion.",
+        "follow_up": "Inventory actual included files, preserve license texts/notices and evaluate EIGEN_MPL2_ONLY before product adoption or redistribution."
+      },
+      "lineage_parents": []
+    },
+    {
+      "id": "w64devkit-2.9.1-legacy-reproduction",
+      "category": "external-tool-bundle",
+      "scope": {"mode": "external-artifact", "include": ["w64devkit-x64-2.9.1.7z.exe"], "exclude": []},
+      "owner_role": "architecture_lead",
+      "purpose": "Pinned GCC/CMake/Ninja toolchain used only in the isolated Legacy reproduction workspace",
+      "source_refs": [
+        "https://github.com/skeeto/w64devkit/releases/tag/v2.9.1",
+        "https://github.com/skeeto/w64devkit/tree/v2.9.1",
+        "reference/legacy/reproduction/current.json"
+      ],
+      "version": "2.9.1",
+      "integrity": {"kind": "sha256", "sha256": "9208c19755cd4964b7915b9afcf02c66d493a4c870c4b3e83f6c538d9c1237a5", "bytes": 61462208},
+      "repository_presence": "external-untracked",
+      "internal_handling": "subject-to-upstream-terms",
+      "external_distribution": "not-redistributed",
+      "classification": "external-tool",
+      "license": {
+        "scan_result": "license-information-present",
+        "detected_expression": "NOASSERTION",
+        "concluded_expression": "NOASSERTION",
+        "evidence_refs": ["https://github.com/skeeto/w64devkit/tree/v2.9.1"],
+        "scope_note": "The source repository license does not collapse the licenses of bundled GCC, MinGW-w64, runtimes and other tools into one expression.",
+        "follow_up": "Review exact component/runtime licenses and preserve required license bundles before distributing any produced binary or tool archive."
+      },
+      "lineage_parents": []
+    },
+    {
+      "id": "host-validation-toolchain",
+      "category": "external-validation-tools",
+      "scope": {"mode": "external-installed-tools", "include": ["MSVC 19.50.35725", "CMake 4.1.2-msvc8", "Ninja 1.12.1", "Python 3.13.5", "Windows PowerShell 5.1.26100.8457", "Git 2.54.0.windows.1"], "exclude": []},
+      "owner_role": "validation_lead",
+      "purpose": "Configure, compile, test, validate and version the greenfield repository",
+      "source_refs": ["docs/quality/scientific-conventions-cross-tool-report.json", "CMakePresets.json"],
+      "version": "versions-listed-in-scope",
+      "integrity": {"kind": "environment-identity", "value": "installed executables are not project artifacts"},
+      "repository_presence": "external-untracked",
+      "internal_handling": "subject-to-upstream-terms",
+      "external_distribution": "not-redistributed",
+      "classification": "external-tool",
+      "license": {
+        "scan_result": "not-scanned-nonredistributed-tool",
+        "detected_expression": "NOASSERTION",
+        "concluded_expression": "NOASSERTION",
+        "evidence_refs": ["docs/governance/license-and-provenance-policy.md"],
+        "scope_note": "Installed tools are executed in place and are not included in the repository or planned distribution.",
+        "follow_up": "Record executable hashes and exact vendor terms if a tool, runtime, container or generated component will be redistributed."
+      },
+      "lineage_parents": []
+    },
+    {
+      "id": "github-actions-checkout-6.0.2",
+      "category": "external-ci-action",
+      "scope": {"mode": "workflow-reference", "include": [".github/workflows/ci.yml"], "exclude": []},
+      "owner_role": "validation_lead",
+      "purpose": "Fetch the reviewed repository commit in GitHub-hosted validation jobs",
+      "source_refs": [
+        "https://github.com/actions/checkout/releases/tag/v6.0.2",
+        "https://github.com/actions/checkout/commit/de0fac2e4500dabe0009e67214ff5f5447ce83dd"
+      ],
+      "version": "6.0.2",
+      "integrity": {"kind": "git-commit", "value": "de0fac2e4500dabe0009e67214ff5f5447ce83dd"},
+      "repository_presence": "external-untracked",
+      "internal_handling": "subject-to-upstream-terms",
+      "external_distribution": "not-redistributed",
+      "classification": "external-tool",
+      "license": {
+        "scan_result": "license-information-present",
+        "detected_expression": "MIT",
+        "concluded_expression": "NOASSERTION",
+        "evidence_refs": ["https://github.com/actions/checkout/blob/de0fac2e4500dabe0009e67214ff5f5447ce83dd/LICENSE"],
+        "scope_note": "The workflow invokes the pinned upstream action; its source is not copied into this repository or project distributions.",
+        "follow_up": "Review the exact action dependency bundle and upstream terms before any redistribution or license conclusion."
+      },
+      "lineage_parents": []
+    }
+  ]
+}

@@ -1,0 +1,20 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-UNRESOLVED-TASK-001",
+  "status": "specification_only",
+  "purpose": "Prove that fixture blockers must resolve to the repository backlog.",
+  "authority": "validation_lead",
+  "provenance": {
+    "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"]
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-UNRESOLVED-TASK",
+      "claim": "An unknown task cannot be recorded as an open blocker.",
+      "tolerance_policy": "Exact task identity."
+    }
+  ],
+  "required_artifacts": ["task backlog"],
+  "acceptance": ["Unknown task identities are rejected."],
+  "open_tasks": ["R0-NOPE-999"]
+}

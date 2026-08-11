@@ -237,6 +237,8 @@ code 一旦发布不改变含义，也不回收给新问题。
 
 ### 6.2 `EvidenceValidity`
 
+`EvidenceValidity = Valid | ValidWithCaveats | Partial | Invalid | Unknown` 是 Observation、Outcome 和 Artifact 共用的唯一有效性枚举。
+
 | 状态 | 含义 |
 | --- | --- |
 | Valid | 可用于声明的研究目的 |

@@ -19,6 +19,8 @@
 
 路线和详细分册统一使用 `CapabilityStatus`，状态描述交付承诺，阶段编号描述依赖顺序：
 
+`CapabilityStatus = Stable | V1 | PressureOnly | Deferred | Legacy` 是全库唯一交付状态枚举。
+
 | 状态 | 路线含义 |
 | --- | --- |
 | `Stable` | 当前与目标路径都必须保持的架构/科学约束 |

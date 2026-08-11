@@ -1,0 +1,17 @@
+﻿# stage: legacy-ctest-label-architecture-guard
+# command: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\deps\w64devkit-extracted\w64devkit\bin\ctest.exe --test-dir C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07\build-main -L architecture-guard --output-on-failure
+# working_directory: C:\Users\ZBY\Desktop\YYZ\GNCSIMZMKN\build\legacy-reproduction\runs\r0-leg-001-20260810-07
+# started_utc: 2026-08-10T05:19:52.9792080+00:00
+# elapsed_seconds: 0.131
+# exit_code: 0
+
+Test project C:/Users/ZBY/Desktop/YYZ/GNCSIMZMKN/build/legacy-reproduction/runs/r0-leg-001-20260810-07/build-main
+    Start 27: test_architecture_guards
+1/1 Test #27: test_architecture_guards .........   Passed    0.08 sec
+
+100% tests passed out of 1
+
+Label Time Summary:
+architecture-guard    =   0.08 sec*proc (1 test)
+
+Total Test time (real) =   0.09 sec
