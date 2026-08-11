@@ -249,6 +249,10 @@ foreach ($file in $markdownFiles | Sort-Object FullName -Unique) {
         $pathPart = ($target -split '#')[0]
         if ([string]::IsNullOrWhiteSpace($pathPart)) { continue }
         $resolved = [System.IO.Path]::GetFullPath((Join-Path $file.DirectoryName $pathPart))
+        if (Test-PathBelow $resolved $extractedLegacyRoot) {
+            Add-Error "Markdown link targets disposable extracted Legacy content in $($file.FullName): $target"
+            continue
+        }
         if (-not (Test-Path -LiteralPath $resolved)) {
             Add-Error "Broken Markdown link in $($file.FullName): $target"
         }

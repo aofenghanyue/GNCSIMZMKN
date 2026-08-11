@@ -78,7 +78,7 @@
 
 ### 3.4 Frozen Legacy behavior
 
-隔离执行 [Legacy guidance](../../reference/legacy/extracted/GNCZMKN-legacy-a63621c/user/example_08_cavh_geographic_3dof_custom/components/cavh_glide_range_guidance.hpp)及其 mission，只记录它实际做了什么。旧 node/provider/config/observable 名、CSV 列序、exception 文本和 silent clamp 是迁移输入，不是 target contract。
+隔离执行 [Legacy source index](../../reference/legacy/source-index.md) 所列的 `user/example_08_cavh_geographic_3dof_custom/components/cavh_glide_range_guidance.hpp` 及其 mission，只记录它实际做了什么。旧 node/provider/config/observable 名、CSV 列序、exception 文本和 silent clamp 是迁移输入，不是 target contract。
 
 四条 lane 各自有不同 `authority_domain`、`source_refs`、`input_hash`、`producer_hash`、`validity` 和 `disposition`。任何 artifact 都不得仅凭同名 case id 在 lane 间替换。
 
@@ -145,7 +145,7 @@ Assumption ledger 至少逐项覆盖：
 
 ### 5.2 当前测试为何不是独立证据
 
-[Frozen test](../../reference/legacy/extracted/GNCZMKN-legacy-a63621c/tests/test_cavh_glide_range_guidance.cpp)在 include 生产头文件后，又在同一 translation unit 定义 `paperEq17GammaCommand` 和 `paperEq18GammaCommand`。两者逐项复制生产函数的公式，并使用相同 binary64、相同输入来源和相同默认约定。测试覆盖可以发现部分 wiring/config 退化，却不能发现双方共同的：
+[Legacy source index](../../reference/legacy/source-index.md) 所列的 `tests/test_cavh_glide_range_guidance.cpp` 在 include 生产头文件后，又在同一 translation unit 定义 `paperEq17GammaCommand` 和 `paperEq18GammaCommand`。两者逐项复制生产函数的公式，并使用相同 binary64、相同输入来源和相同默认约定。测试覆盖可以发现部分 wiring/config 退化，却不能发现双方共同的：
 
 - source equation 转录错误；
 - 符号、括号、指数或遗漏项；
