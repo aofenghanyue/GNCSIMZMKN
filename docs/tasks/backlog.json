@@ -224,7 +224,7 @@
       "priority": "P0",
       "size": "L",
       "owner_role": "architecture_lead",
-      "assignee": "Codex",
+      "assignee": "r0-architecture-agent",
       "depends_on": ["B0-VER-001"],
       "deliverables": ["Versioned JSON schemas", "valid and invalid examples", "schema validation command"],
       "acceptance": ["R0 bundles fail early on missing identity, provenance, tolerance or expected facts"],

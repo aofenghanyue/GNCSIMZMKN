@@ -191,7 +191,7 @@ function Test-RepositoryEvidenceLocator {
         $Reference.Contains('\') -or
         $Reference.Contains('//') -or
         $Reference -match '(^|/)(\.|\.\.)(/|$)' -or
-        $Reference -match '[\x00-\x1F:*?"<>|#\[\]]') {
+        $Reference -match '[\x00-\x1F%:*?"<>|#\[\]]') {
         return [PSCustomObject]@{
             IsValid = $false
             Diagnostic = "evidence locator '$Reference' must be a repository-root-relative path using forward slashes"
@@ -1029,7 +1029,7 @@ $contractMutations = @(
     },
     [PSCustomObject]@{
         Name = 'percent-encoded-evidence-locator'
-        ExpectedErrorContains = 'does not name an exact tracked stage-0 Git path'
+        ExpectedErrorContains = 'repository-root-relative path'
         Evaluate = { @((Test-RepositoryEvidenceLocator -Reference 'specs/%52EADME.md').Diagnostic) }
     },
     [PSCustomObject]@{
