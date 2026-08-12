@@ -1,0 +1,225 @@
+{
+  "schema_version": "gnczmkn.r0-architecture-review-contract/1",
+  "maturity": "review-candidate-governance-only-no-runtime-consumer",
+  "task_id": "R0-ARCH-001",
+  "adr_id": "ADR-0005",
+  "reviewed_base": "e0bba2b99e96a2a6ded646302b1d1424d323c362",
+  "decisions": {
+    "RECON-DEC-006": "logical-only-keep-current",
+    "RECON-DEC-007": "keep-current-22-owner-consumer-map"
+  },
+  "physical_dag": {
+    "authority": "docs/adr/0003-initial-module-dependency-dag.md",
+    "graph_version": "adr-0003/1",
+    "registry_schema_version": "gnczmkn.architecture-authority-registry/1",
+    "module_names": [
+      "foundation",
+      "contracts",
+      "model_sdk",
+      "compiler",
+      "kernel",
+      "evidence",
+      "workflow",
+      "application",
+      "adapters"
+    ],
+    "logical_labels_forbidden_as_physical_modules": [
+      "packages_user",
+      "composition_root"
+    ],
+    "superseding_adr_required_for_change": true
+  },
+  "logical_boundaries": [
+    {
+      "name": "packages_user",
+      "kind": "logical-contribution-boundary",
+      "authority": "design-notes/gnczmkn-architecture-roadmap/02-layered-reference-architecture.md#13",
+      "representation": "source-rule-label-only",
+      "source_roots": [
+        "packages",
+        "user"
+      ],
+      "relationship": "contributes-through-model-sdk-descriptors",
+      "physical_module": false
+    },
+    {
+      "name": "composition_root",
+      "kind": "logical-composition-boundary",
+      "authority": "design-notes/gnczmkn-architecture-roadmap/02-layered-reference-architecture.md#13",
+      "representation": "source-rule-label-only",
+      "source_roots": [
+        "apps"
+      ],
+      "relationship": "only-boundary-with-packages-adapters-and-application-host",
+      "physical_module": false
+    }
+  ],
+  "legacy_reconciliation": {
+    "outcome": "keep-current-22-owner-consumer-map",
+    "authority_mapping_count": 22,
+    "classified_responsibility_count": 33,
+    "aligned_responsibility_ids": [
+      "assembly-context-lowering",
+      "auto-data-recording",
+      "config-manager-compile",
+      "config-node-source",
+      "config-reader-frontend",
+      "discrete-node-descriptor",
+      "execution-phase-transaction",
+      "framework-catalog-view",
+      "discrete-task-obligation",
+      "observable-projection-plan",
+      "record-sink-port",
+      "mission-assembler-passes",
+      "node-registry-plan-handles",
+      "node-registry-session-state",
+      "observable-field-contract",
+      "onboard-state-contracts",
+      "simflow-experiment",
+      "simulation-builder-operation",
+      "simulation-node-definition",
+      "simulator-session",
+      "simulator-control",
+      "simulator-comparison"
+    ],
+    "deferred_owner_split_ids": [
+      "execution-phase-plan",
+      "onboard-state-input-view",
+      "simulation-builder-plan"
+    ],
+    "logical_route_ids": [
+      "guidance-process-recipe",
+      "node-factory-contribution"
+    ],
+    "unregistered_legacy_names": [
+      "IContinuousGroup",
+      "IIntegrator",
+      "ISummaryObserver",
+      "math_types.hpp",
+      "SimulationSummary"
+    ],
+    "unregistered_responsibility_ids": [
+      "continuous-group-plan",
+      "integrator-plan",
+      "integrator-outcome",
+      "summary-observer-metrics",
+      "math-types-contract-boundaries",
+      "simulation-summary-workflow"
+    ],
+    "responsibility_overlay_forbidden_in_v1": true,
+    "glossary_migration_and_superseding_adr_required_for_change": true
+  },
+  "authority_snapshot": {
+    "normalization": "utf8-lf-no-bom",
+    "entries": [
+      {
+        "path": "design-notes/gnczmkn-architecture-roadmap/reference-glossary.md",
+        "normalized_byte_length": 43478,
+        "normalized_sha256": "87aa5e708179c2a264e7efb63288ad27c1cd86f2a4a44aa99381a5a4db4ca326"
+      },
+      {
+        "path": "docs/adr/0003-initial-module-dependency-dag.md",
+        "normalized_byte_length": 1159,
+        "normalized_sha256": "52b6197eb01645b79edafc5eb9984590fe59e8523c6e309e99631d1241f83542"
+      },
+      {
+        "path": "design-notes/gnczmkn-architecture-roadmap/02-layered-reference-architecture.md",
+        "normalized_byte_length": 68117,
+        "normalized_sha256": "5d06c742bcbdf8c4f4ada5a05114671a9b58b6b4342e102e5138353642d55c72"
+      },
+      {
+        "path": "docs/architecture/authority-registry.json",
+        "normalized_byte_length": 8622,
+        "normalized_sha256": "4aa740e709a87ffb2a7fb3c3d19c6553eb43a1ea6d5a2520dd295d63def73320"
+      },
+      {
+        "path": "CMakeLists.txt",
+        "normalized_byte_length": 4723,
+        "normalized_sha256": "23cb5111dae0da437747742db6432906c0f84c2f60437b6dacd450302c3e783d"
+      },
+      {
+        "path": "tools/modules/ArchitectureBaseline.psm1",
+        "normalized_byte_length": 69373,
+        "normalized_sha256": "adf412f38c460f711065d5bf65f9077bfa7484e4afb767c988802818e64dc844"
+      },
+      {
+        "path": "tools/modules/R0ArchitectureReview.psm1",
+        "normalized_byte_length": 38563,
+        "normalized_sha256": "13e0e429816c5433cf02d54320b3f2ece39630be3e8a8c9b16093dd6114ff01b"
+      },
+      {
+        "path": "tools/modules/JsonSchemaSubset.psm1",
+        "normalized_byte_length": 24673,
+        "normalized_sha256": "ef2a00f4d8a5f6fa08f12278bc9c13cd06deabbd8fd46d4550bc5ca6e4069446"
+      },
+      {
+        "path": "tools/validate-architecture-baseline.ps1",
+        "normalized_byte_length": 6699,
+        "normalized_sha256": "3b5b9c1702148214173fd2c6522fe1608b8c0aa00d6d1ddf8c2c70b0358e15d7"
+      },
+      {
+        "path": "docs/architecture/architecture-baseline.json",
+        "normalized_byte_length": 81562,
+        "normalized_sha256": "89ca51e5d81c1a2d3e54258e245e4859e382314c53c4ed40acc61bf6353985bf"
+      },
+      {
+        "path": "docs/quality/terminology-conformance-report.json",
+        "normalized_byte_length": 3651,
+        "normalized_sha256": "0f24a0f4202f82a6288fdc1859d379f45ede4a29b065baa405b231be85fbbc55"
+      }
+    ]
+  },
+  "runtime_consumer_policy": {
+    "allowed_consumer_count": 0,
+    "scan_roots": [
+      "framework",
+      "packages",
+      "adapters",
+      "apps",
+      "user"
+    ],
+    "forbidden_path_tokens": [
+      "docs/architecture/architecture-baseline.json",
+      "docs/architecture/authority-registry.json",
+      "docs/architecture/r0-architecture-review-contract.json",
+      "docs/quality/terminology-conformance-report.json"
+    ]
+  },
+  "required_mutation_ids": [
+    "missing-capability-section",
+    "duplicate-capability-identity",
+    "empty-capability-commitment",
+    "empty-capability-activation-gate",
+    "unresolved-capability-authority",
+    "capability-status-promotion-drift",
+    "module-source-root-drift",
+    "module-source-root-dot-segment",
+    "module-source-root-case-drift",
+    "module-source-root-untracked",
+    "module-source-root-symlink",
+    "shared-symbol-owner-drift",
+    "shared-symbol-kind-drift",
+    "shared-symbol-authority-drift",
+    "legacy-primary-owner-drift",
+    "legacy-disposition-drift",
+    "legacy-secondary-consumer-drift",
+    "logical-boundary-physical-promotion",
+    "legacy-reconciliation-outcome-drift",
+    "authority-source-hash-drift",
+    "derived-baseline-bom",
+    "derived-report-crlf",
+    "cmake-unknown-module-dependency",
+    "cmake-variable-dependency",
+    "cmake-generator-expression-dependency",
+    "cmake-alias-dependency",
+    "cmake-non-interface-visibility",
+    "adr-second-dependency-block",
+    "adr-unsupported-dependency-line",
+    "coordinated-dag-change-without-superseding-snapshot",
+    "registry-duplicate-json-key",
+    "coordinated-new-legacy-mapping-without-superseding-snapshot",
+    "runtime-consumer",
+    "packages-user-physical-module",
+    "composition-root-physical-module"
+  ]
+}

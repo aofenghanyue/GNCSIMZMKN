@@ -104,7 +104,7 @@
       "priority": "P0",
       "size": "L",
       "owner_role": "architecture_lead",
-      "assignee": "Codex",
+      "assignee": "r0-po-agent",
       "depends_on": ["B0-VER-001"],
       "deliverables": ["Machine-readable terminology baseline", "module dependency map", "legacy-to-target ownership map"],
       "acceptance": ["Shared terms, enums, keys and owners each have one authority"],

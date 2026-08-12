@@ -1,7 +1,9 @@
 # R0-ARCH-001｜术语与架构依赖基线
 
 - 状态：Review
-- Assignee：Codex
+- Assignee / implementation actor：`r0-po-agent`（machine agent，task `/root`）
+- Decision owner：`r0-architecture-agent`（machine agent，task `/root/r0_architecture_agent`）
+- Independent reviewer：`r0-validation-agent`（machine agent，task `/root/r0_validation_agent`）
 - Owner role：Architecture Lead
 - 目标评审日期：2026-08-10
 - 关联 gate：G0 / G1
@@ -21,6 +23,7 @@
 3. 共享术语、枚举和值域、稳定 key 与 owner authority 的唯一归属清单；
 4. 校验派生物未漂移、identity 未重复、引用可解析、依赖图无环且 CMake 实际边未越界的 conformance 命令；
 5. CTest 与 repository verification 中可追踪的 terminology conformance 证据。
+6. `RECON-DEC-006/007` 技术候选锁：九物理模块、两个逻辑标签、22 条 Legacy ownership 与 33 项 candidate responsibility 分类保持可机检。
 
 ## 失败路径
 
@@ -34,12 +37,16 @@
 - CMake module target 或 `target_link_libraries` 实际依赖偏离 ADR-0003 时失败；
 - Kernel 依赖 Compiler，或具体 package 越过 composition boundary 时失败；
 - `packages_user` / `composition_root` 未经 ADR-0003 变更被提升为物理 module，或未在 glossary 注册的 Legacy 名称被加入 ownership registry 时失败。
+- capability section、表头、identity、当前承诺、开启条件或 authority reference 缺失/漂移时失败；
+- module source root、shared symbol owner、Legacy disposition/owner/consumer 在合法值之间漂移，但未更新 accepted snapshot 时失败；
+- CMake 通过未知 target、变量、generator expression、非 `INTERFACE` visibility 或额外 ADR block 隐藏依赖时失败；
+- 派生 JSON 含 BOM/CRLF、权威 source hash 漂移或产品路径消费治理 artifact 时失败。
 
 ## 验收与证据
 
 - `tools/validate-architecture-baseline.ps1` 输出术语、alias、Legacy 映射、共享 symbol、模块和依赖边计数；
 - 默认检查模式验证仓库中派生 JSON 与重新生成结果字节一致；
-- 自动反例覆盖重复 identity、悬空引用、循环依赖、禁止边、源哈希漂移、注册表形状漂移、逻辑边界物理化和无 glossary 行的 Legacy ownership；
+- 自动反例覆盖原有 15 项 architecture mutation，以及 capability、合法值漂移、逻辑边界、strict derived bytes、隐藏依赖、duplicate JSON key 与 runtime consumer 等 35 项 review-contract mutation；
 - CTest 包含独立 architecture baseline conformance test；
 - `tools/bootstrap.ps1` 全量通过；
 - `git diff --check`、变更审查清单和最终 commit hash 作为代码评审证据。
@@ -62,12 +69,13 @@
 
 日期：2026-08-10。
 
-- terminology review：276 个 canonical terms、20 个退出/关系 alias 和 10 个 capability rows 全部可解析，9 个共享 enum 的成员集合与唯一语义权威逐项一致；
+- terminology review：276 个 canonical terms、20 个退出/关系 alias 和 10 个 capability rows 全部可解析；capability section/header/identity/commitment/gate/authority 现已 fail closed；9 个共享 enum 的成员集合与唯一语义权威逐项一致；
 - ownership review：27 个共享 enum/key/owner symbols 各有一个语义权威和一个物理 owner，22 个 Legacy 名称各有一个 primary owner；
 - dependency review：ADR-0003 的 9 模块 DAG 无环，CMake 的 22 条直接依赖均落在允许闭包，Kernel 对 Compiler 依赖保持为零；
-- failure review：原有 9 个反例，加上未知顶层字段、module 行字段、shared-symbol 行字段、Legacy responsibility overlay、`packages_user` / `composition_root` 物理模块提升，以及 5 个 candidate-only Legacy 名称共 6 组反例，合计 15 个 mutation 均被拒绝；
+- failure review：原有 15 个 architecture mutation 均进入真实 evaluator；新增 review contract 拒绝 35/35 个 capability、authority snapshot、ownership、logical-boundary、CMake/ADR、strict bytes、duplicate-key 与 runtime-consumer mutation；
 - reconciliation review：candidate 的 27 个名称 / 33 项职责被完整分成 22 项现有 owner/consumer 对齐、3 项物理 owner 细分提案、2 项逻辑 contribution-boundary 路由和 6 项属于 5 个当前未注册名称的职责；33 项引用的目标术语均已存在，但 owner 粒度与名称注册仍需 Architecture Lead / Validation Lead 决策；
 - review findings：修复 5 项职责分册规范名称缺失或权威错指；统一 glossary 与 03 的 17 个 `NumericalStatus` 成员；清除 14 中 `CurrentCycleSample`、`PreviousCommittedSample`、`HeldLatestSample` 三个退出写法；修复 Markdown 分隔行列数未校验的问题；
 - portability review：生成器模块保持 ASCII，派生 JSON 使用紧凑稳定序列化，文本源 hash 统一按 UTF-8、LF、无 BOM 归一化；
-- verification：Windows PowerShell 5.1 targeted architecture validation 拒绝 15/15 个自动反例；MSVC Debug 与 Release 各 9/9 CTest 通过；repository verification 验证 56 个 JSON、65 个 task entries 与 98 个 Markdown；`git diff --check` 通过；
-- residual risk：全库新增 CamelCase/代码词扫描与 include evolution guard 属于 `R0-ARCH-002`；ADR-0005 在 Architecture Lead 指派前保持 `Proposed`，任务因此停留在 `review`。
+- current technical candidate：`RECON-DEC-006=logical-only-keep-current`；`RECON-DEC-007=keep-current-22-owner-consumer-map`。`packages_user` / `composition_root` 只作逻辑规则标签，22 条 authority mapping 保持逐项不变；
+- verification：targeted architecture validation 当前验证 276 terms、20 aliases、10 capabilities、27 shared symbols、22 Legacy mappings、9 modules、22 CMake edges、15/15 原有 mutation、2 logical boundaries 与 35/35 review-contract mutation；完整 CTest、repository verification、diff 与 Hosted CI 在技术候选冻结后重新绑定；
+- residual risk：全库新增 CamelCase/代码词扫描与 include evolution guard 属于 `R0-ARCH-002`；ADR-0005 仍为 `Proposed`，任务保持 `review`，等待 Architecture owner 与独立 Validation reviewer 的 commit-bound disposition。

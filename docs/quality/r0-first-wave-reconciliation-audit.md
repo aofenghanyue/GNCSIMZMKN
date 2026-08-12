@@ -297,9 +297,9 @@ The current deterministic validator now requires exact property sets for the aut
 5. physical-module promotion of both `packages_user` and `composition_root`；
 6. ownership rows for all five candidate-only names without glossary migration rows。
 
-Together with the original nine cases, 15/15 invalid mutations are rejected。The baseline remains a projection of the same glossary、ADR-0003、physical partition、authority registry and CMake graph：276 terms、20 aliases、27 shared symbols、22 Legacy mappings、9 physical modules and 22 CMake edges。This closes the safe technical part of Slice C but intentionally leaves `RECON-DEC-006` / `RECON-DEC-007` open。
+Together with the original nine cases, 15/15 invalid mutations are rejected。The source-hash case now writes mutated derived bytes through the same strict generated-content evaluator；it no longer relies on a string inequality assertion。The baseline remains a projection of the same glossary、ADR-0003、physical partition、authority registry and CMake graph：276 terms、20 aliases、27 shared symbols、22 Legacy mappings、9 physical modules and 22 CMake edges。
 
-Verification passed under Windows PowerShell 5.1 and MSVC x64：Debug 9/9 CTest、Release 9/9 CTest、repository verification（56 JSON、65 task entries、98 Markdown）and `git diff --check`。The generated baseline raw SHA-256 is `69cf9c4f26a15b62ecdb60364417bb066c89756924134612a3701471f10943e7`；the conformance report raw SHA-256 is `298f06e15eb7b52d37a9a6c0338222d2a6e88ec2991301a1680acb2b4e8527fc`。
+2026-08-12 technical candidate 增加 `r0-architecture-review-contract/1`：`RECON-DEC-006` 采用 `logical-only-keep-current` 候选，`packages_user` / `composition_root` 只登记为逻辑规则标签；`RECON-DEC-007` 采用 `keep-current-22-owner-consumer-map` 候选，33 项 responsibility 继续按 `22 + 3 + 2 + 6` 分类。contract 锁定 11 个 authority/generator/derived entries、2 个 logical boundaries、零 runtime consumer 与 35 项新增 mutation。capability section/header/identity/commitment/gate、合法 ownership/source-root 漂移、隐藏 CMake/ADR dependency、duplicate JSON key、BOM/CRLF derived bytes 与治理 artifact runtime consumption 均进入真实失败路径。ADR 与 decision 当前仍为 `Proposed`，任务保持 `review`，等待 commit-bound Architecture/Validation disposition。
 
 ## 9. Scientific convention audit
 
@@ -478,8 +478,8 @@ Scope：GOV-002 review amendment。
 | `RECON-DEC-003` | PlanProof typed prerequisite graph/index boundary | Architecture Lead + Compiler Lead | `keep-current` / accepted；typed graph moves to v2；[record](../governance/reconciliation-dispositions/RECON-DEC-003-2026-08-12.json) |
 | `RECON-DEC-004` | axis-angle positive sign and adapter naming | Scientific Authority | open |
 | `RECON-DEC-005` | scientific context/independent-reference provenance contract | Scientific Authority + Product Owner | open |
-| `RECON-DEC-006` | `packages_user`/`composition_root` representation and source authority | Architecture Lead | open |
-| `RECON-DEC-007` | candidate extra Legacy mappings/responsibility granularity | Architecture Lead + Validation Lead | open |
+| `RECON-DEC-006` | `packages_user`/`composition_root` representation and source authority | Architecture Lead | `logical-only-keep-current` technical candidate；awaiting commit-bound disposition |
+| `RECON-DEC-007` | candidate extra Legacy mappings/responsibility granularity | Architecture Lead + Validation Lead | `keep-current-22-owner-consumer-map` technical candidate；awaiting independent review |
 | `RECON-DEC-008` | current hosted runner/action profile and artifact retention | Product Owner + Validation Lead | `keep-current` / accepted receipt |
 | `RECON-DEC-009` | whether half-open validity becomes the approved public time contract | Scientific Authority + Architecture Lead | open |
 

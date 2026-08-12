@@ -5,7 +5,7 @@
 - Audited implementation commit：`bfd735e38a0d3f84fbe19f0f93435522cbdf7d56`
 - Prepared by：Codex
 - Prepared on：2026-08-10
-- Current-state amendment：2026-08-12，through R0-SPEC-001 commit-bound acceptance
+- Current-state amendment：2026-08-12，through R0-SPEC-001 commit-bound acceptance and R0-ARCH-001 technical candidate
 - Readiness verdict：`not_ready_for_authorized_review`
 - Official gate result：无；本文件不是 G0/G1 decision record
 - Current project gate：`R0`
@@ -123,7 +123,7 @@ G1 只有科学约定 bundle 达到 `executable`，且其技术 cross-tool compa
 
 | Task | Backlog | Commit | 有效技术证据 | 仍缺 |
 | --- | --- | --- | --- | --- |
-| `R0-ARCH-001` | `review` | `84b7d6c` + `a9a84c6` | terminology/owner/dependency baseline；27/33 candidate delta 已归类；15 negative cases | ADR-0005、Architecture Lead / Validation Lead review；`RECON-DEC-006/007` |
+| `R0-ARCH-001` | `review` / `r0-po-agent`；decision owner `r0-architecture-agent` | prior baseline + current technical candidate | 276 terms、20 aliases、10 capabilities、27 shared symbols、22 Legacy mappings、9 modules、22 CMake edges；15 architecture + 35 review-contract mutations；33 responsibilities 完整分类 | ADR-0005 与 `RECON-DEC-006/007` 的 commit-bound Architecture/Validation disposition、task acceptance 与双平台 current-head CI |
 | `R0-LEG-001` | `review` | `b2e69d0` | frozen archive reproduction、双跑 normalized hash | Validation/Science owner classification/review |
 | `R0-SCI-001` | `review` | `9e95f1c` + `4c916e1` | C++/Python 各 23 checks/1819 assertions、16 observations、0 mismatch、6 failures rejected | ADR-0006/0007、Scientific Authority review；half-open validity remains Proposed |
 
