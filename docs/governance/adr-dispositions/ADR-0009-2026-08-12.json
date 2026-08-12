@@ -1,0 +1,62 @@
+{
+  "schema_version": "gnczmkn.adr-disposition/1",
+  "adr_id": "ADR-0009",
+  "decision": "accept-as-written",
+  "decision_date": "2026-08-12",
+  "reviewed_commit": "d4f1a6b105b680a7e7f32925d90a44c0f85f57e0",
+  "reviewed_parent": "291cb28b064642f3e7aa14303ee30b03c8d047f0",
+  "reviewed_fileset": {
+    "path_count": 13,
+    "sha256": "db36acaefa6007b93beee908e8a695604fccf476bc395b25908a1fddd88a93f6",
+    "normalization": "sorted path, NUL, raw working-tree bytes, NUL per path"
+  },
+  "authorization_ref": "docs/governance/r0-owner-authorization.json",
+  "decision_actors": [
+    {
+      "actor_id": "r0-po-agent",
+      "kind": "machine_agent",
+      "task_path": "/root",
+      "role": "product_owner",
+      "decision": "accept-as-written"
+    },
+    {
+      "actor_id": "r0-architecture-agent",
+      "kind": "machine_agent",
+      "task_path": "/root/r0_architecture_agent",
+      "role": "architecture_lead",
+      "decision": "accept-as-written"
+    }
+  ],
+  "independent_review": {
+    "actor_id": "r0-validation-agent",
+    "kind": "machine_agent",
+    "task_path": "/root/r0_validation_agent",
+    "role": "validation_lead",
+    "result": "approved",
+    "reviewed_commit": "d4f1a6b105b680a7e7f32925d90a44c0f85f57e0",
+    "reviewed_fileset_sha256": "db36acaefa6007b93beee908e8a695604fccf476bc395b25908a1fddd88a93f6"
+  },
+  "rationale": [
+    "The repository-owner instruction authorizes four explicitly disclosed machine agents for R0.",
+    "All required role pairs resolve through the authorization record and use distinct actor and task bindings.",
+    "Scientific Authority and Architecture Lead remain independent at both actor and task levels.",
+    "Authorization, identity, scope, review-pair and toolchain regressions are covered by executable mutations.",
+    "Validation and Architecture independently reproduced the reviewed commit and all required checks."
+  ],
+  "verification": {
+    "team_toolchain_validator": "passed; 0 missing slots; 18/18 mutations rejected",
+    "license_provenance_validator": "passed; 8/8 NOASSERTION; 14/14 mutations rejected",
+    "ctest_dev": "passed; 9/9",
+    "repository_verifier": "passed; 57 JSON; 65 task entries; 100 Markdown",
+    "diff_check": "passed"
+  },
+  "unresolved_boundaries": [
+    "hosted-ci-commit-bound-evidence",
+    "toolchain-supported-qualification",
+    "rights-and-provenance-decisions",
+    "external-distribution",
+    "task-acceptance",
+    "G0-and-G1",
+    "R1-production-implementation"
+  ]
+}

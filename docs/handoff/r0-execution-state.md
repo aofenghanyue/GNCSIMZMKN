@@ -6,7 +6,7 @@
 - 可信锚点核验：`origin/main` 精确等于锚点，已通过 ancestor 检查
 - 当前任务：`R0-GOV-001`
 - 当前分支：`codex/r0-gov-001`
-- 当前工作树基线：`291cb28b064642f3e7aa14303ee30b03c8d047f0`
+- 当前冻结审查 commit：`d4f1a6b105b680a7e7f32925d90a44c0f85f57e0`
 - 执行团队 shared thread：`019ff3be-4a80-7210-a14e-dac71ac15f9f`
 
 ## 已登记机器智能体
@@ -27,7 +27,7 @@
 
 ## 当前纵向切片
 
-`R0-GOV-001` 正在完成仓库所有者授权登记、角色映射、ADR-0009 修订和 repository guard。ADR 在独立复核与 disposition 落库前保持 `Proposed`。工具链 profile 在 commit-bound Hosted CI 证据闭合前保持 `candidate-not-supported`。
+`R0-GOV-001` 已完成仓库所有者授权登记、角色映射、ADR-0009 独立复核和 disposition。ADR-0009 已进入 `Accepted`。工具链 profile 在 commit-bound Hosted CI 证据闭合前保持 `candidate-not-supported`。
 
 ## 验收与测试结果
 
@@ -47,15 +47,13 @@
 
 ## 下一项满足依赖的工作
 
-1. 由 `r0-validation-agent` 独立复核 `R0-GOV-001` 治理 diff 和 mutation；
-2. 由授权 Product/Architecture actor 记录 ADR-0009 disposition；
-3. 推送 `codex/r0-gov-001`，取得固定 Windows/Linux profile 的 commit-bound CI 结果；
-4. 闭合任务 acceptance/evidence 后将 `R0-GOV-001` 依次推进到 `done` 并合并；
-5. 从最新 `main` 开始下一项阶段 A 收口切片。
+1. 提交 ADR-0009 disposition 状态更新；
+2. 推送 `codex/r0-gov-001`，取得固定 Windows/Linux profile 的 commit-bound CI 结果；
+3. 闭合任务 acceptance/evidence 后将 `R0-GOV-001` 依次推进到 `done` 并合并；
+4. 从最新 `main` 开始下一项阶段 A 收口切片。
 
 ## 真实 blocker
 
-- `ADR-0009` 尚待独立复核和正式 disposition；
 - 当前工作树 commit 尚无固定 runner CI；
 - ADR-0004～0008 与 `RECON-DEC-001`～`009` 尚未全部裁决；
 - repository、blueprint、Legacy 和科学来源的许可结论仍为 `NOASSERTION`，外部分发继续阻断；

@@ -1,6 +1,6 @@
 # ADR-0009: Accountable roles and candidate toolchain
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-08-10
 - Amended: 2026-08-12
 - Owners: Product Owner, Architecture Lead
@@ -47,7 +47,7 @@ CI checkout 固定到 `actions/checkout` v6.0.2 的 commit `de0fac2e4500dabe0009
 
 w64devkit/GCC 16.2 只服务冻结 Legacy 复现，保持 `evidence-only` 且不具备产品资格。Clang、macOS、ARM、MinGW 产品构建、sanitizer、动态 package ABI 和 Python wheels 尚未 qualified。
 
-候选 profile 只有在以下三项全部成立后才能改为 supported：本 ADR 由已授权的 Product Owner 与 Architecture Lead actor 接受；八个 required role 都有独立且可解析的 assignee/reviewer；固定 runner 的新 workflow 成功运行并保存精确环境证据。当前 ADR 保持 `Proposed`，等待本修订的精确 diff 接受独立复核并记录 disposition。当前工具链整体状态继续为 `candidate-not-supported`，本授权记录不会关闭 Hosted CI blocker。
+候选 profile 只有在以下三项全部成立后才能改为 supported：本 ADR 由已授权的 Product Owner 与 Architecture Lead actor 接受；八个 required role 都有独立且可解析的 assignee/reviewer；固定 runner 的新 workflow 成功运行并保存精确环境证据。前两项已针对冻结提交 `d4f1a6b105b680a7e7f32925d90a44c0f85f57e0` 通过并记录在 [ADR disposition](../governance/adr-dispositions/ADR-0009-2026-08-12.json)。当前工具链整体状态继续为 `candidate-not-supported`，等待 Hosted CI 的 commit-bound evidence。
 
 ## Consequences
 
@@ -59,7 +59,7 @@ w64devkit/GCC 16.2 只服务冻结 Legacy 复现，保持 `evidence-only` 且不
 - Cost: Ubuntu 本机 WSL 没有 PowerShell，只能提供 C++/CMake smoke；完整治理 CTest 需由托管 runner 补齐。
 - Cost: 角色登记、validator、readiness report 与当前 handoff 材料必须在同一治理切片中迁移到授权 actor 语义。
 - Risk: 固定 runner label 仍会更新预装工具，workflow 必须保留每次运行的 identity 输出。
-- Governance blocker: ADR disposition、角色映射、独立复核和新 CI run 尚未全部闭合，不能宣称已支持或将任务标为 done。
+- Governance blocker: 新 CI run 及其 retained evidence 尚未闭合，不能宣称已支持或将任务标为 done。
 
 ## Alternatives considered
 
@@ -80,6 +80,6 @@ w64devkit/GCC 16.2 只服务冻结 Legacy 复现，保持 `evidence-only` 且不
 
 ## Acceptance and supersession
 
-当前修订先保持 `Proposed`。`r0-validation-agent` 对本修订精确 diff、授权哈希、actor/task binding、独立性和 fail-closed boundary 完成复核后，由 `r0-po-agent` 与 `r0-architecture-agent` 记录 disposition，随后才可将本 ADR 改为 `Accepted`。角色文件、validator 与 readiness report 需要同步完成授权 actor 迁移，并满足 required slot 与独立性约束。
+`r0-validation-agent` 已对冻结提交的精确 diff、授权哈希、actor/task binding、独立性和 fail-closed boundary 完成复核；`r0-po-agent` 与 `r0-architecture-agent` 均给出 `accept-as-written`。正式 disposition 记录 reviewed commit、文件集哈希、decision actors、独立 reviewer、理由和验证结果。本 ADR 因此进入 `Accepted`。
 
 新 workflow 在两个固定 runner 上成功并保留 commit-bound evidence 后，另行更新矩阵与报告，将经过证据覆盖的 profile 改为 supported。rights/provenance、外部分发与 gate decision 继续按各自 ADR、evidence 和 review 闭合。任何 OS、architecture、compiler family/range、CMake minimum、generator、warning policy、sanitizer、ABI 或发布目标变化都需要重新评审。

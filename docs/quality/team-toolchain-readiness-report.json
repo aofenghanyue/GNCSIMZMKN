@@ -7,11 +7,6 @@
     "governance_ready":  false,
     "blockers":  [
                      {
-                         "code":  "ADR-NOT-ACCEPTED",
-                         "owner_role":  "architecture_lead",
-                         "condition":  "ADR-0009 remains Proposed pending Product Owner and Architecture Lead acceptance."
-                     },
-                     {
                          "code":  "HOSTED-CI-PENDING",
                          "owner_role":  "validation_lead",
                          "condition":  "The fixed-runner workflow has not been pushed and completed with retained run evidence."
@@ -37,8 +32,8 @@
                   "ready":  true
               },
     "toolchain":  {
-                      "adr_status":  "Proposed",
-                      "decision_status":  "proposed",
+                      "adr_status":  "Accepted",
+                      "decision_status":  "accepted",
                       "qualification_status":  "candidate-not-supported",
                       "language_standard":  "C++17",
                       "cmake_declared_minimum":  "3.20.0",
@@ -84,17 +79,17 @@
                            {
                                "name":  "missing-reviewer-field",
                                "rejected":  true,
-                               "detected_issue_count":  4
+                               "detected_issue_count":  5
                            },
                            {
                                "name":  "same-assignee-and-reviewer",
                                "rejected":  true,
-                               "detected_issue_count":  4
+                               "detected_issue_count":  5
                            },
                            {
                                "name":  "shared-science-architecture-assignee",
                                "rejected":  true,
-                               "detected_issue_count":  3
+                               "detected_issue_count":  4
                            },
                            {
                                "name":  "accepted-adr-without-roles",
@@ -109,7 +104,7 @@
                            {
                                "name":  "machine-actor-impersonates-human",
                                "rejected":  true,
-                               "detected_issue_count":  10
+                               "detected_issue_count":  11
                            },
                            {
                                "name":  "duplicate-actor-task-binding",
@@ -119,12 +114,12 @@
                            {
                                "name":  "fewer-than-four-authorized-actors",
                                "rejected":  true,
-                               "detected_issue_count":  16
+                               "detected_issue_count":  17
                            },
                            {
                                "name":  "science-architecture-shared-task-binding",
                                "rejected":  true,
-                               "detected_issue_count":  7
+                               "detected_issue_count":  8
                            },
                            {
                                "name":  "authorization-scope-expands-to-r1",
@@ -134,7 +129,7 @@
                            {
                                "name":  "unregistered-machine-alias",
                                "rejected":  true,
-                               "detected_issue_count":  3
+                               "detected_issue_count":  4
                            },
                            {
                                "name":  "preset-schema-exceeds-declared-floor",
@@ -164,7 +159,7 @@
                            {
                                "name":  "distinct-codex-seat-assignments",
                                "rejected":  true,
-                               "detected_issue_count":  19
+                               "detected_issue_count":  20
                            },
                            {
                                "name":  "premature-task-completion",
@@ -185,17 +180,17 @@
                          },
                          {
                              "path":  "docs/governance/toolchain-support-matrix.json",
-                             "sha256":  "1923a2f4045e215638c7bc19518cd6d2be356769527be8f6e4cacdc4fefc1bbb",
+                             "sha256":  "4fb8ee2ec3578171d93e007264fc996268516f5b0e2a273e38510415ad83adff",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
                              "path":  "docs/adr/0009-accountable-roles-and-candidate-toolchain.md",
-                             "sha256":  "098adfa5598bc861310e2ce9678a98388bbae3886cf8ea93c398670e7b363131",
+                             "sha256":  "b0263334a6125a32eca6da80f08074f9b612aa4c9a40b21e9015b1f446156bc3",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
                              "path":  "docs/tasks/work-packages/R0-GOV-001.md",
-                             "sha256":  "e1b063ea0e58da298754f970aa47d3674b0fb4cf532116868a57d542df059517",
+                             "sha256":  "7c26ebc97f96445b1458286cc094ae7515673ed183aedb3153209610e3b0683d",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
