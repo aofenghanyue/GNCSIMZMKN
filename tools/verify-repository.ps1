@@ -38,6 +38,8 @@ $requiredPaths = @(
     'docs/handoff/README.md',
     'docs/tasks/backlog.json',
     'docs/team/role-assignments.json',
+    'docs/governance/r0-owner-authorization.json',
+    'docs/handoff/r0-execution-state.md',
     'docs/architecture/authority-registry.json',
     'docs/architecture/architecture-baseline.json',
     'docs/quality/terminology-conformance-report.json',

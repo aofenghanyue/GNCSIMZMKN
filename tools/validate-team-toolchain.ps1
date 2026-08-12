@@ -9,6 +9,7 @@ $ErrorActionPreference = 'Stop'
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $rolesPath = Join-Path $repoRoot 'docs\team\role-assignments.json'
+$authorizationPath = Join-Path $repoRoot 'docs\governance\r0-owner-authorization.json'
 $matrixPath = Join-Path $repoRoot 'docs\governance\toolchain-support-matrix.json'
 $backlogPath = Join-Path $repoRoot 'docs\tasks\backlog.json'
 $presetsPath = Join-Path $repoRoot 'CMakePresets.json'
@@ -49,10 +50,43 @@ function Test-HasField([object]$Object, [string]$Name) {
     return $null -ne $Object -and $null -ne $Object.PSObject.Properties[$Name]
 }
 
-function Test-Identity([object]$Value) {
+function Test-IdentityToken([object]$Value) {
     $text = [string]$Value
     if ([string]::IsNullOrWhiteSpace($text)) { return $false }
     return $text.Trim() -notmatch '^(?i:codex(?:[\s_-].*)?|unassigned|tbd|todo|unknown|n/?a|none|null|placeholder)$'
+}
+
+function Get-ActorMap([object]$Authorization) {
+    $actorById = @{}
+    if ($null -eq $Authorization) { return $actorById }
+    foreach ($actor in @(Get-Field $Authorization 'actors')) {
+        $id = [string](Get-Field $actor 'id')
+        if (-not [string]::IsNullOrWhiteSpace($id) -and -not $actorById.ContainsKey($id)) {
+            $actorById[$id] = $actor
+        }
+    }
+    return $actorById
+}
+
+function Test-AuthorizedActor(
+    [object]$Value,
+    [hashtable]$ActorById,
+    [string]$RequiredRole = '') {
+    $id = [string]$Value
+    if (-not (Test-IdentityToken $id) -or -not $ActorById.ContainsKey($id)) {
+        return $false
+    }
+    $actor = $ActorById[$id]
+    if ((Get-Field $actor 'kind') -ne 'machine_agent' -or
+        (Get-Field $actor 'identity_disclosure') -ne 'machine-agent' -or
+        [string]::IsNullOrWhiteSpace([string](Get-Field $actor 'task_path'))) {
+        return $false
+    }
+    if (-not [string]::IsNullOrWhiteSpace($RequiredRole) -and
+        $RequiredRole -notin @(Get-Field $actor 'authorized_roles')) {
+        return $false
+    }
+    return $true
 }
 
 function Get-NormalizedTextSha256([string]$Path) {
@@ -74,7 +108,8 @@ function Copy-JsonObject([object]$Object) {
     return $Object | ConvertTo-Json -Depth 100 | ConvertFrom-Json
 }
 
-function Get-RoleReadiness([object]$Roles) {
+function Get-RoleReadiness([object]$Roles, [object]$Authorization) {
+    $actorById = Get-ActorMap $Authorization
     $required = @()
     if ($null -ne $Roles) {
         $required = @((Get-Field $Roles 'roles') | Where-Object {
@@ -82,17 +117,19 @@ function Get-RoleReadiness([object]$Roles) {
             })
     }
     $assigned = @($required | Where-Object {
-            Test-Identity (Get-Field $_ 'assignee')
+            Test-AuthorizedActor (Get-Field $_ 'assignee') $actorById ([string](Get-Field $_ 'id'))
         }).Count
     $reviewed = @($required | Where-Object {
-            Test-Identity (Get-Field $_ 'reviewer')
+            Test-AuthorizedActor (Get-Field $_ 'reviewer') $actorById
         }).Count
     $validPairs = @($required | Where-Object {
             $assignee = [string](Get-Field $_ 'assignee')
             $reviewer = [string](Get-Field $_ 'reviewer')
-            (Test-Identity $assignee) -and
-            (Test-Identity $reviewer) -and
-            $assignee -ne $reviewer
+            (Test-AuthorizedActor $assignee $actorById ([string](Get-Field $_ 'id'))) -and
+            (Test-AuthorizedActor $reviewer $actorById) -and
+            $assignee -ne $reviewer -and
+            (Get-Field $actorById[$assignee] 'task_path') -ne
+            (Get-Field $actorById[$reviewer] 'task_path')
         }).Count
 
     $highRiskIndependent = $false
@@ -106,9 +143,11 @@ function Get-RoleReadiness([object]$Roles) {
         $scientificAssignee = [string](Get-Field $scientific 'assignee')
         $architectureAssignee = [string](Get-Field $architecture 'assignee')
         $highRiskIndependent =
-            (Test-Identity $scientificAssignee) -and
-            (Test-Identity $architectureAssignee) -and
-            $scientificAssignee -ne $architectureAssignee
+            (Test-AuthorizedActor $scientificAssignee $actorById 'scientific_authority') -and
+            (Test-AuthorizedActor $architectureAssignee $actorById 'architecture_lead') -and
+            $scientificAssignee -ne $architectureAssignee -and
+            (Get-Field $actorById[$scientificAssignee] 'task_path') -ne
+            (Get-Field $actorById[$architectureAssignee] 'task_path')
     }
 
     return [pscustomobject][ordered]@{
@@ -127,6 +166,7 @@ function Get-RoleReadiness([object]$Roles) {
 
 function Test-GovernanceObjects(
     [object]$Roles,
+    [object]$Authorization,
     [object]$Matrix,
     [object]$Backlog,
     [object]$Presets,
@@ -136,19 +176,125 @@ function Test-GovernanceObjects(
     [string]$CMakeText) {
     $issues = [System.Collections.Generic.List[string]]::new()
 
-    if ((Get-Field $Roles 'schema_version') -ne 'gnczmkn.team-roles/2') {
+    if ((Get-Field $Roles 'schema_version') -ne 'gnczmkn.team-roles/3') {
         $issues.Add('Unsupported team-role schema.')
+    }
+    if ((Get-Field $Roles 'authorization_ref') -ne
+        'docs/governance/r0-owner-authorization.json') {
+        $issues.Add('Team roles do not reference the R0 owner authorization record.')
     }
     $assignmentPolicy = Get-Field $Roles 'assignment_policy'
     if ((Get-Field $assignmentPolicy 'reviewer_must_differ_from_assignee') -ne $true -or
+        (Get-Field $assignmentPolicy 'reviewer_task_must_differ_from_assignee_task') -ne $true -or
+        (Get-Field $assignmentPolicy 'identities_resolve_through_authorization') -ne $true -or
+        (Get-Field $assignmentPolicy 'machine_identity_must_be_explicit') -ne $true -or
         (Get-Field $assignmentPolicy 'placeholder_assignments_forbidden') -ne $true) {
-        $issues.Add('Team-role assignment policy does not enforce independent, real identities.')
+        $issues.Add('Team-role assignment policy does not enforce authorized, explicit and independent identities.')
     }
     $highRiskPolicy = Get-Field $assignmentPolicy 'high_risk_independence'
     if ((@(Get-Field $highRiskPolicy 'roles') -join ',') -ne
         'scientific_authority,architecture_lead' -or
-        (Get-Field $highRiskPolicy 'assignees_must_differ') -ne $true) {
+        (Get-Field $highRiskPolicy 'assignees_must_differ') -ne $true -or
+        (Get-Field $highRiskPolicy 'assignee_tasks_must_differ') -ne $true) {
         $issues.Add('Scientific/architecture high-risk independence policy is incomplete.')
+    }
+
+    if ((Get-Field $Authorization 'schema_version') -ne
+        'gnczmkn.r0-owner-authorization/1' -or
+        (Get-Field $Authorization 'authorization_id') -ne
+        'R0-OWNER-AUTH-2026-08-12' -or
+        (Get-Field $Authorization 'authorization_status') -ne 'active' -or
+        (Get-Field $Authorization 'authorized_on') -ne '2026-08-12') {
+        $issues.Add('R0 owner authorization identity or status is invalid.')
+    }
+    $sourceInstruction = Get-Field $Authorization 'source_instruction'
+    if ((Get-Field $sourceInstruction 'digest_algorithm') -ne 'SHA-256' -or
+        (Get-Field $sourceInstruction 'sha256') -ne
+        '6b220b6425cd90fab5b8bdae262d6c83c8e299e29d47d328d96262dfe69f918b') {
+        $issues.Add('R0 owner authorization source instruction digest is invalid.')
+    }
+    $authorizedRepository = Get-Field $Authorization 'repository'
+    if ((Get-Field $authorizedRepository 'slug') -ne 'aofenghanyue/GNCSIMZMKN' -or
+        (Get-Field $authorizedRepository 'trusted_baseline_commit') -ne
+        '291cb28b064642f3e7aa14303ee30b03c8d047f0' -or
+        (Get-Field $Authorization 'shared_thread_id') -ne
+        '019ff3be-4a80-7210-a14e-dac71ac15f9f') {
+        $issues.Add('R0 owner authorization repository, baseline or shared thread binding is invalid.')
+    }
+    $authorizedScope = Get-Field $Authorization 'scope'
+    if ((Get-Field $authorizedScope 'stage') -ne 'R0' -or
+        @(Get-Field $authorizedScope 'authorized_actions').Count -lt 6 -or
+        [string](Get-Field $authorizedScope 'stage_boundary') -notmatch 'R1 through R8') {
+        $issues.Add('R0 owner authorization scope or stage boundary is incomplete.')
+    }
+    $identityPolicy = Get-Field $Authorization 'identity_policy'
+    if ((Get-Field $identityPolicy 'machine_identity_must_be_explicit') -ne $true -or
+        (Get-Field $identityPolicy 'human_impersonation_forbidden') -ne $true -or
+        (Get-Field $identityPolicy 'unregistered_actor_aliases_have_no_authority') -ne $true) {
+        $issues.Add('R0 owner authorization identity policy is incomplete.')
+    }
+    $independencePolicy = Get-Field $Authorization 'independence_policy'
+    if ((Get-Field $independencePolicy 'minimum_distinct_machine_actors') -ne 4 -or
+        (Get-Field $independencePolicy 'actor_ids_must_be_unique') -ne $true -or
+        (Get-Field $independencePolicy 'task_paths_must_be_unique') -ne $true -or
+        (Get-Field $independencePolicy 'implementer_and_final_reviewer_must_differ') -ne $true -or
+        (Get-Field $independencePolicy 'scientific_authority_and_architecture_lead_must_differ') -ne $true) {
+        $issues.Add('R0 owner authorization independence policy is incomplete.')
+    }
+    $failClosedBoundaries = Get-Field $Authorization 'fail_closed_boundaries'
+    foreach ($boundary in @(
+            'rights_and_provenance', 'external_distribution', 'hosted_ci',
+            'toolchain_qualification', 'task_and_gate_status', 'legacy_boundary')) {
+        if ([string]::IsNullOrWhiteSpace([string](Get-Field $failClosedBoundaries $boundary))) {
+            $issues.Add("R0 owner authorization is missing fail-closed boundary '$boundary'.")
+        }
+    }
+
+    $actorById = Get-ActorMap $Authorization
+    $expectedActors = [ordered]@{
+        'r0-po-agent' = [ordered]@{
+            task = '/root'; roles = @('product_owner'); reviewer = 'r0-validation-agent'
+        }
+        'r0-architecture-agent' = [ordered]@{
+            task = '/root/r0_architecture_agent'; roles = @('architecture_lead', 'compiler_lead'); reviewer = 'r0-validation-agent'
+        }
+        'r0-science-agent' = [ordered]@{
+            task = '/root/r0_science_agent'; roles = @('scientific_authority', 'model_sdk_lead'); reviewer = 'r0-architecture-agent'
+        }
+        'r0-validation-agent' = [ordered]@{
+            task = '/root/r0_validation_agent'; roles = @('validation_lead', 'runtime_numerics_lead', 'evidence_workflow_lead'); reviewer = 'r0-po-agent'
+        }
+    }
+    if ($actorById.Count -ne 4 -or
+        (($actorById.Keys | Sort-Object) -join ',') -ne
+        (($expectedActors.Keys | Sort-Object) -join ',')) {
+        $issues.Add('R0 owner authorization must bind exactly the four authorized machine actors.')
+    }
+    $seenTaskPaths = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+    foreach ($actorId in @($actorById.Keys)) {
+        $actor = $actorById[$actorId]
+        $taskPath = [string](Get-Field $actor 'task_path')
+        if (-not (Test-AuthorizedActor $actorId $actorById)) {
+            $issues.Add("Actor '$actorId' lacks explicit machine identity or task binding.")
+        }
+        if (-not $seenTaskPaths.Add($taskPath)) {
+            $issues.Add("Actor '$actorId' reuses task path '$taskPath'.")
+        }
+        if (-not $expectedActors.Contains($actorId)) { continue }
+        $expected = $expectedActors[$actorId]
+        if ($taskPath -ne $expected.task -or
+            ((@(Get-Field $actor 'authorized_roles') | Sort-Object) -join ',') -ne
+            ((@($expected.roles) | Sort-Object) -join ',') -or
+            (Get-Field $actor 'primary_reviewer_actor_id') -ne $expected.reviewer) {
+            $issues.Add("Actor '$actorId' differs from the owner-authorized task, role or reviewer binding.")
+        }
+        $reviewerId = [string](Get-Field $actor 'primary_reviewer_actor_id')
+        if (-not $actorById.ContainsKey($reviewerId) -or $reviewerId -eq $actorId) {
+            $issues.Add("Actor '$actorId' has no distinct authorized primary reviewer.")
+        }
+        elseif ((Get-Field $actorById[$reviewerId] 'task_path') -eq $taskPath) {
+            $issues.Add("Actor '$actorId' shares a task path with its primary reviewer.")
+        }
     }
 
     $expectedRoleIds = @(
@@ -177,18 +323,33 @@ function Test-GovernanceObjects(
         }
         $assignee = Get-Field $role 'assignee'
         $reviewer = Get-Field $role 'reviewer'
-        if ($null -ne $assignee -and -not (Test-Identity $assignee)) {
-            $issues.Add("Role '$id' has a placeholder assignee.")
+        if ($null -ne $assignee -and
+            -not (Test-AuthorizedActor $assignee $actorById $id)) {
+            $issues.Add("Role '$id' has an unauthorized or out-of-scope assignee.")
         }
-        if ($null -ne $reviewer -and -not (Test-Identity $reviewer)) {
-            $issues.Add("Role '$id' has a placeholder reviewer.")
+        if ($null -ne $reviewer -and
+            -not (Test-AuthorizedActor $reviewer $actorById)) {
+            $issues.Add("Role '$id' has an unauthorized reviewer.")
         }
-        if ((Test-Identity $assignee) -xor (Test-Identity $reviewer)) {
+        if ((Test-AuthorizedActor $assignee $actorById $id) -xor
+            (Test-AuthorizedActor $reviewer $actorById)) {
             $issues.Add("Role '$id' has only one side of the assignee/reviewer pair.")
         }
-        if ((Test-Identity $assignee) -and (Test-Identity $reviewer) -and
+        if ((Test-AuthorizedActor $assignee $actorById $id) -and
+            (Test-AuthorizedActor $reviewer $actorById) -and
             [string]$assignee -eq [string]$reviewer) {
             $issues.Add("Role '$id' has the same assignee and reviewer.")
+        }
+        if ((Test-AuthorizedActor $assignee $actorById $id) -and
+            (Test-AuthorizedActor $reviewer $actorById) -and
+            (Get-Field $actorById[[string]$assignee] 'task_path') -eq
+            (Get-Field $actorById[[string]$reviewer] 'task_path')) {
+            $issues.Add("Role '$id' has assignee and reviewer on the same task path.")
+        }
+        if ((Test-AuthorizedActor $assignee $actorById $id) -and
+            (Get-Field $actorById[[string]$assignee] 'primary_reviewer_actor_id') -ne
+            [string]$reviewer) {
+            $issues.Add("Role '$id' differs from the owner-authorized review pairing.")
         }
     }
     if ((($roleById.Keys | Sort-Object) -join ',') -ne
@@ -203,15 +364,21 @@ function Test-GovernanceObjects(
         }
     }
 
-    $roleReadiness = Get-RoleReadiness $Roles
+    $roleReadiness = Get-RoleReadiness $Roles $Authorization
     if ($roleById.ContainsKey('scientific_authority') -and
         $roleById.ContainsKey('architecture_lead')) {
         $scientificAssignee = Get-Field $roleById['scientific_authority'] 'assignee'
         $architectureAssignee = Get-Field $roleById['architecture_lead'] 'assignee'
-        if ((Test-Identity $scientificAssignee) -and
-            (Test-Identity $architectureAssignee) -and
+        if ((Test-AuthorizedActor $scientificAssignee $actorById 'scientific_authority') -and
+            (Test-AuthorizedActor $architectureAssignee $actorById 'architecture_lead') -and
             [string]$scientificAssignee -eq [string]$architectureAssignee) {
             $issues.Add('Scientific Authority and Architecture Lead share the same high-risk assignee.')
+        }
+        if ((Test-AuthorizedActor $scientificAssignee $actorById 'scientific_authority') -and
+            (Test-AuthorizedActor $architectureAssignee $actorById 'architecture_lead') -and
+            (Get-Field $actorById[[string]$scientificAssignee] 'task_path') -eq
+            (Get-Field $actorById[[string]$architectureAssignee] 'task_path')) {
+            $issues.Add('Scientific Authority and Architecture Lead share the same high-risk task path.')
         }
     }
     $roleDecisionStatus = [string](Get-Field $Roles 'decision_status')
@@ -457,6 +624,7 @@ function Test-GovernanceObjects(
 function Invoke-Mutation([string]$Name, [scriptblock]$Mutation) {
     $context = [ordered]@{
         roles = Copy-JsonObject $script:roles
+        authorization = Copy-JsonObject $script:authorization
         matrix = Copy-JsonObject $script:matrix
         backlog = Copy-JsonObject $script:backlog
         presets = Copy-JsonObject $script:presets
@@ -468,6 +636,7 @@ function Invoke-Mutation([string]$Name, [scriptblock]$Mutation) {
     & $Mutation $context
     $mutationIssues = @(Test-GovernanceObjects `
             $context.roles `
+            $context.authorization `
             $context.matrix `
             $context.backlog `
             $context.presets `
@@ -488,6 +657,7 @@ function Invoke-Mutation([string]$Name, [scriptblock]$Mutation) {
 
 $requiredPaths = @(
     'docs/team/role-assignments.json',
+    'docs/governance/r0-owner-authorization.json',
     'docs/governance/toolchain-support-matrix.json',
     'docs/adr/0009-accountable-roles-and-candidate-toolchain.md',
     'docs/tasks/work-packages/R0-GOV-001.md',
@@ -506,6 +676,7 @@ foreach ($relativePath in $requiredPaths) {
 }
 
 $roles = Read-Json $rolesPath
+$authorization = Read-Json $authorizationPath
 $matrix = Read-Json $matrixPath
 $backlog = Read-Json $backlogPath
 $presets = Read-Json $presetsPath
@@ -524,6 +695,7 @@ $cmakeText = if (Test-Path -LiteralPath $cmakePath -PathType Leaf) {
 else { '' }
 
 $script:roles = $roles
+$script:authorization = $authorization
 $script:matrix = $matrix
 $script:backlog = $backlog
 $script:presets = $presets
@@ -532,10 +704,11 @@ $script:adrText = $adrText
 $script:workflowText = $workflowText
 $script:cmakeText = $cmakeText
 
-if ($null -ne $roles -and $null -ne $matrix -and $null -ne $backlog -and
+if ($null -ne $roles -and $null -ne $authorization -and
+    $null -ne $matrix -and $null -ne $backlog -and
     $null -ne $presets -and $null -ne $manifest) {
     foreach ($issue in @(Test-GovernanceObjects `
-            $roles $matrix $backlog $presets $manifest `
+            $roles $authorization $matrix $backlog $presets $manifest `
             $adrText $workflowText $cmakeText)) {
         Add-Error $issue
     }
@@ -559,8 +732,8 @@ if ($null -ne $roles -and $null -ne $matrix -and $null -ne $backlog -and
     }
     Invoke-Mutation 'same-assignee-and-reviewer' {
         param($value)
-        $value.roles.roles[0].assignee = 'Alice Example'
-        $value.roles.roles[0].reviewer = 'Alice Example'
+        $value.roles.roles[0].assignee = 'r0-po-agent'
+        $value.roles.roles[0].reviewer = 'r0-po-agent'
     }
     Invoke-Mutation 'shared-science-architecture-assignee' {
         param($value)
@@ -570,15 +743,48 @@ if ($null -ne $roles -and $null -ne $matrix -and $null -ne $backlog -and
         $architecture = @($value.roles.roles | Where-Object {
                 $_.id -eq 'architecture_lead'
             }) | Select-Object -First 1
-        $scientific.assignee = 'Alice Example'
-        $scientific.reviewer = 'Bob Example'
-        $architecture.assignee = 'Alice Example'
-        $architecture.reviewer = 'Carol Example'
+        $architecture.assignee = $scientific.assignee
+        $architecture.reviewer = $scientific.reviewer
     }
     Invoke-Mutation 'accepted-adr-without-roles' {
         param($value)
+        $value.roles.roles[0].reviewer = $null
         $value.adr_text = $value.adr_text.Replace('- Status: Proposed', '- Status: Accepted')
         $value.matrix.decision_status = 'accepted'
+    }
+    Invoke-Mutation 'authorization-source-digest-missing' {
+        param($value)
+        $value.authorization.source_instruction.sha256 = ''
+    }
+    Invoke-Mutation 'machine-actor-impersonates-human' {
+        param($value)
+        $value.authorization.actors[0].kind = 'human'
+    }
+    Invoke-Mutation 'duplicate-actor-task-binding' {
+        param($value)
+        $value.authorization.actors[1].task_path = $value.authorization.actors[0].task_path
+    }
+    Invoke-Mutation 'fewer-than-four-authorized-actors' {
+        param($value)
+        $value.authorization.actors = @($value.authorization.actors | Select-Object -First 3)
+    }
+    Invoke-Mutation 'science-architecture-shared-task-binding' {
+        param($value)
+        $science = @($value.authorization.actors | Where-Object {
+                $_.id -eq 'r0-science-agent'
+            }) | Select-Object -First 1
+        $architecture = @($value.authorization.actors | Where-Object {
+                $_.id -eq 'r0-architecture-agent'
+            }) | Select-Object -First 1
+        $architecture.task_path = $science.task_path
+    }
+    Invoke-Mutation 'authorization-scope-expands-to-r1' {
+        param($value)
+        $value.authorization.scope.stage = 'R1'
+    }
+    Invoke-Mutation 'unregistered-machine-alias' {
+        param($value)
+        $value.roles.roles[0].assignee = 'r0-unregistered-agent'
     }
     Invoke-Mutation 'preset-schema-exceeds-declared-floor' {
         param($value)
@@ -603,10 +809,6 @@ if ($null -ne $roles -and $null -ne $matrix -and $null -ne $backlog -and
         $value.matrix.evidence_only_profiles[0].classification = 'candidate-primary'
         $value.matrix.evidence_only_profiles[0].product_qualification = $true
     }
-    Invoke-Mutation 'virtual-role-readiness' {
-        param($value)
-        $value.roles.decision_status = 'complete'
-    }
     Invoke-Mutation 'distinct-codex-seat-assignments' {
         param($value)
         $index = 0
@@ -626,7 +828,7 @@ if ($null -ne $roles -and $null -ne $matrix -and $null -ne $backlog -and
     }
 }
 
-$roleReadiness = Get-RoleReadiness $roles
+$roleReadiness = Get-RoleReadiness $roles $authorization
 $adrStatusMatch = [regex]::Match($adrText, '(?m)^- Status: (Proposed|Accepted)$')
 $adrStatus = if ($adrStatusMatch.Success) { $adrStatusMatch.Groups[1].Value } else { 'Invalid' }
 $qualificationPolicy = Get-Field $matrix 'qualification_policy'
@@ -685,11 +887,25 @@ if ($null -ne $matrix) {
 $expectedReport = [pscustomobject][ordered]@{
     schema_version = 'gnczmkn.team-toolchain-readiness/1'
     task_id = 'R0-GOV-001'
-    reviewed_on = '2026-08-10'
+    reviewed_on = '2026-08-12'
     status = if ($governanceReady) { 'ready' } else { 'conformant-with-blockers' }
     configuration_validation = if ($errors.Count -eq 0) { 'passed' } else { 'failed' }
     governance_ready = $governanceReady
     blockers = @($blockers)
+    authorization = [ordered]@{
+        authorization_id = Get-Field $authorization 'authorization_id'
+        authorization_status = Get-Field $authorization 'authorization_status'
+        authorized_on = Get-Field $authorization 'authorized_on'
+        source_instruction_sha256 = Get-Field (Get-Field $authorization 'source_instruction') 'sha256'
+        shared_thread_id = Get-Field $authorization 'shared_thread_id'
+        stage = Get-Field (Get-Field $authorization 'scope') 'stage'
+        machine_actor_count = @((Get-Field $authorization 'actors') | Where-Object {
+                (Get-Field $_ 'kind') -eq 'machine_agent'
+            }).Count
+        unique_task_binding_count = @((Get-Field $authorization 'actors') | ForEach-Object {
+                [string](Get-Field $_ 'task_path')
+            } | Sort-Object -Unique).Count
+    }
     roles = $roleReadiness
     toolchain = [ordered]@{
         adr_status = $adrStatus

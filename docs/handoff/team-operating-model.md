@@ -16,6 +16,8 @@
 
 小团队可以让一人承担多个角色。Scientific Authority 与 Architecture Lead 对高风险改动保持独立签字。
 
+责任主体可以是可解析的人类身份，也可以是经过仓库所有者明确授权的机器智能体。机器智能体必须在授权登记中公开身份类型、实际 task/thread binding、角色范围和日期，且不得伪装成人类。未登记别名、泛化工具名称和占位符均不具备决策资格。同一事项的实现者与最终复核者必须来自不同责任主体和不同执行 task；Scientific Authority 与 Architecture Lead 继续保持独立。
+
 ## 2. 决策规则
 
 - 目标架构语义变化：Architecture Lead + Scientific Authority + Product Owner。

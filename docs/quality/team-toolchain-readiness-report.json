@@ -1,16 +1,11 @@
 {
     "schema_version":  "gnczmkn.team-toolchain-readiness/1",
     "task_id":  "R0-GOV-001",
-    "reviewed_on":  "2026-08-10",
+    "reviewed_on":  "2026-08-12",
     "status":  "conformant-with-blockers",
     "configuration_validation":  "passed",
     "governance_ready":  false,
     "blockers":  [
-                     {
-                         "code":  "ROLE-ASSIGNMENTS-MISSING",
-                         "owner_role":  "product_owner",
-                         "condition":  "16 required assignee/reviewer slots remain empty or invalid."
-                     },
                      {
                          "code":  "ADR-NOT-ACCEPTED",
                          "owner_role":  "architecture_lead",
@@ -22,14 +17,24 @@
                          "condition":  "The fixed-runner workflow has not been pushed and completed with retained run evidence."
                      }
                  ],
+    "authorization":  {
+                          "authorization_id":  "R0-OWNER-AUTH-2026-08-12",
+                          "authorization_status":  "active",
+                          "authorized_on":  "2026-08-12",
+                          "source_instruction_sha256":  "6b220b6425cd90fab5b8bdae262d6c83c8e299e29d47d328d96262dfe69f918b",
+                          "shared_thread_id":  "019ff3be-4a80-7210-a14e-dac71ac15f9f",
+                          "stage":  "R0",
+                          "machine_actor_count":  4,
+                          "unique_task_binding_count":  4
+                      },
     "roles":  {
                   "required_role_count":  8,
-                  "assigned_required_roles":  0,
-                  "reviewed_required_roles":  0,
-                  "valid_required_pairs":  0,
-                  "missing_required_slots":  16,
-                  "high_risk_assignees_independent":  false,
-                  "ready":  false
+                  "assigned_required_roles":  8,
+                  "reviewed_required_roles":  8,
+                  "valid_required_pairs":  8,
+                  "missing_required_slots":  0,
+                  "high_risk_assignees_independent":  true,
+                  "ready":  true
               },
     "toolchain":  {
                       "adr_status":  "Proposed",
@@ -79,22 +84,57 @@
                            {
                                "name":  "missing-reviewer-field",
                                "rejected":  true,
-                               "detected_issue_count":  1
+                               "detected_issue_count":  4
                            },
                            {
                                "name":  "same-assignee-and-reviewer",
                                "rejected":  true,
-                               "detected_issue_count":  1
+                               "detected_issue_count":  4
                            },
                            {
                                "name":  "shared-science-architecture-assignee",
                                "rejected":  true,
-                               "detected_issue_count":  1
+                               "detected_issue_count":  3
                            },
                            {
                                "name":  "accepted-adr-without-roles",
                                "rejected":  true,
+                               "detected_issue_count":  4
+                           },
+                           {
+                               "name":  "authorization-source-digest-missing",
+                               "rejected":  true,
                                "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "machine-actor-impersonates-human",
+                               "rejected":  true,
+                               "detected_issue_count":  10
+                           },
+                           {
+                               "name":  "duplicate-actor-task-binding",
+                               "rejected":  true,
+                               "detected_issue_count":  2
+                           },
+                           {
+                               "name":  "fewer-than-four-authorized-actors",
+                               "rejected":  true,
+                               "detected_issue_count":  16
+                           },
+                           {
+                               "name":  "science-architecture-shared-task-binding",
+                               "rejected":  true,
+                               "detected_issue_count":  7
+                           },
+                           {
+                               "name":  "authorization-scope-expands-to-r1",
+                               "rejected":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "unregistered-machine-alias",
+                               "rejected":  true,
+                               "detected_issue_count":  3
                            },
                            {
                                "name":  "preset-schema-exceeds-declared-floor",
@@ -122,11 +162,6 @@
                                "detected_issue_count":  1
                            },
                            {
-                               "name":  "virtual-role-readiness",
-                               "rejected":  true,
-                               "detected_issue_count":  1
-                           },
-                           {
                                "name":  "distinct-codex-seat-assignments",
                                "rejected":  true,
                                "detected_issue_count":  19
@@ -140,7 +175,12 @@
     "input_hashes":  [
                          {
                              "path":  "docs/team/role-assignments.json",
-                             "sha256":  "4ede05482e214268cc7cf0dc139c17f0e92b9bf9e8c773b090ce83d6fe678f0e",
+                             "sha256":  "35e0cf92b7756bc2c95becde44d9999e401d802b012d027ceeace5e391106e45",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
+                             "path":  "docs/governance/r0-owner-authorization.json",
+                             "sha256":  "b3f58e2cdd2c6ff0a5cb5abcfd4fad607111f2fa6f78baa2b810adaee2f59042",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
@@ -150,22 +190,22 @@
                          },
                          {
                              "path":  "docs/adr/0009-accountable-roles-and-candidate-toolchain.md",
-                             "sha256":  "b86e2daa37cda5ae2e2a508d15fdb7427625e1734c3135d972aedb6fbbb39cd9",
+                             "sha256":  "098adfa5598bc861310e2ce9678a98388bbae3886cf8ea93c398670e7b363131",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
                              "path":  "docs/tasks/work-packages/R0-GOV-001.md",
-                             "sha256":  "1b688a78f58c40acf47d7dd76fcbc631ded11fb8a6edb92894c184564da0ea94",
+                             "sha256":  "e1b063ea0e58da298754f970aa47d3674b0fb4cf532116868a57d542df059517",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
                              "path":  "docs/tasks/backlog.json",
-                             "sha256":  "8627b65f1d655f09043833eb23965c3bf72772e554eedc9e920429d131f3a06c",
+                             "sha256":  "5f104e178a557dc612a366c1f4698d121b120da7c2256bcb8b359d46804f0601",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
                              "path":  "docs/handoff/team-operating-model.md",
-                             "sha256":  "c8aaf65e70f7674d450f19aa3530e3763639e82230f74ac90e79fdf2252f8810",
+                             "sha256":  "39518c31159d1004addc7cfb05a3529ffa8196a01857ff1ad84c6ec41a7bcbaa",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
@@ -195,7 +235,7 @@
                          },
                          {
                              "path":  "tools/validate-team-toolchain.ps1",
-                             "sha256":  "6cd2b6c49064cebd1b61a325b03791701e31167c736cfcade7482be2ddc3d0c8",
+                             "sha256":  "6d89eac8e03f0abe293ecb1256878f5daeaf6e34e55e5ba475c6642f61e5b091",
                              "hash_normalization":  "utf8-lf-no-bom"
                          }
                      ]

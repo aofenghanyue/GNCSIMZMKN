@@ -1,0 +1,95 @@
+{
+  "schema_version": "gnczmkn.r0-owner-authorization/1",
+  "authorization_id": "R0-OWNER-AUTH-2026-08-12",
+  "authorization_status": "active",
+  "authorized_on": "2026-08-12",
+  "authorizing_party": {
+    "authority": "repository_owner",
+    "identity_claim": "The instruction was supplied by the repository owner in the shared Codex thread."
+  },
+  "source_instruction": {
+    "digest_algorithm": "SHA-256",
+    "sha256": "6b220b6425cd90fab5b8bdae262d6c83c8e299e29d47d328d96262dfe69f918b"
+  },
+  "repository": {
+    "slug": "aofenghanyue/GNCSIMZMKN",
+    "trusted_baseline_commit": "291cb28b064642f3e7aa14303ee30b03c8d047f0",
+    "baseline_rule": "origin/main must equal the trusted baseline commit or be its descendant before a task branch is created"
+  },
+  "shared_thread_id": "019ff3be-4a80-7210-a14e-dac71ac15f9f",
+  "actors": [
+    {
+      "id": "r0-po-agent",
+      "kind": "machine_agent",
+      "identity_disclosure": "machine-agent",
+      "task_path": "/root",
+      "authorized_roles": ["product_owner"],
+      "primary_reviewer_actor_id": "r0-validation-agent"
+    },
+    {
+      "id": "r0-architecture-agent",
+      "kind": "machine_agent",
+      "identity_disclosure": "machine-agent",
+      "task_path": "/root/r0_architecture_agent",
+      "authorized_roles": ["architecture_lead", "compiler_lead"],
+      "primary_reviewer_actor_id": "r0-validation-agent"
+    },
+    {
+      "id": "r0-science-agent",
+      "kind": "machine_agent",
+      "identity_disclosure": "machine-agent",
+      "task_path": "/root/r0_science_agent",
+      "authorized_roles": ["scientific_authority", "model_sdk_lead"],
+      "primary_reviewer_actor_id": "r0-architecture-agent"
+    },
+    {
+      "id": "r0-validation-agent",
+      "kind": "machine_agent",
+      "identity_disclosure": "machine-agent",
+      "task_path": "/root/r0_validation_agent",
+      "authorized_roles": [
+        "validation_lead",
+        "runtime_numerics_lead",
+        "evidence_workflow_lead"
+      ],
+      "primary_reviewer_actor_id": "r0-po-agent"
+    }
+  ],
+  "scope": {
+    "stage": "R0",
+    "authorized_actions": [
+      "assume the recorded project roles within R0",
+      "make architecture, science, governance and engineering decisions within R0",
+      "implement R0 code, specifications, tests, evidence and documentation",
+      "perform independent review, task acceptance and R0 gate review",
+      "create branches, commit, push, create or update pull requests",
+      "merge a pull request after independent review, automated tests and required CI have passed"
+    ],
+    "stage_boundary": "R1 through R8 production implementation remains locked until the formal R0 gate passes"
+  },
+  "independence_policy": {
+    "minimum_distinct_machine_actors": 4,
+    "actor_ids_must_be_unique": true,
+    "task_paths_must_be_unique": true,
+    "implementer_and_final_reviewer_must_differ": true,
+    "scientific_authority_and_architecture_lead_must_differ": true
+  },
+  "identity_policy": {
+    "machine_identity_must_be_explicit": true,
+    "human_impersonation_forbidden": true,
+    "unregistered_actor_aliases_have_no_authority": true
+  },
+  "fail_closed_boundaries": {
+    "rights_and_provenance": "remain subject to their own evidence, ADR and review requirements; this authorization grants no license or distribution right",
+    "external_distribution": "remains blocked wherever current provenance or rights records block it",
+    "hosted_ci": "remains pending until retained, commit-bound runs satisfy the approved profiles",
+    "toolchain_qualification": "remains candidate-not-supported until every qualification prerequisite is evidenced",
+    "task_and_gate_status": "does not advance automatically; backlog acceptance, evidence and independent review still apply",
+    "legacy_boundary": "reference/legacy remains read-only and evidence-only"
+  },
+  "governance_refs": [
+    "docs/adr/0009-accountable-roles-and-candidate-toolchain.md",
+    "docs/team/role-assignments.json",
+    "docs/handoff/team-operating-model.md"
+  ]
+}

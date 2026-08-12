@@ -9,8 +9,8 @@
                    "repository_distribution_license_selected":  false,
                    "root_distribution_license_files":  0,
                    "decision_roles":  {
-                                          "product_owner_assigned":  false,
-                                          "architecture_lead_assigned":  false
+                                          "product_owner_assigned":  true,
+                                          "architecture_lead_assigned":  true
                                       }
                },
     "inventory":  {

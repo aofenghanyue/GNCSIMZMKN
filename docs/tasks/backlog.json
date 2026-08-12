@@ -1,7 +1,7 @@
 {
   "schema_version": "gnczmkn.task-backlog/1",
   "current_gate": "R0",
-  "updated_at": "2026-08-10",
+  "updated_at": "2026-08-12",
   "status_values": ["planned", "ready", "in_progress", "blocked", "review", "done"],
   "tasks": [
     {
@@ -73,7 +73,8 @@
       "priority": "P0",
       "size": "S",
       "owner_role": "product_owner",
-      "assignee": "Codex",
+      "assignee": "r0-po-agent",
+      "reviewer": "r0-validation-agent",
       "depends_on": ["B0-VER-001"],
       "deliverables": ["Completed role assignments", "Accepted platform/compiler ADR"],
       "acceptance": ["Every required role has an assignee and reviewer"],
