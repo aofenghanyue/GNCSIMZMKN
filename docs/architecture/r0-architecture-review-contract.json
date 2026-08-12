@@ -144,8 +144,8 @@
       },
       {
         "path": "tools/modules/R0ArchitectureReview.psm1",
-        "normalized_byte_length": 38563,
-        "normalized_sha256": "13e0e429816c5433cf02d54320b3f2ece39630be3e8a8c9b16093dd6114ff01b"
+        "normalized_byte_length": 39939,
+        "normalized_sha256": "7d734fdce6f8e5dfa6fb6c72e229a6fc53359b4287ee18b5ea9725a407b2f3d3"
       },
       {
         "path": "tools/modules/JsonSchemaSubset.psm1",
@@ -160,12 +160,12 @@
       {
         "path": "docs/architecture/architecture-baseline.json",
         "normalized_byte_length": 81562,
-        "normalized_sha256": "89ca51e5d81c1a2d3e54258e245e4859e382314c53c4ed40acc61bf6353985bf"
+        "normalized_sha256": "feae2b1b26417f25b563862a6c3e1cd91bc2b3482baa1a432ad4d459157e28e9"
       },
       {
         "path": "docs/quality/terminology-conformance-report.json",
         "normalized_byte_length": 3651,
-        "normalized_sha256": "0f24a0f4202f82a6288fdc1859d379f45ede4a29b065baa405b231be85fbbc55"
+        "normalized_sha256": "ca3760a089456bbc6a3aa7a8bd7e8a3813953d74625dec339210678dc18742ac"
       }
     ]
   },

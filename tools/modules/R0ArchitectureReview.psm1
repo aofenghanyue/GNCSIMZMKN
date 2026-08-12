@@ -446,10 +446,40 @@ function Invoke-R0ArchitectureReviewMutations {
     }
 
     ++$caseCount
-    $mutatedGlossaryText = [regex]::Replace($GlossaryText, '\| PressureOnly \|', '| V1 |', 1)
-    $result = Test-R0ArchitectureReviewContract -Contract $Contract -Registry $Registry -RepoRoot $RepoRoot -ContentOverrides @{
-        'design-notes/gnczmkn-architecture-roadmap/reference-glossary.md' = $mutatedGlossaryText }
-    Assert-R0ArchitectureReviewFailure -Failures $failures -Name 'capability-status-promotion-drift' -Result $result -ExpectedText 'snapshot digest drifted'
+    $capabilitySectionStart = $GlossaryText.IndexOf('## 8.', [System.StringComparison]::Ordinal)
+    $legacySectionStart = if ($capabilitySectionStart -ge 0) {
+        $GlossaryText.IndexOf('## 9.', $capabilitySectionStart, [System.StringComparison]::Ordinal)
+    }
+    else {
+        -1
+    }
+    if ($capabilitySectionStart -lt 0 -or $legacySectionStart -le $capabilitySectionStart) {
+        $failures.Add('capability-status-promotion-drift mutation could not isolate the capability section.')
+    }
+    else {
+        $capabilitySectionText = $GlossaryText.Substring(
+            $capabilitySectionStart,
+            $legacySectionStart - $capabilitySectionStart)
+        $capabilityStatusPattern = [regex]::new(
+            '^(\| `RenderSnapshot`[^|\r\n]*\| )PressureOnly( \|)',
+            [System.Text.RegularExpressions.RegexOptions]::Multiline)
+        $mutatedCapabilitySectionText = $capabilityStatusPattern.Replace(
+            $capabilitySectionText,
+            '${1}V1${2}',
+            1)
+        if ($mutatedCapabilitySectionText -ceq $capabilitySectionText) {
+            $failures.Add('capability-status-promotion-drift mutation did not alter the target capability row.')
+        }
+        else {
+            $mutatedGlossaryText =
+                $GlossaryText.Substring(0, $capabilitySectionStart) +
+                $mutatedCapabilitySectionText +
+                $GlossaryText.Substring($legacySectionStart)
+            $result = Test-R0ArchitectureReviewContract -Contract $Contract -Registry $Registry -RepoRoot $RepoRoot -ContentOverrides @{
+                'design-notes/gnczmkn-architecture-roadmap/reference-glossary.md' = $mutatedGlossaryText }
+            Assert-R0ArchitectureReviewFailure -Failures $failures -Name 'capability-status-promotion-drift' -Result $result -ExpectedText 'snapshot digest drifted'
+        }
+    }
 
     foreach ($mutation in @(
             @{ name = 'module-source-root-drift'; expected = 'snapshot digest drifted'; apply = { param($r) $temp = $r.modules[0].source_root; $r.modules[0].source_root = $r.modules[1].source_root; $r.modules[1].source_root = $temp } },
