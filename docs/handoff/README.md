@@ -20,7 +20,7 @@
 
 ## 新团队第一天
 
-1. 由仓库所有者填写 `docs/team/role-assignments.json`。
+1. 核对仓库所有者授权记录与 `docs/team/role-assignments.json` 的责任主体绑定。
 2. Architecture Lead 主持 90 分钟架构主线走查。
 3. Scientific Authority 确认四元数、坐标、单位、时间和 YYZ/CAVH reference 的权威来源。
 4. Validation Lead 运行 `tools/bootstrap.ps1` 并保存输出。
@@ -45,4 +45,5 @@
 - [风险登记](risk-register.md)
 - [开放决策](open-decisions.md)
 - [R0 权威解锁包](r0-authority-unblock-packet.md)
+- [R0 持续执行状态](r0-execution-state.md)
 - [首月安排](first-30-days.md)

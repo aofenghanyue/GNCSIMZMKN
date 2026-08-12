@@ -1,0 +1,387 @@
+{
+  "schema_version": "gnczmkn.hosted-ci-evidence/1",
+  "evidence_id": "R0-GOV-001-HOSTED-CI-32F6ADE7",
+  "task_id": "R0-GOV-001",
+  "evidence_status": "accepted",
+  "recorded_on": "2026-08-12",
+  "adr_ref": "docs/adr/0009-accountable-roles-and-candidate-toolchain.md",
+  "task_ref": "docs/tasks/work-packages/R0-GOV-001.md",
+  "matrix_ref": "docs/governance/toolchain-support-matrix.json",
+  "migration_ref": "docs/quality/r0-first-wave-reconciliation-audit.md#14-decision-ledger",
+  "decision": {
+    "id": "RECON-DEC-008",
+    "outcome": "keep-current",
+    "status": "accepted",
+    "decided_on": "2026-08-12",
+    "reviewed_commit": "32f6ade7f2feec6fb1792121773d437f6f035581",
+    "actors": [
+      {
+        "actor_id": "r0-po-agent",
+        "kind": "machine_agent",
+        "task_path": "/root",
+        "role": "product_owner",
+        "result": "keep-current"
+      },
+      {
+        "actor_id": "r0-validation-agent",
+        "kind": "machine_agent",
+        "task_path": "/root/r0_validation_agent",
+        "role": "validation_lead",
+        "result": "approved"
+      }
+    ],
+    "rationale": [
+      "The fixed runner labels, pinned checkout commit, full-history checkout, Release configuration and warnings-as-errors policy passed on both qualified profiles.",
+      "A permanent structured receipt retains the commit, checkout context, environment identity, verification results and downloaded log archive hashes after upstream logs expire.",
+      "This governance-only qualification has no binary artifact acceptance requirement, so an empty Actions artifact set is recorded explicitly and does not weaken the retained facts."
+    ]
+  },
+  "repository": {
+    "provider": "github-actions",
+    "repository_id": "1328549597",
+    "node_id": "R_kgDOTzAO3Q",
+    "slug": "aofenghanyue/GNCSIMZMKN",
+    "visibility": "public",
+    "api_url": "https://api.github.com/repos/aofenghanyue/GNCSIMZMKN",
+    "html_url": "https://github.com/aofenghanyue/GNCSIMZMKN"
+  },
+  "qualification": {
+    "status": "passed-with-evidence",
+    "commit": "32f6ade7f2feec6fb1792121773d437f6f035581",
+    "parent": "cd093d5e91ba5225cc4201506450a7993af32446",
+    "tree": "6efb2a55e6ae63bb2e3f50c0a164e55ba57f2815",
+    "branch": "codex/r0-gov-001",
+    "scope": "R0-GOV-001 accountable-role and candidate-toolchain governance",
+    "workflow": {
+      "workflow_id": "330370398",
+      "name": "bootstrap-ci",
+      "path": ".github/workflows/ci.yml",
+      "api_url": "https://api.github.com/repos/aofenghanyue/GNCSIMZMKN/actions/workflows/330370398",
+      "git_blob_oid": "c9ad4b796ddf321fe2858f9a2ca148defd7f7a9b",
+      "raw_sha256": "5338f9b37404a19a651e67766452ac125886aead1b711d8dcc93c1574008803c",
+      "checkout_version": "6.0.2",
+      "checkout_commit": "de0fac2e4500dabe0009e67214ff5f5447ce83dd",
+      "fetch_depth": 0,
+      "configuration": "Release",
+      "warnings_as_errors": true
+    }
+  },
+  "runs": {
+    "primary": {
+      "run_id": "31559701566",
+      "run_attempt": 1,
+      "event": "push",
+      "api_url": "https://api.github.com/repos/aofenghanyue/GNCSIMZMKN/actions/runs/31559701566",
+      "url": "https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31559701566",
+      "workflow_id": "330370398",
+      "jobs_api_url": "https://api.github.com/repos/aofenghanyue/GNCSIMZMKN/actions/runs/31559701566/jobs",
+      "artifacts_api_url": "https://api.github.com/repos/aofenghanyue/GNCSIMZMKN/actions/runs/31559701566/artifacts",
+      "source_head_sha": "32f6ade7f2feec6fb1792121773d437f6f035581",
+      "source_branch": "codex/r0-gov-001",
+      "checked_out_ref": "refs/heads/codex/r0-gov-001",
+      "checked_out_sha": "32f6ade7f2feec6fb1792121773d437f6f035581",
+      "checked_out_tree_sha": "6efb2a55e6ae63bb2e3f50c0a164e55ba57f2815",
+      "checked_out_parent_shas": [
+        "cd093d5e91ba5225cc4201506450a7993af32446"
+      ],
+      "created_at": "2026-08-12T03:19:07Z",
+      "started_at": "2026-08-12T03:19:07Z",
+      "completed_at": "2026-08-12T03:20:46Z",
+      "conclusion": "success",
+      "artifact_count": 0,
+      "jobs": [
+        {
+          "job_id": "93999328011",
+          "name": "ubuntu-24.04-gcc-13",
+          "runner_label": "ubuntu-24.04",
+          "runner_group": "GitHub Actions",
+          "runner_name": "GitHub Actions 1000000081",
+          "started_at": "2026-08-12T03:19:11Z",
+          "completed_at": "2026-08-12T03:20:08Z",
+          "conclusion": "success",
+          "url": "https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31559701566/job/93999328011",
+          "required_step_conclusions": {
+            "Check out repository": "success",
+            "Record runner and tool identity": "success",
+            "Configure Ubuntu candidate": "success",
+            "Configure Windows candidate": "skipped",
+            "Record configured compiler identity": "success",
+            "Build": "success",
+            "Test": "success",
+            "Repository checks": "success",
+            "Verify Windows PowerShell 5.1 compatibility": "skipped"
+          }
+        },
+        {
+          "job_id": "93999328054",
+          "name": "windows-2025-vs2026-msvc-19.5x",
+          "runner_label": "windows-2025-vs2026",
+          "runner_group": "GitHub Actions",
+          "runner_name": "GitHub Actions 1000000082",
+          "started_at": "2026-08-12T03:19:11Z",
+          "completed_at": "2026-08-12T03:20:45Z",
+          "conclusion": "success",
+          "url": "https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31559701566/job/93999328054",
+          "required_step_conclusions": {
+            "Check out repository": "success",
+            "Record runner and tool identity": "success",
+            "Configure Ubuntu candidate": "skipped",
+            "Configure Windows candidate": "success",
+            "Record configured compiler identity": "success",
+            "Build": "success",
+            "Test": "success",
+            "Repository checks": "success",
+            "Verify Windows PowerShell 5.1 compatibility": "success"
+          }
+        }
+      ],
+      "log_archive": {
+        "api_url": "https://api.github.com/repos/aofenghanyue/GNCSIMZMKN/actions/runs/31559701566/logs",
+        "archive_format": "zip",
+        "byte_length": 31455,
+        "hash_algorithm": "SHA-256",
+        "sha256": "bea51b51d806f2ea7089f4964362dab5e13c15f660e449dd0ec25737fee7639b",
+        "downloaded_at": "2026-08-12T11:29:48+08:00",
+        "repeated_download_match": true
+      }
+    },
+    "repeat": {
+      "run_id": "31559704268",
+      "run_attempt": 1,
+      "event": "pull_request",
+      "api_url": "https://api.github.com/repos/aofenghanyue/GNCSIMZMKN/actions/runs/31559704268",
+      "url": "https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31559704268",
+      "workflow_id": "330370398",
+      "jobs_api_url": "https://api.github.com/repos/aofenghanyue/GNCSIMZMKN/actions/runs/31559704268/jobs",
+      "artifacts_api_url": "https://api.github.com/repos/aofenghanyue/GNCSIMZMKN/actions/runs/31559704268/artifacts",
+      "source_head_sha": "32f6ade7f2feec6fb1792121773d437f6f035581",
+      "source_branch": "codex/r0-gov-001",
+      "checked_out_ref": "refs/pull/2/merge",
+      "checked_out_sha": "4ecb1cafc8fab2dc385d1fb5493aa823b48b08bd",
+      "checked_out_tree_sha": "6efb2a55e6ae63bb2e3f50c0a164e55ba57f2815",
+      "checked_out_parent_shas": [
+        "291cb28b064642f3e7aa14303ee30b03c8d047f0",
+        "32f6ade7f2feec6fb1792121773d437f6f035581"
+      ],
+      "checked_out_commit_object": {
+        "object_type": "commit",
+        "content_encoding": "base64",
+        "byte_length": 1167,
+        "sha1": "4ecb1cafc8fab2dc385d1fb5493aa823b48b08bd",
+        "content_base64": "dHJlZSA2ZWZiMmE1NWU2YWU2M2JiMmUzZjUwYzBhMTY0ZTU1YmE1N2YyODE1CnBhcmVudCAyOTFjYjI4YjA2NDY0MmYzZTdhYTE0MzAzZWUzMGIwM2M4ZDA0N2YwCnBhcmVudCAzMmY2YWRlN2YyZmVlYzZmYjE3OTIxMjE3NzNkNDM3ZjZmMDM1NTgxCmF1dGhvciB5dWUgb2YgPDE3NzIxNTU0NDBAcXEuY29tPiAxNzg2NTA0NzQ4ICswMDAwCmNvbW1pdHRlciBHaXRIdWIgPG5vcmVwbHlAZ2l0aHViLmNvbT4gMTc4NjUwNDc0OCArMDAwMApncGdzaWcgLS0tLS1CRUdJTiBQR1AgU0lHTkFUVVJFLS0tLS0KIAogd3NGY0JBQUJDQUFRQlFKcWUrWXNDUkMxYVE3dXU1VWhsQUFBYW1RUUFIRXNEbi9wdEU1a0UzQmwvY3RpT1g0OAogYkxHUjNXMEFqb1Q1WU9mdVJ3UHk5QVpJR2pqRTIvUUluOUFvdUs1eDhyei8yUHNwZEM4T1g0TGRya05TWlJYUAogOVBTTmJFMTFOSHV4NEJNUjJlYlBOZDMxRXhqT0hUVElvMHRqai9XK2RyTnRlZGhTOWcyWHVGK2xHRGdFNzVRbAogWHNKNHlTTksveUdBTUx1NU1USDJ6RzhmM0NJR2ZQOTMrVXZhbmJadVA3MG9rcExvenhJUm1PeTU0ZTh6Tk1UcQogL0xPZkYzanRjRDAyTUx4Rlh6LzdIK1dyNnlrMTdTUjhBbFl2ckFUVFBKbHcxRytmalVYOVcxUmYwUTZhT0hrdAogVG01MElaUUJidzVGNWh5V1JDRjE4aWI1TllQbHU0MkIwMEFuczJOMGdxeEg4U1QwejNJLzNnRVhhTXYwcXlHQwogNklJZVh5RTZocVJra1Fjd1Jmb3J3QXFnZ0NHbVowemNxWUJOY0FVWEVDNS96L0UzMEFtdmwxaWdnZ2ZFUTArRwogQnk0QmtMbis4bVVxUXdLejdoRTZrMUw0RmNOaWZKbmtBaisrZmNjZHUycVBGSEtvbWhDM1hIZUkrQ2JaZDcwOAogcXE3djhrTFAweDV3RlpiL3ZFU21EWEg0ZkNzWXJPV1pjMnFHdzdZbUhwY1I4dTlUZlpsMWJCcFRIT3BaU2s2ZwogYW9UcCsyZWFWN1hZMnZ5NGxQRWtqUks0QnpBNXdrL01vZFJwbWl5cGFHTnZoRXlOUHRrVGswaUp3UUhHeE5lWQogRXM3WDFUV2RwdTNXay9tczNXbU1VZnFzZFdRWjRaV3pqUVp5RW90c3JPYnZvU01KenBJdTkwRGpkcWphM3U3SAogTXZvQ0hmY05VQVlia2Z5Y2t5KzcKID10VnhnCiAtLS0tLUVORCBQR1AgU0lHTkFUVVJFLS0tLS0KIAoKTWVyZ2UgMzJmNmFkZTdmMmZlZWM2ZmIxNzkyMTIxNzczZDQzN2Y2ZjAzNTU4MSBpbnRvIDI5MWNiMjhiMDY0NjQyZjNlN2FhMTQzMDNlZTMwYjAzYzhkMDQ3ZjAK"
+      },
+      "created_at": "2026-08-12T03:19:10Z",
+      "started_at": "2026-08-12T03:19:10Z",
+      "completed_at": "2026-08-12T03:20:29Z",
+      "conclusion": "success",
+      "artifact_count": 0,
+      "jobs": [
+        {
+          "job_id": "93999335576",
+          "name": "ubuntu-24.04-gcc-13",
+          "runner_label": "ubuntu-24.04",
+          "runner_group": "GitHub Actions",
+          "runner_name": "GitHub Actions 1000000083",
+          "started_at": "2026-08-12T03:19:14Z",
+          "completed_at": "2026-08-12T03:20:11Z",
+          "conclusion": "success",
+          "url": "https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31559704268/job/93999335576",
+          "required_step_conclusions": {
+            "Check out repository": "success",
+            "Record runner and tool identity": "success",
+            "Configure Ubuntu candidate": "success",
+            "Configure Windows candidate": "skipped",
+            "Record configured compiler identity": "success",
+            "Build": "success",
+            "Test": "success",
+            "Repository checks": "success",
+            "Verify Windows PowerShell 5.1 compatibility": "skipped"
+          }
+        },
+        {
+          "job_id": "93999335654",
+          "name": "windows-2025-vs2026-msvc-19.5x",
+          "runner_label": "windows-2025-vs2026",
+          "runner_group": "GitHub Actions",
+          "runner_name": "GitHub Actions 1000000084",
+          "started_at": "2026-08-12T03:19:14Z",
+          "completed_at": "2026-08-12T03:20:29Z",
+          "conclusion": "success",
+          "url": "https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31559704268/job/93999335654",
+          "required_step_conclusions": {
+            "Check out repository": "success",
+            "Record runner and tool identity": "success",
+            "Configure Ubuntu candidate": "skipped",
+            "Configure Windows candidate": "success",
+            "Record configured compiler identity": "success",
+            "Build": "success",
+            "Test": "success",
+            "Repository checks": "success",
+            "Verify Windows PowerShell 5.1 compatibility": "success"
+          }
+        }
+      ],
+      "log_archive": {
+        "api_url": "https://api.github.com/repos/aofenghanyue/GNCSIMZMKN/actions/runs/31559704268/logs",
+        "archive_format": "zip",
+        "byte_length": 33033,
+        "hash_algorithm": "SHA-256",
+        "sha256": "6578a756edf0a72124f8c2d70aaed533fbbbea4482b8122b74cb817703bdac8b",
+        "downloaded_at": "2026-08-12T11:29:48+08:00",
+        "repeated_download_match": true
+      }
+    }
+  },
+  "profiles": [
+    {
+      "profile_id": "ubuntu-24.04-x64-gcc-13",
+      "job_id": "93999328011",
+      "name": "ubuntu-24.04-gcc-13",
+      "job_url": "https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31559701566/job/93999328011",
+      "runner_os": "Linux",
+      "runner_arch": "X64",
+      "runner_name": "GitHub Actions 1000000081",
+      "image_os": "ubuntu24",
+      "image_version": "20260720.247.2",
+      "generator": "Ninja",
+      "compiler_id": "GNU",
+      "compiler_version": "13.3.0",
+      "cmake": "3.31.6",
+      "python": "3.12.3",
+      "powershell": "7.6.3",
+      "ninja": "1.13.2",
+      "git": "2.54.0",
+      "configuration": "Release",
+      "warnings_as_errors": true,
+      "verification": {
+        "configure": "passed",
+        "build": "passed",
+        "ctest": "9/9 passed",
+        "repository_verifier": "passed: 57 JSON, 65 tasks, 100 Markdown"
+      }
+    },
+    {
+      "profile_id": "windows-x64-msvc-19.5x",
+      "job_id": "93999328054",
+      "name": "windows-2025-vs2026-msvc-19.5x",
+      "job_url": "https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31559701566/job/93999328054",
+      "runner_os": "Windows",
+      "runner_arch": "X64",
+      "runner_name": "GitHub Actions 1000000082",
+      "image_os": "win25-vs2026",
+      "image_version": "20260803.193.1",
+      "generator": "Visual Studio 18 2026",
+      "compiler_id": "MSVC",
+      "compiler_version": "19.51.36252.0",
+      "cmake": "4.4.2",
+      "python": "3.12.10",
+      "powershell": "7.6.4",
+      "ninja": null,
+      "git": "2.55.0.windows.3",
+      "configuration": "Release",
+      "warnings_as_errors": true,
+      "windows_powershell_compatibility": {
+        "shell": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.EXE",
+        "schema_validator": "passed",
+        "architecture_validator": "passed"
+      },
+      "verification": {
+        "configure": "passed",
+        "build": "passed",
+        "ctest": "9/9 passed",
+        "repository_verifier": "passed: 57 JSON, 65 tasks, 100 Markdown"
+      }
+    }
+  ],
+  "repeat_profiles": [
+    {
+      "profile_id": "ubuntu-24.04-x64-gcc-13",
+      "job_id": "93999335576",
+      "name": "ubuntu-24.04-gcc-13",
+      "job_url": "https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31559704268/job/93999335576",
+      "runner_os": "Linux",
+      "runner_arch": "X64",
+      "runner_name": "GitHub Actions 1000000083",
+      "image_os": "ubuntu24",
+      "image_version": "20260720.247.2",
+      "generator": "Ninja",
+      "compiler_id": "GNU",
+      "compiler_version": "13.3.0",
+      "cmake": "3.31.6",
+      "python": "3.12.3",
+      "powershell": "7.6.3",
+      "ninja": "1.13.2",
+      "git": "2.54.0",
+      "configuration": "Release",
+      "warnings_as_errors": true,
+      "verification": {
+        "configure": "passed",
+        "build": "passed",
+        "ctest": "9/9 passed",
+        "repository_verifier": "passed: 57 JSON, 65 tasks, 100 Markdown"
+      }
+    },
+    {
+      "profile_id": "windows-x64-msvc-19.5x",
+      "job_id": "93999335654",
+      "name": "windows-2025-vs2026-msvc-19.5x",
+      "job_url": "https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31559704268/job/93999335654",
+      "runner_os": "Windows",
+      "runner_arch": "X64",
+      "runner_name": "GitHub Actions 1000000084",
+      "image_os": "win25-vs2026",
+      "image_version": "20260803.193.1",
+      "generator": "Visual Studio 18 2026",
+      "compiler_id": "MSVC",
+      "compiler_version": "19.51.36252.0",
+      "cmake": "4.4.2",
+      "python": "3.12.10",
+      "powershell": "7.6.4",
+      "ninja": null,
+      "git": "2.55.0.windows.3",
+      "configuration": "Release",
+      "warnings_as_errors": true,
+      "windows_powershell_compatibility": {
+        "shell": "C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\powershell.EXE",
+        "schema_validator": "passed",
+        "architecture_validator": "passed"
+      },
+      "verification": {
+        "configure": "passed",
+        "build": "passed",
+        "ctest": "9/9 passed",
+        "repository_verifier": "passed: 57 JSON, 65 tasks, 100 Markdown"
+      }
+    }
+  ],
+  "retention": {
+    "repository_receipt": "permanent-in-git-history",
+    "upstream_logs": "github-managed-repository-retention",
+    "upstream_log_retention_days": 90,
+    "maximum_allowed_days": 90,
+    "observed_at": "2026-08-12T03:37:37Z",
+    "settings_api_url": "https://api.github.com/repos/aofenghanyue/GNCSIMZMKN/actions/permissions/artifact-and-log-retention",
+    "binary_artifacts": "not-required-for-governance-only-qualification",
+    "artifact_count": 0,
+    "zero_artifact_rationale": "R0-GOV-001 qualifies governance, role and toolchain configuration only; its acceptance has no distributable build-artifact requirement.",
+    "access": "repository readers with GitHub Actions log access",
+    "required_facts_permanently_retained": true,
+    "append_only": true,
+    "supersession_policy": "A later qualification adds a new receipt and marks this evidence superseded without rewriting the retained facts.",
+    "refresh_required_on": [
+      "qualified workflow content change",
+      "runner profile or compiler range change",
+      "checkout action or history-depth policy change",
+      "new qualification commit or revoked upstream run"
+    ]
+  },
+  "boundaries": {
+    "upstream_log_availability": "retention-limited; repository receipt and log archive hashes remain",
+    "does_not_establish": [
+      "no-product-runtime-qualification",
+      "no-rights-or-external-distribution-decision",
+      "no-r0-task-or-gate-acceptance",
+      "no-r1-through-r8-unlock"
+    ]
+  }
+}

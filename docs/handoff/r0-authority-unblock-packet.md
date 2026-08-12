@@ -1,16 +1,22 @@
 # R0 权威解锁包
 
-- 状态：`Prepared / unsigned / non-authoritative`
+- 状态：`Superseded as current authority input / retained as historical evidence`
 - 准备日期：2026-08-10
 - 技术基线 commit：`a05b65f36924f9a0f9e68167e65a0960b0d4f5b4`
 - 工作分支：`codex/r0-first-wave-reconciliation`
 - 当前 gate：`R0`
 
-## 用途与边界
+## 当前处置
 
-本包把当前 R0 已通过机器验证的技术成果和仍需具名人类作出的决定整理到一个审查入口。它允许仓库所有者一次性提供角色、ADR、重建差异、托管 CI、来源与权利输入，随后再由维护者把决定写入各自的权威文件。
+本包记录 2026-08-10 基线上的历史阻塞状态。2026-08-12，仓库所有者已经通过可校验指令授权四个独立机器智能体承担 R0 责任角色；当前权威记录为 [`r0-owner-authorization.json`](../governance/r0-owner-authorization.json)、[`role-assignments.json`](../team/role-assignments.json) 与 [`r0-execution-state.md`](r0-execution-state.md)。本包中 human-only、禁止 AI 决策、无 push 授权、旧分支和旧 commit 等陈述不再表达当前治理状态。
 
-本文件不是角色登记、ADR decision、task approval、waiver、gate decision、许可证或外部分享许可。填写本文件、在聊天中讨论选项、通过本地测试或由 Codex 自审，都不能单独改变任何项目状态。有效决定必须由对应 owner/reviewer 对冻结 commit 明确作出，并落实到相应权威文件后接受独立复核。
+本包继续保留当时的证据缺口清单。`RECON-DEC-008` 已于 2026-08-12 通过 [Hosted CI evidence receipt](../quality/hosted-ci-evidence-R0-GOV-001.json) 闭合；rights/provenance、外部分发、任务 acceptance 和阶段门仍需各自闭合。机器智能体授权不会改变这些 fail-closed 边界。
+
+## 历史用途与边界
+
+本包把当时 R0 已通过机器验证的技术成果和待授权决定整理到一个审查入口。仓库所有者随后提供的 2026-08-12 授权已经取代本包中的责任主体资格假设。
+
+本文件不充当当前角色登记、ADR decision、task approval、waiver、gate decision、许可证或外部分享许可。有效决定需要由已授权的对应 actor 对冻结 commit 明确作出，落实到权威文件，并接受不同 actor 的独立复核。
 
 在上述技术基线上：
 
@@ -24,11 +30,11 @@
 
 权威状态分别来自 [role assignments](../team/role-assignments.json)、[R0 backlog](../tasks/backlog.json)、[ADR index](../adr/README.md)、[provenance inventory](../governance/provenance-inventory.json)、[open decisions](open-decisions.md) 和 [project manifest](../../project-manifest.json)。如果本包与这些来源不一致，以这些来源及其受审查 commit 为准。
 
-## 1. 角色指派输入
+## 1. 历史角色指派输入
 
-仓库所有者应提供可解析到真实人员的 assignee/reviewer。除 Scientific Authority 与 Architecture Lead 必须由不同人员担任外，小团队可以跨角色复用人员；但每个角色的 reviewer 都必须与该角色 assignee 不同。`Codex`、`codex-*`、机器人席位、职位占位符或同一人员自审均无效。
+本节表格保存旧基线上的空槽位。当前角色映射以授权登记和角色登记为准。已登记机器 actor 可以承担责任角色；未登记别名、职位占位符和同一 actor/task 自审继续无效。Scientific Authority 与 Architecture Lead 保持独立。
 
-下表是回复工作表，不是角色权威。维护者收到决定后，应更新 `docs/team/role-assignments.json` 并运行角色/工具链校验。
+下表仅作历史回复工作表，不再作为待填写入口。
 
 | Role id | Required | Assignee | Reviewer | 可解析身份或决定证据 |
 | --- | --- | --- | --- | --- |

@@ -1,25 +1,30 @@
 {
-  "schema_version": "gnczmkn.team-roles/2",
-  "updated_at": "2026-08-10",
-  "decision_status": "incomplete",
+  "schema_version": "gnczmkn.team-roles/3",
+  "updated_at": "2026-08-12",
+  "decision_status": "complete",
+  "authorization_ref": "docs/governance/r0-owner-authorization.json",
   "assignment_policy": {
     "required_fields": ["assignee", "reviewer"],
+    "identities_resolve_through_authorization": true,
     "reviewer_must_differ_from_assignee": true,
+    "reviewer_task_must_differ_from_assignee_task": true,
     "placeholder_assignments_forbidden": true,
+    "machine_identity_must_be_explicit": true,
     "high_risk_independence": {
       "roles": ["scientific_authority", "architecture_lead"],
-      "assignees_must_differ": true
+      "assignees_must_differ": true,
+      "assignee_tasks_must_differ": true
     }
   },
   "roles": [
-    {"id": "product_owner", "assignee": null, "reviewer": null, "required": true},
-    {"id": "scientific_authority", "assignee": null, "reviewer": null, "required": true},
-    {"id": "architecture_lead", "assignee": null, "reviewer": null, "required": true},
-    {"id": "model_sdk_lead", "assignee": null, "reviewer": null, "required": true},
-    {"id": "compiler_lead", "assignee": null, "reviewer": null, "required": true},
-    {"id": "runtime_numerics_lead", "assignee": null, "reviewer": null, "required": true},
-    {"id": "evidence_workflow_lead", "assignee": null, "reviewer": null, "required": true},
+    {"id": "product_owner", "assignee": "r0-po-agent", "reviewer": "r0-validation-agent", "required": true},
+    {"id": "scientific_authority", "assignee": "r0-science-agent", "reviewer": "r0-architecture-agent", "required": true},
+    {"id": "architecture_lead", "assignee": "r0-architecture-agent", "reviewer": "r0-validation-agent", "required": true},
+    {"id": "model_sdk_lead", "assignee": "r0-science-agent", "reviewer": "r0-architecture-agent", "required": true},
+    {"id": "compiler_lead", "assignee": "r0-architecture-agent", "reviewer": "r0-validation-agent", "required": true},
+    {"id": "runtime_numerics_lead", "assignee": "r0-validation-agent", "reviewer": "r0-po-agent", "required": true},
+    {"id": "evidence_workflow_lead", "assignee": "r0-validation-agent", "reviewer": "r0-po-agent", "required": true},
     {"id": "application_lead", "assignee": null, "reviewer": null, "required": false},
-    {"id": "validation_lead", "assignee": null, "reviewer": null, "required": true}
+    {"id": "validation_lead", "assignee": "r0-validation-agent", "reviewer": "r0-po-agent", "required": true}
   ]
 }

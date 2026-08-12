@@ -396,6 +396,8 @@ Candidate hosted run is authentic execution evidence for commit `7d7c0a8`：two 
 
 The URL and result should be retained in the reconciliation evidence index. Current hosted status remains `pending-push-and-run` until a current commit is pushed and both approved jobs produce retained identity evidence.
 
+2026-08-12 supersession note：the current branch later satisfied that condition. Push run `31559701566` tested `32f6ade7f2feec6fb1792121773d437f6f035581`; PR run `31559704268` tested merge-context commit `4ecb1cafc8fab2dc385d1fb5493aa823b48b08bd`. The accepted [Hosted CI evidence receipt](hosted-ci-evidence-R0-GOV-001.json) permanently retains exact identities, required-step conclusions, downloaded log hashes and the 90-day upstream retention setting.
+
 ## 13. Selective implementation plan
 
 ### Slice 0 — accountable role identity hardening（implemented）
@@ -469,17 +471,17 @@ Scope：GOV-002 review amendment。
 
 ## 14. Decision ledger
 
-| Decision id | Required decision | Owner |
-| --- | --- | --- |
-| `RECON-DEC-001` | current schema field graph/$id vs candidate graph；migration/version policy | Architecture Lead + Validation Lead |
-| `RECON-DEC-002` | repository/local/external reference resolution grammar | Architecture Lead + Evidence Lead |
-| `RECON-DEC-003` | PlanProof typed prerequisite graph/index boundary | Architecture Lead + Compiler Lead |
-| `RECON-DEC-004` | axis-angle positive sign and adapter naming | Scientific Authority |
-| `RECON-DEC-005` | scientific context/independent-reference provenance contract | Scientific Authority + Product Owner |
-| `RECON-DEC-006` | `packages_user`/`composition_root` representation and source authority | Architecture Lead |
-| `RECON-DEC-007` | candidate extra Legacy mappings/responsibility granularity | Architecture Lead + Validation Lead |
-| `RECON-DEC-008` | current hosted runner/action profile and artifact retention | Product Owner + Validation Lead |
-| `RECON-DEC-009` | whether half-open validity becomes the approved public time contract | Scientific Authority + Architecture Lead |
+| Decision id | Required decision | Owner | Current disposition |
+| --- | --- | --- | --- |
+| `RECON-DEC-001` | current schema field graph/$id vs candidate graph；migration/version policy | Architecture Lead + Validation Lead | open |
+| `RECON-DEC-002` | repository/local/external reference resolution grammar | Architecture Lead + Evidence Lead | open |
+| `RECON-DEC-003` | PlanProof typed prerequisite graph/index boundary | Architecture Lead + Compiler Lead | open |
+| `RECON-DEC-004` | axis-angle positive sign and adapter naming | Scientific Authority | open |
+| `RECON-DEC-005` | scientific context/independent-reference provenance contract | Scientific Authority + Product Owner | open |
+| `RECON-DEC-006` | `packages_user`/`composition_root` representation and source authority | Architecture Lead | open |
+| `RECON-DEC-007` | candidate extra Legacy mappings/responsibility granularity | Architecture Lead + Validation Lead | open |
+| `RECON-DEC-008` | current hosted runner/action profile and artifact retention | Product Owner + Validation Lead | `keep-current` / accepted receipt |
+| `RECON-DEC-009` | whether half-open validity becomes the approved public time contract | Scientific Authority + Architecture Lead | open |
 
 Prepared slices may test both sides but cannot silently close these decisions。
 
