@@ -246,7 +246,7 @@ The first amendment may add only checks whose semantics already follow current c
 - executable/qualified bundle artifact completeness when current fields can express it；
 - extra result-specific PlanProof negative examples already defined by current schema。
 
-Path/ref resolution, typed proof prerequisite graph, oracle fact model and schema `$id` changes require ADR-0004 owner decision; they remain design findings, not silent validator behavior.
+Path/ref resolution、typed proof prerequisite graph、oracle fact model 与 schema `$id` changes require ADR-0004 owner decision；2026-08-12 的初始实现已形成 `RECON-DEC-001`～`003` proposed disposition，并继续等待独立 commit-bound review。
 
 ## 8. Architecture audit
 
@@ -473,15 +473,17 @@ Scope：GOV-002 review amendment。
 
 | Decision id | Required decision | Owner | Current disposition |
 | --- | --- | --- | --- |
-| `RECON-DEC-001` | current schema field graph/$id vs candidate graph；migration/version policy | Architecture Lead + Validation Lead | open |
-| `RECON-DEC-002` | repository/local/external reference resolution grammar | Architecture Lead + Evidence Lead | open |
-| `RECON-DEC-003` | PlanProof typed prerequisite graph/index boundary | Architecture Lead + Compiler Lead | open |
+| `RECON-DEC-001` | current schema field graph/$id vs candidate graph；migration/version policy | Architecture Lead + Validation Lead | `keep-current` proposed；pending independent review |
+| `RECON-DEC-002` | repository/local/external reference resolution grammar | Architecture Lead + Evidence Lead | `repository-root-only` proposed；tracked nonempty regular Git blob；pending independent review |
+| `RECON-DEC-003` | PlanProof typed prerequisite graph/index boundary | Architecture Lead + Compiler Lead | `keep-current` object-map snapshot proposed；typed graph moves to v2；pending independent review |
 | `RECON-DEC-004` | axis-angle positive sign and adapter naming | Scientific Authority | open |
 | `RECON-DEC-005` | scientific context/independent-reference provenance contract | Scientific Authority + Product Owner | open |
 | `RECON-DEC-006` | `packages_user`/`composition_root` representation and source authority | Architecture Lead | open |
 | `RECON-DEC-007` | candidate extra Legacy mappings/responsibility granularity | Architecture Lead + Validation Lead | open |
 | `RECON-DEC-008` | current hosted runner/action profile and artifact retention | Product Owner + Validation Lead | `keep-current` / accepted receipt |
 | `RECON-DEC-009` | whether half-open validity becomes the approved public time contract | Scientific Authority + Architecture Lead | open |
+
+2026-08-12 current-branch note：`r0-architecture-agent` 以 `611a48a23ea02ecd0c210a2b101f5c5cbf5df0e6` 为基线实施 R0-SPEC-001 初始技术冻结。`specs/r0-schema-contract-lock.json` 锁定三个 v1 contract；executable evidence locator 收窄为 repository-root-only tracked nonempty regular Git blob；`source_refs` 保持 opaque；PlanProof v1 `premises` 保持 object-map scalar snapshot；产品/runtime consumer 为零。三项 disposition 和 ADR-0004 仍为 `Proposed`，需要 `r0-validation-agent` 对精确 commit/fileset 独立复核。
 
 Prepared slices may test both sides but cannot silently close these decisions。
 

@@ -55,6 +55,7 @@ $requiredPaths = @(
     'docs/quality/provenance-review-checklist.md',
     'docs/quality/license-provenance-conformance-report.json',
     'docs/quality/team-toolchain-readiness-report.json',
+    'specs/r0-schema-contract-lock.json',
     'reference/legacy/source-manifest.json',
     'reference/legacy/legacy-source.zip',
     'reference/legacy/legacy-source.sha256',

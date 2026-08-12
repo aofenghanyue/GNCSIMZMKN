@@ -19,36 +19,36 @@
       "id": "FACT-SCI-QUATERNION",
       "claim": "Column-vector passive transforms use Hamilton multiplication, right-order composition, exact wxyz serialization and explicitly labelled Euler conversion.",
       "tolerance_policy": "Serialization and check identities are exact; computed rotation values use the tolerance in cases.json.",
-      "evidence_refs": ["conventions.json", "cases.json", "../../docs/quality/scientific-conventions-cross-tool-report.json"]
+      "evidence_refs": ["fixtures/ref-scientific-conventions/conventions.json", "fixtures/ref-scientific-conventions/cases.json", "docs/quality/scientific-conventions-cross-tool-report.json"]
     },
     {
       "id": "FACT-SCI-UNIT",
       "claim": "Runtime physical values use SI and radians, with non-SI and offset conversions confined to declared boundaries.",
       "tolerance_policy": "Converted numeric values use the tolerance in cases.json; unit identities and boundary names are exact.",
-      "evidence_refs": ["conventions.json", "cases.json"]
+      "evidence_refs": ["fixtures/ref-scientific-conventions/conventions.json", "fixtures/ref-scientific-conventions/cases.json"]
     },
     {
       "id": "FACT-SCI-FRAME",
       "claim": "R_to_from has one direction and point transforms differ from free-vector transforms by translation.",
       "tolerance_policy": "Matrix/vector values use the tolerance in cases.json; frame direction and transform category are exact.",
-      "evidence_refs": ["conventions.json", "cases.json"]
+      "evidence_refs": ["fixtures/ref-scientific-conventions/conventions.json", "fixtures/ref-scientific-conventions/cases.json"]
     },
     {
       "id": "FACT-SCI-TIME",
       "claim": "Fixed-step logical time is derived from integer tick and five public time identities remain distinct.",
       "tolerance_policy": "Tick identity and policy names are exact; derived seconds use the tolerance in cases.json.",
-      "evidence_refs": ["conventions.json", "cases.json"]
+      "evidence_refs": ["fixtures/ref-scientific-conventions/conventions.json", "fixtures/ref-scientific-conventions/cases.json"]
     },
     {
       "id": "FACT-SCI-CROSS-TOOL",
       "claim": "An isolated C++17 property implementation and a CPython-standard-library reference agree with fixture expectations.",
       "tolerance_policy": "Every required check passes and every observation satisfies absolute plus relative tolerance.",
-      "evidence_refs": ["../../docs/quality/scientific-conventions-cross-tool-report.json"]
+      "evidence_refs": ["docs/quality/scientific-conventions-cross-tool-report.json"]
     }
   ],
   "required_artifacts": [
-    "conventions.json",
-    "cases.json",
+    "fixtures/ref-scientific-conventions/conventions.json",
+    "fixtures/ref-scientific-conventions/cases.json",
     "tests/scientific_conventions.cpp",
     "tools/scientific_conventions_reference.py",
     "tools/validate-scientific-conventions.ps1",

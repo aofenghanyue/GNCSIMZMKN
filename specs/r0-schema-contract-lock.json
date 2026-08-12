@@ -1,0 +1,130 @@
+{
+  "schema_version": "gnczmkn.r0-schema-contract-lock/1",
+  "lock_id": "R0-SPEC-001-V1-CONTRACT-LOCK",
+  "task_id": "R0-SPEC-001",
+  "adr_ref": "docs/adr/0004-r0-json-schema-contracts.md",
+  "decision_status": "proposed",
+  "maturity": "governance-contract-no-runtime-consumer",
+  "reconciliation_decisions": [
+    {
+      "id": "RECON-DEC-001",
+      "proposed_disposition": "keep-current",
+      "boundary": "The three current v1 schema identities, instance versions, raw bytes and field graphs stay fixed."
+    },
+    {
+      "id": "RECON-DEC-002",
+      "proposed_disposition": "repository-root-only",
+      "boundary": "Executable evidence locators use repository-root-relative forward-slash paths and resolve to tracked, nonempty, regular Git blobs."
+    },
+    {
+      "id": "RECON-DEC-003",
+      "proposed_disposition": "keep-current",
+      "boundary": "PlanProofRecord v1 premises remain a flat scalar object-map snapshot; typed prerequisite graphs and PlanProofIndex require v2."
+    }
+  ],
+  "contracts": [
+    {
+      "name": "fixture-manifest",
+      "schema_path": "specs/fixture-manifest.schema.json",
+      "schema_id": "https://internal.gnczmkn/schemas/fixture-manifest/1",
+      "instance_version": "gnczmkn.fixture-manifest/1",
+      "schema_maturity": "Fixture",
+      "raw_byte_length": 2499,
+      "raw_sha256": "d532903919d6583e7615b5598772f3b4576761f60bfe3118c2b108de03f91c56",
+      "field_graph": [
+        {
+          "path": "$",
+          "required_fields": ["acceptance", "authority", "expected_facts", "fixture_id", "provenance", "purpose", "required_artifacts", "schema_version", "status"],
+          "optional_fields": ["open_tasks"],
+          "additional_properties": "forbidden"
+        },
+        {
+          "path": "$.expected_facts[]",
+          "required_fields": ["claim", "id", "tolerance_policy"],
+          "optional_fields": ["evidence_refs"],
+          "additional_properties": "forbidden"
+        },
+        {
+          "path": "$.provenance",
+          "required_fields": ["source_refs"],
+          "optional_fields": ["notes"],
+          "additional_properties": "forbidden"
+        }
+      ]
+    },
+    {
+      "name": "oracle-manifest",
+      "schema_path": "specs/oracle-manifest.schema.json",
+      "schema_id": "https://internal.gnczmkn/schemas/oracle-manifest/1",
+      "instance_version": "gnczmkn.oracle-manifest/1",
+      "schema_maturity": "Fixture",
+      "raw_byte_length": 2526,
+      "raw_sha256": "2818ce6169105e49b563ca995cd4becc2797267220bdc332711d0751fabf7ca9",
+      "field_graph": [
+        {
+          "path": "$",
+          "required_fields": ["oracle_set_id", "oracles", "provenance", "schema_version", "status"],
+          "optional_fields": [],
+          "additional_properties": "forbidden"
+        },
+        {
+          "path": "$.oracles[]",
+          "required_fields": ["claim", "expected_facts", "id", "level", "reference_kind", "source_refs", "status", "tolerance_policy"],
+          "optional_fields": ["artifact_refs"],
+          "additional_properties": "forbidden"
+        },
+        {
+          "path": "$.provenance",
+          "required_fields": ["source_refs"],
+          "optional_fields": ["notes"],
+          "additional_properties": "forbidden"
+        }
+      ]
+    },
+    {
+      "name": "plan-proof-record",
+      "schema_path": "specs/plan-proof-record.schema.json",
+      "schema_id": "https://internal.gnczmkn/schemas/plan-proof-record/1",
+      "instance_version": "gnczmkn.plan-proof-record/1",
+      "schema_maturity": "Fixture",
+      "raw_byte_length": 2351,
+      "raw_sha256": "f2047ff0369576ceae90d1b9556b85724daa487f89b83dc5fa4b4b3cbe5a0c78",
+      "field_graph": [
+        {
+          "path": "$",
+          "required_fields": ["assertion_code", "diagnostic_ids", "generated_by_pass", "lowered_operator_refs", "premises", "proof_id", "proof_kind", "result", "schema_version", "source_refs", "subject_refs"],
+          "optional_fields": [],
+          "additional_properties": "forbidden"
+        },
+        {
+          "path": "$.premises",
+          "required_fields": [],
+          "optional_fields": [],
+          "additional_properties": "allowed"
+        }
+      ]
+    }
+  ],
+  "reference_policy": {
+    "executable_evidence_fields": ["fixture.required_artifacts[]", "fixture.expected_facts[].evidence_refs[]", "oracle.oracles[].artifact_refs[]"],
+    "locator_form": "repository-root-relative-forward-slash",
+    "git_object_requirement": "tracked-stage-0-regular-blob",
+    "nonempty_blob_required": true,
+    "nonempty_worktree_file_required": true,
+    "source_refs_semantics": "opaque-provenance-locator"
+  },
+  "plan_proof_v1_policy": {
+    "premises_representation": "flat-object-map-scalar-snapshot",
+    "typed_prerequisite_graph": "forbidden-in-v1",
+    "plan_proof_index": "outside-v1-contract"
+  },
+  "consumer_policy": {
+    "runtime_consumers": 0,
+    "forbidden_roots": ["framework", "packages", "adapters", "apps", "user"],
+    "allowed_uses": ["repository-validation", "fixture-authoring", "oracle-authoring", "test-evidence", "governance-review"]
+  },
+  "v2_migration_policy": {
+    "trigger": "Any schema identity, instance version, field graph, public reference grammar, typed proof prerequisite graph or runtime consumer change",
+    "requirements": ["new-schema-id-and-instance-version", "v1-to-v2-migration", "dual-version-positive-and-negative-fixtures", "independent-validator-conformance", "consumer-evidence", "superseding-adr"]
+  }
+}

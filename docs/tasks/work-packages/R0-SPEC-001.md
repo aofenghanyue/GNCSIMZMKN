@@ -1,9 +1,10 @@
 # R0-SPEC-001｜R0 机器契约与一致性验证
 
 - 状态：Review
-- Assignee：Codex
+- Assignee：`r0-architecture-agent`（machine agent，`/root/r0_architecture_agent`）
+- Reviewer：`r0-validation-agent`（machine agent，`/root/r0_validation_agent`）
 - Owner role：Architecture Lead
-- 目标评审日期：2026-08-10
+- 目标评审日期：2026-08-12
 - 关联 gate：G0 / G1
 
 ## 权威输入
@@ -21,6 +22,7 @@
 3. 可在 Windows PowerShell 5.1 与 PowerShell 7 上运行的仓库内验证命令；
 4. CTest 与 repository verification 中可追踪的 schema conformance 证据；
 5. 对 schema 版本、验证子集和升级边界的 ADR。
+6. 锁定 v1 `$id`、instance version、原始字节与 field graph 的机器契约，以及 executable evidence locator、consumer 和 v2 migration policy。
 
 ## 失败路径
 
@@ -33,11 +35,14 @@
 - fixture/oracle/expected-fact/proof 等稳定 identity 在实际 registry 或 mutation 中重复时失败；
 - fixture authority 不在 role registry、`open_tasks` 不存在或已 `done` 时失败；
 - `executable`/`qualified` fixture fact 或 oracle 的 evidence/artifact 文件缺失、越出仓库或为空时失败；
+- executable evidence locator 使用 manifest-relative、absolute、drive-relative、file URI、反斜杠、`.`/`..` segment、大小写别名或未跟踪路径时失败；目标不是 stage-0 tracked、非空 regular Git blob 与非空 regular worktree file 时失败；
 - `Rejected` 或 `DeferredUnsupported` proof 缺少 diagnostic，或 unsupported proof 暴露可调用 operator 时失败。
+- v1 schema `$id`、instance version、raw bytes 或 field graph 漂移，`premises` 注入 typed prerequisite overlay，或 Fixture schema 被产品/runtime 路径消费时失败。
 
 ## 验收与证据
 
 - `tools/validate-r0-specs.ps1` 对全部实际 manifests 和示例返回成功；
+- `specs/r0-schema-contract-lock.json` 与三份 v1 schema 的 identity、raw bytes 和 object field graph 精确一致；
 - 每份 schema 至少有一个 valid 与一个 invalid conformance case，且每个 invalid case 固定预期 diagnostic；
 - CTest 包含独立 schema conformance test；
 - `tools/bootstrap.ps1` 全量通过；
@@ -65,4 +70,9 @@
 - review findings：修正 backlog 中过时的 proof 章节引用，并为 PowerShell 将 JSON `null` 表示为 `$null` 的根值路径增加显式类型校验与回归例；
 - initial verification：`6613186` 上 3/3 CTest、repository verification、`git diff --check` 与 Python `jsonschema` Draft 2020-12 schema 交叉检查通过；
 - reconciliation amendment：schema bytes/version/field graph 保持不变；PowerShell 5.1 suite 验证 5 actual manifests、6 valid、16 invalid、9 validator failures、25 actual-manifest identities 和 5 identity mutations；独立 Python `jsonschema` Draft 2020-12 交叉检查接受 6 valid、拒绝 8 schema-level invalid，并按预期接受由 repository semantic layer 拒绝的另 8 例；Windows Debug/Release 各 9/9 CTest、repository verification（56 JSON、65 tasks、98 Markdown）和 `git diff --check` 通过。PowerShell 7/current hosted run 仍等待当前 commit 推送后的正式证据；
-- residual risk：仓库验证器有意限制为 R0 使用子集；ADR-0004 在 owner role 指派前保持 `Proposed`，任务因此停留在 `review`。
+- owner implementation：2026-08-12 由授权 `r0-architecture-agent` 实施初始技术冻结，`r0-validation-agent` 保留独立最终复核；基线绑定 `611a48a23ea02ecd0c210a2b101f5c5cbf5df0e6`；
+- contract lock：三份 v1 schema 原始 bytes 不变；machine lock 固定 `$id`、instance version、raw SHA-256/byte length 与 object field graph，maturity 保持 Fixture，产品/runtime consumer 为零；
+- locator review：executable evidence 使用 repository-root-only locator，并闭合到 tracked、非空 regular Git blob 与 worktree file；valid example 证明 `source_refs` 仍是 opaque provenance locator；
+- failure review：新增 20 个 lock/locator/typed-overlay/consumer mutation，原有 16 invalid examples、9 parser failures 与 5 identity mutations保持；
+- invocation review：Git object 查询显式使用 repository root；CTest 从构建目录调用与仓库根直接调用均通过同一 evidence locator 检查；
+- residual risk：ADR-0004、`RECON-DEC-001`～`003` 继续保持 `Proposed`，等待 `r0-validation-agent` 对精确 commit/fileset 独立复核。`fixtures/ref-yyz-001/fixture-manifest.json` 继续把 `R0-SPEC-001` 登记为 open task，backlog 继续 `review`。任务只有在 commit-bound acceptance 与原子 open-task/status 更新后才能进入 `done`。
