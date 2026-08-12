@@ -6,7 +6,8 @@
 - 可信锚点核验：`origin/main` 精确等于锚点，已通过 ancestor 检查
 - 当前任务：`R0-GOV-001`
 - 当前分支：`codex/r0-gov-001`
-- 当前冻结审查 commit：`d4f1a6b105b680a7e7f32925d90a44c0f85f57e0`
+- 当前分支已提交 tip：`121d0aa08058c2cd8b95a7196ba9fca6801278da`
+- ADR-0009 冻结审查 commit：`d4f1a6b105b680a7e7f32925d90a44c0f85f57e0`
 - 执行团队 shared thread：`019ff3be-4a80-7210-a14e-dac71ac15f9f`
 
 ## 已登记机器智能体
@@ -36,8 +37,8 @@
 - `cmake --preset dev`：通过；
 - `cmake --build --preset dev`：通过；
 - `ctest --preset dev --output-on-failure`：9/9 通过；
-- `tools/verify-repository.ps1`：通过，验证 57 个 JSON、65 个任务条目、100 个 Markdown，以及全部已登记 R0 bundle；
-- 新治理 guard 的工作树验证：角色缺失槽位 0，四个授权 actor 使用四个唯一 task binding，18/18 mutation 被拒绝；ADR 与 Hosted CI 仍作为显式 blocker。
+- `tools/verify-repository.ps1`：通过，验证 58 个 JSON、65 个任务条目、100 个 Markdown，以及全部已登记 R0 bundle；
+- 新治理 guard 的工作树验证：角色缺失槽位 0，四个授权 actor 使用四个唯一 task binding，24/24 mutation 被拒绝；当前只保留 Hosted CI blocker。
 
 旧构建目录含 2026-08-11 的陈旧 `LastTestsFailed.log`，其中测试名称已过期。本轮结果以重新配置后的 9 项 CTest 和当前 `LastTest.log` 为准。
 
@@ -47,8 +48,8 @@
 
 ## 下一项满足依赖的工作
 
-1. 提交 ADR-0009 disposition 状态更新；
-2. 推送 `codex/r0-gov-001`，取得固定 Windows/Linux profile 的 commit-bound CI 结果；
+1. 由 `r0-validation-agent` 复核 disposition 语义 guard 修订；
+2. 提交修订并推送 `codex/r0-gov-001`，取得固定 Windows/Linux profile 的 commit-bound CI 结果；
 3. 闭合任务 acceptance/evidence 后将 `R0-GOV-001` 依次推进到 `done` 并合并；
 4. 从最新 `main` 开始下一项阶段 A 收口切片。
 

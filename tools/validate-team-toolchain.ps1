@@ -10,6 +10,7 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $rolesPath = Join-Path $repoRoot 'docs\team\role-assignments.json'
 $authorizationPath = Join-Path $repoRoot 'docs\governance\r0-owner-authorization.json'
+$dispositionPath = Join-Path $repoRoot 'docs\governance\adr-dispositions\ADR-0009-2026-08-12.json'
 $matrixPath = Join-Path $repoRoot 'docs\governance\toolchain-support-matrix.json'
 $backlogPath = Join-Path $repoRoot 'docs\tasks\backlog.json'
 $presetsPath = Join-Path $repoRoot 'CMakePresets.json'
@@ -20,6 +21,7 @@ $cmakePath = Join-Path $repoRoot 'CMakeLists.txt'
 $reportPath = Join-Path $repoRoot 'docs\quality\team-toolchain-readiness-report.json'
 $errors = [System.Collections.Generic.List[string]]::new()
 $mutationResults = [System.Collections.Generic.List[object]]::new()
+$reviewedFilesetCache = @{}
 
 function Add-Error([string]$Message) {
     $script:errors.Add($Message)
@@ -104,6 +106,95 @@ function Get-NormalizedTextSha256([string]$Path) {
     }
 }
 
+function Get-Sha256Hex([byte[]]$Bytes) {
+    $algorithm = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        return ([System.BitConverter]::ToString(
+                $algorithm.ComputeHash($Bytes))).Replace('-', '').ToLowerInvariant()
+    }
+    finally {
+        $algorithm.Dispose()
+    }
+}
+
+function Get-GitBlobFact([string]$Commit, [string]$Path) {
+    $objectId = [string](& git -C $repoRoot rev-parse "$Commit`:$Path" 2>$null)
+    if ($LASTEXITCODE -ne 0 -or $objectId.Trim() -notmatch '^[0-9a-f]{40}$') {
+        throw "Cannot resolve Git blob '$Commit`:$Path'."
+    }
+
+    $startInfo = [System.Diagnostics.ProcessStartInfo]::new()
+    $startInfo.FileName = 'git'
+    $startInfo.Arguments = "cat-file blob $($objectId.Trim())"
+    $startInfo.WorkingDirectory = $repoRoot
+    $startInfo.UseShellExecute = $false
+    $startInfo.RedirectStandardOutput = $true
+    $startInfo.RedirectStandardError = $true
+    $process = [System.Diagnostics.Process]::new()
+    $memory = [System.IO.MemoryStream]::new()
+    try {
+        $process.StartInfo = $startInfo
+        [void]$process.Start()
+        $process.StandardOutput.BaseStream.CopyTo($memory)
+        $standardError = $process.StandardError.ReadToEnd()
+        $process.WaitForExit()
+        if ($process.ExitCode -ne 0) {
+            throw "Cannot read Git blob '$Commit`:$Path': $standardError"
+        }
+        $bytes = $memory.ToArray()
+        return [pscustomobject][ordered]@{
+            path = $Path
+            byte_length = $bytes.Length
+            sha256 = Get-Sha256Hex $bytes
+        }
+    }
+    finally {
+        $memory.Dispose()
+        $process.Dispose()
+    }
+}
+
+function Get-ReviewedFileset([string]$Commit, [string]$Parent) {
+    $cacheKey = "$Commit|$Parent"
+    if ($script:reviewedFilesetCache.ContainsKey($cacheKey)) {
+        return $script:reviewedFilesetCache[$cacheKey]
+    }
+    if ($Commit -notmatch '^[0-9a-f]{40}$' -or $Parent -notmatch '^[0-9a-f]{40}$') {
+        throw 'Reviewed commit and parent must be lowercase full SHA-1 values.'
+    }
+    $actualParent = [string](& git -C $repoRoot rev-parse "$Commit^" 2>$null)
+    if ($LASTEXITCODE -ne 0 -or $actualParent.Trim() -ne $Parent) {
+        throw "Reviewed commit '$Commit' does not have recorded parent '$Parent'."
+    }
+    [string[]]$paths = @(& git -C $repoRoot diff-tree --no-commit-id --name-only -r $Commit)
+    if ($LASTEXITCODE -ne 0 -or $paths.Count -eq 0) {
+        throw "Reviewed commit '$Commit' has no readable changed-path set."
+    }
+    [System.Array]::Sort($paths, [System.StringComparer]::Ordinal)
+    $entries = [System.Collections.Generic.List[object]]::new()
+    $manifestLines = [System.Collections.Generic.List[string]]::new()
+    foreach ($path in $paths) {
+        $entry = Get-GitBlobFact $Commit $path
+        $entries.Add($entry)
+        $manifestLines.Add(
+            "$($entry.path)`t$($entry.byte_length)`t$($entry.sha256)")
+    }
+    $manifest = [string]::Join("`n", $manifestLines) + "`n"
+    $manifestBytes = [System.Text.UTF8Encoding]::new($false).GetBytes($manifest)
+    $result = [pscustomobject][ordered]@{
+        algorithm_id = 'gnczmkn.fileset-manifest/1'
+        path_order = 'ordinal-ascending'
+        entry_format = 'path<TAB>raw_git_blob_byte_length<TAB>lowercase_sha256(raw_git_blob_bytes)'
+        manifest_encoding = 'UTF-8 without BOM'
+        line_ending = 'LF with a final LF'
+        path_count = $entries.Count
+        sha256 = Get-Sha256Hex $manifestBytes
+        entries = @($entries)
+    }
+    $script:reviewedFilesetCache[$cacheKey] = $result
+    return $result
+}
+
 function Copy-JsonObject([object]$Object) {
     return $Object | ConvertTo-Json -Depth 100 | ConvertFrom-Json
 }
@@ -167,6 +258,7 @@ function Get-RoleReadiness([object]$Roles, [object]$Authorization) {
 function Test-GovernanceObjects(
     [object]$Roles,
     [object]$Authorization,
+    [object]$Disposition,
     [object]$Matrix,
     [object]$Backlog,
     [object]$Presets,
@@ -294,6 +386,135 @@ function Test-GovernanceObjects(
         }
         elseif ((Get-Field $actorById[$reviewerId] 'task_path') -eq $taskPath) {
             $issues.Add("Actor '$actorId' shares a task path with its primary reviewer.")
+        }
+    }
+
+    if ($null -eq $Disposition) {
+        $issues.Add('ADR-0009 Accepted disposition record is missing.')
+    }
+    else {
+        if ((Get-Field $Disposition 'schema_version') -ne
+            'gnczmkn.adr-disposition/1' -or
+            (Get-Field $Disposition 'adr_id') -ne 'ADR-0009' -or
+            (Get-Field $Disposition 'decision') -ne 'accept-as-written' -or
+            (Get-Field $Disposition 'decision_date') -ne '2026-08-12' -or
+            (Get-Field $Disposition 'authorization_ref') -ne
+            'docs/governance/r0-owner-authorization.json') {
+            $issues.Add('ADR-0009 disposition identity, decision or authorization reference is invalid.')
+        }
+
+        $reviewedCommit = [string](Get-Field $Disposition 'reviewed_commit')
+        $reviewedParent = [string](Get-Field $Disposition 'reviewed_parent')
+        $computedFileset = $null
+        try {
+            $computedFileset = Get-ReviewedFileset $reviewedCommit $reviewedParent
+        }
+        catch {
+            $issues.Add("ADR-0009 disposition reviewed commit cannot be reproduced: $($_.Exception.Message)")
+        }
+        $recordedFileset = Get-Field $Disposition 'reviewed_fileset'
+        if ($null -ne $computedFileset) {
+            foreach ($field in @(
+                    'algorithm_id', 'path_order', 'entry_format',
+                    'manifest_encoding', 'line_ending', 'path_count', 'sha256')) {
+                if ((Get-Field $recordedFileset $field) -ne
+                    (Get-Field $computedFileset $field)) {
+                    $issues.Add("ADR-0009 disposition fileset field '$field' does not match the reviewed Git commit.")
+                }
+            }
+            $recordedEntries = @(Get-Field $recordedFileset 'entries')
+            $computedEntries = @(Get-Field $computedFileset 'entries')
+            if ($recordedEntries.Count -ne $computedEntries.Count) {
+                $issues.Add('ADR-0009 disposition fileset entry count is incorrect.')
+            }
+            else {
+                for ($index = 0; $index -lt $computedEntries.Count; ++$index) {
+                    foreach ($field in @('path', 'byte_length', 'sha256')) {
+                        if ((Get-Field $recordedEntries[$index] $field) -ne
+                            (Get-Field $computedEntries[$index] $field)) {
+                            $issues.Add("ADR-0009 disposition fileset entry $index field '$field' is incorrect.")
+                        }
+                    }
+                }
+            }
+        }
+
+        $expectedDecisionActors = [ordered]@{
+            'r0-po-agent' = [ordered]@{
+                role = 'product_owner'; task = '/root'
+            }
+            'r0-architecture-agent' = [ordered]@{
+                role = 'architecture_lead'; task = '/root/r0_architecture_agent'
+            }
+        }
+        $decisionActors = @(Get-Field $Disposition 'decision_actors')
+        if ($decisionActors.Count -ne 2) {
+            $issues.Add('ADR-0009 disposition must have exactly Product and Architecture decision actors.')
+        }
+        $seenDecisionActors = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+        $seenDecisionTasks = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+        foreach ($decisionActor in $decisionActors) {
+            $actorId = [string](Get-Field $decisionActor 'actor_id')
+            $taskPath = [string](Get-Field $decisionActor 'task_path')
+            [void]$seenDecisionActors.Add($actorId)
+            [void]$seenDecisionTasks.Add($taskPath)
+            if (-not $expectedDecisionActors.Contains($actorId)) {
+                $issues.Add("ADR-0009 disposition contains unauthorized decision actor '$actorId'.")
+                continue
+            }
+            $expected = $expectedDecisionActors[$actorId]
+            if (-not (Test-AuthorizedActor $actorId $actorById $expected.role) -or
+                (Get-Field $decisionActor 'kind') -ne 'machine_agent' -or
+                (Get-Field $decisionActor 'role') -ne $expected.role -or
+                $taskPath -ne $expected.task -or
+                (Get-Field $decisionActor 'decision') -ne 'accept-as-written' -or
+                (Get-Field $actorById[$actorId] 'task_path') -ne $taskPath) {
+                $issues.Add("ADR-0009 decision actor '$actorId' has invalid role, task, kind or decision.")
+            }
+        }
+        if ($seenDecisionActors.Count -ne 2 -or $seenDecisionTasks.Count -ne 2) {
+            $issues.Add('ADR-0009 decision actors must use two distinct authorized actor and task identities.')
+        }
+
+        $independentReview = Get-Field $Disposition 'independent_review'
+        $reviewActorId = [string](Get-Field $independentReview 'actor_id')
+        $reviewTaskPath = [string](Get-Field $independentReview 'task_path')
+        if ($reviewActorId -ne 'r0-validation-agent' -or
+            -not (Test-AuthorizedActor $reviewActorId $actorById 'validation_lead') -or
+            (Get-Field $independentReview 'kind') -ne 'machine_agent' -or
+            (Get-Field $independentReview 'role') -ne 'validation_lead' -or
+            (Get-Field $independentReview 'result') -ne 'approved' -or
+            $reviewTaskPath -ne '/root/r0_validation_agent' -or
+            (Get-Field $independentReview 'reviewed_commit') -ne $reviewedCommit -or
+            (Get-Field $independentReview 'reviewed_fileset_sha256') -ne
+            (Get-Field $recordedFileset 'sha256') -or
+            $seenDecisionActors.Contains($reviewActorId) -or
+            $seenDecisionTasks.Contains($reviewTaskPath)) {
+            $issues.Add('ADR-0009 disposition lacks an independent authorized Validation approval for the reviewed commit/fileset.')
+        }
+
+        if (@(Get-Field $Disposition 'rationale').Count -lt 3) {
+            $issues.Add('ADR-0009 disposition rationale is incomplete.')
+        }
+        $verification = Get-Field $Disposition 'verification'
+        foreach ($field in @(
+                'team_toolchain_validator', 'license_provenance_validator',
+                'ctest_dev', 'repository_verifier', 'diff_check')) {
+            if ([string]::IsNullOrWhiteSpace([string](Get-Field $verification $field))) {
+                $issues.Add("ADR-0009 disposition verification field '$field' is empty.")
+            }
+        }
+        $expectedBoundaries = @(
+            'hosted-ci-commit-bound-evidence',
+            'toolchain-supported-qualification',
+            'rights-and-provenance-decisions',
+            'external-distribution',
+            'task-acceptance',
+            'G0-and-G1',
+            'R1-production-implementation')
+        if (((@(Get-Field $Disposition 'unresolved_boundaries') | Sort-Object) -join ',') -ne
+            (($expectedBoundaries | Sort-Object) -join ',')) {
+            $issues.Add('ADR-0009 disposition does not preserve the complete fail-closed boundary set.')
         }
     }
 
@@ -580,6 +801,11 @@ function Test-GovernanceObjects(
     if ($adrStatus -eq 'Accepted' -and -not $roleReadiness.ready) {
         $issues.Add('ADR-0009 is Accepted without complete accountable-role assignments.')
     }
+    if ($adrStatus -eq 'Accepted' -and
+        -not $AdrText.Contains(
+            '../governance/adr-dispositions/ADR-0009-2026-08-12.json')) {
+        $issues.Add('ADR-0009 is Accepted without its authoritative disposition reference.')
+    }
     $matrixDecision = [string](Get-Field $Matrix 'decision_status')
     if (($adrStatus -eq 'Proposed' -and $matrixDecision -ne 'proposed') -or
         ($adrStatus -eq 'Accepted' -and $matrixDecision -ne 'accepted')) {
@@ -625,6 +851,7 @@ function Invoke-Mutation([string]$Name, [scriptblock]$Mutation) {
     $context = [ordered]@{
         roles = Copy-JsonObject $script:roles
         authorization = Copy-JsonObject $script:authorization
+        disposition = Copy-JsonObject $script:disposition
         matrix = Copy-JsonObject $script:matrix
         backlog = Copy-JsonObject $script:backlog
         presets = Copy-JsonObject $script:presets
@@ -637,6 +864,7 @@ function Invoke-Mutation([string]$Name, [scriptblock]$Mutation) {
     $mutationIssues = @(Test-GovernanceObjects `
             $context.roles `
             $context.authorization `
+            $context.disposition `
             $context.matrix `
             $context.backlog `
             $context.presets `
@@ -658,6 +886,7 @@ function Invoke-Mutation([string]$Name, [scriptblock]$Mutation) {
 $requiredPaths = @(
     'docs/team/role-assignments.json',
     'docs/governance/r0-owner-authorization.json',
+    'docs/governance/adr-dispositions/ADR-0009-2026-08-12.json',
     'docs/governance/toolchain-support-matrix.json',
     'docs/adr/0009-accountable-roles-and-candidate-toolchain.md',
     'docs/tasks/work-packages/R0-GOV-001.md',
@@ -677,6 +906,7 @@ foreach ($relativePath in $requiredPaths) {
 
 $roles = Read-Json $rolesPath
 $authorization = Read-Json $authorizationPath
+$disposition = Read-Json $dispositionPath
 $matrix = Read-Json $matrixPath
 $backlog = Read-Json $backlogPath
 $presets = Read-Json $presetsPath
@@ -696,6 +926,7 @@ else { '' }
 
 $script:roles = $roles
 $script:authorization = $authorization
+$script:disposition = $disposition
 $script:matrix = $matrix
 $script:backlog = $backlog
 $script:presets = $presets
@@ -705,10 +936,11 @@ $script:workflowText = $workflowText
 $script:cmakeText = $cmakeText
 
 if ($null -ne $roles -and $null -ne $authorization -and
+    $null -ne $disposition -and
     $null -ne $matrix -and $null -ne $backlog -and
     $null -ne $presets -and $null -ne $manifest) {
     foreach ($issue in @(Test-GovernanceObjects `
-            $roles $authorization $matrix $backlog $presets $manifest `
+            $roles $authorization $disposition $matrix $backlog $presets $manifest `
             $adrText $workflowText $cmakeText)) {
         Add-Error $issue
     }
@@ -785,6 +1017,37 @@ if ($null -ne $roles -and $null -ne $authorization -and
     Invoke-Mutation 'unregistered-machine-alias' {
         param($value)
         $value.roles.roles[0].assignee = 'r0-unregistered-agent'
+    }
+    Invoke-Mutation 'missing-accepted-disposition' {
+        param($value)
+        $value.disposition = $null
+    }
+    Invoke-Mutation 'wrong-disposition-reviewed-commit' {
+        param($value)
+        $value.disposition.reviewed_commit =
+            '0000000000000000000000000000000000000000'
+    }
+    Invoke-Mutation 'wrong-disposition-fileset-hash' {
+        param($value)
+        $value.disposition.reviewed_fileset.sha256 =
+            '0000000000000000000000000000000000000000000000000000000000000000'
+    }
+    Invoke-Mutation 'wrong-disposition-decision-actor' {
+        param($value)
+        $value.disposition.decision_actors[0].actor_id = 'r0-science-agent'
+    }
+    Invoke-Mutation 'disposition-self-review' {
+        param($value)
+        $value.disposition.independent_review.actor_id = 'r0-po-agent'
+        $value.disposition.independent_review.task_path = '/root'
+        $value.disposition.independent_review.role = 'product_owner'
+    }
+    Invoke-Mutation 'disposition-drops-fail-closed-boundary' {
+        param($value)
+        $value.disposition.unresolved_boundaries = @(
+            $value.disposition.unresolved_boundaries | Where-Object {
+                $_ -ne 'external-distribution'
+            })
     }
     Invoke-Mutation 'preset-schema-exceeds-declared-floor' {
         param($value)
@@ -905,6 +1168,22 @@ $expectedReport = [pscustomobject][ordered]@{
         unique_task_binding_count = @((Get-Field $authorization 'actors') | ForEach-Object {
                 [string](Get-Field $_ 'task_path')
             } | Sort-Object -Unique).Count
+    }
+    disposition = [ordered]@{
+        adr_id = Get-Field $disposition 'adr_id'
+        decision = Get-Field $disposition 'decision'
+        decision_date = Get-Field $disposition 'decision_date'
+        reviewed_commit = Get-Field $disposition 'reviewed_commit'
+        reviewed_parent = Get-Field $disposition 'reviewed_parent'
+        fileset_algorithm = Get-Field (Get-Field $disposition 'reviewed_fileset') 'algorithm_id'
+        fileset_path_count = Get-Field (Get-Field $disposition 'reviewed_fileset') 'path_count'
+        fileset_sha256 = Get-Field (Get-Field $disposition 'reviewed_fileset') 'sha256'
+        decision_actor_ids = @((Get-Field $disposition 'decision_actors') | ForEach-Object {
+                Get-Field $_ 'actor_id'
+            })
+        independent_review_actor_id = Get-Field (Get-Field $disposition 'independent_review') 'actor_id'
+        independent_review_result = Get-Field (Get-Field $disposition 'independent_review') 'result'
+        unresolved_boundaries = @(Get-Field $disposition 'unresolved_boundaries')
     }
     roles = $roleReadiness
     toolchain = [ordered]@{

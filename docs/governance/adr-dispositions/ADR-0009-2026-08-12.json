@@ -6,9 +6,28 @@
   "reviewed_commit": "d4f1a6b105b680a7e7f32925d90a44c0f85f57e0",
   "reviewed_parent": "291cb28b064642f3e7aa14303ee30b03c8d047f0",
   "reviewed_fileset": {
+    "algorithm_id": "gnczmkn.fileset-manifest/1",
+    "path_order": "ordinal-ascending",
+    "entry_format": "path<TAB>raw_git_blob_byte_length<TAB>lowercase_sha256(raw_git_blob_bytes)",
+    "manifest_encoding": "UTF-8 without BOM",
+    "line_ending": "LF with a final LF",
     "path_count": 13,
-    "sha256": "db36acaefa6007b93beee908e8a695604fccf476bc395b25908a1fddd88a93f6",
-    "normalization": "sorted path, NUL, raw working-tree bytes, NUL per path"
+    "sha256": "10e79c181867b88fa920144b8d9c4241b954241b89320b4f633a86d326307da9",
+    "entries": [
+      {"path": "docs/adr/0009-accountable-roles-and-candidate-toolchain.md", "byte_length": 10414, "sha256": "098adfa5598bc861310e2ce9678a98388bbae3886cf8ea93c398670e7b363131"},
+      {"path": "docs/governance/r0-owner-authorization.json", "byte_length": 4020, "sha256": "b3f58e2cdd2c6ff0a5cb5abcfd4fad607111f2fa6f78baa2b810adaee2f59042"},
+      {"path": "docs/handoff/README.md", "byte_length": 2311, "sha256": "18fc19bd1db7e0dffa44ffcb30d0c986230c386c01ec7c94933121922ec87530"},
+      {"path": "docs/handoff/r0-authority-unblock-packet.md", "byte_length": 15360, "sha256": "edbd617b03b9ad8024e32e82e0a282b3e6f9ae36951b9324da60cc7f15b653f1"},
+      {"path": "docs/handoff/r0-execution-state.md", "byte_length": 4102, "sha256": "02c47ed1c0f0a3d912e83b79481ad71c6c79af902dfb6822f4884a4a31e3af45"},
+      {"path": "docs/handoff/team-operating-model.md", "byte_length": 2470, "sha256": "39518c31159d1004addc7cfb05a3529ffa8196a01857ff1ad84c6ec41a7bcbaa"},
+      {"path": "docs/quality/license-provenance-conformance-report.json", "byte_length": 12425, "sha256": "e80552c0cf2f4dd6b831310fb1bfb04a3d177a4c36dd175f0a3672cea96a94ea"},
+      {"path": "docs/quality/team-toolchain-readiness-report.json", "byte_length": 12874, "sha256": "6c7d734b51c8b7fb9d9adb7278e3da1041acee8f74c62f51a9196139aea16d59"},
+      {"path": "docs/tasks/backlog.json", "byte_length": 40344, "sha256": "5f104e178a557dc612a366c1f4698d121b120da7c2256bcb8b359d46804f0601"},
+      {"path": "docs/tasks/work-packages/R0-GOV-001.md", "byte_length": 9170, "sha256": "e1b063ea0e58da298754f970aa47d3674b0fb4cf532116868a57d542df059517"},
+      {"path": "docs/team/role-assignments.json", "byte_length": 1732, "sha256": "35e0cf92b7756bc2c95becde44d9999e401d802b012d027ceeace5e391106e45"},
+      {"path": "tools/validate-team-toolchain.ps1", "byte_length": 44036, "sha256": "6d89eac8e03f0abe293ecb1256878f5daeaf6e34e55e5ba475c6642f61e5b091"},
+      {"path": "tools/verify-repository.ps1", "byte_length": 14624, "sha256": "6164d50ee288aac6fdedc3d12f6060dfad7bb752b542536e12729bb8a018f58d"}
+    ]
   },
   "authorization_ref": "docs/governance/r0-owner-authorization.json",
   "decision_actors": [
@@ -34,7 +53,7 @@
     "role": "validation_lead",
     "result": "approved",
     "reviewed_commit": "d4f1a6b105b680a7e7f32925d90a44c0f85f57e0",
-    "reviewed_fileset_sha256": "db36acaefa6007b93beee908e8a695604fccf476bc395b25908a1fddd88a93f6"
+    "reviewed_fileset_sha256": "10e79c181867b88fa920144b8d9c4241b954241b89320b4f633a86d326307da9"
   },
   "rationale": [
     "The repository-owner instruction authorizes four explicitly disclosed machine agents for R0.",

@@ -22,6 +22,31 @@
                           "machine_actor_count":  4,
                           "unique_task_binding_count":  4
                       },
+    "disposition":  {
+                        "adr_id":  "ADR-0009",
+                        "decision":  "accept-as-written",
+                        "decision_date":  "2026-08-12",
+                        "reviewed_commit":  "d4f1a6b105b680a7e7f32925d90a44c0f85f57e0",
+                        "reviewed_parent":  "291cb28b064642f3e7aa14303ee30b03c8d047f0",
+                        "fileset_algorithm":  "gnczmkn.fileset-manifest/1",
+                        "fileset_path_count":  13,
+                        "fileset_sha256":  "10e79c181867b88fa920144b8d9c4241b954241b89320b4f633a86d326307da9",
+                        "decision_actor_ids":  [
+                                                   "r0-po-agent",
+                                                   "r0-architecture-agent"
+                                               ],
+                        "independent_review_actor_id":  "r0-validation-agent",
+                        "independent_review_result":  "approved",
+                        "unresolved_boundaries":  [
+                                                      "hosted-ci-commit-bound-evidence",
+                                                      "toolchain-supported-qualification",
+                                                      "rights-and-provenance-decisions",
+                                                      "external-distribution",
+                                                      "task-acceptance",
+                                                      "G0-and-G1",
+                                                      "R1-production-implementation"
+                                                  ]
+                    },
     "roles":  {
                   "required_role_count":  8,
                   "assigned_required_roles":  8,
@@ -104,22 +129,22 @@
                            {
                                "name":  "machine-actor-impersonates-human",
                                "rejected":  true,
-                               "detected_issue_count":  11
+                               "detected_issue_count":  12
                            },
                            {
                                "name":  "duplicate-actor-task-binding",
                                "rejected":  true,
-                               "detected_issue_count":  2
+                               "detected_issue_count":  3
                            },
                            {
                                "name":  "fewer-than-four-authorized-actors",
                                "rejected":  true,
-                               "detected_issue_count":  17
+                               "detected_issue_count":  18
                            },
                            {
                                "name":  "science-architecture-shared-task-binding",
                                "rejected":  true,
-                               "detected_issue_count":  8
+                               "detected_issue_count":  9
                            },
                            {
                                "name":  "authorization-scope-expands-to-r1",
@@ -130,6 +155,36 @@
                                "name":  "unregistered-machine-alias",
                                "rejected":  true,
                                "detected_issue_count":  4
+                           },
+                           {
+                               "name":  "missing-accepted-disposition",
+                               "rejected":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "wrong-disposition-reviewed-commit",
+                               "rejected":  true,
+                               "detected_issue_count":  2
+                           },
+                           {
+                               "name":  "wrong-disposition-fileset-hash",
+                               "rejected":  true,
+                               "detected_issue_count":  2
+                           },
+                           {
+                               "name":  "wrong-disposition-decision-actor",
+                               "rejected":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "disposition-self-review",
+                               "rejected":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "disposition-drops-fail-closed-boundary",
+                               "rejected":  true,
+                               "detected_issue_count":  1
                            },
                            {
                                "name":  "preset-schema-exceeds-declared-floor",
@@ -179,6 +234,11 @@
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
+                             "path":  "docs/governance/adr-dispositions/ADR-0009-2026-08-12.json",
+                             "sha256":  "38529e2fede371c6aa2f1c4d015affe2039b748cde1494836be2d3fc9e34bf79",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
                              "path":  "docs/governance/toolchain-support-matrix.json",
                              "sha256":  "4fb8ee2ec3578171d93e007264fc996268516f5b0e2a273e38510415ad83adff",
                              "hash_normalization":  "utf8-lf-no-bom"
@@ -190,7 +250,7 @@
                          },
                          {
                              "path":  "docs/tasks/work-packages/R0-GOV-001.md",
-                             "sha256":  "7c26ebc97f96445b1458286cc094ae7515673ed183aedb3153209610e3b0683d",
+                             "sha256":  "fb9a2abfbf7390c0b1ffa628321cc6e212d09016a570bc346539946d5a972b26",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
@@ -230,7 +290,7 @@
                          },
                          {
                              "path":  "tools/validate-team-toolchain.ps1",
-                             "sha256":  "6d89eac8e03f0abe293ecb1256878f5daeaf6e34e55e5ba475c6642f61e5b091",
+                             "sha256":  "87420fef261367c27e6f161eb9cadde87a7a6697124d98f9556367e2b8b66223",
                              "hash_normalization":  "utf8-lf-no-bom"
                          }
                      ]
