@@ -38,13 +38,14 @@
 - `cmake --build --preset dev`：通过；
 - `ctest --preset dev --output-on-failure`：9/9 通过；
 - `tools/verify-repository.ps1`：通过，验证 58 个 JSON、65 个任务条目、100 个 Markdown，以及全部已登记 R0 bundle；
-- 新治理 guard 的工作树验证：角色缺失槽位 0，四个授权 actor 使用四个唯一 task binding，24/24 mutation 被拒绝；当前只保留 Hosted CI blocker。
+- 新治理 guard 的工作树验证：角色缺失槽位 0，四个授权 actor 使用四个唯一 task binding，25/25 mutation 被拒绝；当前只保留 Hosted CI blocker。
 
 旧构建目录含 2026-08-11 的陈旧 `LastTestsFailed.log`，其中测试名称已过期。本轮结果以重新配置后的 9 项 CTest 和当前 `LastTest.log` 为准。
 
 ## 已合并 PR
 
 - PR #1：已合并到 `main@291cb28b064642f3e7aa14303ee30b03c8d047f0`。
+- PR #2：draft，`codex/r0-gov-001` → `main`；首轮双平台 run 因 checkout 浅克隆无法读取 disposition reviewed commit 而失败，修复已进入本地工作树。
 
 ## 下一项满足依赖的工作
 

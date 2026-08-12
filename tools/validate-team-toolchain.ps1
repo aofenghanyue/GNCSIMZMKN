@@ -765,6 +765,7 @@ function Test-GovernanceObjects(
             'ubuntu-24.04',
             'windows-2025-vs2026',
             'actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd',
+            'fetch-depth: 0',
             '-DGNC_BUILD_TESTS=ON',
             '-DGNC_WARNINGS_AS_ERRORS=ON',
             '--config Release',
@@ -1062,6 +1063,11 @@ if ($null -ne $roles -and $null -ne $authorization -and
         $value.workflow_text = $value.workflow_text.Replace(
             'actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd',
             'actions/checkout@v6')
+    }
+    Invoke-Mutation 'shallow-checkout-hides-reviewed-commit' {
+        param($value)
+        $value.workflow_text = $value.workflow_text.Replace(
+            'fetch-depth: 0', 'fetch-depth: 1')
     }
     Invoke-Mutation 'unbounded-compiler-range' {
         param($value)

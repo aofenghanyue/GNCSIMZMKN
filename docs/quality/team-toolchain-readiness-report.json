@@ -202,6 +202,11 @@
                                "detected_issue_count":  2
                            },
                            {
+                               "name":  "shallow-checkout-hides-reviewed-commit",
+                               "rejected":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
                                "name":  "unbounded-compiler-range",
                                "rejected":  true,
                                "detected_issue_count":  2
@@ -250,7 +255,7 @@
                          },
                          {
                              "path":  "docs/tasks/work-packages/R0-GOV-001.md",
-                             "sha256":  "fb9a2abfbf7390c0b1ffa628321cc6e212d09016a570bc346539946d5a972b26",
+                             "sha256":  "f2fd7a0a53db9d288c68c1ed92bcd2484397e843c1efff1aa3ae58404c88c2fa",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
@@ -285,12 +290,12 @@
                          },
                          {
                              "path":  ".github/workflows/ci.yml",
-                             "sha256":  "e6b53e6cc2cd21b5801c7b0083214e8f53bfbbfd8e96bc6e3bc7877481f41185",
+                             "sha256":  "5338f9b37404a19a651e67766452ac125886aead1b711d8dcc93c1574008803c",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
                              "path":  "tools/validate-team-toolchain.ps1",
-                             "sha256":  "87420fef261367c27e6f161eb9cadde87a7a6697124d98f9556367e2b8b66223",
+                             "sha256":  "d9ea1cafc074316bc41d9543c80784c0fee592cda847906aab5c9cfe6779e197",
                              "hash_normalization":  "utf8-lf-no-bom"
                          }
                      ]
