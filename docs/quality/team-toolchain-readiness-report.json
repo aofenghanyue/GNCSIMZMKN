@@ -100,6 +100,20 @@
                                "repository_receipt":  "permanent-in-git-history",
                                "upstream_logs":  "github-managed-repository-retention"
                            },
+    "task_acceptance":  {
+                            "acceptance_id":  "R0-GOV-001-ACCEPTANCE-2026-08-12",
+                            "result":  "accepted",
+                            "accepted_on":  "2026-08-12",
+                            "reviewed_commit":  "416725156d4cc14410f33d2e0fd34cc4e2d031f4",
+                            "reviewed_parent":  "32f6ade7f2feec6fb1792121773d437f6f035581",
+                            "fileset_path_count":  10,
+                            "fileset_sha256":  "7e907656f67de137a1361d9ca8a4f57522ffee54cfab2358cdb307737d541d0d",
+                            "implementation_actor_id":  "r0-po-agent",
+                            "reviewer_actor_id":  "r0-validation-agent",
+                            "reviewer_result":  "accepted",
+                            "push_run_id":  "31562029553",
+                            "pull_request_run_id":  "31562031272"
+                        },
     "workflow":  {
                      "runner_labels":  [
                                            "ubuntu-24.04",
@@ -116,22 +130,22 @@
                            {
                                "name":  "missing-reviewer-field",
                                "rejected":  true,
-                               "detected_issue_count":  6
+                               "detected_issue_count":  7
                            },
                            {
                                "name":  "same-assignee-and-reviewer",
                                "rejected":  true,
-                               "detected_issue_count":  6
+                               "detected_issue_count":  7
                            },
                            {
                                "name":  "shared-science-architecture-assignee",
                                "rejected":  true,
-                               "detected_issue_count":  5
+                               "detected_issue_count":  6
                            },
                            {
                                "name":  "accepted-adr-without-roles",
                                "rejected":  true,
-                               "detected_issue_count":  5
+                               "detected_issue_count":  6
                            },
                            {
                                "name":  "authorization-source-digest-missing",
@@ -141,7 +155,7 @@
                            {
                                "name":  "machine-actor-impersonates-human",
                                "rejected":  true,
-                               "detected_issue_count":  14
+                               "detected_issue_count":  16
                            },
                            {
                                "name":  "duplicate-actor-task-binding",
@@ -151,12 +165,12 @@
                            {
                                "name":  "fewer-than-four-authorized-actors",
                                "rejected":  true,
-                               "detected_issue_count":  20
+                               "detected_issue_count":  22
                            },
                            {
                                "name":  "science-architecture-shared-task-binding",
                                "rejected":  true,
-                               "detected_issue_count":  10
+                               "detected_issue_count":  11
                            },
                            {
                                "name":  "authorization-scope-expands-to-r1",
@@ -166,7 +180,7 @@
                            {
                                "name":  "unregistered-machine-alias",
                                "rejected":  true,
-                               "detected_issue_count":  5
+                               "detected_issue_count":  6
                            },
                            {
                                "name":  "missing-accepted-disposition",
@@ -279,6 +293,41 @@
                                "detected_issue_count":  1
                            },
                            {
+                               "name":  "missing-task-acceptance",
+                               "rejected":  true,
+                               "detected_issue_count":  2
+                           },
+                           {
+                               "name":  "task-acceptance-wrong-reviewed-commit",
+                               "rejected":  true,
+                               "detected_issue_count":  2
+                           },
+                           {
+                               "name":  "task-acceptance-wrong-fileset-hash",
+                               "rejected":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "task-acceptance-self-review",
+                               "rejected":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "task-acceptance-missing-deliverable",
+                               "rejected":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "task-acceptance-failed-current-ci",
+                               "rejected":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
+                               "name":  "task-acceptance-drops-r1-boundary",
+                               "rejected":  true,
+                               "detected_issue_count":  1
+                           },
+                           {
                                "name":  "preset-schema-exceeds-declared-floor",
                                "rejected":  true,
                                "detected_issue_count":  1
@@ -311,10 +360,15 @@
                            {
                                "name":  "distinct-codex-seat-assignments",
                                "rejected":  true,
-                               "detected_issue_count":  21
+                               "detected_issue_count":  22
                            },
                            {
                                "name":  "task-completion-without-hosted-ci",
+                               "rejected":  true,
+                               "detected_issue_count":  2
+                           },
+                           {
+                               "name":  "task-completion-without-acceptance",
                                "rejected":  true,
                                "detected_issue_count":  2
                            }
@@ -346,18 +400,23 @@
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
+                             "path":  "docs/quality/task-acceptance-R0-GOV-001.json",
+                             "sha256":  "aa860f68669940a88cf9506533060f74d6658c11d60e2f9e54be703e0b2dc4ea",
+                             "hash_normalization":  "utf8-lf-no-bom"
+                         },
+                         {
                              "path":  "docs/adr/0009-accountable-roles-and-candidate-toolchain.md",
                              "sha256":  "ed69988350c6addaa859f2810558bc89771a6932573cc682fa71509e048564aa",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
                              "path":  "docs/tasks/work-packages/R0-GOV-001.md",
-                             "sha256":  "19faca8407e5d62fedb231c8b6f027ed2b879cf08bd14daadacdc218cc6204ec",
+                             "sha256":  "e105c6fc43b52f38f5f7192a1f83cc2f9789d9f7d3c015d6d20f13d412192d0d",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
                              "path":  "docs/tasks/backlog.json",
-                             "sha256":  "5f104e178a557dc612a366c1f4698d121b120da7c2256bcb8b359d46804f0601",
+                             "sha256":  "c95f3810855adc8a9361fd25ed5b8242361a4662791792c0b9cdbc36c04c44a7",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
@@ -392,7 +451,7 @@
                          },
                          {
                              "path":  "tools/validate-team-toolchain.ps1",
-                             "sha256":  "15701a2fd29839f5aea6cfb9c17a23a9660567548f43735d2112fee684c88e37",
+                             "sha256":  "413bb0fda6804f382874ad015d3c146d8ed4e31a6de8db8928e29148601bc5cf",
                              "hash_normalization":  "utf8-lf-no-bom"
                          }
                      ]

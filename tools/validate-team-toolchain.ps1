@@ -13,6 +13,7 @@ $authorizationPath = Join-Path $repoRoot 'docs\governance\r0-owner-authorization
 $dispositionPath = Join-Path $repoRoot 'docs\governance\adr-dispositions\ADR-0009-2026-08-12.json'
 $matrixPath = Join-Path $repoRoot 'docs\governance\toolchain-support-matrix.json'
 $hostedCiEvidencePath = Join-Path $repoRoot 'docs\quality\hosted-ci-evidence-R0-GOV-001.json'
+$taskAcceptancePath = Join-Path $repoRoot 'docs\quality\task-acceptance-R0-GOV-001.json'
 $backlogPath = Join-Path $repoRoot 'docs\tasks\backlog.json'
 $presetsPath = Join-Path $repoRoot 'CMakePresets.json'
 $manifestPath = Join-Path $repoRoot 'project-manifest.json'
@@ -717,12 +718,143 @@ function Test-HostedCiEvidence([object]$Evidence, [object]$Authorization) {
     return $issues.ToArray()
 }
 
+function Test-TaskAcceptance([object]$Acceptance, [object]$Authorization) {
+    $issues = [System.Collections.Generic.List[string]]::new()
+    if ($null -eq $Acceptance) {
+        $issues.Add('R0-GOV-001 task acceptance record is missing.')
+        return $issues.ToArray()
+    }
+    if ((Get-Field $Acceptance 'schema_version') -ne 'gnczmkn.task-acceptance/1' -or
+        (Get-Field $Acceptance 'acceptance_id') -ne 'R0-GOV-001-ACCEPTANCE-2026-08-12' -or
+        (Get-Field $Acceptance 'task_id') -ne 'R0-GOV-001' -or
+        (Get-Field $Acceptance 'result') -ne 'accepted' -or
+        (Get-Field $Acceptance 'accepted_on') -ne '2026-08-12' -or
+        (Get-Field $Acceptance 'authorization_ref') -ne
+        'docs/governance/r0-owner-authorization.json') {
+        $issues.Add('R0-GOV-001 task acceptance identity or result is invalid.')
+    }
+
+    $reviewedCommit = [string](Get-Field $Acceptance 'reviewed_commit')
+    $reviewedParent = [string](Get-Field $Acceptance 'reviewed_parent')
+    $computedFileset = $null
+    try {
+        $computedFileset = Get-ReviewedFileset $reviewedCommit $reviewedParent
+    }
+    catch {
+        $issues.Add("R0-GOV-001 task acceptance commit cannot be reproduced: $($_.Exception.Message)")
+    }
+    $recordedFileset = Get-Field $Acceptance 'reviewed_fileset'
+    if ($null -ne $computedFileset) {
+        foreach ($field in @(
+                'algorithm_id', 'path_order', 'entry_format', 'manifest_encoding',
+                'line_ending', 'path_count', 'sha256')) {
+            if ((Get-Field $recordedFileset $field) -ne (Get-Field $computedFileset $field)) {
+                $issues.Add("R0-GOV-001 task acceptance fileset field '$field' is incorrect.")
+            }
+        }
+        $recordedEntries = @(Get-Field $recordedFileset 'entries')
+        $computedEntries = @(Get-Field $computedFileset 'entries')
+        if ($recordedEntries.Count -ne $computedEntries.Count) {
+            $issues.Add('R0-GOV-001 task acceptance fileset entry count is incorrect.')
+        }
+        else {
+            for ($index = 0; $index -lt $computedEntries.Count; ++$index) {
+                foreach ($field in @('path', 'byte_length', 'sha256')) {
+                    if ((Get-Field $recordedEntries[$index] $field) -ne
+                        (Get-Field $computedEntries[$index] $field)) {
+                        $issues.Add("R0-GOV-001 task acceptance entry $index field '$field' is incorrect.")
+                    }
+                }
+            }
+        }
+    }
+
+    $actorById = Get-ActorMap $Authorization
+    $implementationActor = Get-Field $Acceptance 'implementation_actor'
+    $reviewer = Get-Field $Acceptance 'independent_reviewer'
+    $implementationActorId = [string](Get-Field $implementationActor 'actor_id')
+    $reviewerId = [string](Get-Field $reviewer 'actor_id')
+    $implementationTask = [string](Get-Field $implementationActor 'task_path')
+    $reviewerTask = [string](Get-Field $reviewer 'task_path')
+    if ($implementationActorId -ne 'r0-po-agent' -or
+        -not (Test-AuthorizedActor $implementationActorId $actorById 'product_owner') -or
+        (Get-Field $implementationActor 'kind') -ne 'machine_agent' -or
+        (Get-Field $implementationActor 'role') -ne 'product_owner' -or
+        $implementationTask -ne '/root' -or
+        $reviewerId -ne 'r0-validation-agent' -or
+        -not (Test-AuthorizedActor $reviewerId $actorById 'validation_lead') -or
+        (Get-Field $reviewer 'kind') -ne 'machine_agent' -or
+        (Get-Field $reviewer 'role') -ne 'validation_lead' -or
+        (Get-Field $reviewer 'result') -ne 'accepted' -or
+        $reviewerTask -ne '/root/r0_validation_agent' -or
+        $implementationActorId -eq $reviewerId -or
+        $implementationTask -eq $reviewerTask) {
+        $issues.Add('R0-GOV-001 task acceptance lacks distinct authorized implementation and review actors.')
+    }
+
+    $checks = Get-Field $Acceptance 'acceptance_checks'
+    $deliverables = Get-Field $checks 'deliverables'
+    $acceptanceCriteria = Get-Field $checks 'acceptance'
+    $evidence = Get-Field $checks 'evidence'
+    if ((Get-Field $deliverables 'completed_role_assignments') -ne 'passed' -or
+        (Get-Field $deliverables 'accepted_platform_compiler_adr') -ne 'passed' -or
+        (Get-Field $acceptanceCriteria 'every_required_role_has_distinct_assignee_and_reviewer') -ne
+        'passed; 8/8' -or
+        (Get-Field $evidence 'role_assignments') -ne 'docs/team/role-assignments.json' -or
+        (Get-Field $evidence 'accepted_adr') -ne
+        'docs/adr/0009-accountable-roles-and-candidate-toolchain.md' -or
+        (Get-Field $evidence 'adr_disposition') -ne
+        'docs/governance/adr-dispositions/ADR-0009-2026-08-12.json' -or
+        (Get-Field $evidence 'hosted_ci_receipt') -ne
+        'docs/quality/hosted-ci-evidence-R0-GOV-001.json') {
+        $issues.Add('R0-GOV-001 task acceptance checks or evidence references are incomplete.')
+    }
+
+    $verification = Get-Field $Acceptance 'commit_bound_verification'
+    $push = Get-Field $verification 'push_run'
+    $pr = Get-Field $verification 'pull_request_run'
+    if ([string](Get-Field $push 'run_id') -ne '31562029553' -or
+        (Get-Field $push 'head_sha') -ne $reviewedCommit -or
+        (Get-Field $push 'checked_out_sha') -ne $reviewedCommit -or
+        (Get-Field $push 'ubuntu') -ne 'success' -or
+        (Get-Field $push 'windows') -ne 'success' -or
+        [string](Get-Field $pr 'run_id') -ne '31562031272' -or
+        (Get-Field $pr 'source_head_sha') -ne $reviewedCommit -or
+        (Get-Field $pr 'checked_out_sha') -ne
+        '9484abadf92e424567b175da5b653e9266f59c4c' -or
+        (Get-Field $pr 'checked_out_tree_sha') -ne
+        'c5d38d0b7cbaf842f37f5ab39f51a299f86e2cfe' -or
+        ((@(Get-Field $pr 'checked_out_parent_shas') -join ',') -ne
+        '291cb28b064642f3e7aa14303ee30b03c8d047f0,416725156d4cc14410f33d2e0fd34cc4e2d031f4') -or
+        (Get-Field $pr 'ubuntu') -ne 'success' -or
+        (Get-Field $pr 'windows') -ne 'success' -or
+        (Get-Field $verification 'team_toolchain') -ne 'passed; 41/41 mutations rejected' -or
+        (Get-Field $verification 'license_provenance') -ne
+        'passed; 14/14 mutations rejected; 8/8 NOASSERTION' -or
+        (Get-Field $verification 'ctest') -ne 'passed; 9/9' -or
+        (Get-Field $verification 'repository_verifier') -ne
+        'passed; 58 JSON; 65 tasks; 100 Markdown' -or
+        (Get-Field $verification 'diff_check') -ne 'passed') {
+        $issues.Add('R0-GOV-001 task acceptance lacks exact commit-bound verification evidence.')
+    }
+    $boundaries = Get-Field $Acceptance 'boundaries'
+    if ((Get-Field $boundaries 'rights_and_external_distribution') -ne 'remain fail-closed' -or
+        (Get-Field $boundaries 'r0_gate') -ne
+        'R0-GATE-001 remains planned; G0 and G1 are not passed' -or
+        (Get-Field $boundaries 'r1_through_r8') -ne
+        'remain locked until the formal R0 gate record') {
+        $issues.Add('R0-GOV-001 task acceptance drops a required fail-closed boundary.')
+    }
+    return $issues.ToArray()
+}
+
 function Test-GovernanceObjects(
     [object]$Roles,
     [object]$Authorization,
     [object]$Disposition,
     [object]$Matrix,
     [object]$HostedCiEvidence,
+    [object]$TaskAcceptance,
     [object]$Backlog,
     [object]$Presets,
     [object]$Manifest,
@@ -731,6 +863,9 @@ function Test-GovernanceObjects(
     [string]$CMakeText) {
     $issues = [System.Collections.Generic.List[string]]::new()
     foreach ($issue in @(Test-HostedCiEvidence $HostedCiEvidence $Authorization)) {
+        $issues.Add($issue)
+    }
+    foreach ($issue in @(Test-TaskAcceptance $TaskAcceptance $Authorization)) {
         $issues.Add($issue)
     }
 
@@ -1308,8 +1443,9 @@ function Test-GovernanceObjects(
             [string]::IsNullOrWhiteSpace([string](Get-Field $task 'assignee'))) {
             $issues.Add('Active R0-GOV-001 must have an implementation assignee.')
         }
-        if ((Get-Field $task 'status') -eq 'done' -and -not $qualified) {
-            $issues.Add('R0-GOV-001 is done without roles, Accepted ADR and hosted-CI evidence.')
+        if ((Get-Field $task 'status') -eq 'done' -and
+            (-not $qualified -or (Get-Field $TaskAcceptance 'result') -ne 'accepted')) {
+            $issues.Add('R0-GOV-001 is done without roles, Accepted ADR, hosted-CI evidence and task acceptance.')
         }
     }
 
@@ -1323,6 +1459,7 @@ function Invoke-Mutation([string]$Name, [scriptblock]$Mutation) {
         disposition = Copy-JsonObject $script:disposition
         matrix = Copy-JsonObject $script:matrix
         hosted_ci_evidence = Copy-JsonObject $script:hostedCiEvidence
+        task_acceptance = Copy-JsonObject $script:taskAcceptance
         backlog = Copy-JsonObject $script:backlog
         presets = Copy-JsonObject $script:presets
         manifest = Copy-JsonObject $script:manifest
@@ -1337,6 +1474,7 @@ function Invoke-Mutation([string]$Name, [scriptblock]$Mutation) {
             $context.disposition `
             $context.matrix `
             $context.hosted_ci_evidence `
+            $context.task_acceptance `
             $context.backlog `
             $context.presets `
             $context.manifest `
@@ -1360,6 +1498,7 @@ $requiredPaths = @(
     'docs/governance/adr-dispositions/ADR-0009-2026-08-12.json',
     'docs/governance/toolchain-support-matrix.json',
     'docs/quality/hosted-ci-evidence-R0-GOV-001.json',
+    'docs/quality/task-acceptance-R0-GOV-001.json',
     'docs/adr/0009-accountable-roles-and-candidate-toolchain.md',
     'docs/tasks/work-packages/R0-GOV-001.md',
     'docs/tasks/backlog.json',
@@ -1381,6 +1520,7 @@ $authorization = Read-Json $authorizationPath
 $disposition = Read-Json $dispositionPath
 $matrix = Read-Json $matrixPath
 $hostedCiEvidence = Read-Json $hostedCiEvidencePath
+$taskAcceptance = Read-Json $taskAcceptancePath
 $backlog = Read-Json $backlogPath
 $presets = Read-Json $presetsPath
 $manifest = Read-Json $manifestPath
@@ -1402,6 +1542,7 @@ $script:authorization = $authorization
 $script:disposition = $disposition
 $script:matrix = $matrix
 $script:hostedCiEvidence = $hostedCiEvidence
+$script:taskAcceptance = $taskAcceptance
 $script:backlog = $backlog
 $script:presets = $presets
 $script:manifest = $manifest
@@ -1412,10 +1553,11 @@ $script:cmakeText = $cmakeText
 if ($null -ne $roles -and $null -ne $authorization -and
     $null -ne $disposition -and
     $null -ne $matrix -and $null -ne $hostedCiEvidence -and
+    $null -ne $taskAcceptance -and
     $null -ne $backlog -and
     $null -ne $presets -and $null -ne $manifest) {
     foreach ($issue in @(Test-GovernanceObjects `
-            $roles $authorization $disposition $matrix $hostedCiEvidence $backlog $presets $manifest `
+            $roles $authorization $disposition $matrix $hostedCiEvidence $taskAcceptance $backlog $presets $manifest `
             $adrText $workflowText $cmakeText)) {
         Add-Error $issue
     }
@@ -1597,6 +1739,38 @@ if ($null -ne $roles -and $null -ne $authorization -and
         param($value)
         $value.hosted_ci_evidence.runs.primary.artifact_count = 1
     }
+    Invoke-Mutation 'missing-task-acceptance' {
+        param($value)
+        $value.task_acceptance = $null
+    }
+    Invoke-Mutation 'task-acceptance-wrong-reviewed-commit' {
+        param($value)
+        $value.task_acceptance.reviewed_commit =
+            '0000000000000000000000000000000000000000'
+    }
+    Invoke-Mutation 'task-acceptance-wrong-fileset-hash' {
+        param($value)
+        $value.task_acceptance.reviewed_fileset.sha256 =
+            '0000000000000000000000000000000000000000000000000000000000000000'
+    }
+    Invoke-Mutation 'task-acceptance-self-review' {
+        param($value)
+        $value.task_acceptance.independent_reviewer.actor_id = 'r0-po-agent'
+        $value.task_acceptance.independent_reviewer.task_path = '/root'
+        $value.task_acceptance.independent_reviewer.role = 'product_owner'
+    }
+    Invoke-Mutation 'task-acceptance-missing-deliverable' {
+        param($value)
+        $value.task_acceptance.acceptance_checks.deliverables.completed_role_assignments = 'pending'
+    }
+    Invoke-Mutation 'task-acceptance-failed-current-ci' {
+        param($value)
+        $value.task_acceptance.commit_bound_verification.push_run.windows = 'failure'
+    }
+    Invoke-Mutation 'task-acceptance-drops-r1-boundary' {
+        param($value)
+        $value.task_acceptance.boundaries.r1_through_r8 = ''
+    }
     Invoke-Mutation 'preset-schema-exceeds-declared-floor' {
         param($value)
         $value.presets.version = 6
@@ -1644,6 +1818,14 @@ if ($null -ne $roles -and $null -ne $authorization -and
         $value.matrix.qualification_status = 'candidate-not-supported'
         $value.matrix.qualification_policy.hosted_ci_status = 'pending-push-and-run'
         $value.hosted_ci_evidence = $null
+    }
+    Invoke-Mutation 'task-completion-without-acceptance' {
+        param($value)
+        $task = @($value.backlog.tasks | Where-Object {
+                $_.id -eq 'R0-GOV-001'
+            }) | Select-Object -First 1
+        $task.status = 'done'
+        $value.task_acceptance = $null
     }
 }
 
@@ -1770,6 +1952,20 @@ $expectedReport = [pscustomobject][ordered]@{
         artifact_count = Get-Field (Get-Field $hostedCiEvidence 'retention') 'artifact_count'
         repository_receipt = Get-Field (Get-Field $hostedCiEvidence 'retention') 'repository_receipt'
         upstream_logs = Get-Field (Get-Field $hostedCiEvidence 'retention') 'upstream_logs'
+    }
+    task_acceptance = [ordered]@{
+        acceptance_id = Get-Field $taskAcceptance 'acceptance_id'
+        result = Get-Field $taskAcceptance 'result'
+        accepted_on = Get-Field $taskAcceptance 'accepted_on'
+        reviewed_commit = Get-Field $taskAcceptance 'reviewed_commit'
+        reviewed_parent = Get-Field $taskAcceptance 'reviewed_parent'
+        fileset_path_count = Get-Field (Get-Field $taskAcceptance 'reviewed_fileset') 'path_count'
+        fileset_sha256 = Get-Field (Get-Field $taskAcceptance 'reviewed_fileset') 'sha256'
+        implementation_actor_id = Get-Field (Get-Field $taskAcceptance 'implementation_actor') 'actor_id'
+        reviewer_actor_id = Get-Field (Get-Field $taskAcceptance 'independent_reviewer') 'actor_id'
+        reviewer_result = Get-Field (Get-Field $taskAcceptance 'independent_reviewer') 'result'
+        push_run_id = Get-Field (Get-Field (Get-Field $taskAcceptance 'commit_bound_verification') 'push_run') 'run_id'
+        pull_request_run_id = Get-Field (Get-Field (Get-Field $taskAcceptance 'commit_bound_verification') 'pull_request_run') 'run_id'
     }
     workflow = [ordered]@{
         runner_labels = @('ubuntu-24.04', 'windows-2025-vs2026')

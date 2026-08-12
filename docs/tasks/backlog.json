@@ -69,7 +69,7 @@
       "id": "R0-GOV-001",
       "stage": "R0",
       "title": "Assign accountable roles and freeze the supported toolchain",
-      "status": "review",
+      "status": "done",
       "priority": "P0",
       "size": "S",
       "owner_role": "product_owner",

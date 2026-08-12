@@ -41,6 +41,7 @@ $requiredPaths = @(
     'docs/governance/r0-owner-authorization.json',
     'docs/governance/adr-dispositions/ADR-0009-2026-08-12.json',
     'docs/quality/hosted-ci-evidence-R0-GOV-001.json',
+    'docs/quality/task-acceptance-R0-GOV-001.json',
     'docs/handoff/r0-execution-state.md',
     'docs/architecture/authority-registry.json',
     'docs/architecture/architecture-baseline.json',
