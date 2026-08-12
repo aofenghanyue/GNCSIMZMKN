@@ -47,7 +47,7 @@ CI checkout 固定到 `actions/checkout` v6.0.2 的 commit `de0fac2e4500dabe0009
 
 w64devkit/GCC 16.2 只服务冻结 Legacy 复现，保持 `evidence-only` 且不具备产品资格。Clang、macOS、ARM、MinGW 产品构建、sanitizer、动态 package ABI 和 Python wheels 尚未 qualified。
 
-候选 profile 只有在以下三项全部成立后才能改为 supported：本 ADR 由已授权的 Product Owner 与 Architecture Lead actor 接受；八个 required role 都有独立且可解析的 assignee/reviewer；固定 runner 的新 workflow 成功运行并保存精确环境证据。前两项已针对冻结提交 `d4f1a6b105b680a7e7f32925d90a44c0f85f57e0` 通过并记录在 [ADR disposition](../governance/adr-dispositions/ADR-0009-2026-08-12.json)。当前工具链整体状态继续为 `candidate-not-supported`，等待 Hosted CI 的 commit-bound evidence。
+候选 profile 只有在以下三项全部成立后才能改为 supported：本 ADR 由已授权的 Product Owner 与 Architecture Lead actor 接受；八个 required role 都有独立且可解析的 assignee/reviewer；固定 runner 的新 workflow 成功运行并保存精确环境证据。前两项已针对冻结提交 `d4f1a6b105b680a7e7f32925d90a44c0f85f57e0` 通过并记录在 [ADR disposition](../governance/adr-dispositions/ADR-0009-2026-08-12.json)。第三项由 push run `31559701566` 与 PR run `31559704268` 闭合，commit、checkout context、runner/image/tool/compiler identity、步骤结论、日志归档哈希和 90 天上游保留期均记录在 [Hosted CI evidence receipt](../quality/hosted-ci-evidence-R0-GOV-001.json)。两个 profile 因此进入 `supported`；未列入矩阵的工具链继续保持未资格化。
 
 ## Consequences
 
@@ -59,7 +59,7 @@ w64devkit/GCC 16.2 只服务冻结 Legacy 复现，保持 `evidence-only` 且不
 - Cost: Ubuntu 本机 WSL 没有 PowerShell，只能提供 C++/CMake smoke；完整治理 CTest 需由托管 runner 补齐。
 - Cost: 角色登记、validator、readiness report 与当前 handoff 材料必须在同一治理切片中迁移到授权 actor 语义。
 - Risk: 固定 runner label 仍会更新预装工具，workflow 必须保留每次运行的 identity 输出。
-- Governance blocker: 新 CI run 及其 retained evidence 尚未闭合，不能宣称已支持或将任务标为 done。
+- Governance boundary: 新 CI run 及其 retained evidence 已闭合工具链资格；任务仍须在本证据物化提交通过独立验收后单独标为 `done`。
 
 ## Alternatives considered
 
@@ -76,7 +76,7 @@ w64devkit/GCC 16.2 只服务冻结 Legacy 复现，保持 `evidence-only` 且不
 - validator 对齐 C++17、CMake 3.20、preset schema 2、两个 compiler range 与所有排除项；
 - workflow 检查固定 runner label、checkout commit、Release、warnings-as-errors、CTest、repository verification 和 identity 输出；
 - mutation suite 拒绝缺 reviewer、同 actor 或同 task path 自审、Science/Architecture 共用 actor 或 task、未登记机器 alias、缺授权来源/scope/身份披露、机器 actor 伪装人类、无有效 disposition 的 Accepted、preset 漂移、latest runner、浮动 action、无上界 compiler、Legacy 晋升和空角色虚假 readiness；
-- 本地 Windows Debug/Release 与 Linux GCC smoke 的命令和结果记录在工作包；新 hosted CI run 在 push 前保持显式 pending。
+- 本地 Windows Debug/Release 与 Linux GCC smoke 的命令和结果记录在工作包；固定 Hosted CI 的 push 与 PR merge-context 运行均已通过。离线 guard 会复算资格提交、工作流 Git blob、PR 临时合并 commit object、必需步骤和精确环境身份。
 
 ## Acceptance and supersession
 

@@ -40,6 +40,7 @@ $requiredPaths = @(
     'docs/team/role-assignments.json',
     'docs/governance/r0-owner-authorization.json',
     'docs/governance/adr-dispositions/ADR-0009-2026-08-12.json',
+    'docs/quality/hosted-ci-evidence-R0-GOV-001.json',
     'docs/handoff/r0-execution-state.md',
     'docs/architecture/authority-registry.json',
     'docs/architecture/architecture-baseline.json',
@@ -73,10 +74,20 @@ foreach ($relativePath in $requiredPaths) {
 }
 
 $buildRoot = [System.IO.Path]::GetFullPath((Join-Path $repoRoot 'build'))
+$userOutputsRoot = [System.IO.Path]::GetFullPath((Join-Path $repoRoot 'user/outputs'))
+$artifactsRoot = [System.IO.Path]::GetFullPath((Join-Path $repoRoot 'artifacts'))
 $extractedLegacyRoot = [System.IO.Path]::GetFullPath((Join-Path $repoRoot 'reference/legacy/extracted'))
+$gitIgnoreText = Get-Content -LiteralPath (Join-Path $repoRoot '.gitignore') -Raw -Encoding utf8
+foreach ($requiredGeneratedExclusion in @('/user/outputs/', '/artifacts/')) {
+    if ($gitIgnoreText -notmatch "(?m)^$([regex]::Escape($requiredGeneratedExclusion))$") {
+        Add-Error "Repository JSON exclusion lacks matching .gitignore policy: $requiredGeneratedExclusion"
+    }
+}
 $jsonFiles = Get-ChildItem -LiteralPath $repoRoot -Recurse -File -Filter '*.json' |
     Where-Object {
         -not (Test-PathBelow $_.FullName $buildRoot) -and
+        -not (Test-PathBelow $_.FullName $userOutputsRoot) -and
+        -not (Test-PathBelow $_.FullName $artifactsRoot) -and
         -not (Test-PathBelow $_.FullName $extractedLegacyRoot)
     }
 foreach ($file in $jsonFiles) {

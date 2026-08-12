@@ -10,7 +10,7 @@
 
 本包记录 2026-08-10 基线上的历史阻塞状态。2026-08-12，仓库所有者已经通过可校验指令授权四个独立机器智能体承担 R0 责任角色；当前权威记录为 [`r0-owner-authorization.json`](../governance/r0-owner-authorization.json)、[`role-assignments.json`](../team/role-assignments.json) 与 [`r0-execution-state.md`](r0-execution-state.md)。本包中 human-only、禁止 AI 决策、无 push 授权、旧分支和旧 commit 等陈述不再表达当前治理状态。
 
-本包继续保留当时的证据缺口清单。rights/provenance、外部分发、Hosted CI retention、任务 acceptance 和阶段门仍需各自闭合；机器智能体授权不会改变这些 fail-closed 边界。
+本包继续保留当时的证据缺口清单。`RECON-DEC-008` 已于 2026-08-12 通过 [Hosted CI evidence receipt](../quality/hosted-ci-evidence-R0-GOV-001.json) 闭合；rights/provenance、外部分发、任务 acceptance 和阶段门仍需各自闭合。机器智能体授权不会改变这些 fail-closed 边界。
 
 ## 历史用途与边界
 

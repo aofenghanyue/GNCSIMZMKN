@@ -12,6 +12,7 @@ $rolesPath = Join-Path $repoRoot 'docs\team\role-assignments.json'
 $authorizationPath = Join-Path $repoRoot 'docs\governance\r0-owner-authorization.json'
 $dispositionPath = Join-Path $repoRoot 'docs\governance\adr-dispositions\ADR-0009-2026-08-12.json'
 $matrixPath = Join-Path $repoRoot 'docs\governance\toolchain-support-matrix.json'
+$hostedCiEvidencePath = Join-Path $repoRoot 'docs\quality\hosted-ci-evidence-R0-GOV-001.json'
 $backlogPath = Join-Path $repoRoot 'docs\tasks\backlog.json'
 $presetsPath = Join-Path $repoRoot 'CMakePresets.json'
 $manifestPath = Join-Path $repoRoot 'project-manifest.json'
@@ -114,6 +115,55 @@ function Get-Sha256Hex([byte[]]$Bytes) {
     }
     finally {
         $algorithm.Dispose()
+    }
+}
+
+function Get-Sha1Hex([byte[]]$Bytes) {
+    $algorithm = [System.Security.Cryptography.SHA1]::Create()
+    try {
+        return ([System.BitConverter]::ToString(
+                $algorithm.ComputeHash($Bytes))).Replace('-', '').ToLowerInvariant()
+    }
+    finally {
+        $algorithm.Dispose()
+    }
+}
+
+function Get-RetainedGitCommitFact([object]$Object) {
+    if ((Get-Field $Object 'object_type') -ne 'commit' -or
+        (Get-Field $Object 'content_encoding') -ne 'base64') {
+        throw 'Retained Git object type or encoding is invalid.'
+    }
+    try {
+        [byte[]]$content = [System.Convert]::FromBase64String(
+            [string](Get-Field $Object 'content_base64'))
+    }
+    catch {
+        throw "Retained Git commit base64 is invalid: $($_.Exception.Message)"
+    }
+    if ($content.Length -ne (Get-Field $Object 'byte_length')) {
+        throw 'Retained Git commit byte length is incorrect.'
+    }
+    [byte[]]$header = [System.Text.Encoding]::ASCII.GetBytes(
+        "commit $($content.Length)`0")
+    [byte[]]$fullObject = New-Object byte[] ($header.Length + $content.Length)
+    [System.Array]::Copy($header, 0, $fullObject, 0, $header.Length)
+    [System.Array]::Copy($content, 0, $fullObject, $header.Length, $content.Length)
+    $sha1 = Get-Sha1Hex $fullObject
+    if ($sha1 -ne (Get-Field $Object 'sha1')) {
+        throw 'Retained Git commit SHA-1 is incorrect.'
+    }
+    $text = [System.Text.UTF8Encoding]::new($false, $true).GetString($content)
+    $treeMatch = [regex]::Match($text, '(?m)^tree ([0-9a-f]{40})$')
+    $parentMatches = [regex]::Matches($text, '(?m)^parent ([0-9a-f]{40})$')
+    if (-not $treeMatch.Success -or $parentMatches.Count -eq 0) {
+        throw 'Retained Git commit has no readable tree or parent headers.'
+    }
+    return [pscustomobject][ordered]@{
+        sha1 = $sha1
+        byte_length = $content.Length
+        tree = $treeMatch.Groups[1].Value
+        parents = @($parentMatches | ForEach-Object { $_.Groups[1].Value })
     }
 }
 
@@ -255,11 +305,424 @@ function Get-RoleReadiness([object]$Roles, [object]$Authorization) {
     }
 }
 
+function Test-HostedCiEvidence([object]$Evidence, [object]$Authorization) {
+    $issues = [System.Collections.Generic.List[string]]::new()
+    if ($null -eq $Evidence) {
+        $issues.Add('Hosted CI qualification evidence is missing.')
+        return $issues.ToArray()
+    }
+
+    if ((Get-Field $Evidence 'schema_version') -ne 'gnczmkn.hosted-ci-evidence/1' -or
+        (Get-Field $Evidence 'evidence_id') -ne 'R0-GOV-001-HOSTED-CI-32F6ADE7' -or
+        (Get-Field $Evidence 'task_id') -ne 'R0-GOV-001' -or
+        (Get-Field $Evidence 'evidence_status') -ne 'accepted' -or
+        (Get-Field $Evidence 'recorded_on') -ne '2026-08-12' -or
+        (Get-Field $Evidence 'adr_ref') -ne
+        'docs/adr/0009-accountable-roles-and-candidate-toolchain.md' -or
+        (Get-Field $Evidence 'task_ref') -ne
+        'docs/tasks/work-packages/R0-GOV-001.md' -or
+        (Get-Field $Evidence 'matrix_ref') -ne
+        'docs/governance/toolchain-support-matrix.json' -or
+        (Get-Field $Evidence 'migration_ref') -ne
+        'docs/quality/r0-first-wave-reconciliation-audit.md#14-decision-ledger') {
+        $issues.Add('Hosted CI evidence identity or status is invalid.')
+    }
+
+    $actorById = Get-ActorMap $Authorization
+    $decision = Get-Field $Evidence 'decision'
+    if ((Get-Field $decision 'id') -ne 'RECON-DEC-008' -or
+        (Get-Field $decision 'outcome') -ne 'keep-current' -or
+        (Get-Field $decision 'status') -ne 'accepted' -or
+        (Get-Field $decision 'decided_on') -ne '2026-08-12' -or
+        (Get-Field $decision 'reviewed_commit') -ne
+        '32f6ade7f2feec6fb1792121773d437f6f035581') {
+        $issues.Add('RECON-DEC-008 is missing an accepted commit-bound disposition.')
+    }
+    $expectedDecisionActors = [ordered]@{
+        'r0-po-agent' = [ordered]@{
+            role = 'product_owner'; task = '/root'; result = 'keep-current'
+        }
+        'r0-validation-agent' = [ordered]@{
+            role = 'validation_lead'; task = '/root/r0_validation_agent'; result = 'approved'
+        }
+    }
+    $seenDecisionActors = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+    $seenDecisionTasks = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
+    foreach ($actor in @(Get-Field $decision 'actors')) {
+        $actorId = [string](Get-Field $actor 'actor_id')
+        $taskPath = [string](Get-Field $actor 'task_path')
+        [void]$seenDecisionActors.Add($actorId)
+        [void]$seenDecisionTasks.Add($taskPath)
+        if (-not $expectedDecisionActors.Contains($actorId)) {
+            $issues.Add("RECON-DEC-008 contains unauthorized actor '$actorId'.")
+            continue
+        }
+        $expected = $expectedDecisionActors[$actorId]
+        if (-not (Test-AuthorizedActor $actorId $actorById $expected.role) -or
+            (Get-Field $actor 'kind') -ne 'machine_agent' -or
+            (Get-Field $actor 'role') -ne $expected.role -or
+            $taskPath -ne $expected.task -or
+            (Get-Field $actor 'result') -ne $expected.result -or
+            (Get-Field $actorById[$actorId] 'task_path') -ne $taskPath) {
+            $issues.Add("RECON-DEC-008 actor '$actorId' has an invalid role, task, kind or result.")
+        }
+    }
+    if ($seenDecisionActors.Count -ne 2 -or $seenDecisionTasks.Count -ne 2) {
+        $issues.Add('RECON-DEC-008 requires distinct Product Owner and Validation actor/task identities.')
+    }
+    if (@(Get-Field $decision 'rationale').Count -lt 3) {
+        $issues.Add('RECON-DEC-008 rationale is incomplete.')
+    }
+
+    $repository = Get-Field $Evidence 'repository'
+    if ((Get-Field $repository 'provider') -ne 'github-actions' -or
+        [string](Get-Field $repository 'repository_id') -ne '1328549597' -or
+        (Get-Field $repository 'node_id') -ne 'R_kgDOTzAO3Q' -or
+        (Get-Field $repository 'slug') -ne 'aofenghanyue/GNCSIMZMKN' -or
+        (Get-Field $repository 'visibility') -ne 'public' -or
+        (Get-Field $repository 'api_url') -ne
+        'https://api.github.com/repos/aofenghanyue/GNCSIMZMKN' -or
+        (Get-Field $repository 'html_url') -ne
+        'https://github.com/aofenghanyue/GNCSIMZMKN') {
+        $issues.Add('Hosted CI evidence repository identity is invalid.')
+    }
+
+    $qualification = Get-Field $Evidence 'qualification'
+    $qualifiedCommit = [string](Get-Field $qualification 'commit')
+    $qualifiedParent = [string](Get-Field $qualification 'parent')
+    if ((Get-Field $qualification 'status') -ne 'passed-with-evidence' -or
+        $qualifiedCommit -ne '32f6ade7f2feec6fb1792121773d437f6f035581' -or
+        $qualifiedParent -ne 'cd093d5e91ba5225cc4201506450a7993af32446' -or
+        (Get-Field $qualification 'tree') -ne
+        '6efb2a55e6ae63bb2e3f50c0a164e55ba57f2815' -or
+        (Get-Field $qualification 'branch') -ne 'codex/r0-gov-001') {
+        $issues.Add('Hosted CI qualification commit, parent, branch or status is invalid.')
+    }
+    $actualParent = [string](& git -C $repoRoot rev-parse "$qualifiedCommit^" 2>$null)
+    if ($LASTEXITCODE -ne 0 -or $actualParent.Trim() -ne $qualifiedParent) {
+        $issues.Add('Hosted CI qualification commit and parent cannot be reproduced from Git history.')
+    }
+    $actualTree = [string](& git -C $repoRoot rev-parse "${qualifiedCommit}^{tree}" 2>$null)
+    if ($LASTEXITCODE -ne 0 -or
+        $actualTree.Trim() -ne (Get-Field $qualification 'tree')) {
+        $issues.Add('Hosted CI qualification tree cannot be reproduced from Git history.')
+    }
+
+    $workflow = Get-Field $qualification 'workflow'
+    if ([string](Get-Field $workflow 'workflow_id') -ne '330370398' -or
+        (Get-Field $workflow 'name') -ne 'bootstrap-ci' -or
+        (Get-Field $workflow 'path') -ne '.github/workflows/ci.yml' -or
+        (Get-Field $workflow 'api_url') -ne
+        'https://api.github.com/repos/aofenghanyue/GNCSIMZMKN/actions/workflows/330370398' -or
+        (Get-Field $workflow 'git_blob_oid') -ne 'c9ad4b796ddf321fe2858f9a2ca148defd7f7a9b' -or
+        (Get-Field $workflow 'raw_sha256') -ne
+        '5338f9b37404a19a651e67766452ac125886aead1b711d8dcc93c1574008803c' -or
+        (Get-Field $workflow 'checkout_commit') -ne
+        'de0fac2e4500dabe0009e67214ff5f5447ce83dd' -or
+        (Get-Field $workflow 'fetch_depth') -ne 0 -or
+        (Get-Field $workflow 'configuration') -ne 'Release' -or
+        (Get-Field $workflow 'warnings_as_errors') -ne $true) {
+        $issues.Add('Hosted CI evidence does not bind the qualified workflow configuration.')
+    }
+    try {
+        $workflowFact = Get-GitBlobFact $qualifiedCommit '.github/workflows/ci.yml'
+        if ($workflowFact.sha256 -ne (Get-Field $workflow 'raw_sha256') -or
+            ([string](& git -C $repoRoot rev-parse "$qualifiedCommit`:.github/workflows/ci.yml")).Trim() -ne
+            (Get-Field $workflow 'git_blob_oid')) {
+            $issues.Add('Hosted CI workflow receipt differs from the qualified Git blob.')
+        }
+    }
+    catch {
+        $issues.Add("Hosted CI workflow Git blob cannot be reproduced: $($_.Exception.Message)")
+    }
+
+    $runs = Get-Field $Evidence 'runs'
+    $expectedRuns = [ordered]@{
+        primary = [ordered]@{
+            id = '31559701566'; event = 'push'; url = 'https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31559701566'
+            api_url = 'https://api.github.com/repos/aofenghanyue/GNCSIMZMKN/actions/runs/31559701566'
+            jobs_url = 'https://api.github.com/repos/aofenghanyue/GNCSIMZMKN/actions/runs/31559701566/jobs'
+            artifacts_url = 'https://api.github.com/repos/aofenghanyue/GNCSIMZMKN/actions/runs/31559701566/artifacts'
+            source_head_sha = '32f6ade7f2feec6fb1792121773d437f6f035581'
+            checked_out_ref = 'refs/heads/codex/r0-gov-001'
+            checked_out_sha = '32f6ade7f2feec6fb1792121773d437f6f035581'
+            created_at = '2026-08-12T03:19:07Z'; started_at = '2026-08-12T03:19:07Z'; completed_at = '2026-08-12T03:20:46Z'
+            log_url = 'https://api.github.com/repos/aofenghanyue/GNCSIMZMKN/actions/runs/31559701566/logs'
+            log_bytes = 31455; log_sha256 = 'bea51b51d806f2ea7089f4964362dab5e13c15f660e449dd0ec25737fee7639b'
+        }
+        repeat = [ordered]@{
+            id = '31559704268'; event = 'pull_request'; url = 'https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31559704268'
+            api_url = 'https://api.github.com/repos/aofenghanyue/GNCSIMZMKN/actions/runs/31559704268'
+            jobs_url = 'https://api.github.com/repos/aofenghanyue/GNCSIMZMKN/actions/runs/31559704268/jobs'
+            artifacts_url = 'https://api.github.com/repos/aofenghanyue/GNCSIMZMKN/actions/runs/31559704268/artifacts'
+            source_head_sha = '32f6ade7f2feec6fb1792121773d437f6f035581'
+            checked_out_ref = 'refs/pull/2/merge'
+            checked_out_sha = '4ecb1cafc8fab2dc385d1fb5493aa823b48b08bd'
+            created_at = '2026-08-12T03:19:10Z'; started_at = '2026-08-12T03:19:10Z'; completed_at = '2026-08-12T03:20:29Z'
+            log_url = 'https://api.github.com/repos/aofenghanyue/GNCSIMZMKN/actions/runs/31559704268/logs'
+            log_bytes = 33033; log_sha256 = '6578a756edf0a72124f8c2d70aaed533fbbbea4482b8122b74cb817703bdac8b'
+        }
+    }
+    $linuxSteps = [ordered]@{
+        'Check out repository' = 'success'
+        'Record runner and tool identity' = 'success'
+        'Configure Ubuntu candidate' = 'success'
+        'Configure Windows candidate' = 'skipped'
+        'Record configured compiler identity' = 'success'
+        'Build' = 'success'
+        'Test' = 'success'
+        'Repository checks' = 'success'
+        'Verify Windows PowerShell 5.1 compatibility' = 'skipped'
+    }
+    $windowsSteps = [ordered]@{
+        'Check out repository' = 'success'
+        'Record runner and tool identity' = 'success'
+        'Configure Ubuntu candidate' = 'skipped'
+        'Configure Windows candidate' = 'success'
+        'Record configured compiler identity' = 'success'
+        'Build' = 'success'
+        'Test' = 'success'
+        'Repository checks' = 'success'
+        'Verify Windows PowerShell 5.1 compatibility' = 'success'
+    }
+    $expectedJobSets = [ordered]@{
+        primary = [ordered]@{
+            '93999328011' = [ordered]@{
+                name = 'ubuntu-24.04-gcc-13'; runner_label = 'ubuntu-24.04'; runner_group = 'GitHub Actions'
+                runner_name = 'GitHub Actions 1000000081'; started_at = '2026-08-12T03:19:11Z'; completed_at = '2026-08-12T03:20:08Z'
+                url = 'https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31559701566/job/93999328011'; steps = $linuxSteps
+            }
+            '93999328054' = [ordered]@{
+                name = 'windows-2025-vs2026-msvc-19.5x'; runner_label = 'windows-2025-vs2026'; runner_group = 'GitHub Actions'
+                runner_name = 'GitHub Actions 1000000082'; started_at = '2026-08-12T03:19:11Z'; completed_at = '2026-08-12T03:20:45Z'
+                url = 'https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31559701566/job/93999328054'; steps = $windowsSteps
+            }
+        }
+        repeat = [ordered]@{
+            '93999335576' = [ordered]@{
+                name = 'ubuntu-24.04-gcc-13'; runner_label = 'ubuntu-24.04'; runner_group = 'GitHub Actions'
+                runner_name = 'GitHub Actions 1000000083'; started_at = '2026-08-12T03:19:14Z'; completed_at = '2026-08-12T03:20:11Z'
+                url = 'https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31559704268/job/93999335576'; steps = $linuxSteps
+            }
+            '93999335654' = [ordered]@{
+                name = 'windows-2025-vs2026-msvc-19.5x'; runner_label = 'windows-2025-vs2026'; runner_group = 'GitHub Actions'
+                runner_name = 'GitHub Actions 1000000084'; started_at = '2026-08-12T03:19:14Z'; completed_at = '2026-08-12T03:20:29Z'
+                url = 'https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31559704268/job/93999335654'; steps = $windowsSteps
+            }
+        }
+    }
+    foreach ($name in @('primary', 'repeat')) {
+        $run = Get-Field $runs $name
+        $expected = $expectedRuns[$name]
+        if ([string](Get-Field $run 'run_id') -ne $expected.id -or
+            (Get-Field $run 'run_attempt') -ne 1 -or
+            (Get-Field $run 'event') -ne $expected.event -or
+            (Get-Field $run 'api_url') -ne $expected.api_url -or
+            [string](Get-Field $run 'workflow_id') -ne '330370398' -or
+            (Get-Field $run 'jobs_api_url') -ne $expected.jobs_url -or
+            (Get-Field $run 'artifacts_api_url') -ne $expected.artifacts_url -or
+            (Get-Field $run 'source_head_sha') -ne $expected.source_head_sha -or
+            (Get-Field $run 'source_branch') -ne 'codex/r0-gov-001' -or
+            (Get-Field $run 'checked_out_ref') -ne $expected.checked_out_ref -or
+            (Get-Field $run 'checked_out_sha') -ne $expected.checked_out_sha -or
+            (Get-Field $run 'checked_out_tree_sha') -ne
+            '6efb2a55e6ae63bb2e3f50c0a164e55ba57f2815' -or
+            (Get-Field $run 'conclusion') -ne 'success' -or
+            (Get-Field $run 'created_at') -ne $expected.created_at -or
+            (Get-Field $run 'started_at') -ne $expected.started_at -or
+            (Get-Field $run 'completed_at') -ne $expected.completed_at -or
+            (Get-Field $run 'url') -ne $expected.url -or
+            (Get-Field $run 'artifact_count') -ne 0 -or
+            (Get-Field (Get-Field $run 'log_archive') 'api_url') -ne $expected.log_url -or
+            (Get-Field (Get-Field $run 'log_archive') 'archive_format') -ne 'zip' -or
+            (Get-Field (Get-Field $run 'log_archive') 'hash_algorithm') -ne 'SHA-256' -or
+            (Get-Field (Get-Field $run 'log_archive') 'byte_length') -ne $expected.log_bytes -or
+            (Get-Field (Get-Field $run 'log_archive') 'sha256') -ne $expected.log_sha256 -or
+            (Get-Field (Get-Field $run 'log_archive') 'repeated_download_match') -ne $true) {
+            $issues.Add("Hosted CI $name run receipt is incomplete or inconsistent.")
+        }
+        $expectedParents = if ($name -eq 'primary') {
+            @('cd093d5e91ba5225cc4201506450a7993af32446')
+        }
+        else {
+            @(
+                '291cb28b064642f3e7aa14303ee30b03c8d047f0',
+                '32f6ade7f2feec6fb1792121773d437f6f035581')
+        }
+        if ((@(Get-Field $run 'checked_out_parent_shas') -join ',') -ne
+            ($expectedParents -join ',')) {
+            $issues.Add("Hosted CI $name run checkout-parent receipt is incorrect.")
+        }
+        if ($name -eq 'repeat') {
+            try {
+                $retainedCommit = Get-RetainedGitCommitFact(
+                    Get-Field $run 'checked_out_commit_object')
+                if ($retainedCommit.sha1 -ne (Get-Field $run 'checked_out_sha') -or
+                    $retainedCommit.tree -ne (Get-Field $run 'checked_out_tree_sha') -or
+                    (($retainedCommit.parents -join ',') -ne ($expectedParents -join ','))) {
+                    $issues.Add('Hosted CI PR checkout differs from its retained raw Git commit object.')
+                }
+            }
+            catch {
+                $issues.Add("Hosted CI PR Git commit object cannot be reproduced: $($_.Exception.Message)")
+            }
+        }
+        $jobs = @(Get-Field $run 'jobs')
+        $expectedJobs = $expectedJobSets[$name]
+        $jobById = @{}
+        foreach ($job in $jobs) {
+            $jobById[[string](Get-Field $job 'job_id')] = $job
+        }
+        if ($jobs.Count -ne 2 -or
+            (($jobById.Keys | Sort-Object) -join ',') -ne
+            (($expectedJobs.Keys | Sort-Object) -join ',')) {
+            $issues.Add("Hosted CI $name run does not retain the exact two profile jobs.")
+        }
+        foreach ($jobId in $expectedJobs.Keys) {
+            if (-not $jobById.ContainsKey($jobId)) { continue }
+            $job = $jobById[$jobId]
+            $expectedJob = $expectedJobs[$jobId]
+            foreach ($field in @(
+                    'name', 'runner_label', 'runner_group', 'runner_name',
+                    'started_at', 'completed_at', 'url')) {
+                if ((Get-Field $job $field) -ne $expectedJob[$field]) {
+                    $issues.Add("Hosted CI $name job '$jobId' field '$field' is incorrect.")
+                }
+            }
+            if ((Get-Field $job 'conclusion') -ne 'success') {
+                $issues.Add("Hosted CI $name job '$jobId' did not conclude successfully.")
+            }
+            $steps = Get-Field $job 'required_step_conclusions'
+            $stepCount = if ($null -eq $steps) { 0 } else { @($steps.PSObject.Properties).Count }
+            if ($stepCount -ne $expectedJob.steps.Count) {
+                $issues.Add("Hosted CI $name job '$jobId' has an incorrect required-step set.")
+            }
+            foreach ($stepName in $expectedJob.steps.Keys) {
+                if ((Get-Field $steps $stepName) -ne $expectedJob.steps[$stepName]) {
+                    $issues.Add("Hosted CI $name job '$jobId' step '$stepName' has an incorrect conclusion.")
+                }
+            }
+        }
+    }
+
+    $expectedPrimaryProfiles = [ordered]@{
+        'ubuntu-24.04-x64-gcc-13' = [ordered]@{
+            job_id = '93999328011'; name = 'ubuntu-24.04-gcc-13'; runner_os = 'Linux'; runner_arch = 'X64'
+            runner_name = 'GitHub Actions 1000000081'
+            job_url = 'https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31559701566/job/93999328011'
+            image_os = 'ubuntu24'; image_version = '20260720.247.2'; generator = 'Ninja'
+            compiler_id = 'GNU'; compiler_version = '13.3.0'; cmake = '3.31.6'; python = '3.12.3'
+            powershell = '7.6.3'; ninja = '1.13.2'; git = '2.54.0'
+            configuration = 'Release'; warnings_as_errors = $true
+        }
+        'windows-x64-msvc-19.5x' = [ordered]@{
+            job_id = '93999328054'; name = 'windows-2025-vs2026-msvc-19.5x'; runner_os = 'Windows'; runner_arch = 'X64'
+            runner_name = 'GitHub Actions 1000000082'
+            job_url = 'https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31559701566/job/93999328054'
+            image_os = 'win25-vs2026'; image_version = '20260803.193.1'; generator = 'Visual Studio 18 2026'
+            compiler_id = 'MSVC'; compiler_version = '19.51.36252.0'; cmake = '4.4.2'; python = '3.12.10'
+            powershell = '7.6.4'; ninja = $null; git = '2.55.0.windows.3'
+            configuration = 'Release'; warnings_as_errors = $true
+        }
+    }
+    $expectedRepeatProfiles = [ordered]@{
+        'ubuntu-24.04-x64-gcc-13' = [ordered]@{
+            job_id = '93999335576'; name = 'ubuntu-24.04-gcc-13'; runner_os = 'Linux'; runner_arch = 'X64'
+            runner_name = 'GitHub Actions 1000000083'
+            job_url = 'https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31559704268/job/93999335576'
+            image_os = 'ubuntu24'; image_version = '20260720.247.2'; generator = 'Ninja'
+            compiler_id = 'GNU'; compiler_version = '13.3.0'; cmake = '3.31.6'; python = '3.12.3'
+            powershell = '7.6.3'; ninja = '1.13.2'; git = '2.54.0'
+            configuration = 'Release'; warnings_as_errors = $true
+        }
+        'windows-x64-msvc-19.5x' = [ordered]@{
+            job_id = '93999335654'; name = 'windows-2025-vs2026-msvc-19.5x'; runner_os = 'Windows'; runner_arch = 'X64'
+            runner_name = 'GitHub Actions 1000000084'
+            job_url = 'https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31559704268/job/93999335654'
+            image_os = 'win25-vs2026'; image_version = '20260803.193.1'; generator = 'Visual Studio 18 2026'
+            compiler_id = 'MSVC'; compiler_version = '19.51.36252.0'; cmake = '4.4.2'; python = '3.12.10'
+            powershell = '7.6.4'; ninja = $null; git = '2.55.0.windows.3'
+            configuration = 'Release'; warnings_as_errors = $true
+        }
+    }
+    $profileSets = [ordered]@{
+        profiles = $expectedPrimaryProfiles
+        repeat_profiles = $expectedRepeatProfiles
+    }
+    foreach ($profileSetName in $profileSets.Keys) {
+        $expectedProfiles = $profileSets[$profileSetName]
+        $profileById = @{}
+        foreach ($profile in @(Get-Field $Evidence $profileSetName)) {
+            $profileById[[string](Get-Field $profile 'profile_id')] = $profile
+        }
+        if ((($profileById.Keys | Sort-Object) -join ',') -ne
+            (($expectedProfiles.Keys | Sort-Object) -join ',')) {
+            $issues.Add("Hosted CI evidence '$profileSetName' set is incomplete.")
+        }
+        foreach ($profileId in $expectedProfiles.Keys) {
+            if (-not $profileById.ContainsKey($profileId)) { continue }
+            $profile = $profileById[$profileId]
+            $expected = $expectedProfiles[$profileId]
+            foreach ($field in $expected.Keys) {
+                if ((Get-Field $profile $field) -ne $expected[$field]) {
+                    $issues.Add("Hosted CI '$profileSetName' profile '$profileId' field '$field' differs from the retained run identity.")
+                }
+            }
+            $verification = Get-Field $profile 'verification'
+            if ((Get-Field $verification 'configure') -ne 'passed' -or
+                (Get-Field $verification 'build') -ne 'passed' -or
+                (Get-Field $verification 'ctest') -ne '9/9 passed' -or
+                (Get-Field $verification 'repository_verifier') -ne 'passed: 57 JSON, 65 tasks, 100 Markdown') {
+                $issues.Add("Hosted CI '$profileSetName' profile '$profileId' lacks retained verification results.")
+            }
+            if ($profileId -eq 'windows-x64-msvc-19.5x') {
+                $windowsCompatibility = Get-Field $profile 'windows_powershell_compatibility'
+                if ((Get-Field $windowsCompatibility 'shell') -ne
+                    'C:\Windows\System32\WindowsPowerShell\v1.0\powershell.EXE' -or
+                    (Get-Field $windowsCompatibility 'schema_validator') -ne 'passed' -or
+                    (Get-Field $windowsCompatibility 'architecture_validator') -ne 'passed') {
+                    $issues.Add("Hosted CI '$profileSetName' Windows profile lacks PowerShell 5.1 verification.")
+                }
+            }
+        }
+    }
+
+    $retention = Get-Field $Evidence 'retention'
+    if ((Get-Field $retention 'repository_receipt') -ne 'permanent-in-git-history' -or
+        (Get-Field $retention 'upstream_logs') -ne 'github-managed-repository-retention' -or
+        (Get-Field $retention 'upstream_log_retention_days') -ne 90 -or
+        (Get-Field $retention 'maximum_allowed_days') -ne 90 -or
+        (Get-Field $retention 'observed_at') -ne '2026-08-12T03:37:37Z' -or
+        (Get-Field $retention 'settings_api_url') -ne
+        'https://api.github.com/repos/aofenghanyue/GNCSIMZMKN/actions/permissions/artifact-and-log-retention' -or
+        (Get-Field $retention 'binary_artifacts') -ne 'not-required-for-governance-only-qualification' -or
+        (Get-Field $retention 'artifact_count') -ne 0 -or
+        [string]::IsNullOrWhiteSpace([string](Get-Field $retention 'zero_artifact_rationale')) -or
+        (Get-Field $retention 'required_facts_permanently_retained') -ne $true -or
+        (Get-Field $retention 'append_only') -ne $true -or
+        [string]::IsNullOrWhiteSpace([string](Get-Field $retention 'supersession_policy')) -or
+        @(Get-Field $retention 'refresh_required_on').Count -lt 4) {
+        $issues.Add('Hosted CI evidence retention and refresh policy is incomplete.')
+    }
+    $expectedBoundaries = @(
+        'no-product-runtime-qualification',
+        'no-rights-or-external-distribution-decision',
+        'no-r0-task-or-gate-acceptance',
+        'no-r1-through-r8-unlock')
+    if (((@(Get-Field (Get-Field $Evidence 'boundaries') 'does_not_establish') | Sort-Object) -join ',') -ne
+        (($expectedBoundaries | Sort-Object) -join ',')) {
+        $issues.Add('Hosted CI evidence drops a required fail-closed boundary.')
+    }
+
+    return $issues.ToArray()
+}
+
 function Test-GovernanceObjects(
     [object]$Roles,
     [object]$Authorization,
     [object]$Disposition,
     [object]$Matrix,
+    [object]$HostedCiEvidence,
     [object]$Backlog,
     [object]$Presets,
     [object]$Manifest,
@@ -267,6 +730,9 @@ function Test-GovernanceObjects(
     [string]$WorkflowText,
     [string]$CMakeText) {
     $issues = [System.Collections.Generic.List[string]]::new()
+    foreach ($issue in @(Test-HostedCiEvidence $HostedCiEvidence $Authorization)) {
+        $issues.Add($issue)
+    }
 
     if ((Get-Field $Roles 'schema_version') -ne 'gnczmkn.team-roles/3') {
         $issues.Add('Unsupported team-role schema.')
@@ -626,6 +1092,8 @@ function Test-GovernanceObjects(
     $qualificationPolicy = Get-Field $Matrix 'qualification_policy'
     if ((@(Get-Field $qualificationPolicy 'supported_requires') -join ',') -ne
         'accepted-adr,complete-required-role-assignments,successful-fixed-runner-ci' -or
+        (Get-Field $qualificationPolicy 'evidence_receipt') -ne
+        'docs/quality/hosted-ci-evidence-R0-GOV-001.json' -or
         (Get-Field $qualificationPolicy 'hosted_runner_identity') -ne
         'fixed-image-family-plus-exact-per-run-identity' -or
         (Get-Field $qualificationPolicy 'warnings_as_errors') -ne $true -or
@@ -854,6 +1322,7 @@ function Invoke-Mutation([string]$Name, [scriptblock]$Mutation) {
         authorization = Copy-JsonObject $script:authorization
         disposition = Copy-JsonObject $script:disposition
         matrix = Copy-JsonObject $script:matrix
+        hosted_ci_evidence = Copy-JsonObject $script:hostedCiEvidence
         backlog = Copy-JsonObject $script:backlog
         presets = Copy-JsonObject $script:presets
         manifest = Copy-JsonObject $script:manifest
@@ -867,6 +1336,7 @@ function Invoke-Mutation([string]$Name, [scriptblock]$Mutation) {
             $context.authorization `
             $context.disposition `
             $context.matrix `
+            $context.hosted_ci_evidence `
             $context.backlog `
             $context.presets `
             $context.manifest `
@@ -889,6 +1359,7 @@ $requiredPaths = @(
     'docs/governance/r0-owner-authorization.json',
     'docs/governance/adr-dispositions/ADR-0009-2026-08-12.json',
     'docs/governance/toolchain-support-matrix.json',
+    'docs/quality/hosted-ci-evidence-R0-GOV-001.json',
     'docs/adr/0009-accountable-roles-and-candidate-toolchain.md',
     'docs/tasks/work-packages/R0-GOV-001.md',
     'docs/tasks/backlog.json',
@@ -909,6 +1380,7 @@ $roles = Read-Json $rolesPath
 $authorization = Read-Json $authorizationPath
 $disposition = Read-Json $dispositionPath
 $matrix = Read-Json $matrixPath
+$hostedCiEvidence = Read-Json $hostedCiEvidencePath
 $backlog = Read-Json $backlogPath
 $presets = Read-Json $presetsPath
 $manifest = Read-Json $manifestPath
@@ -929,6 +1401,7 @@ $script:roles = $roles
 $script:authorization = $authorization
 $script:disposition = $disposition
 $script:matrix = $matrix
+$script:hostedCiEvidence = $hostedCiEvidence
 $script:backlog = $backlog
 $script:presets = $presets
 $script:manifest = $manifest
@@ -938,10 +1411,11 @@ $script:cmakeText = $cmakeText
 
 if ($null -ne $roles -and $null -ne $authorization -and
     $null -ne $disposition -and
-    $null -ne $matrix -and $null -ne $backlog -and
+    $null -ne $matrix -and $null -ne $hostedCiEvidence -and
+    $null -ne $backlog -and
     $null -ne $presets -and $null -ne $manifest) {
     foreach ($issue in @(Test-GovernanceObjects `
-            $roles $authorization $disposition $matrix $backlog $presets $manifest `
+            $roles $authorization $disposition $matrix $hostedCiEvidence $backlog $presets $manifest `
             $adrText $workflowText $cmakeText)) {
         Add-Error $issue
     }
@@ -1050,6 +1524,79 @@ if ($null -ne $roles -and $null -ne $authorization -and
                 $_ -ne 'external-distribution'
             })
     }
+    Invoke-Mutation 'missing-hosted-ci-evidence' {
+        param($value)
+        $value.hosted_ci_evidence = $null
+    }
+    Invoke-Mutation 'hosted-ci-receipt-wrong-head' {
+        param($value)
+        $value.hosted_ci_evidence.runs.primary.source_head_sha =
+            '0000000000000000000000000000000000000000'
+    }
+    Invoke-Mutation 'hosted-ci-pr-head-confused-with-checkout' {
+        param($value)
+        $value.hosted_ci_evidence.runs.repeat.checked_out_sha =
+            $value.hosted_ci_evidence.runs.repeat.source_head_sha
+    }
+    Invoke-Mutation 'hosted-ci-receipt-failed-job' {
+        param($value)
+        $value.hosted_ci_evidence.runs.primary.jobs[0].conclusion = 'failure'
+    }
+    Invoke-Mutation 'hosted-ci-receipt-missing-image-identity' {
+        param($value)
+        $value.hosted_ci_evidence.profiles[0].image_version = ''
+    }
+    Invoke-Mutation 'hosted-ci-receipt-wrong-workflow-hash' {
+        param($value)
+        $value.hosted_ci_evidence.qualification.workflow.raw_sha256 =
+            '0000000000000000000000000000000000000000000000000000000000000000'
+    }
+    Invoke-Mutation 'hosted-ci-receipt-wrong-qualification-tree' {
+        param($value)
+        $value.hosted_ci_evidence.qualification.tree =
+            '0000000000000000000000000000000000000000'
+    }
+    Invoke-Mutation 'hosted-ci-receipt-corrupt-pr-commit-object' {
+        param($value)
+        $value.hosted_ci_evidence.runs.repeat.checked_out_commit_object.sha1 =
+            '0000000000000000000000000000000000000000'
+    }
+    Invoke-Mutation 'hosted-ci-receipt-missing-required-step' {
+        param($value)
+        $value.hosted_ci_evidence.runs.primary.jobs[0].required_step_conclusions.PSObject.Properties.Remove(
+            'Repository checks')
+    }
+    Invoke-Mutation 'hosted-ci-receipt-failed-required-step' {
+        param($value)
+        $value.hosted_ci_evidence.runs.primary.jobs[1].required_step_conclusions.Test = 'failure'
+    }
+    Invoke-Mutation 'hosted-ci-receipt-wrong-platform-skip' {
+        param($value)
+        $value.hosted_ci_evidence.runs.repeat.jobs[0].required_step_conclusions.'Configure Windows candidate' = 'success'
+    }
+    Invoke-Mutation 'hosted-ci-receipt-wrong-repeat-job-url' {
+        param($value)
+        $value.hosted_ci_evidence.runs.repeat.jobs[1].url =
+            'https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31559704268/job/0'
+    }
+    Invoke-Mutation 'hosted-ci-receipt-missing-repeat-image-identity' {
+        param($value)
+        $value.hosted_ci_evidence.repeat_profiles[1].image_version = ''
+    }
+    Invoke-Mutation 'hosted-ci-receipt-self-review' {
+        param($value)
+        $value.hosted_ci_evidence.decision.actors[1].actor_id = 'r0-po-agent'
+        $value.hosted_ci_evidence.decision.actors[1].task_path = '/root'
+        $value.hosted_ci_evidence.decision.actors[1].role = 'product_owner'
+    }
+    Invoke-Mutation 'hosted-ci-receipt-drops-retention' {
+        param($value)
+        $value.hosted_ci_evidence.retention.required_facts_permanently_retained = $false
+    }
+    Invoke-Mutation 'hosted-ci-receipt-artifact-misclaim' {
+        param($value)
+        $value.hosted_ci_evidence.runs.primary.artifact_count = 1
+    }
     Invoke-Mutation 'preset-schema-exceeds-declared-floor' {
         param($value)
         $value.presets.version = 6
@@ -1088,12 +1635,15 @@ if ($null -ne $roles -and $null -ne $authorization -and
         }
         $value.roles.decision_status = 'complete'
     }
-    Invoke-Mutation 'premature-task-completion' {
+    Invoke-Mutation 'task-completion-without-hosted-ci' {
         param($value)
         $task = @($value.backlog.tasks | Where-Object {
                 $_.id -eq 'R0-GOV-001'
-            }) | Select-Object -First 1
+        }) | Select-Object -First 1
         $task.status = 'done'
+        $value.matrix.qualification_status = 'candidate-not-supported'
+        $value.matrix.qualification_policy.hosted_ci_status = 'pending-push-and-run'
+        $value.hosted_ci_evidence = $null
     }
 }
 
@@ -1204,10 +1754,28 @@ $expectedReport = [pscustomobject][ordered]@{
         evidence_only_profile_count = @(Get-Field $matrix 'evidence_only_profiles').Count
         not_qualified = @(Get-Field $matrix 'not_qualified')
     }
+    hosted_ci_evidence = [ordered]@{
+        evidence_id = Get-Field $hostedCiEvidence 'evidence_id'
+        evidence_status = Get-Field $hostedCiEvidence 'evidence_status'
+        decision_id = Get-Field (Get-Field $hostedCiEvidence 'decision') 'id'
+        decision_outcome = Get-Field (Get-Field $hostedCiEvidence 'decision') 'outcome'
+        qualification_commit = Get-Field (Get-Field $hostedCiEvidence 'qualification') 'commit'
+        primary_run_id = Get-Field (Get-Field (Get-Field $hostedCiEvidence 'runs') 'primary') 'run_id'
+        primary_checked_out_sha = Get-Field (Get-Field (Get-Field $hostedCiEvidence 'runs') 'primary') 'checked_out_sha'
+        repeat_run_id = Get-Field (Get-Field (Get-Field $hostedCiEvidence 'runs') 'repeat') 'run_id'
+        repeat_checked_out_sha = Get-Field (Get-Field (Get-Field $hostedCiEvidence 'runs') 'repeat') 'checked_out_sha'
+        successful_profile_count = @((Get-Field $hostedCiEvidence 'profiles') | Where-Object {
+                (Get-Field (Get-Field $_ 'verification') 'ctest') -eq '9/9 passed'
+            }).Count
+        artifact_count = Get-Field (Get-Field $hostedCiEvidence 'retention') 'artifact_count'
+        repository_receipt = Get-Field (Get-Field $hostedCiEvidence 'retention') 'repository_receipt'
+        upstream_logs = Get-Field (Get-Field $hostedCiEvidence 'retention') 'upstream_logs'
+    }
     workflow = [ordered]@{
         runner_labels = @('ubuntu-24.04', 'windows-2025-vs2026')
         checkout_version = '6.0.2'
         checkout_commit = 'de0fac2e4500dabe0009e67214ff5f5447ce83dd'
+        fetch_depth = 0
         configuration = 'Release'
         warnings_as_errors = $true
         exact_identity_recording = $true

@@ -2,7 +2,7 @@
   "schema_version": "gnczmkn.toolchain-support-matrix/1",
   "task_id": "R0-GOV-001",
   "decision_status": "accepted",
-  "qualification_status": "candidate-not-supported",
+  "qualification_status": "supported",
   "adr_path": "docs/adr/0009-accountable-roles-and-candidate-toolchain.md",
   "language_standard": "C++17",
   "cmake_contract": {
@@ -16,10 +16,11 @@
       "complete-required-role-assignments",
       "successful-fixed-runner-ci"
     ],
+    "evidence_receipt": "docs/quality/hosted-ci-evidence-R0-GOV-001.json",
     "hosted_runner_identity": "fixed-image-family-plus-exact-per-run-identity",
     "warnings_as_errors": true,
     "required_configuration": "Release",
-    "hosted_ci_status": "pending-push-and-run"
+    "hosted_ci_status": "passed-with-evidence"
   },
   "profiles": [
     {
@@ -51,7 +52,8 @@
       },
       "evidence_refs": [
         "docs/tasks/work-packages/R0-GOV-001.md",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "docs/quality/hosted-ci-evidence-R0-GOV-001.json"
       ]
     },
     {
@@ -83,7 +85,8 @@
       },
       "evidence_refs": [
         "docs/tasks/work-packages/R0-GOV-001.md",
-        ".github/workflows/ci.yml"
+        ".github/workflows/ci.yml",
+        "docs/quality/hosted-ci-evidence-R0-GOV-001.json"
       ]
     }
   ],
