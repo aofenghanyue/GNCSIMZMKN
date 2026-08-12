@@ -246,7 +246,7 @@ The first amendment may add only checks whose semantics already follow current c
 - executable/qualified bundle artifact completeness when current fields can express it；
 - extra result-specific PlanProof negative examples already defined by current schema。
 
-Path/ref resolution, typed proof prerequisite graph, oracle fact model and schema `$id` changes require ADR-0004 owner decision; they remain design findings, not silent validator behavior.
+Path/ref resolution、typed proof prerequisite graph、oracle fact model 与 schema `$id` changes require ADR-0004 owner decision；2026-08-12 的初始实现已形成 `RECON-DEC-001`～`003` proposed disposition，并继续等待独立 commit-bound review。
 
 ## 8. Architecture audit
 
@@ -473,15 +473,17 @@ Scope：GOV-002 review amendment。
 
 | Decision id | Required decision | Owner | Current disposition |
 | --- | --- | --- | --- |
-| `RECON-DEC-001` | current schema field graph/$id vs candidate graph；migration/version policy | Architecture Lead + Validation Lead | open |
-| `RECON-DEC-002` | repository/local/external reference resolution grammar | Architecture Lead + Evidence Lead | open |
-| `RECON-DEC-003` | PlanProof typed prerequisite graph/index boundary | Architecture Lead + Compiler Lead | open |
+| `RECON-DEC-001` | current schema field graph/$id vs candidate graph；migration/version policy | Architecture Lead + Validation Lead | `keep-current` / accepted；[record](../governance/reconciliation-dispositions/RECON-DEC-001-2026-08-12.json) |
+| `RECON-DEC-002` | repository/local/external reference resolution grammar | Architecture Lead + Evidence Lead | `repository-root-only` / accepted；tracked nonempty regular Git blob；[record](../governance/reconciliation-dispositions/RECON-DEC-002-2026-08-12.json) |
+| `RECON-DEC-003` | PlanProof typed prerequisite graph/index boundary | Architecture Lead + Compiler Lead | `keep-current` / accepted；typed graph moves to v2；[record](../governance/reconciliation-dispositions/RECON-DEC-003-2026-08-12.json) |
 | `RECON-DEC-004` | axis-angle positive sign and adapter naming | Scientific Authority | open |
 | `RECON-DEC-005` | scientific context/independent-reference provenance contract | Scientific Authority + Product Owner | open |
 | `RECON-DEC-006` | `packages_user`/`composition_root` representation and source authority | Architecture Lead | open |
 | `RECON-DEC-007` | candidate extra Legacy mappings/responsibility granularity | Architecture Lead + Validation Lead | open |
 | `RECON-DEC-008` | current hosted runner/action profile and artifact retention | Product Owner + Validation Lead | `keep-current` / accepted receipt |
 | `RECON-DEC-009` | whether half-open validity becomes the approved public time contract | Scientific Authority + Architecture Lead | open |
+
+2026-08-12 current-branch note：`r0-architecture-agent` 以 `611a48a23ea02ecd0c210a2b101f5c5cbf5df0e6` 为基线实施 R0-SPEC-001 技术冻结，最终技术提交为 `ee7157359e689114d0259a1ae7884a315b029bc1`。`specs/r0-schema-contract-lock.json` 锁定三个 v1 contract；executable evidence locator 收窄为 repository-root-only tracked nonempty regular Git blob；`source_refs` 保持 opaque；PlanProof v1 `premises` 保持 object-map scalar snapshot；产品/runtime consumer 为零。Architecture owner 与独立 Validation reviewer 对同一 13 路径文件集给出接受结论；ADR-0004 与三项 disposition 已接受，R0-SPEC-001 已形成 commit-bound task acceptance。
 
 Prepared slices may test both sides but cannot silently close these decisions。
 
@@ -543,4 +545,6 @@ Candidate discovery changes the evidence inventory, not the current gate result�
 
 At `7d43a64` the worktree was clean。The final implementation-bearing state passed Windows PowerShell 5.1 targeted validators、MSVC x64 Debug 9/9 CTest、Release 9/9 CTest、repository verification（56 JSON、65 task entries、98 Markdown）and staged diff checks。No candidate commit was merged or cherry-picked。
 
-Technical reconciliation does not close authority：all `RECON-DEC-001`～`RECON-DEC-009` remain open；ADR-0004～ADR-0009 remain `Proposed`；required human role slots、current-commit hosted CI、source/right decisions and R0 owner reviews remain absent。The R0 gate result is unchanged（3 direct dependencies in `review`、6 `planned`、0 `done`），and R1 remains locked until signed G1。
+Historical closeout at `7d43a64` did not close authority：at that point all `RECON-DEC-001`～`RECON-DEC-009` remained open，ADR-0004～ADR-0009 remained `Proposed`，and current-commit hosted evidence and owner reviews were absent。
+
+Current amendment on 2026-08-12：ADR-0004、`RECON-DEC-001`～`003` and R0-SPEC-001 are accepted through the machine-agent authorization chain and commit-bound review described above。`RECON-DEC-004`～`007` and `009` remain open；rights and external distribution remain fail-closed；R0 gate and R1 remain locked。

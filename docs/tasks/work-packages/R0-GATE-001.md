@@ -12,13 +12,12 @@
 
 ## 准备结论
 
-`R0-GATE-001` 当前不能合法激活，也不能形成 `Passed`、`Conditional` 或 `Failed` 的正式 gate decision。它的 9 个直接依赖中，3 个仍为 `review`、6 个仍为 `planned`、0 个为 `done`；任务 assignee 为空，Product Owner、Architecture Lead、Scientific Authority 等 required roles 也都没有具名 assignee/reviewer。仓库只存在 Bootstrap 的 `B0-2026-08-09-passed.md`，不存在 G0 或 G1 的签署记录，`project-manifest.json` 的 `current_gate` 仍是 `R0`。
+`R0-GATE-001` 当前不能合法激活，也不能形成 `Passed`、`Conditional` 或 `Failed` 的正式 gate decision。它的 9 个直接依赖中，1 个仍为 `review`、6 个仍为 `planned`、2 个为 `done`；任务 assignee 为空。8 个 required roles 的 assignee/reviewer 已通过所有者授权闭合，工具链与 current-commit Hosted CI 已形成受支持证据。仓库仍不存在 G0 或 G1 的签署记录，`project-manifest.json` 的 `current_gate` 保持 `R0`。
 
 已有技术证据并非无效：R0 schema、术语/依赖 baseline、Legacy 可复现基线、科学约定 cross-tool suite、license/provenance validator 和候选工具链检查均已实现并通过本地验证。但是，它们分别停留在“技术验证通过但 owner review/ADR 未闭合”或“仅完成实施设计”的层级，不能被提升为 gate pass。特别是：
 
-- 6 份 R0 ADR 仍为 `Proposed`；
-- 8 个 required roles 的 16 个 assignee/reviewer slots 均为空；
-- hosted CI 仍是 `pending-push-and-run`；
+- ADR-0005～0008 仍为 `Proposed`；ADR-0004 与 ADR-0009 已接受；
+- required roles 与 Hosted CI 已闭合，其证据只覆盖治理、工具链和已审查的任务切片；
 - `R0-ARCH-002` 没有实际 architecture fitness guard/CI integration；
 - 7 个 Legacy behavior oracle 全部为 `planned` 且 `artifact_refs` 为空；
 - minimal 3DoF、YYZ、CAVH 三个科学 fixture 均为 `specification_only`；
@@ -43,17 +42,17 @@
 
 | Task | Backlog | 已有可用证据 | 未闭合项 | Gate 资格 |
 | --- | --- | --- | --- | --- |
-| `R0-GOV-001` | `review` | 角色/工具链 validator、候选 CI profile、12 个 mutation | 16 个 required role slots；ADR-0009；hosted run | 不合格 |
+| `R0-GOV-001` | `done` | 8/8 role pairs、ADR-0009、49 governance mutations、retained Hosted CI 与 task acceptance | 已闭合 | 合格 |
 | `R0-GOV-002` | `review` | provenance inventory、policy validator、14 个带预期诊断的 mutation | ADR-0008；Product Owner 决策；distribution license 未选；scientific-context authority 未闭合 | 不合格 |
 | `R0-ARCH-002` | `planned` | fitness coverage 设计和 20 个 mutation 设计 | production guards、positive/negative suite、CI integration | 不合格 |
 | `R0-LEG-002` | `planned` | 7 类 oracle capture 设计 | executable artifacts、tolerance、Preserve/Fix/Retire 审批 | 不合格 |
 | `R0-SCI-002` | `planned` | minimal 3DoF reference 设计 | executable independent trajectory/convergence/failure bundle | 不合格 |
 | `R0-SCI-003` | `planned` | YYZ bundle 设计 | authoritative source/assets、independent values、machine-valid evidence chain | 不合格 |
 | `R0-SCI-004` | `planned` | CAVH formula 设计 | authoritative source edition/license、independent formula bundle | 不合格 |
-| `R0-SPEC-001` | `review` | 3 个 contract schemas；6 valid、16 targeted invalid、9 strict failures、25 actual identities、5 registry mutations | Architecture Lead review；ADR-0004 acceptance；current hosted/PowerShell 7 evidence | 不合格 |
+| `R0-SPEC-001` | `done` | 3 个 contract schemas；6 valid、16 targeted invalid、9 strict failures、25 actual identities、5 registry mutations；20 contract 与 25 acceptance mutations | ADR-0004、DEC001～003、commit-bound owner/reviewer acceptance 与双平台 CI 已闭合 | 合格 |
 | `R0-PERF-001` | `planned` | determinism/performance baseline 设计 | workload、profiles、raw samples、budgets、baseline report | 不合格 |
 
-`R0-ARCH-001`、`R0-LEG-001` 与 `R0-SCI-001` 虽不是 gate 的直接依赖，但分别是上述任务的上游且仍为 `review`。这些技术切片不能通过把下游任务标记 `done` 来绕过 owner 审查。
+`R0-ARCH-001`、`R0-LEG-001` 与 `R0-SCI-001` 虽不是 gate 的直接依赖，但分别是上述任务的上游且仍为 `review`。这些技术切片需要在激活对应下游任务前完成独立接受。
 
 ## 本次审计锚点
 
@@ -193,9 +192,10 @@
 ## 准备切片审查记录
 
 - 实现自审：Codex，2026-08-10；结论为“已把直接依赖、G0/G1 criterion、证据状态、签署/waiver/unlock 规则和 20 项 mutation 收敛为可审查准备包，未生成虚假 gate decision”。本自审不替代任何 owner review。
-- 状态审查：9 个直接依赖为 3 `review` + 6 `planned` + 0 `done`；`R0-GATE-001` 为 `planned`、assignee 为空。
+- 状态审查 historical baseline：2026-08-10 时 9 个直接依赖为 3 `review` + 6 `planned` + 0 `done`；`R0-GATE-001` 为 `planned`、assignee 为空。
 - 架构审查：已有 baseline/PlanProof schema 是部分技术证据；architecture fitness implementation、压力样本闭包和具名 Architecture Lead review 缺失，G0 未就绪。
 - 科学审查：只有 convention fixture 为 `executable`；minimal 3DoF、YYZ、CAVH 为 `specification_only`，Legacy oracles 为 `planned`，G1 未就绪。
-- 治理审查：6 个 Proposed ADR、16 个缺失 role slots、hosted CI pending；Codex 不代签、不改状态。
+- 治理审查 historical baseline：2026-08-10 时 6 个 ADR 均为 Proposed、16 个 role slots 缺失、Hosted CI pending。
+- 2026-08-12 current amendment：直接依赖为 1 `review` + 6 `planned` + 2 `done`；required roles、ADR-0009、Hosted CI、ADR-0004 与 R0-SPEC-001 已闭合。R0-GATE-001 继续 `planned` 且 assignee 为空，G0/G1 仍未进入正式评审。
 - 发布审查：没有新增 G0/G1 decision、waiver 或 R1 unlock；`project-manifest.current_gate` 保持 `R0`。
 - 边界审查：本切片只增加 work package 与 readiness audit，不修改产品、schema、CI、Legacy 或权威科学数据。

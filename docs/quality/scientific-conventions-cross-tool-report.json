@@ -30,7 +30,7 @@
                    },
                    {
                        "path":  "fixtures/ref-scientific-conventions/fixture-manifest.json",
-                       "sha256_normalized_utf8_lf":  "446d6700f3e7fc86ae4a6905586b471dea7bd1bec4b0c7a72e8c3777491026ef"
+                       "sha256_normalized_utf8_lf":  "a9ea1e8fd5c7ee9a3f03b5ebe07aac2c7d28083fdf4c042d7a08316be8c7cb93"
                    },
                    {
                        "path":  "fixtures/ref-scientific-conventions/conventions.json",

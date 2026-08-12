@@ -5,7 +5,10 @@
   "purpose": "Exercise the minimum valid R0 fixture contract.",
   "authority": "validation_lead",
   "provenance": {
-    "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"]
+    "source_refs": [
+      "https://example.invalid/source#section",
+      "mission:example:1#/models/0"
+    ]
   },
   "expected_facts": [
     {
@@ -15,6 +18,5 @@
     }
   ],
   "required_artifacts": ["example input", "example result"],
-  "acceptance": ["The expected fact is machine-checkable."],
-  "open_tasks": ["R0-SPEC-001"]
+  "acceptance": ["The expected fact is machine-checkable."]
 }
