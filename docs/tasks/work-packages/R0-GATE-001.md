@@ -16,7 +16,7 @@
 
 已有技术证据并非无效：R0 schema、术语/依赖 baseline、Legacy 可复现基线、科学约定 cross-tool suite、license/provenance validator 和候选工具链检查均已实现并通过本地验证。但是，它们分别停留在“技术验证通过但 owner review/ADR 未闭合”或“仅完成实施设计”的层级，不能被提升为 gate pass。特别是：
 
-- ADR-0005～0008 仍为 `Proposed`；ADR-0004 与 ADR-0009 已接受；
+- ADR-0006～0008 仍为 `Proposed`；ADR-0004、ADR-0005 与 ADR-0009 已接受；
 - required roles 与 Hosted CI 已闭合，其证据只覆盖治理、工具链和已审查的任务切片；
 - `R0-ARCH-002` 没有实际 architecture fitness guard/CI integration；
 - 7 个 Legacy behavior oracle 全部为 `planned` 且 `artifact_refs` 为空；
@@ -52,7 +52,7 @@
 | `R0-SPEC-001` | `done` | 3 个 contract schemas；6 valid、16 targeted invalid、9 strict failures、25 actual identities、5 registry mutations；20 contract 与 25 acceptance mutations | ADR-0004、DEC001～003、commit-bound owner/reviewer acceptance 与双平台 CI 已闭合 | 合格 |
 | `R0-PERF-001` | `planned` | determinism/performance baseline 设计 | workload、profiles、raw samples、budgets、baseline report | 不合格 |
 
-`R0-ARCH-001`、`R0-LEG-001` 与 `R0-SCI-001` 虽不是 gate 的直接依赖，但分别是上述任务的上游且仍为 `review`。这些技术切片需要在激活对应下游任务前完成独立接受。
+`R0-ARCH-001` 虽不是 gate 的直接依赖，但已完成 commit-bound acceptance；`R0-LEG-001` 与 `R0-SCI-001` 仍为 `review`。后两项技术切片需要在激活对应下游任务前完成独立接受。
 
 ## 本次审计锚点
 
@@ -168,7 +168,7 @@
 ## 激活前置条件
 
 1. 9 个直接依赖由各自有权 reviewer 关闭为 `done`，其 deliverable、acceptance 和 evidence 可重放；
-2. 上游 `R0-ARCH-001`、`R0-LEG-001`、`R0-SCI-001` 的 review/ADR 也合法闭合；
+2. 上游 `R0-ARCH-001` 保持 accepted/done，`R0-LEG-001` 与 `R0-SCI-001` 的 review/ADR 也合法闭合；
 3. Product Owner 为 `R0-GATE-001` 指派 assignee 和 review date；
 4. required roles 与独立 reviewers 完整，ADR-0004–ADR-0009 已接受或被有权者明确拒绝并处理影响；
 5. hosted CI 和必要 dedicated profile 有 retained run evidence；
@@ -196,6 +196,6 @@
 - 架构审查：已有 baseline/PlanProof schema 是部分技术证据；architecture fitness implementation、压力样本闭包和具名 Architecture Lead review 缺失，G0 未就绪。
 - 科学审查：只有 convention fixture 为 `executable`；minimal 3DoF、YYZ、CAVH 为 `specification_only`，Legacy oracles 为 `planned`，G1 未就绪。
 - 治理审查 historical baseline：2026-08-10 时 6 个 ADR 均为 Proposed、16 个 role slots 缺失、Hosted CI pending。
-- 2026-08-12 current amendment：直接依赖为 1 `review` + 6 `planned` + 2 `done`；required roles、ADR-0009、Hosted CI、ADR-0004 与 R0-SPEC-001 已闭合。R0-GATE-001 继续 `planned` 且 assignee 为空，G0/G1 仍未进入正式评审。
+- 2026-08-12 current amendment：直接依赖为 1 `review` + 6 `planned` + 2 `done`；required roles、ADR-0009、Hosted CI、ADR-0004/R0-SPEC-001 与 ADR-0005/R0-ARCH-001 已闭合。R0-GATE-001 继续 `planned` 且 assignee 为空，G0/G1 仍未进入正式评审。
 - 发布审查：没有新增 G0/G1 decision、waiver 或 R1 unlock；`project-manifest.current_gate` 保持 `R0`。
 - 边界审查：本切片只增加 work package 与 readiness audit，不修改产品、schema、CI、Legacy 或权威科学数据。

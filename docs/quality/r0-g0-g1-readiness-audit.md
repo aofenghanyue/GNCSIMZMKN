@@ -5,7 +5,7 @@
 - Audited implementation commit：`bfd735e38a0d3f84fbe19f0f93435522cbdf7d56`
 - Prepared by：Codex
 - Prepared on：2026-08-10
-- Current-state amendment：2026-08-12，through R0-SPEC-001 commit-bound acceptance
+- Current-state amendment：2026-08-12，through R0-SPEC-001 and R0-ARCH-001 commit-bound acceptance
 - Readiness verdict：`not_ready_for_authorized_review`
 - Official gate result：无；本文件不是 G0/G1 decision record
 - Current project gate：`R0`
@@ -14,7 +14,7 @@
 
 当前仓库已经从纯蓝图进入“R0 基础契约可执行、后续工作可精确领取”的状态，但尚未达到 G0 或 G1 的正式评审入口条件。
 
-最硬的机器事实是：[`R0-GATE-001`](../tasks/backlog.json) 的 9 个直接依赖中，1 个为 `review`、6 个为 `planned`、2 个为 `done`。依赖未全部 `done`、gate assignee 未填写，因此仍不能领取 gate 任务。8 个 required roles 的 assignee/reviewer、ADR-0009 和受支持 Hosted CI 已闭合；ADR-0004 与 R0-SPEC-001 也已通过 commit-bound 接受。其余架构、科学、Legacy、性能与 rights/provenance 输入继续阻止正式评审。
+最硬的机器事实是：[`R0-GATE-001`](../tasks/backlog.json) 的 9 个直接依赖中，1 个为 `review`、6 个为 `planned`、2 个为 `done`。依赖未全部 `done`、gate assignee 未填写，因此仍不能领取 gate 任务。8 个 required roles 的 assignee/reviewer、ADR-0009 和受支持 Hosted CI 已闭合；ADR-0004/R0-SPEC-001 与 ADR-0005/R0-ARCH-001 均已通过 commit-bound 接受。其余架构、科学、Legacy、性能与 rights/provenance 输入继续阻止正式评审。
 
 G0 有可复用的部分基础：ADR-0003 已接受，9-module CMake DAG、术语/owner/Legacy migration baseline、PlanProofRecord fixture schema 和 negative examples 可执行；但 architecture fitness functions 仍只有设计，ChangeCard/CapabilitySlice/广域压力样本没有 gate fixture，PlanProofIndex/YYZ dry-run/十三压力面/表示矩阵没有独立验收 artifact，因此不能证明架构压力闭合。
 
@@ -123,7 +123,7 @@ G1 只有科学约定 bundle 达到 `executable`，且其技术 cross-tool compa
 
 | Task | Backlog | Commit | 有效技术证据 | 仍缺 |
 | --- | --- | --- | --- | --- |
-| `R0-ARCH-001` | `review` | `84b7d6c` + `a9a84c6` | terminology/owner/dependency baseline；27/33 candidate delta 已归类；15 negative cases | ADR-0005、Architecture Lead / Validation Lead review；`RECON-DEC-006/007` |
+| `R0-ARCH-001` | `done` / `r0-po-agent`；reviewer `r0-validation-agent`；decision owner `r0-architecture-agent` | technical target `29f455efebd72113c1d311bc674a78c638265f34` | 276 terms、20 aliases、10 capabilities、27 shared symbols、22 Legacy mappings、9 modules、22 CMake edges；15 architecture + 35 review-contract + 76 acceptance mutations；33 responsibilities 完整分类；双平台 commit-bound CI | 已闭合：ADR-0005、`RECON-DEC-006/007` 与 task acceptance 均 accepted |
 | `R0-LEG-001` | `review` | `b2e69d0` | frozen archive reproduction、双跑 normalized hash | Validation/Science owner classification/review |
 | `R0-SCI-001` | `review` | `9e95f1c` + `4c916e1` | C++/Python 各 23 checks/1819 assertions、16 observations、0 mismatch、6 failures rejected | ADR-0006/0007、Scientific Authority review；half-open validity remains Proposed |
 
@@ -131,7 +131,7 @@ G1 只有科学约定 bundle 达到 `executable`，且其技术 cross-tool compa
 
 ### 4.3 已实现不等于已接受
 
-R0 当前有 2 个任务完成 commit-bound acceptance，4 个技术任务处于 `review`，另有 7 个 dependency-blocked `planned` 任务。此区分是有意的：
+R0 当前有 3 个任务完成 commit-bound acceptance，3 个技术任务处于 `review`，另有 6 个 dependency-blocked `planned` 任务；`R0-ARCH-002` 的依赖已闭合，当前保持未指派并等待合法激活。此区分是有意的：
 
 - implementation commit 证明已登记 implementation actor 交付了可审代码/证据；
 - `review` 表示 acceptance 和有权审批尚未闭合；
@@ -148,7 +148,7 @@ R0 当前有 2 个任务完成 commit-bound acceptance，4 个技术任务处于
 | ADR-0002 C++17/CMake modular monolith | `Accepted` | 基础构建形态可用 |
 | ADR-0003 initial module DAG | `Accepted` | 当前 module dependency authority 可用 |
 | ADR-0004 R0 JSON schema contracts | `Accepted` | Fixture v1 identity/field graph、repository-root evidence 与 PlanProof v1 边界已接受 |
-| ADR-0005 derived architecture baseline | `Proposed` | baseline 技术通过但 authority/derivation policy 未获接受 |
+| ADR-0005 derived architecture baseline | `Accepted` | authority/derivation policy、两个逻辑边界与 22 条 owner/consumer map 已冻结 |
 | ADR-0006 SI/frame/time conventions | `Proposed` | G1 convention policy 未获 Scientific Authority 接受 |
 | ADR-0007 passive Hamilton quaternion | `Proposed` | G1 quaternion convention 未获 Scientific Authority 接受 |
 | ADR-0008 internal-default license/provenance | `Proposed` | 分享/分发资格不能从 validator pass 推导 |
@@ -212,15 +212,15 @@ Authority：[11 §5.1](../../design-notes/gnczmkn-architecture-roadmap/11-roadma
 
 | Criterion | 要求 | 当前证据 | 状态 | 关闭条件 |
 | --- | --- | --- | --- | --- |
-| `G0-D-001` | 三道 firewall + 五 partitions dependency map | 蓝图；ADR-0003；9-module CMake DAG baseline | `review_pending` | ADR-0005/ARCH-001 review；firewall/partition route 逐项 conformance |
+| `G0-D-001` | 三道 firewall + 五 partitions dependency map | 蓝图；ADR-0003；Accepted ADR-0005；9-module CMake DAG baseline | `prepared_only` | `R0-ARCH-002` 实现 firewall/partition route 逐项 conformance |
 | `G0-D-002` | ChangeCard + `<AuthorityDomain, Delta<V,G,S,T,I,R,X>>` | 蓝图术语；baseline capability/change-vector data | `missing` | machine-valid filled samples、normal/invalid cases、owner review |
 | `G0-D-003` | 四类 closed operation languages + Model lowering | 蓝图术语与 operator inventory | `missing` | grammar/closed-set fixture、lowering examples、unsupported diagnostics |
 | `G0-D-004` | 7 类 PlanProofRecord | Accepted Fixture v1 schema enum、3 result-shape valid + 5 result-shape invalid examples、schema test | `partial` | 每个 proof kind 的 positive/negative semantic coverage 与后续 PlanProofIndex consumer evidence |
 | `G0-D-005` | A–F classification + 9 seams | 蓝图与 baseline vocabulary | `missing` | filled A–F cases、seam ownership/route/untouched assertions |
-| `G0-D-006` | source ownership/deletion map | authority registry、22 Legacy migrations、baseline validator | `review_pending` | ADR-0005/owner review；source path/deletion evidence closure |
+| `G0-D-006` | source ownership/deletion map | Accepted authority registry、22 Legacy migrations、baseline validator | `prepared_only` | `R0-ARCH-002` 实现 source path/deletion guard 与证据闭合 |
 | `G0-D-007` | scientific bundles | manifests + preparation designs | `prepared_only` | 见 G1 matrix；executable bundles |
 | `G0-D-008` | 7 Legacy behavior oracle tests | planned manifest + capture design | `prepared_only` | 7 executable artifacts、hash/tolerance/disposition/negative tests |
-| `G0-D-009` | terminology conformance checker | 276 terms、20 aliases、27 shared symbols、15 negative cases；report conformant | `review_pending` | ADR-0005/ARCH-001 owner review；正式 reviewed commit rerun |
+| `G0-D-009` | terminology conformance checker | 276 terms、20 aliases、27 shared symbols、15 baseline + 35 review-contract + 76 acceptance negative cases；report conformant | `verified_technical` | `closed`：ADR-0005 与 R0-ARCH-001 accepted/done |
 | `G0-D-010` | PlanProofRecord/Index + YYZ fixture + dry-run | Record schema 和单个 guidance-rate example | `missing` | Index schema/query、YYZ proof set、dry-run expected/actual evidence |
 | `G0-D-011` | 13 pressure route/untouched table | blueprint + fitness coverage design | `prepared_only` | executable/validated table，13/13 route 与 untouched assertions |
 | `G0-D-012` | representation matrix + causal walkthroughs | blueprint narrative | `missing` | machine-reviewable cases covering required consumers/physical scenarios |
@@ -244,7 +244,7 @@ Authority：[11 §5.1](../../design-notes/gnczmkn-architecture-roadmap/11-roadma
 
 | Blocker | Owner | Close evidence |
 | --- | --- | --- |
-| `G0-BLK-001` ARCH-001/ADR-0005 owner review | Architecture Lead | accepted/rejected decision + reviewed baseline hash |
+| `G0-BLK-001` ARCH-001/ADR-0005 owner review | Architecture Lead | `closed`：ADR-0005 + R0-ARCH-001 accepted/done，技术文件集已固化 |
 | `G0-BLK-002` schema authority pending | Architecture Lead | `closed`：ADR-0004 + SPEC-001 accepted/done |
 | `G0-BLK-003` architecture fitness implementation absent | Architecture Lead | ARCH-002 guard suite/CI report |
 | `G0-BLK-004` ChangeCard/CapabilitySlice corpus absent | Architecture Lead | valid/invalid fixtures + route results |
@@ -267,7 +267,7 @@ Authority：[11 §5.3](../../design-notes/gnczmkn-architecture-roadmap/11-roadma
 | `G1-X-005` | Legacy facts Preserve/Fix/Delete | capture design uses Preserve/Fix/Retire；manifest has no disposition fields | `prepared_only` | fact-level approved classifications；formal Delete/Retire vocabulary mapping |
 | `G1-X-006` | refs independent of node/provider/CSV order | designs explicitly require semantic identity independence | `prepared_only` | executable mutation proves independence，不能只靠声明 |
 | `G1-X-007` | REF-YYZ source/PlanProof/journal/Observation/CSV/Diagnostic schema chain | one PlanProof example；REF-YYZ manifest only | `missing` | all artifacts machine-valid, hash-linked, expected/actual/replay complete |
-| `G1-X-008` | terminology checker passes target blueprint/roadmap excluding raw expert input | current report conformant, 276 terms/9 mutations | `review_pending` | accepted derivation authority + frozen reviewed commit rerun + explicit scope record |
+| `G1-X-008` | terminology checker passes target blueprint/roadmap excluding raw expert input | accepted scoped report conformant, 276 terms/20 aliases/27 shared symbols; 15 baseline + 35 review-contract + 76 acceptance mutations | `verified_technical` | `closed` for the accepted source set；full-repository evolution coverage remains `R0-ARCH-002` |
 | `G1-X-009` | all blocking gaps closed/rejected；unexplained science differences=0 | no gate difference ledger；source bundles absent | `missing` | complete difference ledger with every item classified/approved and unexplained=0 |
 | `G1-X-010` | performance/determinism gate dependency | only design；no measurable target workload | `prepared_only` | PERF-001 done with approved profiles/raw samples/budgets/report |
 | `G1-X-011` | provenance/license eligible | policy validator passes but ADR/license decisions pending | `review_pending` | GOV-002 done；each source/data/artifact eligible for intended use |
@@ -517,7 +517,7 @@ R1 解锁必须是一个授权、可审查的原子变更：
 
 1. `[completed]` Product Owner 指派 required roles/reviewers；接受 ADR-0009，获得 Hosted CI evidence；
 2. Product Owner/Architecture Lead 关闭 ADR-0008 与 intended-use/license/provenance decisions；
-3. `[partial]` ADR-0004 与 SPEC-001 已关闭；ADR-0005 与 ARCH-001 继续等待 owner/reviewer 接受；
+3. `[completed]` ADR-0004/SPEC-001 与 ADR-0005/ARCH-001 已完成 owner/reviewer 接受；
 4. 实施并审查 ARCH-002，完成 G0 fixture/pressure/fitness evidence；
 5. Scientific Authority 关闭 ADR-0006/0007 与 SCI-001 review；
 6. 实施 LEG-002 和 SCI-002，建立最小独立基线；

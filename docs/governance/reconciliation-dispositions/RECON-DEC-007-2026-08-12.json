@@ -1,0 +1,216 @@
+{
+  "schema_version": "gnczmkn.reconciliation-disposition/1",
+  "decision_id": "RECON-DEC-007",
+  "outcome": "keep-current-22-owner-consumer-map",
+  "status": "accepted",
+  "decided_on": "2026-08-12",
+  "reviewed_base": "e0bba2b99e96a2a6ded646302b1d1424d323c362",
+  "reviewed_commit": "29f455efebd72113c1d311bc674a78c638265f34",
+  "reviewed_direct_parent": "4aee5e8901e2afd8df38ccfc14cf0de04400cba0",
+  "reviewed_target_tree": "f4649afaf194935ada70920fdcee140fdf4bf545",
+  "reviewed_fileset": {
+    "algorithm_id": "gnczmkn.fileset-manifest/1",
+    "scope": "reviewed_base..reviewed_commit",
+    "path_order": "ordinal-ascending",
+    "entry_format": "path<TAB>raw_git_blob_byte_length<TAB>lowercase_sha256(raw_git_blob_bytes)",
+    "manifest_encoding": "UTF-8 without BOM",
+    "line_ending": "LF with a final LF",
+    "path_count": 15,
+    "sha256": "16d566512cd3d0bdb8e4f9fc84f3c8709328708aba7b4f95b4570b8a3f6a9561",
+    "entries": [
+      {
+        "path": "docs/adr/0005-derived-architecture-baseline.md",
+        "byte_length": 5953,
+        "sha256": "eb1460c593c9c50eeabef574b08b0b8b6e8876f78e4c14d12928c8234769bc02"
+      },
+      {
+        "path": "docs/architecture/README.md",
+        "byte_length": 1361,
+        "sha256": "f4f076ff53af8076633b588158e620cceffe42ed06fc61d063b0332ba1f24913"
+      },
+      {
+        "path": "docs/architecture/architecture-baseline.json",
+        "byte_length": 81562,
+        "sha256": "feae2b1b26417f25b563862a6c3e1cd91bc2b3482baa1a432ad4d459157e28e9"
+      },
+      {
+        "path": "docs/architecture/r0-architecture-review-contract.json",
+        "byte_length": 7748,
+        "sha256": "79d617a126b98b8b1594bf237940f678ff39529b0a7a828d2fb36f52f03275ba"
+      },
+      {
+        "path": "docs/handoff/r0-execution-state.md",
+        "byte_length": 7328,
+        "sha256": "f490887f4b36718e7738da75654ab02dc81ebbeb9ba0296fa4fcea281bd07df1"
+      },
+      {
+        "path": "docs/quality/r0-first-wave-reconciliation-audit.md",
+        "byte_length": 41995,
+        "sha256": "a7cc91494b7c3d548e308f5007454abd5f267ccbdc8bd2b567a30891fe621964"
+      },
+      {
+        "path": "docs/quality/r0-g0-g1-readiness-audit.md",
+        "byte_length": 39511,
+        "sha256": "f6fa885ee999a209ed4f5017b863ee7368a0fc4a60bbcd8a18d7ede67429dfd6"
+      },
+      {
+        "path": "docs/quality/team-toolchain-readiness-report.json",
+        "byte_length": 24546,
+        "sha256": "2b11ee6ce323839798ee2d0d56174eb9265f6316feacf43e59adbc58da611632"
+      },
+      {
+        "path": "docs/quality/terminology-conformance-report.json",
+        "byte_length": 3651,
+        "sha256": "ca3760a089456bbc6a3aa7a8bd7e8a3813953d74625dec339210678dc18742ac"
+      },
+      {
+        "path": "docs/tasks/backlog.json",
+        "byte_length": 40403,
+        "sha256": "b3a09c17a4963449e9d431a6e62beed3589acc26dd4978ca297c9cc8298545b8"
+      },
+      {
+        "path": "docs/tasks/work-packages/R0-ARCH-001.md",
+        "byte_length": 6906,
+        "sha256": "9b58e9ef2afec3a368736f5371d8cb2e0ad878088a8a76523b4a639709020077"
+      },
+      {
+        "path": "tools/modules/ArchitectureBaseline.psm1",
+        "byte_length": 69373,
+        "sha256": "adf412f38c460f711065d5bf65f9077bfa7484e4afb767c988802818e64dc844"
+      },
+      {
+        "path": "tools/modules/R0ArchitectureReview.psm1",
+        "byte_length": 39939,
+        "sha256": "7d734fdce6f8e5dfa6fb6c72e229a6fc53359b4287ee18b5ea9725a407b2f3d3"
+      },
+      {
+        "path": "tools/validate-architecture-baseline.ps1",
+        "byte_length": 6699,
+        "sha256": "3b5b9c1702148214173fd2c6522fe1608b8c0aa00d6d1ddf8c2c70b0358e15d7"
+      },
+      {
+        "path": "tools/verify-repository.ps1",
+        "byte_length": 16036,
+        "sha256": "a4b494ef873683087be53bcf82f33d61d2ccbccfc2b58bad810bd9167a84102f"
+      }
+    ]
+  },
+  "authorization_ref": "docs/governance/r0-owner-authorization.json",
+  "decision_actor": {
+    "actor_id": "r0-architecture-agent",
+    "kind": "machine_agent",
+    "task_path": "/root/r0_architecture_agent",
+    "roles": [
+      "architecture_lead",
+      "compiler_lead"
+    ],
+    "decision": "accept-as-written"
+  },
+  "independent_review": {
+    "actor_id": "r0-validation-agent",
+    "kind": "machine_agent",
+    "task_path": "/root/r0_validation_agent",
+    "role": "validation_lead",
+    "result": "approved",
+    "decision": "accept-as-written",
+    "reviewed_commit": "29f455efebd72113c1d311bc674a78c638265f34",
+    "reviewed_fileset_sha256": "16d566512cd3d0bdb8e4f9fc84f3c8709328708aba7b4f95b4570b8a3f6a9561"
+  },
+  "rationale": [
+    "The accepted registry keeps the twenty-two current primary-owner and secondary-consumer rows exact.",
+    "The thirty-three candidate responsibilities are completely classified as twenty-two aligned, three deferred owner splits, two logical routes and six responsibilities across five unregistered names."
+  ],
+  "contract": {
+    "contract_id": "current-22-owner-consumer-map",
+    "authority_mapping_count": 22,
+    "classified_responsibility_count": 33,
+    "classification_counts": {
+      "aligned": 22,
+      "deferred_owner_split": 3,
+      "logical_route": 2,
+      "unregistered_responsibility": 6
+    },
+    "aligned_responsibility_ids": [
+      "assembly-context-lowering",
+      "auto-data-recording",
+      "config-manager-compile",
+      "config-node-source",
+      "config-reader-frontend",
+      "discrete-node-descriptor",
+      "execution-phase-transaction",
+      "framework-catalog-view",
+      "discrete-task-obligation",
+      "observable-projection-plan",
+      "record-sink-port",
+      "mission-assembler-passes",
+      "node-registry-plan-handles",
+      "node-registry-session-state",
+      "observable-field-contract",
+      "onboard-state-contracts",
+      "simflow-experiment",
+      "simulation-builder-operation",
+      "simulation-node-definition",
+      "simulator-session",
+      "simulator-control",
+      "simulator-comparison"
+    ],
+    "deferred_owner_split_ids": [
+      "execution-phase-plan",
+      "onboard-state-input-view",
+      "simulation-builder-plan"
+    ],
+    "logical_route_ids": [
+      "guidance-process-recipe",
+      "node-factory-contribution"
+    ],
+    "unregistered_legacy_names": [
+      "IContinuousGroup",
+      "IIntegrator",
+      "ISummaryObserver",
+      "math_types.hpp",
+      "SimulationSummary"
+    ],
+    "unregistered_responsibility_ids": [
+      "continuous-group-plan",
+      "integrator-plan",
+      "integrator-outcome",
+      "summary-observer-metrics",
+      "math-types-contract-boundaries",
+      "simulation-summary-workflow"
+    ],
+    "responsibility_overlay_forbidden_in_v1": true,
+    "glossary_migration_and_superseding_adr_required_for_change": true
+  },
+  "required_mutations": [
+    "legacy-primary-owner-drift",
+    "legacy-disposition-drift",
+    "legacy-secondary-consumer-drift",
+    "legacy-reconciliation-outcome-drift",
+    "coordinated-new-legacy-mapping-without-superseding-snapshot",
+    "shared-symbol-owner-drift",
+    "registry-duplicate-json-key"
+  ],
+  "migration": {
+    "rule": "A new Legacy mapping or finer ownership row first requires a glossary section 9 migration row, owner evidence, a superseding ADR and a registry schema version, followed by a new accepted snapshot."
+  },
+  "boundaries": [
+    "no-responsibility-overlay-in-v1",
+    "no-unregistered-legacy-name",
+    "no-runtime-consumer",
+    "no-rights-gate-or-r1-unlock"
+  ],
+  "verification": {
+    "architecture_validator": "passed; 276 terms; 20 aliases; 10 capabilities; 27 shared symbols; 22 Legacy mappings; 9 modules; 22 CMake edges; 15/15 baseline mutations; 35/35 review-contract mutations",
+    "ctest": "passed; 9/9",
+    "repository_verifier": "passed; 66 JSON; 65 tasks; 100 Markdown",
+    "provenance_validator": "passed; 14/14 mutations; 8/8 NOASSERTION",
+    "diff_check": "passed",
+    "strict_utf8_json_and_wording": "passed; 15/15 reviewed paths",
+    "hosted_ci": {
+      "push_run_id": "31572060238",
+      "pull_request_run_id": "31572064035",
+      "ubuntu": "success on push and pull_request",
+      "windows": "success on push and pull_request"
+    }
+  }
+}

@@ -297,9 +297,9 @@ The current deterministic validator now requires exact property sets for the aut
 5. physical-module promotion of both `packages_user` and `composition_root`；
 6. ownership rows for all five candidate-only names without glossary migration rows。
 
-Together with the original nine cases, 15/15 invalid mutations are rejected。The baseline remains a projection of the same glossary、ADR-0003、physical partition、authority registry and CMake graph：276 terms、20 aliases、27 shared symbols、22 Legacy mappings、9 physical modules and 22 CMake edges。This closes the safe technical part of Slice C but intentionally leaves `RECON-DEC-006` / `RECON-DEC-007` open。
+Together with the original nine cases, 15/15 invalid mutations are rejected。The source-hash case now writes mutated derived bytes through the same strict generated-content evaluator；it no longer relies on a string inequality assertion。The baseline remains a projection of the same glossary、ADR-0003、physical partition、authority registry and CMake graph：276 terms、20 aliases、27 shared symbols、22 Legacy mappings、9 physical modules and 22 CMake edges。
 
-Verification passed under Windows PowerShell 5.1 and MSVC x64：Debug 9/9 CTest、Release 9/9 CTest、repository verification（56 JSON、65 task entries、98 Markdown）and `git diff --check`。The generated baseline raw SHA-256 is `69cf9c4f26a15b62ecdb60364417bb066c89756924134612a3701471f10943e7`；the conformance report raw SHA-256 is `298f06e15eb7b52d37a9a6c0338222d2a6e88ec2991301a1680acb2b4e8527fc`。
+2026-08-12 接受基线增加 `r0-architecture-review-contract/1`：`RECON-DEC-006` 接受 `logical-only-keep-current`，`packages_user` / `composition_root` 只登记为逻辑规则标签；`RECON-DEC-007` 接受 `keep-current-22-owner-consumer-map`，33 项 responsibility 继续按 `22 + 3 + 2 + 6` 分类。contract 锁定 11 个 authority/generator/derived entries、2 个 logical boundaries、零 runtime consumer 与 35 项新增 mutation。capability section/header/identity/commitment/gate、合法 ownership/source-root 漂移、隐藏 CMake/ADR dependency、duplicate JSON key、BOM/CRLF derived bytes 与治理 artifact runtime consumption 均进入真实失败路径。Architecture Lead 与独立 Validation Lead 已接受技术提交 `29f455efebd72113c1d311bc674a78c638265f34` 及 15 路径文件集 SHA-256 `16d566512cd3d0bdb8e4f9fc84f3c8709328708aba7b4f95b4570b8a3f6a9561`；接受 guard 另行拒绝 76/76 项 commit、actor、decision、contract、evidence、CI、状态文档与 boundary mutation。ADR-0005、两项 decision 和 R0-ARCH-001 已形成原子接受记录。
 
 ## 9. Scientific convention audit
 
@@ -478,8 +478,8 @@ Scope：GOV-002 review amendment。
 | `RECON-DEC-003` | PlanProof typed prerequisite graph/index boundary | Architecture Lead + Compiler Lead | `keep-current` / accepted；typed graph moves to v2；[record](../governance/reconciliation-dispositions/RECON-DEC-003-2026-08-12.json) |
 | `RECON-DEC-004` | axis-angle positive sign and adapter naming | Scientific Authority | open |
 | `RECON-DEC-005` | scientific context/independent-reference provenance contract | Scientific Authority + Product Owner | open |
-| `RECON-DEC-006` | `packages_user`/`composition_root` representation and source authority | Architecture Lead | open |
-| `RECON-DEC-007` | candidate extra Legacy mappings/responsibility granularity | Architecture Lead + Validation Lead | open |
+| `RECON-DEC-006` | `packages_user`/`composition_root` representation and source authority | Architecture Lead | `logical-only-keep-current` / accepted；[record](../governance/reconciliation-dispositions/RECON-DEC-006-2026-08-12.json) |
+| `RECON-DEC-007` | candidate extra Legacy mappings/responsibility granularity | Architecture Lead + Validation Lead | `keep-current-22-owner-consumer-map` / accepted；[record](../governance/reconciliation-dispositions/RECON-DEC-007-2026-08-12.json) |
 | `RECON-DEC-008` | current hosted runner/action profile and artifact retention | Product Owner + Validation Lead | `keep-current` / accepted receipt |
 | `RECON-DEC-009` | whether half-open validity becomes the approved public time contract | Scientific Authority + Architecture Lead | open |
 
@@ -547,4 +547,4 @@ At `7d43a64` the worktree was clean。The final implementation-bearing state pas
 
 Historical closeout at `7d43a64` did not close authority：at that point all `RECON-DEC-001`～`RECON-DEC-009` remained open，ADR-0004～ADR-0009 remained `Proposed`，and current-commit hosted evidence and owner reviews were absent。
 
-Current amendment on 2026-08-12：ADR-0004、`RECON-DEC-001`～`003` and R0-SPEC-001 are accepted through the machine-agent authorization chain and commit-bound review described above。`RECON-DEC-004`～`007` and `009` remain open；rights and external distribution remain fail-closed；R0 gate and R1 remain locked。
+Current amendment on 2026-08-12：ADR-0004/R0-SPEC-001 and ADR-0005/R0-ARCH-001 are accepted through the machine-agent authorization chain and commit-bound review described above。`RECON-DEC-001`～`003`、`006` and `007` are accepted；`RECON-DEC-004`、`005` and `009` remain open。Rights and external distribution remain fail-closed；R0 gate and R1 remain locked。

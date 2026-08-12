@@ -41,6 +41,34 @@ function Test-MarkdownSeparatorRow {
     return $true
 }
 
+function Get-GlossaryExpectedHeaderSha256 {
+    param([int]$Section)
+
+    switch ($Section) {
+        2 { return @(
+                '0e861403c68a5eff2a212fc2b5d070ebbef0fd20f1dab955eaf66025778a069b',
+                '0e51f9249f62859ac05fdb5791c0cb117e86f2060ca07d896ae291df83b7d501',
+                'f4aafaba3be7ad874ed2fc780a54b0d81c598a4b9546918dbec459f629e8c91e') }
+        { $_ -ge 3 -and $_ -le 7 } { return @(
+                '6df5e52cd997629a539e5a14885e09a77d9794a999b7ff19e19070e6652eab48',
+                '6320b4a8722a851fb99566e4eac1cfd4b93bc684b3a33d9f5cae37a116b8c734',
+                'b4d7d450f617bcaec4e5dc0d4dd308357ae13a6599e2f3851d45e265a092a4bb',
+                '864b16ab7547da5a90755975c2c176bef4d0759c725437bb12b83baadf3e3f9a') }
+        8 { return @(
+                '5c5374dd958bcb79c1fe83a1b7a6c25df36603eec36f15f180a916af2022cee1',
+                '6320b4a8722a851fb99566e4eac1cfd4b93bc684b3a33d9f5cae37a116b8c734',
+                '02ab86ab3d59a72ceb00f21c50ef6e75f406cb30ddf3cd4ff6534db1ede2cd36',
+                '2943c18e88f84fb21cb453eaa2833d59016975660d85ec941bdc1d0b2071ad99',
+                '864b16ab7547da5a90755975c2c176bef4d0759c725437bb12b83baadf3e3f9a') }
+        9 { return @(
+                'e6feca143cb7cb5455003804f198a3a38648574c808164e9c582bb7b2ef7f269',
+                '6320b4a8722a851fb99566e4eac1cfd4b93bc684b3a33d9f5cae37a116b8c734',
+                'c7768fcc1af08e28aa307cd2fdcd53a05ca8b147f5b5d47425f19115fcb45c63',
+                '864b16ab7547da5a90755975c2c176bef4d0759c725437bb12b83baadf3e3f9a') }
+        default { throw "Unsupported glossary section '$Section'." }
+    }
+}
+
 function Get-CodeIdentity {
     param(
         [Parameter(Mandatory = $true)][string]$Cell,
@@ -58,6 +86,20 @@ function Get-AuthorityReferences {
     param([string]$Cell)
 
     return @($Cell.Split([char]0x3001) | ForEach-Object { $_.Trim() } | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+}
+
+function Test-GlossaryAuthorityReference {
+    param([string]$Reference)
+
+    if ($Reference -ceq 'README') { return $true }
+    if ((Get-TextSha256 -Text $Reference) -ceq '9b089851501a780fdc0c774f1bc7f0c56906f174ceebd1ba46aad8e49237054d') {
+        return $true
+    }
+    $rangeSeparator = [string][char]0x2013
+    $match = [regex]::Match($Reference, '^(?<start>0[0-9]|1[0-5])(?:' + $rangeSeparator + '(?<end>0[0-9]|1[0-5]))?$')
+    if (-not $match.Success) { return $false }
+    if (-not $match.Groups['end'].Success) { return $true }
+    return [int]$match.Groups['end'].Value -ge [int]$match.Groups['start'].Value
 }
 
 function Get-MatchedTermNames {
@@ -162,9 +204,16 @@ function ConvertFrom-GlossaryMarkdown {
 
         $cells = @(Split-MarkdownTableRow -Line $line)
         if (-not $tableHeaderSkipped) {
-            $expectedTableColumns = if ($section -eq 2) { 3 } elseif ($section -eq 8) { 5 } else { 4 }
+            $expectedHeaderSha256 = @(Get-GlossaryExpectedHeaderSha256 -Section $section)
+            $expectedTableColumns = $expectedHeaderSha256.Count
             if ($cells.Count -ne $expectedTableColumns) {
                 throw "Glossary section $section header requires $expectedTableColumns columns: $line"
+            }
+            for ($headerIndex = 0; $headerIndex -lt $expectedHeaderSha256.Count; ++$headerIndex) {
+                $actualHeaderSha256 = Get-TextSha256 -Text ([string]$cells[$headerIndex])
+                if ($actualHeaderSha256 -cne [string]$expectedHeaderSha256[$headerIndex]) {
+                    throw "Glossary section $section header column $($headerIndex + 1) has an unexpected identity: $line"
+                }
             }
             $tableHeaderSkipped = $true
             $expectTableSeparator = $true
@@ -267,19 +316,24 @@ function ConvertFrom-DependencySources {
         [Parameter(Mandatory = $true)][string]$CMakeText
     )
 
-    $dependencyBlock = [regex]::Match(
-        $AdrText,
-        '```text\s*(?<body>foundation\s*<-\s*contracts\s*<-\s*model_sdk\s*<-\s*compiler.*?application\s*<-\s*adapters)\s*```',
-        [System.Text.RegularExpressions.RegexOptions]::Singleline)
-    if (-not $dependencyBlock.Success) {
-        throw 'ADR-0003 dependency text block was not found.'
+    $dependencyBlocks = @([regex]::Matches(
+            $AdrText,
+            '```text\s*(?<body>.*?)\s*```',
+            [System.Text.RegularExpressions.RegexOptions]::Singleline) |
+        Where-Object { $_.Groups['body'].Value -match '(?m)^\s*foundation\s*<-' })
+    if ($dependencyBlocks.Count -ne 1) {
+        throw "ADR-0003 must contain exactly one dependency text block; found $($dependencyBlocks.Count)."
     }
+    $dependencyBlock = $dependencyBlocks[0]
 
     $architectureEdges = [System.Collections.Generic.List[object]]::new()
     $moduleNames = [System.Collections.Generic.List[string]]::new()
     $moduleNameSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
     foreach ($line in [regex]::Split($dependencyBlock.Groups['body'].Value.Trim(), '\r?\n')) {
         if ([string]::IsNullOrWhiteSpace($line)) { continue }
+        if ($line.Trim() -notmatch '^[a-z_][a-z0-9_]*(?:\s*\+\s*[a-z_][a-z0-9_]*)*(?:\s*<-\s*[a-z_][a-z0-9_]*(?:\s*\+\s*[a-z_][a-z0-9_]*)*)+$') {
+            throw "Unsupported ADR dependency expression: $line"
+        }
         $groups = @($line.Trim() -split '\s*<-\s*')
         if ($groups.Count -lt 2) { throw "Unsupported ADR dependency expression: $line" }
         foreach ($group in $groups) {
@@ -300,25 +354,40 @@ function ConvertFrom-DependencySources {
         }
     }
 
-    $cmakeModules = @([regex]::Matches(
-        $CMakeText,
-        '(?m)^\s*gnc_add_interface_module\(\s*([A-Za-z_][A-Za-z0-9_]*)\s*\)') |
-        ForEach-Object { $_.Groups[1].Value })
+    $moduleCalls = @([regex]::Matches(
+            $CMakeText,
+            '(?m)^\s*gnc_add_interface_module\s*\((?<body>[^\)]*)\)\s*$'))
+    $cmakeModules = [System.Collections.Generic.List[string]]::new()
+    foreach ($moduleCall in $moduleCalls) {
+        $moduleArgument = $moduleCall.Groups['body'].Value.Trim()
+        if ($moduleArgument -notmatch '^[A-Za-z_][A-Za-z0-9_]*$') {
+            throw "CMake interface module declaration uses an unsupported argument '$moduleArgument'."
+        }
+        [void]$cmakeModules.Add($moduleArgument)
+    }
     if ($cmakeModules.Count -eq 0) { throw 'No CMake interface modules were found.' }
 
     $moduleSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
     foreach ($moduleName in $cmakeModules) { [void]$moduleSet.Add($moduleName) }
     $cmakeEdges = [System.Collections.Generic.List[object]]::new()
     foreach ($match in [regex]::Matches(
-        $CMakeText,
-        'target_link_libraries\(\s*([A-Za-z_][A-Za-z0-9_]*)\s+INTERFACE\s+([^\)]*)\)',
-        [System.Text.RegularExpressions.RegexOptions]::Singleline)) {
-        $source = $match.Groups[1].Value
+            $CMakeText,
+            '(?ms)^\s*target_link_libraries\s*\(\s*(?<body>.*?)\)\s*$')) {
+        $tokens = @($match.Groups['body'].Value.Trim() -split '\s+' | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })
+        if ($tokens.Count -eq 0) { throw 'CMake target_link_libraries invocation is empty.' }
+        $source = [string]$tokens[0]
         if (-not $moduleSet.Contains($source)) { continue }
-        foreach ($token in [regex]::Matches($match.Groups[2].Value, '[A-Za-z_][A-Za-z0-9_]*')) {
-            if ($moduleSet.Contains($token.Value)) {
-                [void]$cmakeEdges.Add((New-DependencyEdge -Source $source -Target $token.Value))
+        if ($tokens.Count -lt 3 -or [string]$tokens[1] -cne 'INTERFACE') {
+            throw "CMake module '$source' must declare dependencies with INTERFACE visibility."
+        }
+        foreach ($dependencyToken in @($tokens | Select-Object -Skip 2)) {
+            if ([string]$dependencyToken -notmatch '^[A-Za-z_][A-Za-z0-9_]*$') {
+                throw "CMake module '$source' uses unsupported dependency syntax '$dependencyToken'."
             }
+            if (-not $moduleSet.Contains([string]$dependencyToken)) {
+                throw "CMake module '$source' links unknown or external target '$dependencyToken'."
+            }
+            [void]$cmakeEdges.Add((New-DependencyEdge -Source $source -Target ([string]$dependencyToken)))
         }
     }
 
@@ -437,6 +506,37 @@ function Test-ExactObjectProperties {
     }
 }
 
+function Test-ArchitectureModuleSourceRootFacts {
+    param(
+        [string]$ModuleName,
+        [string]$RelativePath,
+        [bool]$EscapesRepository,
+        [bool]$Exists,
+        [bool]$IsContainer,
+        [bool]$IsReparsePoint,
+        [bool]$HasExactTrackedFile,
+        [System.Collections.Generic.List[string]]$Issues
+    )
+
+    if ($RelativePath -notmatch '^[A-Za-z0-9_-]+(?:/[A-Za-z0-9_-]+)*$') {
+        Add-ArchitectureIssue $Issues "Module '$ModuleName' source root must be a canonical repository-relative path."
+    }
+    if ($EscapesRepository) {
+        Add-ArchitectureIssue $Issues "Module '$ModuleName' source root escapes the repository."
+        return
+    }
+    if (-not $Exists -or -not $IsContainer) {
+        Add-ArchitectureIssue $Issues "Module '$ModuleName' source root does not exist as a directory: $RelativePath."
+        return
+    }
+    if ($IsReparsePoint) {
+        Add-ArchitectureIssue $Issues "Module '$ModuleName' source root must not be a symlink or reparse point."
+    }
+    if (-not $HasExactTrackedFile) {
+        Add-ArchitectureIssue $Issues "Module '$ModuleName' source root has no exact-case tracked file."
+    }
+}
+
 function Test-ArchitectureInputs {
     [CmdletBinding()]
     param(
@@ -476,6 +576,7 @@ function Test-ArchitectureInputs {
 
     Test-UniqueProperty -Items @($Glossary.Terms) -Property 'name' -Label 'terminology' -Issues $issues
     Test-UniqueProperty -Items @($Glossary.Aliases) -Property 'retired_name' -Label 'alias' -Issues $issues
+    Test-UniqueProperty -Items @($Glossary.Capabilities) -Property 'capability' -Label 'capability' -Issues $issues
     Test-UniqueProperty -Items @($Glossary.Legacy) -Property 'legacy_name' -Label 'Legacy term' -Issues $issues
 
     $termSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
@@ -490,9 +591,15 @@ function Test-ArchitectureInputs {
         if (@($term.authority_refs).Count -eq 0) {
             Add-ArchitectureIssue $issues "Term '$($term.name)' has no authority reference."
         }
+        foreach ($authorityReference in @($term.authority_refs)) {
+            if (-not (Test-GlossaryAuthorityReference -Reference ([string]$authorityReference))) {
+                Add-ArchitectureIssue $issues "Term '$($term.name)' has unresolved authority reference '$authorityReference'."
+            }
+        }
     }
     if (@($Glossary.Terms).Count -eq 0) { Add-ArchitectureIssue $issues 'No terminology rows were parsed.' }
     if (@($Glossary.Aliases).Count -eq 0) { Add-ArchitectureIssue $issues 'No alias rows were parsed.' }
+    if (@($Glossary.Capabilities).Count -eq 0) { Add-ArchitectureIssue $issues 'No capability rows were parsed.' }
     if (@($Glossary.Legacy).Count -eq 0) { Add-ArchitectureIssue $issues 'No Legacy rows were parsed.' }
 
     foreach ($alias in @($Glossary.Aliases)) {
@@ -522,6 +629,17 @@ function Test-ArchitectureInputs {
         if (@($capability.authority_refs).Count -eq 0) {
             Add-ArchitectureIssue $issues "Capability '$($capability.capability)' has no authority reference."
         }
+        if ([string]::IsNullOrWhiteSpace([string]$capability.current_commitment)) {
+            Add-ArchitectureIssue $issues "Capability '$($capability.capability)' has no current commitment."
+        }
+        if ([string]::IsNullOrWhiteSpace([string]$capability.activation_gate)) {
+            Add-ArchitectureIssue $issues "Capability '$($capability.capability)' has no activation gate."
+        }
+        foreach ($authorityReference in @($capability.authority_refs)) {
+            if (-not (Test-GlossaryAuthorityReference -Reference ([string]$authorityReference))) {
+                Add-ArchitectureIssue $issues "Capability '$($capability.capability)' has unresolved authority reference '$authorityReference'."
+            }
+        }
     }
     foreach ($legacy in @($Glossary.Legacy)) {
         if ($legacy.status -cne 'Legacy') {
@@ -532,9 +650,15 @@ function Test-ArchitectureInputs {
                 Add-ArchitectureIssue $issues "Legacy term '$($legacy.legacy_name)' references unknown target term '$target'."
             }
         }
+        foreach ($authorityReference in @($legacy.authority_refs)) {
+            if (-not (Test-GlossaryAuthorityReference -Reference ([string]$authorityReference))) {
+                Add-ArchitectureIssue $issues "Legacy term '$($legacy.legacy_name)' has unresolved authority reference '$authorityReference'."
+            }
+        }
     }
 
     Test-UniqueProperty -Items @($Registry.modules) -Property 'name' -Label 'module ownership' -Issues $issues
+    Test-UniqueProperty -Items @($Registry.modules) -Property 'source_root' -Label 'module source root' -Issues $issues
     Test-UniqueProperty -Items @($Registry.shared_symbols) -Property 'name' -Label 'shared symbol' -Issues $issues
     Test-UniqueProperty -Items @($Registry.legacy_ownership) -Property 'legacy_name' -Label 'Legacy ownership' -Issues $issues
 
@@ -571,13 +695,29 @@ function Test-ArchitectureInputs {
     $repoPrefix = $RepoRoot.TrimEnd('\', '/') + [System.IO.Path]::DirectorySeparatorChar
     foreach ($module in @($Registry.modules)) {
         [void]$moduleSet.Add([string]$module.name)
-        $sourceRoot = [System.IO.Path]::GetFullPath((Join-Path $RepoRoot ([string]$module.source_root)))
-        if (-not $sourceRoot.StartsWith($repoPrefix, [System.StringComparison]::OrdinalIgnoreCase)) {
-            Add-ArchitectureIssue $issues "Module '$($module.name)' source root escapes the repository."
+        $sourceRootRelative = [string]$module.source_root
+        $sourceRoot = [System.IO.Path]::GetFullPath((Join-Path $RepoRoot $sourceRootRelative))
+        $escapesRepository = -not $sourceRoot.StartsWith($repoPrefix, [System.StringComparison]::OrdinalIgnoreCase)
+        $existsAsContainer = -not $escapesRepository -and (Test-Path -LiteralPath $sourceRoot -PathType Container)
+        $isReparsePoint = $false
+        $hasExactTrackedFile = $false
+        if ($existsAsContainer) {
+            $sourceRootItem = Get-Item -LiteralPath $sourceRoot -Force
+            $isReparsePoint = (($sourceRootItem.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0)
+            $trackedFiles = @(& git -C $RepoRoot ls-files -- "$sourceRootRelative/*" 2>$null)
+            $hasExactTrackedFile = $LASTEXITCODE -eq 0 -and [bool](@($trackedFiles) | Where-Object {
+                    ([string]$_).StartsWith($sourceRootRelative + '/', [System.StringComparison]::Ordinal)
+                } | Select-Object -First 1)
         }
-        elseif (-not (Test-Path -LiteralPath $sourceRoot -PathType Container)) {
-            Add-ArchitectureIssue $issues "Module '$($module.name)' source root does not exist: $($module.source_root)."
-        }
+        Test-ArchitectureModuleSourceRootFacts `
+            -ModuleName ([string]$module.name) `
+            -RelativePath $sourceRootRelative `
+            -EscapesRepository $escapesRepository `
+            -Exists (-not $escapesRepository -and (Test-Path -LiteralPath $sourceRoot)) `
+            -IsContainer $existsAsContainer `
+            -IsReparsePoint $isReparsePoint `
+            -HasExactTrackedFile $hasExactTrackedFile `
+            -Issues $issues
     }
 
     $adrModuleSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
@@ -780,6 +920,8 @@ function New-ArchitectureBaseline {
         Get-FileSourceRecord -RepoRoot $RepoRoot -RelativePath $RegistryRelativePath -Role 'ownership-authority'
         Get-FileSourceRecord -RepoRoot $RepoRoot -RelativePath 'CMakeLists.txt' -Role 'physical-target-graph'
         Get-FileSourceRecord -RepoRoot $RepoRoot -RelativePath 'tools/modules/ArchitectureBaseline.psm1' -Role 'baseline-generator'
+        Get-FileSourceRecord -RepoRoot $RepoRoot -RelativePath 'tools/modules/R0ArchitectureReview.psm1' -Role 'review-contract-guard'
+        Get-FileSourceRecord -RepoRoot $RepoRoot -RelativePath 'tools/modules/JsonSchemaSubset.psm1' -Role 'strict-json-parser'
         Get-FileSourceRecord -RepoRoot $RepoRoot -RelativePath 'tools/validate-architecture-baseline.ps1' -Role 'baseline-entrypoint'
     )
 
@@ -1029,7 +1171,8 @@ function New-TerminologyConformanceReport {
     param(
         [Parameter(Mandatory = $true)]$Baseline,
         [Parameter(Mandatory = $true)][string]$BaselineJson,
-        [Parameter(Mandatory = $true)][int]$NegativeCaseCount
+        [Parameter(Mandatory = $true)][int]$NegativeCaseCount,
+        [Parameter(Mandatory = $true)][int]$ReviewNegativeCaseCount
     )
 
     $statusCounts = @($Baseline.terminology.allowed_statuses | ForEach-Object {
@@ -1048,6 +1191,11 @@ function New-TerminologyConformanceReport {
     return [PSCustomObject]([ordered]@{
         schema_version = 'gnczmkn.terminology-conformance-report/1'
         status = 'conformant'
+        scope = [PSCustomObject]([ordered]@{
+            claim = 'listed-authority-source-set-only'
+            runtime_consumer_count = 0
+            excluded = @('full-repository-include-direction', 'unknown-code-identifier-policy', 'future-runtime-contract-fitness')
+        })
         architecture_baseline_sha256 = Get-TextSha256 -Text $BaselineJson
         generated_from = @($Baseline.generated_from)
         summary = [PSCustomObject]([ordered]@{
@@ -1059,6 +1207,7 @@ function New-TerminologyConformanceReport {
             modules = $moduleCount
             cmake_dependency_edges = $cmakeEdgeCount
             negative_cases = $NegativeCaseCount
+            review_contract_negative_cases = $ReviewNegativeCaseCount
             term_status_counts = @($statusCounts)
         })
         checks = @(
@@ -1069,7 +1218,8 @@ function New-TerminologyConformanceReport {
             [PSCustomObject]([ordered]@{ id = 'MODULE-DAG'; status = 'passed'; assertion = 'ADR-0003 dependency graph is closed and acyclic' }),
             [PSCustomObject]([ordered]@{ id = 'CMAKE-DAG'; status = 'passed'; assertion = 'CMake modules and edges stay within the ADR-0003 dependency closure' }),
             [PSCustomObject]([ordered]@{ id = 'SOURCE-HASH'; status = 'passed'; assertion = 'all derived inputs are pinned by SHA-256' }),
-            [PSCustomObject]([ordered]@{ id = 'NEGATIVE-CASES'; status = 'passed'; assertion = "$NegativeCaseCount invalid mutations were rejected" })
+            [PSCustomObject]([ordered]@{ id = 'NEGATIVE-CASES'; status = 'passed'; assertion = "$NegativeCaseCount baseline mutations and $ReviewNegativeCaseCount review-contract mutations were rejected" }),
+            [PSCustomObject]([ordered]@{ id = 'CLAIM-SCOPE'; status = 'passed'; assertion = 'conformance is limited to the listed authority source set and has zero runtime consumers' })
         )
     })
 }
@@ -1086,9 +1236,13 @@ function Test-GeneratedContent {
     param([string]$Path, [string]$Expected)
 
     if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) { return $false }
-    $actual = Get-Content -LiteralPath $Path -Raw -Encoding utf8
-    $actual = ($actual -replace "`r`n", "`n").TrimStart([char]0xFEFF)
-    return [string]::Equals($actual, $Expected, [System.StringComparison]::Ordinal)
+    $actualBytes = [System.IO.File]::ReadAllBytes($Path)
+    $expectedBytes = [System.Text.UTF8Encoding]::new($false).GetBytes($Expected)
+    if ($actualBytes.Length -ne $expectedBytes.Length) { return $false }
+    for ($index = 0; $index -lt $actualBytes.Length; ++$index) {
+        if ($actualBytes[$index] -ne $expectedBytes[$index]) { return $false }
+    }
+    return $true
 }
 
 function Copy-JsonData {
@@ -1249,8 +1403,17 @@ function Invoke-ArchitectureNegativeCases {
     }
     else {
         $mutatedJson = $ExpectedBaselineJson.Substring(0, $hashMatch.Index) + ('0' * 64) + $ExpectedBaselineJson.Substring($hashMatch.Index + 64)
-        if ([string]::Equals($mutatedJson, $ExpectedBaselineJson, [System.StringComparison]::Ordinal)) {
-            [void]$failures.Add('source hash drift was accepted')
+        $temporaryPath = [System.IO.Path]::GetTempFileName()
+        try {
+            [System.IO.File]::WriteAllBytes($temporaryPath, [System.Text.UTF8Encoding]::new($false).GetBytes($mutatedJson))
+            if (Test-GeneratedContent -Path $temporaryPath -Expected $ExpectedBaselineJson) {
+                [void]$failures.Add('source hash drift was accepted by generated-content validation')
+            }
+        }
+        finally {
+            if (Test-Path -LiteralPath $temporaryPath -PathType Leaf) {
+                [System.IO.File]::Delete($temporaryPath)
+            }
         }
     }
 
@@ -1270,5 +1433,6 @@ Export-ModuleMember -Function @(
     'New-TerminologyConformanceReport',
     'Write-Utf8NoBom',
     'Test-GeneratedContent',
+    'Test-ArchitectureModuleSourceRootFacts',
     'Invoke-ArchitectureNegativeCases'
 )

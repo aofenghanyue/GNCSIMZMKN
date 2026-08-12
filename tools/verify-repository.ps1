@@ -40,18 +40,24 @@ $requiredPaths = @(
     'docs/team/role-assignments.json',
     'docs/governance/r0-owner-authorization.json',
     'docs/governance/adr-dispositions/ADR-0004-2026-08-12.json',
+    'docs/governance/adr-dispositions/ADR-0005-2026-08-12.json',
     'docs/governance/adr-dispositions/ADR-0009-2026-08-12.json',
     'docs/governance/reconciliation-dispositions/RECON-DEC-001-2026-08-12.json',
     'docs/governance/reconciliation-dispositions/RECON-DEC-002-2026-08-12.json',
     'docs/governance/reconciliation-dispositions/RECON-DEC-003-2026-08-12.json',
+    'docs/governance/reconciliation-dispositions/RECON-DEC-006-2026-08-12.json',
+    'docs/governance/reconciliation-dispositions/RECON-DEC-007-2026-08-12.json',
     'docs/quality/hosted-ci-evidence-R0-GOV-001.json',
     'docs/quality/task-acceptance-R0-GOV-001.json',
+    'docs/quality/task-acceptance-R0-ARCH-001.json',
     'docs/quality/task-acceptance-R0-SPEC-001.json',
     'docs/handoff/r0-execution-state.md',
     'docs/architecture/authority-registry.json',
     'docs/architecture/architecture-baseline.json',
+    'docs/architecture/r0-architecture-review-contract.json',
     'docs/quality/terminology-conformance-report.json',
     'docs/adr/0001-greenfield-and-legacy-reference.md',
+    'docs/adr/0005-derived-architecture-baseline.md',
     'docs/adr/0008-internal-default-license-and-provenance-gate.md',
     'docs/adr/0009-accountable-roles-and-candidate-toolchain.md',
     'docs/governance/license-and-provenance-policy.md',
@@ -61,7 +67,9 @@ $requiredPaths = @(
     'docs/quality/license-provenance-conformance-report.json',
     'docs/quality/team-toolchain-readiness-report.json',
     'specs/r0-schema-contract-lock.json',
+    'tools/modules/R0ArchitectureAcceptance.psm1',
     'tools/modules/R0SpecAcceptance.psm1',
+    'tools/validate-r0-architecture-acceptance.ps1',
     'reference/legacy/source-manifest.json',
     'reference/legacy/legacy-source.zip',
     'reference/legacy/legacy-source.sha256',
@@ -294,6 +302,12 @@ if ($LASTEXITCODE -ne 0) {
     Add-Error "R0 architecture baseline conformance failed: $($architectureValidatorOutput -join [Environment]::NewLine)"
 }
 
+$architectureAcceptanceValidatorPath = Join-Path $PSScriptRoot 'validate-r0-architecture-acceptance.ps1'
+$architectureAcceptanceValidatorOutput = & $powerShellHost -NoLogo -NoProfile -ExecutionPolicy Bypass -File $architectureAcceptanceValidatorPath -Quiet 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Add-Error "R0 architecture task acceptance failed: $($architectureAcceptanceValidatorOutput -join [Environment]::NewLine)"
+}
+
 $legacyReproductionValidatorPath = Join-Path $PSScriptRoot 'validate-legacy-reproduction.ps1'
 $legacyReproductionValidatorOutput = & $powerShellHost -NoLogo -NoProfile -ExecutionPolicy Bypass -File $legacyReproductionValidatorPath -Quiet 2>&1
 if ($LASTEXITCODE -ne 0) {
@@ -333,6 +347,7 @@ Write-Host "Validated task entries: $taskCount"
 Write-Host "Validated Markdown files: $($markdownFiles.Count)"
 Write-Host "Validated R0 schema contracts: 3"
 Write-Host "Validated R0 architecture baseline: 1"
+Write-Host "Validated R0 architecture task acceptance: 1"
 Write-Host "Validated R0 legacy reproduction: 1"
 Write-Host "Validated R0 scientific convention bundle: 1"
 Write-Host "Validated R0 license/provenance bundle: 1"
