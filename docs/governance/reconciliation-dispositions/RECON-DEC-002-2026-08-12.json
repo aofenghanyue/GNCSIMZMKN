@@ -1,0 +1,157 @@
+{
+  "schema_version": "gnczmkn.reconciliation-disposition/1",
+  "decision_id": "RECON-DEC-002",
+  "outcome": "repository-root-only",
+  "status": "accepted",
+  "decided_on": "2026-08-12",
+  "reviewed_base": "611a48a23ea02ecd0c210a2b101f5c5cbf5df0e6",
+  "reviewed_commit": "ee7157359e689114d0259a1ae7884a315b029bc1",
+  "reviewed_direct_parent": "e5c711cd26c735eafb59084724682155356a9f45",
+  "reviewed_fileset": {
+    "algorithm_id": "gnczmkn.fileset-manifest/1",
+    "scope": "reviewed_base..reviewed_commit",
+    "path_order": "ordinal-ascending",
+    "entry_format": "path<TAB>raw_git_blob_byte_length<TAB>lowercase_sha256(raw_git_blob_bytes)",
+    "manifest_encoding": "UTF-8 without BOM",
+    "line_ending": "LF with a final LF",
+    "path_count": 13,
+    "sha256": "c7e6bf8bc99b309d42d6aa823c69ee57064a921c2c429fafd58350ce3674ec47",
+    "entries": [
+      {
+        "path": "docs/adr/0004-r0-json-schema-contracts.md",
+        "byte_length": 7349,
+        "sha256": "b173f2de9c07854cd0bf632dc30c794a9edefa42fa18d8aa5829c29a5bf55a9d"
+      },
+      {
+        "path": "docs/handoff/r0-execution-state.md",
+        "byte_length": 5901,
+        "sha256": "04c4a80dd73304a1497a434bd99f7e238dc4e6aed15631b68335def65eb580de"
+      },
+      {
+        "path": "docs/quality/r0-first-wave-reconciliation-audit.md",
+        "byte_length": 40919,
+        "sha256": "9d2ec6dc039e7438bc9beaa3f904be1a3d865e1f7de11738289e53208a126e32"
+      },
+      {
+        "path": "docs/quality/scientific-conventions-cross-tool-report.json",
+        "byte_length": 5178,
+        "sha256": "16874e570b002ca1dd688c3caa2b97cbcb9c9855a8d95e2681efe39af1b9f06d"
+      },
+      {
+        "path": "docs/quality/team-toolchain-readiness-report.json",
+        "byte_length": 24546,
+        "sha256": "f1639de6633baadac5e41c575c4c384a9b6bb6bdb1d02ef6efd07f211f147ab6"
+      },
+      {
+        "path": "docs/tasks/backlog.json",
+        "byte_length": 40358,
+        "sha256": "b1b87a9960c68cf2262b1bab80cb3f1fd39ff31dad99a7dd21522143edb1ff16"
+      },
+      {
+        "path": "docs/tasks/work-packages/R0-SPEC-001.md",
+        "byte_length": 6623,
+        "sha256": "55329a0f3dfe9e9f0734b935aa4bb83067bdb6e2484829660aa51bb881dedf28"
+      },
+      {
+        "path": "fixtures/ref-scientific-conventions/fixture-manifest.json",
+        "byte_length": 3966,
+        "sha256": "a9ea1e8fd5c7ee9a3f03b5ebe07aac2c7d28083fdf4c042d7a08316be8c7cb93"
+      },
+      {
+        "path": "specs/README.md",
+        "byte_length": 3468,
+        "sha256": "3ddf4223edf16897e9b23797c454a8ccaa0aae59e78ba064e4fd3b3c9a40e201"
+      },
+      {
+        "path": "specs/examples/fixture-manifest/valid/minimal.json",
+        "byte_length": 686,
+        "sha256": "28eee4b4485cfc4c16d1e6de6cc12d431c386412b1b21912b01b67c644a1ad0d"
+      },
+      {
+        "path": "specs/r0-schema-contract-lock.json",
+        "byte_length": 5481,
+        "sha256": "94304dc7e03d9c3ae02a5e113e95cb76dc46e3507006466254e6f551db43adab"
+      },
+      {
+        "path": "tools/validate-r0-specs.ps1",
+        "byte_length": 57269,
+        "sha256": "fc19fcb2725bb6c21394c9a6733fc70bd0fd6970a9f0fc91667ffa78cbe35a5d"
+      },
+      {
+        "path": "tools/verify-repository.ps1",
+        "byte_length": 15516,
+        "sha256": "f737c1df19b1ee1955cede60f3b7bc92a8122fecc9cb83507f6e6f3b476f7999"
+      }
+    ]
+  },
+  "authorization_ref": "docs/governance/r0-owner-authorization.json",
+  "decision_actor": {
+    "actor_id": "r0-architecture-agent",
+    "kind": "machine_agent",
+    "task_path": "/root/r0_architecture_agent",
+    "roles": [
+      "architecture_lead",
+      "compiler_lead"
+    ],
+    "decision": "accept-as-written"
+  },
+  "independent_review": {
+    "actor_id": "r0-validation-agent",
+    "kind": "machine_agent",
+    "task_path": "/root/r0_validation_agent",
+    "role": "validation_lead",
+    "result": "approved",
+    "decision": "accept-as-written",
+    "reviewed_commit": "ee7157359e689114d0259a1ae7884a315b029bc1",
+    "reviewed_fileset_sha256": "c7e6bf8bc99b309d42d6aa823c69ee57064a921c2c429fafd58350ce3674ec47"
+  },
+  "rationale": [
+    "The accepted outcome matches the reviewed R0-SPEC-001 contract lock and executable failure paths.",
+    "The cumulative Git fileset was independently reproduced from raw target-commit blobs.",
+    "The decision preserves Fixture maturity, zero runtime consumers and the R0 stage boundary."
+  ],
+  "contract": {
+    "contract_id": "repository-root-executable-evidence",
+    "summary": "Resolve executable and qualified evidence only from exact repository-root paths to tracked nonempty regular Git blobs and worktree files.",
+    "locator_base": "repository-root",
+    "separators": "forward-slash",
+    "source_refs": "opaque provenance locator",
+    "public_reference_grammar": "deferred-to-v2"
+  },
+  "required_mutations": [
+    "manifest-relative-evidence-locator",
+    "rooted-evidence-locator",
+    "backslash-evidence-locator",
+    "drive-relative-evidence-locator",
+    "file-uri-evidence-locator",
+    "escaping-evidence-locator",
+    "query-evidence-locator",
+    "fragment-evidence-locator",
+    "percent-encoded-evidence-locator",
+    "untracked-evidence-locator",
+    "case-alias-evidence-locator",
+    "empty-evidence-blob",
+    "nonregular-evidence-blob",
+    "empty-evidence-worktree-file"
+  ],
+  "migration": {
+    "rule": "Public bundle, repository and external reference classes require v2; external references cannot satisfy local executable evidence."
+  },
+  "boundaries": [
+    "no-schema-runtime-or-public-consumer",
+    "no-rights-or-scientific-qualification",
+    "no-r0-gate-or-r1-unlock"
+  ],
+  "verification": {
+    "schema_validator": "passed; 3 schemas; 5 actual manifests; 6 valid; 16 invalid; 9 strict failures; 25 identities; 5 identity mutations; 20 contract mutations",
+    "ctest": "passed; 9/9",
+    "repository_verifier": "passed; 60 JSON; 65 tasks; 100 Markdown",
+    "diff_check": "passed",
+    "hosted_ci": {
+      "push_run_id": "31565404481",
+      "pull_request_run_id": "31565406888",
+      "ubuntu": "success on push and pull_request",
+      "windows": "success on push and pull_request"
+    }
+  }
+}

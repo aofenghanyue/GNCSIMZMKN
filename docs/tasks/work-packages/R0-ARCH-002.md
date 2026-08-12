@@ -6,7 +6,7 @@
 - Owner role：Architecture Lead
 - 准备人：Codex
 - 准备日期：2026-08-10
-- 依赖：`R0-ARCH-001`、`R0-SPEC-001`，当前均为 `review`
+- 依赖：`R0-ARCH-001` 当前为 `review`；`R0-SPEC-001` 已为 `done`
 - 关联 gate：G0
 
 ## 准备结论
@@ -108,7 +108,7 @@ candidate 的 27 个名称 / 33 项职责已作为准备输入完成归类：22 
 - 当前证据审计：记录 architecture baseline 的 15 个 mutation、CMake DAG/authority 强覆盖和 repository regex 的 partial 覆盖；所有 product-artifact 语义保持 awaiting/deferred，没有借零文件数量声明通过。
 - 故障设计：ARCH-MUT-001～016 覆盖 module/include、Plan/Commit/Application 防火墙、Legacy、延期能力、ADR graph、逻辑/物理边界、registry overlay、exception 和路径规范化；要求 mutation 与 positive scan 共用 evaluator。
 - 自审修正：Adapter include 上限从 ADR transitive closure 收窄为 Application/稳定 contract/Artifact DTO；FF-ARCH-02 完整规则改为等待真实 Kernel dispatch，只把已知 token 子守卫放入 R0 首切片；policy state 与 evaluation result 改为两个正交字段。
-- 状态边界：`R0-ARCH-002` 仍为 `planned`、assignee 为空，`R0-ARCH-001` 与 `R0-SPEC-001` 仍为 `review`；没有修改 backlog、产品源码或冻结 Legacy。
+- 状态边界：`R0-ARCH-002` 仍为 `planned`、assignee 为空；`R0-ARCH-001` 保持 `review`，`R0-SPEC-001` 已完成 commit-bound acceptance；没有修改产品源码或冻结 Legacy。
 - 验证：Debug bootstrap 通过，9/9 CTest 与 repository verification 通过；45 个 JSON、65 个 task entries、85 个 Markdown 在准备文件加入后通过检查。
 - 开放审查：Architecture Lead 仍需确认 public/private include seam、exception policy、governance-only policy 是否需要 ADR，以及依赖关闭后的首切片 assignee/reviewer。
 - reconciliation amendment：只加固 `R0-ARCH-001` 的确定性 authority validator 并扩充本准备设计；targeted validator 拒绝 15/15 mutation，Debug/Release 各 9/9 CTest 与 repository verification 通过；`R0-ARCH-002` 仍为 `planned`、assignee 仍为空，未生成 architecture-fitness pass 声明。

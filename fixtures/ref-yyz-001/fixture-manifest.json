@@ -27,5 +27,5 @@
   ],
   "required_artifacts": ["authoritative mission source", "aero/propulsion/mass assets", "formula intermediate values", "PlanProofRecord set", "step journal facts", "ObservationBatch", "diagnostic failure case", "trajectory and terminal metrics", "tolerance and difference report"],
   "acceptance": ["All example values have confirmed provenance", "Legacy and target results can be compared by semantic field identity", "Every difference has an approved classification"],
-  "open_tasks": ["R0-LEG-002", "R0-SCI-003", "R0-SPEC-001"]
+  "open_tasks": ["R0-LEG-002", "R0-SCI-003"]
 }

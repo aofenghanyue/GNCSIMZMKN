@@ -15,6 +15,8 @@
 
 R0 contract instance 都携带 `schema_version`。fixture 与 oracle manifest 必须给出稳定 identity、provenance、expected facts 和 tolerance policy。`PlanProofRecord` 使用七类 proof kind，并把延期能力统一表示为 `DeferredUnsupported`。
 
+ADR-0004 与 `RECON-DEC-001`～`003` 已于 2026-08-12 接受。权威记录位于 `docs/governance/adr-dispositions/` 与 `docs/governance/reconciliation-dispositions/`；`tools/modules/R0SpecAcceptance.psm1` 从受审查 Git 对象重算文件集，并守卫 owner/reviewer、Hosted CI、任务状态与阶段边界。
+
 ## 一致性验证
 
 默认命令验证三份 schema、仓库内实际 manifests、valid examples、带预期 diagnostic 的 invalid examples、严格 JSON 失败路径和跨文件 identity mutations：

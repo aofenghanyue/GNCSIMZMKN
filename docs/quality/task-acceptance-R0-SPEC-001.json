@@ -1,0 +1,256 @@
+{
+  "schema_version": "gnczmkn.task-acceptance/1",
+  "acceptance_id": "R0-SPEC-001-ACCEPTANCE-2026-08-12",
+  "task_id": "R0-SPEC-001",
+  "result": "accepted",
+  "accepted_on": "2026-08-12",
+  "authorization_ref": "docs/governance/r0-owner-authorization.json",
+  "reviewed_base": "611a48a23ea02ecd0c210a2b101f5c5cbf5df0e6",
+  "reviewed_commit": "ee7157359e689114d0259a1ae7884a315b029bc1",
+  "reviewed_direct_parent": "e5c711cd26c735eafb59084724682155356a9f45",
+  "reviewed_fileset": {
+    "algorithm_id": "gnczmkn.fileset-manifest/1",
+    "scope": "reviewed_base..reviewed_commit",
+    "path_order": "ordinal-ascending",
+    "entry_format": "path<TAB>raw_git_blob_byte_length<TAB>lowercase_sha256(raw_git_blob_bytes)",
+    "manifest_encoding": "UTF-8 without BOM",
+    "line_ending": "LF with a final LF",
+    "path_count": 13,
+    "sha256": "c7e6bf8bc99b309d42d6aa823c69ee57064a921c2c429fafd58350ce3674ec47",
+    "entries": [
+      {
+        "path": "docs/adr/0004-r0-json-schema-contracts.md",
+        "byte_length": 7349,
+        "sha256": "b173f2de9c07854cd0bf632dc30c794a9edefa42fa18d8aa5829c29a5bf55a9d"
+      },
+      {
+        "path": "docs/handoff/r0-execution-state.md",
+        "byte_length": 5901,
+        "sha256": "04c4a80dd73304a1497a434bd99f7e238dc4e6aed15631b68335def65eb580de"
+      },
+      {
+        "path": "docs/quality/r0-first-wave-reconciliation-audit.md",
+        "byte_length": 40919,
+        "sha256": "9d2ec6dc039e7438bc9beaa3f904be1a3d865e1f7de11738289e53208a126e32"
+      },
+      {
+        "path": "docs/quality/scientific-conventions-cross-tool-report.json",
+        "byte_length": 5178,
+        "sha256": "16874e570b002ca1dd688c3caa2b97cbcb9c9855a8d95e2681efe39af1b9f06d"
+      },
+      {
+        "path": "docs/quality/team-toolchain-readiness-report.json",
+        "byte_length": 24546,
+        "sha256": "f1639de6633baadac5e41c575c4c384a9b6bb6bdb1d02ef6efd07f211f147ab6"
+      },
+      {
+        "path": "docs/tasks/backlog.json",
+        "byte_length": 40358,
+        "sha256": "b1b87a9960c68cf2262b1bab80cb3f1fd39ff31dad99a7dd21522143edb1ff16"
+      },
+      {
+        "path": "docs/tasks/work-packages/R0-SPEC-001.md",
+        "byte_length": 6623,
+        "sha256": "55329a0f3dfe9e9f0734b935aa4bb83067bdb6e2484829660aa51bb881dedf28"
+      },
+      {
+        "path": "fixtures/ref-scientific-conventions/fixture-manifest.json",
+        "byte_length": 3966,
+        "sha256": "a9ea1e8fd5c7ee9a3f03b5ebe07aac2c7d28083fdf4c042d7a08316be8c7cb93"
+      },
+      {
+        "path": "specs/README.md",
+        "byte_length": 3468,
+        "sha256": "3ddf4223edf16897e9b23797c454a8ccaa0aae59e78ba064e4fd3b3c9a40e201"
+      },
+      {
+        "path": "specs/examples/fixture-manifest/valid/minimal.json",
+        "byte_length": 686,
+        "sha256": "28eee4b4485cfc4c16d1e6de6cc12d431c386412b1b21912b01b67c644a1ad0d"
+      },
+      {
+        "path": "specs/r0-schema-contract-lock.json",
+        "byte_length": 5481,
+        "sha256": "94304dc7e03d9c3ae02a5e113e95cb76dc46e3507006466254e6f551db43adab"
+      },
+      {
+        "path": "tools/validate-r0-specs.ps1",
+        "byte_length": 57269,
+        "sha256": "fc19fcb2725bb6c21394c9a6733fc70bd0fd6970a9f0fc91667ffa78cbe35a5d"
+      },
+      {
+        "path": "tools/verify-repository.ps1",
+        "byte_length": 15516,
+        "sha256": "f737c1df19b1ee1955cede60f3b7bc92a8122fecc9cb83507f6e6f3b476f7999"
+      }
+    ]
+  },
+  "implementation_actor": {
+    "actor_id": "r0-architecture-agent",
+    "kind": "machine_agent",
+    "task_path": "/root/r0_architecture_agent",
+    "roles": [
+      "architecture_lead",
+      "compiler_lead"
+    ],
+    "decision": "implemented"
+  },
+  "independent_reviewer": {
+    "actor_id": "r0-validation-agent",
+    "kind": "machine_agent",
+    "task_path": "/root/r0_validation_agent",
+    "role": "validation_lead",
+    "result": "approved",
+    "decision": "accept-as-written",
+    "reviewed_commit": "ee7157359e689114d0259a1ae7884a315b029bc1",
+    "reviewed_fileset_sha256": "c7e6bf8bc99b309d42d6aa823c69ee57064a921c2c429fafd58350ce3674ec47"
+  },
+  "acceptance_checks": {
+    "deliverables": {
+      "versioned_json_schemas": "passed",
+      "valid_and_invalid_examples": "passed",
+      "schema_validation_command": "passed"
+    },
+    "acceptance": {
+      "missing_contract_facts_fail_early": "passed"
+    },
+    "evidence": {
+      "contract_lock": "specs/r0-schema-contract-lock.json",
+      "adr_disposition": "docs/governance/adr-dispositions/ADR-0004-2026-08-12.json",
+      "reconciliation_dispositions": [
+        "docs/governance/reconciliation-dispositions/RECON-DEC-001-2026-08-12.json",
+        "docs/governance/reconciliation-dispositions/RECON-DEC-002-2026-08-12.json",
+        "docs/governance/reconciliation-dispositions/RECON-DEC-003-2026-08-12.json"
+      ],
+      "work_package": "docs/tasks/work-packages/R0-SPEC-001.md"
+    }
+  },
+  "commit_bound_verification": {
+    "push_run": {
+      "run_id": "31565404481",
+      "event": "push",
+      "url": "https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31565404481",
+      "source_head_sha": "ee7157359e689114d0259a1ae7884a315b029bc1",
+      "checked_out_sha": "ee7157359e689114d0259a1ae7884a315b029bc1",
+      "conclusion": "success",
+      "jobs": [
+        {
+          "job_id": "94016078875",
+          "name": "windows-2025-vs2026-msvc-19.5x",
+          "runner_name": "GitHub Actions 1000000099",
+          "runner_group": "GitHub Actions",
+          "conclusion": "success",
+          "url": "https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31565404481/job/94016078875",
+          "required_step_conclusions": {
+            "Check out repository": "success",
+            "Record runner and tool identity": "success",
+            "Configure Ubuntu candidate": "skipped",
+            "Configure Windows candidate": "success",
+            "Record configured compiler identity": "success",
+            "Build": "success",
+            "Test": "success",
+            "Repository checks": "success",
+            "Verify Windows PowerShell 5.1 compatibility": "success"
+          }
+        },
+        {
+          "job_id": "94016078976",
+          "name": "ubuntu-24.04-gcc-13",
+          "runner_name": "GitHub Actions 1000000100",
+          "runner_group": "GitHub Actions",
+          "conclusion": "success",
+          "url": "https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31565404481/job/94016078976",
+          "required_step_conclusions": {
+            "Check out repository": "success",
+            "Record runner and tool identity": "success",
+            "Configure Ubuntu candidate": "success",
+            "Configure Windows candidate": "skipped",
+            "Record configured compiler identity": "success",
+            "Build": "success",
+            "Test": "success",
+            "Repository checks": "success",
+            "Verify Windows PowerShell 5.1 compatibility": "skipped"
+          }
+        }
+      ]
+    },
+    "pull_request_run": {
+      "run_id": "31565406888",
+      "event": "pull_request",
+      "url": "https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31565406888",
+      "source_head_sha": "ee7157359e689114d0259a1ae7884a315b029bc1",
+      "checked_out_ref": "refs/pull/3/merge",
+      "checked_out_sha": "52a6630394a2c9720971bae677eea9cb2b71a674",
+      "checked_out_tree_sha": "03e49d5b524426b0ae00170d4f36c3798ae83e1e",
+      "checked_out_parent_shas": [
+        "611a48a23ea02ecd0c210a2b101f5c5cbf5df0e6",
+        "ee7157359e689114d0259a1ae7884a315b029bc1"
+      ],
+      "conclusion": "success",
+      "checked_out_commit_object": {
+        "object_type": "commit",
+        "content_encoding": "base64",
+        "byte_length": 1167,
+        "sha1": "52a6630394a2c9720971bae677eea9cb2b71a674",
+        "content_sha256": "df80c6adda9170097d43f914081eafe19349a6b2728770bd67e6c6538a336b63",
+        "content_base64": "dHJlZSAwM2U0OWQ1YjUyNDQyNmIwYWUwMDE3MGQ0ZjM2YzM3OThhZTgzZTFlCnBhcmVudCA2MTFhNDhhMjNlYTAyZWNkMGMyMTBhMmIxMDFmNWM1Y2JmNWRmMGU2CnBhcmVudCBlZTcxNTczNTllNjg5MTE0ZDAyNTlhMWFlNzg4NGEzMTViMDI5YmMxCmF1dGhvciB5dWUgb2YgPDE3NzIxNTU0NDBAcXEuY29tPiAxNzg2NTExMTQ5ICswMDAwCmNvbW1pdHRlciBHaXRIdWIgPG5vcmVwbHlAZ2l0aHViLmNvbT4gMTc4NjUxMTE0OSArMDAwMApncGdzaWcgLS0tLS1CRUdJTiBQR1AgU0lHTkFUVVJFLS0tLS0KIAogd3NGY0JBQUJDQUFRQlFKcWUvOHRDUkMxYVE3dXU1VWhsQUFBZ2hjUUFGUTRxOWJIcnVpek5kNEkreEVrcDlNQQogSG91QTRFMWxZc3FQODgwOGljQkdKV0JFRWwwNGNFSkNqMThEUkF2VUxWaStUKzN5STdFVGkrb01lKzhqaGdsbgogNFJ0cVBhcWt0TWNVSkVRZHBiUDZ5cElKWExyUkY3dGZqVmp3Qi9uZVR2cEF1eEN0WVJYT1BwUWJWMXNvZEl1SgogaXljRmVEVG9Rc0srd1ByVUxlVDh1ZExVd2JFUkVkL29ORTQybmVJQ0NkbGJWbU9BYVN0NUdhT0diUk42ZHlvYgogL29jaFRCU2k2dWV5SFNFamZsb3B6L2xGUXNobUFMR3NhVkt0WkJJT05vUCs0QkJuQ3l1VGxTL2k5MUg1OHVYNAogeVg2YjRKOUVqN0ZYVVFHbXVXU3BZcWdkNFRrTW1Dd05PaXRKdzNTM0NRWlVVOE5VTU0rRHVqZmduRXNWWk5hdwogS3hDOXdvODBib2VTS2xiVlFsd0lpMVVtTGVNamNKd3UrRGZTdjkzd1RGY3VqcnZxb0k1WFlhVG1Ka3FCNm00ZQogZUdOa284RHRKdHlyM0dsRjhtSlpMY1pFRExyMFM1QUxvbU9lUUx1aE1mS0wvN2puUDhqQnpKdDVuTzNFeDVEaAogZlkvQVVETGRlUzRsa21ONkdZUUtDMGVRTy9HZGZKSlVTVmNIbTMrMXhZak83WmxYRjNWTVlBMkpRbUxWellrWQogSUQxWVVHRjFrN0ErSFVucXV6c2ZqRGYydElqQ09YdkdHNFhOS0QraDR0aEdBSmRSN1l2WWdwMEZSYjJoOVZ6cgogekk2NFhUc0JnTEpmMXVtK1ZkWGpXazRWemxtSVNQeXhzOTRMSHh2MmRsbWpNZWlUUGRoVEwrMzBTMUcyODg2QgogdzBDamszR2VJcXMzYkVLMnVMT0QKID15dENGCiAtLS0tLUVORCBQR1AgU0lHTkFUVVJFLS0tLS0KIAoKTWVyZ2UgZWU3MTU3MzU5ZTY4OTExNGQwMjU5YTFhZTc4ODRhMzE1YjAyOWJjMSBpbnRvIDYxMWE0OGEyM2VhMDJlY2QwYzIxMGEyYjEwMWY1YzVjYmY1ZGYwZTYK"
+      },
+      "jobs": [
+        {
+          "job_id": "94016086092",
+          "name": "windows-2025-vs2026-msvc-19.5x",
+          "runner_name": "GitHub Actions 1000000101",
+          "runner_group": "GitHub Actions",
+          "conclusion": "success",
+          "url": "https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31565406888/job/94016086092",
+          "required_step_conclusions": {
+            "Check out repository": "success",
+            "Record runner and tool identity": "success",
+            "Configure Ubuntu candidate": "skipped",
+            "Configure Windows candidate": "success",
+            "Record configured compiler identity": "success",
+            "Build": "success",
+            "Test": "success",
+            "Repository checks": "success",
+            "Verify Windows PowerShell 5.1 compatibility": "success"
+          }
+        },
+        {
+          "job_id": "94016086110",
+          "name": "ubuntu-24.04-gcc-13",
+          "runner_name": "GitHub Actions 1000000102",
+          "runner_group": "GitHub Actions",
+          "conclusion": "success",
+          "url": "https://github.com/aofenghanyue/GNCSIMZMKN/actions/runs/31565406888/job/94016086110",
+          "required_step_conclusions": {
+            "Check out repository": "success",
+            "Record runner and tool identity": "success",
+            "Configure Ubuntu candidate": "success",
+            "Configure Windows candidate": "skipped",
+            "Record configured compiler identity": "success",
+            "Build": "success",
+            "Test": "success",
+            "Repository checks": "success",
+            "Verify Windows PowerShell 5.1 compatibility": "skipped"
+          }
+        }
+      ]
+    },
+    "local_and_repository": {
+      "schema_validator": "passed; 20/20 contract mutations",
+      "acceptance_validator": "passed; 25/25 acceptance mutations",
+      "ctest": "passed; 9/9",
+      "repository_verifier": "passed; 60 JSON; 65 tasks; 100 Markdown",
+      "diff_check": "passed",
+      "strict_utf8_and_wording": "passed; 13/13 reviewed paths"
+    }
+  },
+  "boundaries": {
+    "schema_maturity": "Fixture",
+    "runtime_consumers": 0,
+    "rights_and_external_distribution": "remain fail-closed",
+    "scientific_qualification": "not established",
+    "r0_gate": "R0-GATE-001 remains planned; G0 and G1 are not passed",
+    "r1_through_r8": "remain locked"
+  }
+}

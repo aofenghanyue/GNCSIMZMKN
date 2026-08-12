@@ -11,6 +11,8 @@ $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 $modulePath = Join-Path $PSScriptRoot 'modules\JsonSchemaSubset.psm1'
 Import-Module -Name $modulePath -Force
+$acceptanceModulePath = Join-Path $PSScriptRoot 'modules\R0SpecAcceptance.psm1'
+Import-Module -Name $acceptanceModulePath -Force
 
 $roleAssignmentsPath = Join-Path $repoRoot 'docs\team\role-assignments.json'
 $taskBacklogPath = Join-Path $repoRoot 'docs\tasks\backlog.json'
@@ -405,28 +407,31 @@ function Get-SchemaLockErrors {
         [string](Get-PropertyValue $Lock 'lock_id') -cne 'R0-SPEC-001-V1-CONTRACT-LOCK' -or
         [string](Get-PropertyValue $Lock 'task_id') -cne 'R0-SPEC-001' -or
         [string](Get-PropertyValue $Lock 'adr_ref') -cne 'docs/adr/0004-r0-json-schema-contracts.md' -or
-        [string](Get-PropertyValue $Lock 'decision_status') -cne 'proposed' -or
+        [string](Get-PropertyValue $Lock 'decision_status') -cne 'accepted' -or
         [string](Get-PropertyValue $Lock 'maturity') -cne 'governance-contract-no-runtime-consumer') {
         [void]$errors.Add('R0 schema contract lock identity, status or maturity is invalid')
     }
 
     $expectedDecisions = [ordered]@{
-        'RECON-DEC-001' = 'keep-current'
-        'RECON-DEC-002' = 'repository-root-only'
-        'RECON-DEC-003' = 'keep-current'
+        'RECON-DEC-001' = [PSCustomObject]@{ Outcome = 'keep-current'; Record = 'docs/governance/reconciliation-dispositions/RECON-DEC-001-2026-08-12.json' }
+        'RECON-DEC-002' = [PSCustomObject]@{ Outcome = 'repository-root-only'; Record = 'docs/governance/reconciliation-dispositions/RECON-DEC-002-2026-08-12.json' }
+        'RECON-DEC-003' = [PSCustomObject]@{ Outcome = 'keep-current'; Record = 'docs/governance/reconciliation-dispositions/RECON-DEC-003-2026-08-12.json' }
     }
     $decisionMap = @{}
     foreach ($decision in @((Get-PropertyValue $Lock 'reconciliation_decisions'))) {
-        Add-ExactPropertyErrors -Object $decision -Required @('id', 'proposed_disposition', 'boundary') -Label 'R0 schema reconciliation decision' -Errors $errors
+        Add-ExactPropertyErrors -Object $decision -Required @('id', 'outcome', 'status', 'record_ref', 'boundary') -Label 'R0 schema reconciliation decision' -Errors $errors
         $id = [string](Get-PropertyValue $decision 'id')
         if ($decisionMap.ContainsKey($id)) { [void]$errors.Add("Duplicate schema reconciliation decision '$id'") }
         else { $decisionMap[$id] = $decision }
     }
     foreach ($id in $expectedDecisions.Keys) {
+        $expectedDecision = $expectedDecisions[$id]
         if (-not $decisionMap.ContainsKey($id) -or
-            [string](Get-PropertyValue $decisionMap[$id] 'proposed_disposition') -cne [string]$expectedDecisions[$id] -or
+            [string](Get-PropertyValue $decisionMap[$id] 'outcome') -cne [string]$expectedDecision.Outcome -or
+            [string](Get-PropertyValue $decisionMap[$id] 'status') -cne 'accepted' -or
+            [string](Get-PropertyValue $decisionMap[$id] 'record_ref') -cne [string]$expectedDecision.Record -or
             [string]::IsNullOrWhiteSpace([string](Get-PropertyValue $decisionMap[$id] 'boundary'))) {
-            [void]$errors.Add("Schema reconciliation decision '$id' is missing or differs from the proposed disposition")
+            [void]$errors.Add("Schema reconciliation decision '$id' is missing or differs from the accepted disposition")
         }
     }
     if ($decisionMap.Count -ne $expectedDecisions.Count) {
@@ -786,6 +791,7 @@ $validExampleCount = 0
 $invalidExampleCount = 0
 $validatorFailureCaseCount = 0
 $contractMutationCaseCount = 0
+$acceptanceMutationCaseCount = 0
 $repositoryDocuments = [System.Collections.Generic.List[object]]::new()
 $schemaLock = $null
 try {
@@ -1115,6 +1121,12 @@ foreach ($mutationCase in $contractMutations) {
         -Failures $failures
 }
 
+$acceptanceResult = Test-R0SpecAcceptance -RepoRoot $repoRoot -RunMutations
+$acceptanceMutationCaseCount = [int]$acceptanceResult.MutationCount
+foreach ($message in @($acceptanceResult.Issues)) {
+    [void]$failures.Add("R0-SPEC-001 acceptance: $message")
+}
+
 $validatorFailureCases = @(
     [PSCustomObject]@{
         Name = 'unsupported schema keyword'
@@ -1201,4 +1213,5 @@ if (-not $Quiet) {
     Write-Host "Validated actual-manifest stable identities: $repositoryIdentityCount"
     Write-Host "Validated identity mutation cases: $identityMutationCaseCount"
     Write-Host "Validated schema lock/locator/consumer mutations: $contractMutationCaseCount"
+    Write-Host "Validated R0-SPEC-001 acceptance mutations: $acceptanceMutationCaseCount"
 }

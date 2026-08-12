@@ -18,6 +18,5 @@
     }
   ],
   "required_artifacts": ["example input", "example result"],
-  "acceptance": ["The expected fact is machine-checkable."],
-  "open_tasks": ["R0-SPEC-001"]
+  "acceptance": ["The expected fact is machine-checkable."]
 }
