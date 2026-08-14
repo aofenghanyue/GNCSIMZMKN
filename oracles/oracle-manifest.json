@@ -95,7 +95,7 @@
     {
       "id": "ORACLE-YYZ-CSV-05",
       "level": "mission",
-      "status": "capturing",
+      "status": "executable",
       "claim": "Each recorded time identifies t_k and fields follow declared publish/update boundaries.",
       "expected_facts": [
         "The three rows identify t0=0, t1=0.5 s and t2=1 s and contain the state published at each boundary.",

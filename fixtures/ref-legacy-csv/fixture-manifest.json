@@ -1,7 +1,7 @@
 {
   "schema_version": "gnczmkn.fixture-manifest/1",
   "fixture_id": "REF-LEGACY-CSV-001",
-  "status": "capturing",
+  "status": "executable",
   "purpose": "Make the frozen Legacy CSV t_k and published-field boundaries executable through semantic field identities while permitting encoding changes.",
   "authority": "validation_lead",
   "provenance": {
@@ -76,7 +76,7 @@
     "Independent 50-digit Decimal and C++17 implementations agree with every semantic row",
     "Column permutation, finite Decimal-equivalent text, unmapped-column changes and duplicate unmapped headers are accepted after header mapping",
     "Missing t0, shifted t_k, stale published state, missing or non-finite required values, and duplicate required header are rejected",
-    "Preserve and Retire recommendations remain visibly pending until the repository owner accepts the disposition choice"
+    "The accepted disposition preserves each row's t_k boundary and published-state projection while retiring Legacy column order, concatenated headers, numeric text format, session filename and output directory"
   ],
   "open_tasks": [
     "R0-LEG-002",

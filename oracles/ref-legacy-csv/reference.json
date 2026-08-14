@@ -117,24 +117,24 @@
     }
   ],
   "disposition_decision": {
-    "status": "needs_owner_decision",
+    "status": "accepted",
     "owner_role": "validation_lead",
     "facts": [
       {
         "fact_id": "FACT-CSV-TK-TIMESTAMP",
-        "recommended_disposition": "Preserve",
+        "disposition": "Preserve",
         "difference_reason": "ScientificInvariant",
         "target_mapping": "Each semantic observation row identifies its declared t_k sample boundary"
       },
       {
         "fact_id": "FACT-CSV-PUBLISHED-BOUNDARY",
-        "recommended_disposition": "Preserve",
+        "disposition": "Preserve",
         "difference_reason": "ScientificInvariant",
         "target_mapping": "Truth fields are projected from the state published at the row's t_k boundary"
       },
       {
         "fact_id": "FACT-CSV-LEGACY-ENCODING",
-        "recommended_disposition": "Retire",
+        "disposition": "Retire",
         "difference_reason": "AccidentalStructure",
         "target_mapping": "Legacy column order, concatenated header names, numeric text format, session filename and output directory"
       }
