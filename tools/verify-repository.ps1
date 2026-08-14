@@ -186,36 +186,6 @@ if (Test-Path -LiteralPath $legacyManifestPath) {
     }
 }
 
-$productionRoots = @('apps', 'framework', 'adapters', 'packages', 'user', 'cmake')
-$productionFiles = @()
-foreach ($relativeRoot in $productionRoots) {
-    $absoluteRoot = Join-Path $repoRoot $relativeRoot
-    if (Test-Path -LiteralPath $absoluteRoot) {
-        $productionFiles += Get-ChildItem -LiteralPath $absoluteRoot -Recurse -File |
-            Where-Object { $_.Extension -in @('.h', '.hpp', '.hxx', '.c', '.cc', '.cpp', '.cxx', '.cmake') -or $_.Name -eq 'CMakeLists.txt' }
-    }
-}
-$productionFiles += Get-Item -LiteralPath (Join-Path $repoRoot 'CMakeLists.txt')
-
-$legacyPatterns = @(
-    '#include\s*[<\"](?:\.\./)*reference/legacy',
-    '#include\s*[<\"][^>\"]*(SimulationNode|NodeFactory|NodeRegistry|AssemblyContext|MissionAssembler|ConfigNode)',
-    'target_(include_directories|link_libraries)\([^\)]*reference[/\\]legacy'
-)
-foreach ($file in $productionFiles) {
-    $text = Get-Content -LiteralPath $file.FullName -Raw -Encoding utf8
-    foreach ($pattern in $legacyPatterns) {
-        if ($text -match $pattern) {
-            Add-Error "Forbidden legacy production dependency in $($file.FullName): $pattern"
-        }
-    }
-}
-
-$cmakeText = Get-Content -LiteralPath (Join-Path $repoRoot 'CMakeLists.txt') -Raw -Encoding utf8
-if ($cmakeText -match 'target_link_libraries\(kernel[^\)]*compiler') {
-    Add-Error "Kernel must not link Compiler."
-}
-
 $authoredMarkdown = @(
     (Get-Item -LiteralPath (Join-Path $repoRoot 'README.md'))
     (Get-Item -LiteralPath (Join-Path $repoRoot 'AGENTS.md'))
@@ -285,6 +255,12 @@ if ($LASTEXITCODE -ne 0) {
     Add-Error "R0 architecture baseline conformance failed: $($architectureValidatorOutput -join [Environment]::NewLine)"
 }
 
+$sourceBoundaryValidatorPath = Join-Path $PSScriptRoot 'validate-source-boundaries.ps1'
+$sourceBoundaryValidatorOutput = & $powerShellHost -NoLogo -NoProfile -ExecutionPolicy Bypass -File $sourceBoundaryValidatorPath -Quiet 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Add-Error "R0 source-boundary fitness failed: $($sourceBoundaryValidatorOutput -join [Environment]::NewLine)"
+}
+
 $legacyReproductionValidatorPath = Join-Path $PSScriptRoot 'validate-legacy-reproduction.ps1'
 $legacyReproductionValidatorOutput = & $powerShellHost -NoLogo -NoProfile -ExecutionPolicy Bypass -File $legacyReproductionValidatorPath -Quiet 2>&1
 if ($LASTEXITCODE -ne 0) {
@@ -318,6 +294,7 @@ Write-Host "Validated task entries: $taskCount"
 Write-Host "Validated Markdown files: $($markdownFiles.Count)"
 Write-Host "Validated R0 schema contracts: 3"
 Write-Host "Validated R0 architecture baseline: 1"
+Write-Host "Validated R0 source boundaries: 1"
 Write-Host "Validated R0 legacy reproduction: 1"
 Write-Host "Validated R0 scientific convention bundle: 1"
 Write-Host "Validated R0 license/provenance bundle: 1"

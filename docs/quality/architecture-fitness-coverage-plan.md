@@ -1,9 +1,9 @@
 # R0-ARCH-002 架构 Fitness 覆盖与故障设计
 
-- 文档状态：Preparation design
-- 实现成熟度：未实现；不得作为 architecture fitness pass evidence
-- 任务：`R0-ARCH-002`（backlog 保持 `planned`）
-- 日期：2026-08-10
+- 文档状态：Implemented R0 source-boundary slice
+- 实现成熟度：executable；当前 source/CMake 边界可作为直接 fitness evidence
+- 任务：`R0-ARCH-002`
+- 日期：2026-08-15
 - 权威 owner role：Architecture Lead
 
 ## 1. 目标与证据边界
@@ -19,15 +19,15 @@
 | Surface | 当前证据 | 覆盖强度 | 已知缺口 |
 | --- | --- | --- | --- |
 | 术语与 CapabilityStatus | glossary parser、authority registry、派生 baseline | 强：唯一性、状态、alias、enum authority、hash | 未检查普通 production identifier 与退出词 |
-| module DAG | ADR-0003 + CMake target parser | 强：9 modules、22 physical edges、closure、cycle | 未解析 C/C++ include graph；`packages/user/apps` 无独立规则 |
+| module DAG | ADR-0003 + CMake target parser + source-boundary evaluator | 强：9 modules、22 physical edges、closure、cycle、production include direction | public/private header seam 随首个真实 consumer 收窄 |
 | shared symbol owner | authority registry + authority text | 强：27 个 enum/key/owner identity | 尚无 production definition，可执行 duplicate-definition scan 缺失 |
 | Legacy ownership | glossary + 22 条 ownership mapping | 强：唯一 primary owner、consumer、disposition | ownership evidence 不等于 production deletion guard |
-| Legacy production dependency | repository verifier 的 3 类 regex | 弱/partial | 删除 token 不完整，路径规范化、注释/字符串和 allowlist 语义未闭合 |
-| Kernel/Compiler boundary | CMake closure + 单条 repository regex | 中等 | 其他 module pair 和 source include 方向未闭合 |
+| Legacy production dependency | source/CMake inventory + exact path/API evaluator | 强：路径、archive、include、代码 identifier、CMake bracket argument | R3/G6 的全量删除 token 仍按 gate 激活 |
+| Kernel/Compiler boundary | CMake closure + normalized C/C++ include graph | 强：直接、相对与 dot-segment include 均受同一 DAG 判定 | 首个 private source root 出现时补 root registration |
 | semantic/evolution guards | 无目标 artifact | 未启用 | 需要 maturity、prerequisite 与 mutation 证据 |
-| orchestration | CTest + repository verification + fixed-runner workflow | 强：入口闭合 | 新 architecture-fitness validator 尚未接入 |
+| orchestration | CTest + repository verification + Ubuntu/Windows workflow | 强：`r0.source-boundaries`、仓库入口和 Windows PowerShell 5.1 入口闭合 | 无 |
 
-architecture baseline 当前覆盖 15 项直接 mutation，包括 glossary、term/alias/authority、ownership、DAG/CMake、source hash 和派生 bytes。R0-ARCH-002 只补充可执行切片实际暴露的依赖与边界回归，避免复制第二份 terminology/DAG authority。
+architecture baseline 保持 15 项直接 mutation，覆盖 glossary、term/alias/authority、ownership、DAG/CMake、source hash 和派生 bytes。source-boundary evaluator 另有一个正向矩阵和八个定向反例，直接覆盖 source owner、依赖方向、project/package 边界与 Legacy 禁入。两者共同使用现有 ADR 和 registry，没有复制 terminology/DAG authority。
 
 ### 2.1 Candidate responsibility reconciliation
 
@@ -41,7 +41,7 @@ architecture baseline 当前覆盖 15 项直接 mutation，包括 glossary、ter
 
 Accepted `RECON-DEC-006` / `RECON-DEC-007` 已固定当前九模块 DAG、22 条 Legacy ownership 和 registry v1 schema。准备表可以使用 `packages/`、`user/`、`apps/`、composition root 等 source-rule label；物理 module 提升、responsibility overlay 或新 Legacy mapping 仍需满足已接受的 superseding/migration 规则。
 
-## 3. 拟采用的守卫层次
+## 3. 当前守卫层次
 
 ```text
 authoritative ADR / registry / gate vocabulary
@@ -72,12 +72,12 @@ positive repository scan + same-evaluator mutations
 
 ### 3.2 L1｜物理依赖与禁入规则
 
-- CMake edge 继续使用当前 parser；
+- CMake edge 继续使用当前 parser；production CMake 由 source-boundary evaluator 额外检查 Legacy tree/archive 禁入；
 - C/C++ include inventory 只解析预处理 include directive，并将 `gnc/<module>/...` 与可解析相对路径映射到 source owner；
-- identifier/deferred-token scan 只扫描 production C/C++/CMake，排除 docs、fixtures、oracles、reports、tests 的 expected violation text 和冻结 Legacy；
+- identifier scan 只扫描 production C/C++/CMake，排除 docs、fixtures、oracles、reports、tests 的 expected violation text 和冻结 Legacy；
 - include path 在比较前统一 separator、`.`/`..`、repository root 与 Windows case；越出 repository 的 unresolved relative include 记录为诊断；
-- comments/strings 中的历史词不自动形成 identifier finding，include string 在 comment stripping 前单独解析；
-- exception 只能针对精确 rule/path/token-or-edge，并带 owner、reason、expiry gate。
+- comments、普通字符串和 raw string 中的历史词不形成 identifier finding；include string 与 runtime Legacy path 单独解析；
+- 当前切片没有 exception/allowlist。真实例外需要先形成窄 ADR，并明确 exact rule/path/token-or-edge。
 
 ### 3.3 L2｜artifact-aware semantic rules
 
@@ -90,14 +90,16 @@ positive repository scan + same-evaluator mutations
 
 | Authority IDs | R0-ARCH-002 计划状态 | 检测依据 | 启用前置 |
 | --- | --- | --- | --- |
-| FF-ARCH-01、05、06 | 首切片 `enforced` | source owner/include graph、精确 forbidden dependency/token | 依赖任务 done；首切片实现 |
-| FF-ARCH-02 | 权威规则 `not-applicable-awaiting-artifact`；R0 只启用 RuntimeCellProfile/已知延期与领域 token 子守卫 | Kernel dispatch/control-flow inventory + reviewed domain vocabulary | 首个真实 Kernel dispatch 进入工作树 |
+| FF-ARCH-01 | `enforced` | package/model SDK source owner 与 include graph | 已实现 |
+| FF-ARCH-05、06 | source-direction 子守卫 `enforced`；运行时语义 `not-applicable-awaiting-artifact` | Workflow/Evidence/Adapter include graph | 首个 state/DTO consumer 激活语义检查 |
+| FF-ARCH-02 | `not-applicable-awaiting-artifact` | Kernel dispatch/control-flow inventory + reviewed domain vocabulary | 首个真实 Kernel dispatch 进入工作树 |
 | FF-ARCH-11 | `not-applicable-awaiting-artifact` | Kernel/Workflow/Control/Artifact dispatch inventory + domain/product vocabulary | 对应 dispatch 首次进入工作树 |
 | FF-ARCH-03、04、15 | `not-applicable-awaiting-artifact` | recipe/obligation/RuntimeComponent descriptors 与 publish fixture | R1-MOD/REC/BEH |
-| FF-ARCH-07–10、12、16 | R0 follow-on；默认 fail closed | CapabilitySlice/ChangeCard、AuthorityDomain、ChangeVector、proof/operator/commit/evidence refs | governance contract/ADR 与真实 change fixture |
+| FF-ARCH-07–10、12、16 | `not-applicable-awaiting-artifact` | CapabilitySlice/ChangeCard、AuthorityDomain、ChangeVector、proof/operator/commit/evidence refs | governance contract/ADR 与真实 change fixture |
 | FF-ARCH-13 | `deferred-by-gate` | Workflow Graph、proof、TaskOutcome、ArtifactCommit | R5-WFP/EXE/ART |
 | FF-ARCH-14 | R0 gate evidence | withheld scenario record + reviewed diff/untouched areas | R0-GATE-001 |
-| FF-DEP-01–09 | 首切片 `enforced` | source root/include categories + CMake DAG + negative inventory | 依赖任务 done；首切片实现 |
+| FF-DEP-04、06、07、08 | `enforced` | source root/include categories + CMake DAG + negative inventory | 已实现 |
+| FF-DEP-01、02、03、05、09 | module-direction 子守卫 `enforced`；format/library/private seam 子守卫 `not-applicable-awaiting-artifact` | source root/include graph | 对应真实 source/header 首次进入工作树 |
 | FF-OBJ-01–07、09、15 | `not-applicable-awaiting-artifact` | ModelDefinition/RuntimeComponent/StateSchema/recipe conformance fixtures | R1-MOD/REC/BEH |
 | FF-OBJ-08、12–14 | `not-applicable-awaiting-artifact` | StateBlockPlan、codec、CycleFrame、replacement/commit fixture | R2-BIND/PLAN、R3-STR/TXN |
 | FF-OBJ-10、11 | `deferred-by-gate` | Session lifecycle/resource failure suite | R3-LIF |
@@ -107,7 +109,7 @@ positive repository scan + same-evaluator mutations
 | FF-DIA-01–04 | `not-applicable-awaiting-artifact` | stable diagnostic registry + failure injection | R1 contracts、R2/R3 diagnostics |
 | FF-ART-01–03 | `deferred-by-gate` | RunManifest、lineage、dataset round-trip | R4-OBS/SNK/ART/MAN |
 | FF-CFG-01–03 | 分阶段启用 | source/config schema negative suite；runtime image scan | R2-SRC/IR/PLAN 与 R3 |
-| §9.8 deletion guard | 首切片 `enforced`，R3/G6 收紧 | exact Legacy identifier/include/path inventory | 当前 AGENTS production 禁入；例外需精确 ADR；G6 零引用 |
+| §9.8 deletion guard | R0 Legacy isolation 子集 `enforced`；完整 deletion guard `deferred-by-gate` | exact Legacy identifier/include/path inventory | 当前 AGENTS production 禁入；R3/G6 收紧为全量零引用 |
 
 ### 4.1 Authority ID inventory
 
@@ -139,7 +141,7 @@ positive repository scan + same-evaluator mutations
 | `adapters` | foundation/contracts/Application public seam 与已批准 Artifact/Control DTO | 不得依赖 compiler/kernel/workflow internals；composition exception 必须精确 |
 | `packages/` | foundation/contracts/model SDK public seam | 禁止 compiler/kernel/workflow/application/adapters；包私有 header 不跨包 |
 | `user/` | project composition policy（待真实 consumer 冻结） | framework 永不反向 include；不得迁入通用 runtime |
-| `apps/` | composition root | 当前 CLI 只通过 adapters；新增入口复用 Application/Adapter |
+| `apps/` | foundation/contracts/Application/Adapter seam | 禁止直接依赖 Compiler、Kernel、Workflow、package 或 user source |
 
 表中的“允许依赖”只表达方向上限，不自动授权尚未定义的公共 header。具体 public/private seam 需要在真实 consumer 出现时收窄。
 
@@ -148,47 +150,38 @@ positive repository scan + same-evaluator mutations
 ### 6.1 R0 production error
 
 - include/link/runtime path 指向 `reference/legacy/`；
-- production 使用 `SimulationNode`、`DiscreteNode`、`NodeFactory`、`NodeRegistry`、`AssemblyContext`、`IObservable`、`IDiscreteTask`；
+- production 使用 `SimulationNode`、`DiscreteNode`、`NodeFactory`、`NodeRegistry`、`AssemblyContext`、`MissionAssembler`、`ConfigNode`、`IObservable`、`IDiscreteTask`；
 - production 使用 `GNC_REGISTER_NODE_TYPE`、`GNC_REGISTER_BUILTIN_NODE`、`requireByName`、`bindIfPresent`；
 - 新 Session/Compiler/Application 调用 Legacy archive 或 extracted binary。
 
-### 6.2 Gate 前 fail closed
+### 6.2 延期能力
 
-- `SegmentTransaction`、`TopologyTransaction`、dynamic package runtime/ABI 的 production definition；
-- 用 callback、全局 registry 或 feature flag 模拟上述延期语义；
-- 新 `KernelCapability` 没有 F 类场景、ADR、Compiler representation、failure evidence 与 revisit gate。
-
-文档、术语迁移表、测试反例和历史 evidence 可以出现这些名称。例外范围必须精确，不能把整个 `tests/` 或 `docs/` 作为 production allowlist 输入。
+`SegmentTransaction`、`TopologyTransaction`、dynamic package runtime/ABI 和新 `KernelCapability` 当前没有 production consumer。本切片不扫描这些名称，也不建立延期 token policy；对应能力进入已开放阶段并出现真实实现时，由该纵向切片增加直接结构与行为检查。
 
 ## 7. 同一 evaluator 的故障矩阵
 
-未来 validator 应先把 repository 转为标准化 inventory，再让正向检查与 mutation 都调用同一 evaluator。mutation 只改变 inventory 中的 source file、include edge、CMake edge、policy exception 或 maturity record。
+`validate-source-boundaries.ps1` 先把 repository 转为标准化 source/include/CMake inventory，正向仓库检查与合成反例都调用 `Test-SourceBoundaryInventory`。当前八个反例为：
 
-最小矩阵为工作包中的 ARCH-MUT-001～016，并增加以下元测试：
+1. 同一 source root 登记两个 owner；
+2. Kernel 通过 dot-segment include Compiler；
+3. Adapter 直接 include Kernel internal；
+4. package 直接 include Compiler；
+5. framework 反向 include `user/`；
+6. `gnc/<module>` 指向未知内部模块；
+7. production source 同时引用 Legacy 路径与 retired API；
+8. production CMake 通过 bracket argument 引入 Legacy。
 
-- 删除一条 mutation 对应 rule 时，coverage completeness 失败；
-- 将零目标的 semantic rule 改为 `passed` 时，maturity consistency 失败；
-- exception 缺 owner/reason/expiry 或覆盖多个 path/token 时，exception policy 失败；
-- report source hash 漂移时，derived evidence 失败；
-- rule id 重复、未知 authority id、未知 activation task/gate 时，policy validation 失败。
+正向矩阵覆盖 Kernel/Compiler/package/Adapter/apps 的允许边、注释中的伪 include、普通字符串中的 Legacy 名称和 CMake bracket comment。architecture baseline 的既有反例继续承担 shared symbol/Legacy ownership、DAG、CMake edge 和派生基线漂移检查。未来 semantic evaluator 与首个 descriptor/state/transaction consumer 同步进入对应产品切片。
 
-## 8. 报告最小内容
+## 8. 可执行输出
 
-- policy/authority input path、normalized SHA-256 与 generator hash；
-- module/root/source/include/CMake edge 计数；
-- 每个 rule id 的 enforcement state、evaluation result、target count、finding count、mutation count、owner task、activation gate 与 evidence refs；
-- 所有 exception 的精确范围与 expiry；
-- Legacy/deferred token finding；
-- mutation rejection 结果；
-- 当前未覆盖项与其 prerequisite artifact；
-- runtime consumer count 固定为 0，直到另行 ADR。
+当前 validator 直接输出 production C/C++ 文件数、include 数、CMake 文件数和已拒绝反例数；失败时输出稳定 rule id、文件、行号与原因。CTest 和 repository verification 以退出码消费结果。当前没有 runtime consumer，也没有需要持久化的 architecture fitness report consumer，因此本切片不新增 schema 或报告镜像。
 
-## 9. 准备切片退出检查
+## 9. 切片退出检查
 
-- 本计划覆盖治理分册 §9 的全部 rule family，没有把未来规则标为已实现；
-- 当前强/partial/未启用证据与实际脚本一致；
-- 首切片边界可在不修改产品源码和 Legacy 的前提下实施；
-- 每个首切片规则有负向注入设计，避免空骨架的 vacuous pass；
-- public schema、module/firewall 变化保留 ADR gate；
-- Markdown link、UTF-8、repository verification 与 `git diff --check` 通过；
-- backlog 状态仍为 `planned`，两个依赖均真实显示为 `done`；任务保持未指派，尚未激活。
+- 治理分册 §9 的全部 rule family 保持可定位，未来规则没有被标为已实现；
+- 当前强、partial、awaiting-artifact 证据与实际脚本一致；
+- source/include/CMake 首切片使用真实仓库正向扫描和同 evaluator 反例；
+- public schema、module graph 与 runtime firewall 变化继续保留 ADR gate；
+- shared symbol、runtime mutable state、descriptor 与 transaction 语义随真实 consumer 激活；
+- 完整验证结果记录在任务交付 commit 的可复现测试入口中，不生成 CI 收据副本。

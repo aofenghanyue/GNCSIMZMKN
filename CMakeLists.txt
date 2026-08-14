@@ -330,6 +330,14 @@ if(GNC_BUILD_TESTS)
             -ExecutionPolicy Bypass
             -File ${CMAKE_CURRENT_SOURCE_DIR}/tools/validate-architecture-baseline.ps1)
     add_test(
+        NAME r0.source-boundaries
+        COMMAND
+            ${GNC_POWERSHELL_EXECUTABLE}
+            -NoLogo
+            -NoProfile
+            -ExecutionPolicy Bypass
+            -File ${CMAKE_CURRENT_SOURCE_DIR}/tools/validate-source-boundaries.ps1)
+    add_test(
         NAME r0.legacy-reproduction-evidence
         COMMAND
             ${GNC_POWERSHELL_EXECUTABLE}

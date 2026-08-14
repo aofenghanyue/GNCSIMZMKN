@@ -79,3 +79,4 @@ jobs:
         run: |
           ./tools/validate-r0-specs.ps1
           ./tools/validate-architecture-baseline.ps1
+          ./tools/validate-source-boundaries.ps1

@@ -26,7 +26,7 @@ R0 需要让术语、模块依赖和 Legacy 迁移归属可被自动检查。直
 
 `RECON-DEC-007` 的接受结果为 `keep-current-22-owner-consumer-map`。审计中的 33 项 candidate responsibility 已按 `22 + 3 + 2 + 6` 完整分类：22 项与当前 owner/consumer 对齐；3 项 owner split 暂不导入；2 项进入上述逻辑路由并留给 `R0-ARCH-002` 的 source-boundary guard；6 项属于 5 个尚无 glossary §9 migration row 的名称。v1 registry 保留 22 条现有映射，不增加 responsibility overlay。后续新增名称或细粒度 owner 需要先登记 glossary migration、提交迁移证据并修订 ADR/schema。
 
-九模块顺序、两个逻辑标签和 22 条 Legacy ownership 映射由 ADR、authority registry、派生基线和直接负向测试共同保护。全库 include 方向和未来 descriptor/state/transaction fitness 继续归 `R0-ARCH-002`。
+九模块顺序、两个逻辑标签和 22 条 Legacy ownership 映射由 ADR、authority registry、派生基线和直接负向测试共同保护。全库 production C/C++ include 方向、逻辑 source root 边界和 Legacy production 禁入由 `validate-source-boundaries.ps1` 执行；未来 descriptor/state/transaction fitness 随首个真实 consumer 激活。
 
 ## Consequences
 
