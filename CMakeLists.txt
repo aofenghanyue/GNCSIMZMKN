@@ -77,6 +77,13 @@ if(GNC_BUILD_TESTS)
     target_compile_features(gnc_minimal_3dof_probe PRIVATE cxx_std_17)
     gnc_enable_warnings(gnc_minimal_3dof_probe)
 
+    # R0 CAVH scientific oracle: independent formula/guidance qualification.
+    add_executable(
+        gnc_cavh_formula_probe
+        tests/cavh_formula.cpp)
+    target_compile_features(gnc_cavh_formula_probe PRIVATE cxx_std_17)
+    gnc_enable_warnings(gnc_cavh_formula_probe)
+
     # R0 YYZ scientific oracle: accepted fixture-local rigid-body core.
     add_executable(
         gnc_yyz_6dof_core_probe
@@ -239,6 +246,9 @@ if(GNC_BUILD_TESTS)
         NAME r0.minimal-3dof.probe
         COMMAND gnc_minimal_3dof_probe --self-check)
     add_test(
+        NAME r0.cavh-formula.probe
+        COMMAND gnc_cavh_formula_probe --self-check)
+    add_test(
         NAME r0.yyz-6dof-core.probe
         COMMAND gnc_yyz_6dof_core_probe --self-check)
     add_test(
@@ -362,6 +372,19 @@ if(GNC_BUILD_TESTS)
             ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-minimal-3dof/reference.json
             --probe
             $<TARGET_FILE:gnc_minimal_3dof_probe>)
+    add_test(
+        NAME r0.cavh-formula.oracle
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/cavh_formula_reference.py
+            --cases
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-cavh-formula/cases.json
+            --oracle
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-cavh-formula/reference.json
+            --probe
+            $<TARGET_FILE:gnc_cavh_formula_probe>)
     add_test(
         NAME r0.yyz-6dof-core.oracle
         COMMAND

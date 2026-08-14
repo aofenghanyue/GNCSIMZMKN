@@ -1,0 +1,179 @@
+{
+  "schema_version": "gnczmkn.cavh-formula-cases/1",
+  "fixture_id": "REF-CAVH-FORMULA-001",
+  "oracle_id": "ORACLE-CAVH-FORMULA-001",
+  "model_choice": {
+    "status": "accepted",
+    "model_id": "MODEL-CAVH-LEGACY-TRANSCRIBED-FORMULA-001",
+    "accepted_scope": "Legacy-transcribed CAVH formula qualification with an analytic parabolic envelope, analytic derivatives, immutable Eq17/Eq18 strategies and TDCT command formation.",
+    "equation_identity": {
+      "eq17": "Mach-dependent CL_star derivative retained",
+      "eq18": "Mach dependence of CL_star neglected",
+      "fallback": "forbidden"
+    },
+    "excluded": [
+      "paper-faithful equation reproduction",
+      "canonical aerodynamic assets",
+      "closed-loop guidance performance",
+      "product contracts and R1-R8 runtime capability"
+    ]
+  },
+  "tolerances": {
+    "formula_absolute": 2e-11,
+    "formula_relative": 2e-11,
+    "denominator_minimum_absolute": 1e-12,
+    "derivative_minimum_absolute_per_mps": 1e-12,
+    "convergence_final_absolute": 2e-9,
+    "convergence_ratio_absolute": 5e-4,
+    "stored_decimal_absolute": "1e-60"
+  },
+  "envelope_cases": [
+    {
+      "id": "CASE-CAVH-ENVELOPE-CONSTANT-POLAR",
+      "polar": {
+        "cl_intercept": 0.0,
+        "cl_slope_per_rad": 2.0,
+        "cd0_base": 0.02,
+        "cd0_slope_per_mach": 0.0,
+        "induced_drag_factor": 0.08,
+        "mach": 10.0,
+        "alpha_min_rad": 0.0,
+        "alpha_max_rad": 0.5
+      }
+    },
+    {
+      "id": "CASE-CAVH-ENVELOPE-MACH-DEPENDENT",
+      "polar": {
+        "cl_intercept": 0.0,
+        "cl_slope_per_rad": 2.0,
+        "cd0_base": 0.02,
+        "cd0_slope_per_mach": 0.001,
+        "induced_drag_factor": 0.08,
+        "mach": 10.0,
+        "alpha_min_rad": 0.0,
+        "alpha_max_rad": 0.5
+      }
+    }
+  ],
+  "derivative_case": {
+    "id": "CASE-CAVH-DERIVATIVE-CONVERGENCE",
+    "altitude_m": 30000.0,
+    "speed_mps": 3000.0,
+    "atmosphere": {
+      "sea_level_density_kg_per_m3": 1.225,
+      "density_scale_height_m": 7200.0,
+      "speed_of_sound_mps": 300.0,
+      "speed_of_sound_gradient_per_m": -0.00075
+    },
+    "density_altitude_step_ladder_m": [800.0, 400.0, 200.0, 100.0, 50.0],
+    "mach_altitude_step_ladder_m": [800.0, 400.0, 200.0, 100.0, 50.0],
+    "cl_star_mach_step_ladder": [0.4, 0.2, 0.1, 0.05, 0.025],
+    "envelope_case_id": "CASE-CAVH-ENVELOPE-MACH-DEPENDENT"
+  },
+  "equation_cases": [
+    {
+      "id": "CASE-CAVH-EQ18-UNBANKED",
+      "equation": "eq18",
+      "altitude_m": 30000.0,
+      "speed_mps": 3000.0,
+      "gravity_mps2": 9.81,
+      "mass_kg": 50000.0,
+      "reference_area_m2": 100.0,
+      "reference_radius_m": 6371000.0,
+      "sea_level_density_kg_per_m3": 1.225,
+      "density_scale_height_m": 7200.0,
+      "bank_angle_rad": 0.0,
+      "envelope_case_id": "CASE-CAVH-ENVELOPE-CONSTANT-POLAR"
+    },
+    {
+      "id": "CASE-CAVH-EQ18-BANKED",
+      "equation": "eq18",
+      "altitude_m": 30000.0,
+      "speed_mps": 3000.0,
+      "gravity_mps2": 9.81,
+      "mass_kg": 50000.0,
+      "reference_area_m2": 100.0,
+      "reference_radius_m": 6371000.0,
+      "sea_level_density_kg_per_m3": 1.225,
+      "density_scale_height_m": 7200.0,
+      "bank_angle_rad": 1.047197551196597746154214461093167628065723133125,
+      "envelope_case_id": "CASE-CAVH-ENVELOPE-CONSTANT-POLAR"
+    },
+    {
+      "id": "CASE-CAVH-EQ17-MACH-ALTITUDE-COUPLED",
+      "equation": "eq17",
+      "altitude_m": 30000.0,
+      "speed_mps": 3000.0,
+      "gravity_mps2": 9.81,
+      "mass_kg": 50000.0,
+      "reference_area_m2": 100.0,
+      "reference_radius_m": 6371000.0,
+      "sea_level_density_kg_per_m3": 1.225,
+      "density_scale_height_m": 7200.0,
+      "speed_of_sound_mps": 300.0,
+      "speed_of_sound_gradient_per_m": -0.00075,
+      "bank_angle_rad": 0.5235987755982988730771072305465838140328615665625,
+      "envelope_case_id": "CASE-CAVH-ENVELOPE-MACH-DEPENDENT"
+    }
+  ],
+  "tdct_cases": [
+    {
+      "id": "CASE-CAVH-TDCT-UNSATURATED",
+      "alpha_star_rad": 0.25,
+      "gamma_reference_rad": -0.01,
+      "gamma_measured_rad": -0.03,
+      "gain": 3.0,
+      "alpha_min_rad": 0.1,
+      "alpha_max_rad": 0.4
+    },
+    {
+      "id": "CASE-CAVH-TDCT-UPPER-SATURATION",
+      "alpha_star_rad": 0.25,
+      "gamma_reference_rad": -0.01,
+      "gamma_measured_rad": -0.2,
+      "gain": 3.0,
+      "alpha_min_rad": 0.1,
+      "alpha_max_rad": 0.4
+    },
+    {
+      "id": "CASE-CAVH-TDCT-LOWER-SATURATION",
+      "alpha_star_rad": 0.25,
+      "gamma_reference_rad": -0.01,
+      "gamma_measured_rad": 0.1,
+      "gain": 3.0,
+      "alpha_min_rad": 0.1,
+      "alpha_max_rad": 0.4
+    },
+    {
+      "id": "CASE-CAVH-TDCT-ZERO-GAIN",
+      "alpha_star_rad": 0.25,
+      "gamma_reference_rad": -0.01,
+      "gamma_measured_rad": 0.3,
+      "gain": 0.0,
+      "alpha_min_rad": 0.1,
+      "alpha_max_rad": 0.4
+    }
+  ],
+  "invalid_input_cases": [
+    {"id": "INVALID-CAVH-ENVELOPE-NONPOSITIVE-CD0", "expected_status": "envelope-domain-error"},
+    {"id": "INVALID-CAVH-ENVELOPE-NONPOSITIVE-K", "expected_status": "envelope-domain-error"},
+    {"id": "INVALID-CAVH-ENVELOPE-NONPOSITIVE-CL-SLOPE", "expected_status": "envelope-domain-error"},
+    {"id": "INVALID-CAVH-ENVELOPE-OPTIMUM-OUTSIDE-ALPHA-DOMAIN", "expected_status": "envelope-outside-domain"},
+    {"id": "INVALID-CAVH-EQ18-NONPOSITIVE-VERTICAL-LIFT", "expected_status": "formula-domain-error"},
+    {"id": "INVALID-CAVH-EQ18-SINGULAR-DENOMINATORS", "expected_status": "formula-singularity"},
+    {"id": "INVALID-CAVH-EQ17-ZERO-DERIVATIVE", "expected_status": "derivative-degenerate", "fallback_disposition": "forbidden"},
+    {"id": "INVALID-CAVH-EQ17-NONPOSITIVE-MACH-SPEED-PARTIAL", "expected_status": "formula-domain-error"},
+    {"id": "INVALID-CAVH-TDCT-NEGATIVE-GAIN", "expected_status": "input-domain-error"},
+    {"id": "INVALID-CAVH-TDCT-INVALID-BOUNDS", "expected_status": "input-domain-error"},
+    {"id": "INVALID-CAVH-TDCT-NONFINITE", "expected_status": "input-domain-error"}
+  ],
+  "mutation_cases": [
+    {"id": "MUTATION-CAVH-ENVELOPE-INVERTED-K", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-CAVH-DERIVATIVE-FINITE-DIFFERENCE-AS-EXACT", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-CAVH-EQ18-REVERSED-DENSITY-GRADIENT", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-CAVH-EQ17-OMIT-MACH-ALTITUDE-TERMS", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-CAVH-EQ17-SILENT-EQ18-FALLBACK", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-CAVH-TDCT-REVERSED-ERROR", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-CAVH-TDCT-SKIP-CLAMP", "expected_status": "oracle-mismatch"}
+  ]
+}

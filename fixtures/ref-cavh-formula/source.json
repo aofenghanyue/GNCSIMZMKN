@@ -1,0 +1,71 @@
+{
+  "schema_version": "gnczmkn.cavh-source-record/1",
+  "fixture_id": "REF-CAVH-FORMULA-001",
+  "citation": {
+    "title": "Guidance Scheme for Glide Range Maximization of a Hypersonic Vehicle",
+    "authors": ["Wenbin Yu", "Wanchun Chen"],
+    "publication": "AIAA Guidance, Navigation, and Control Conference",
+    "conference_location": "Portland, Oregon, USA",
+    "conference_dates": "2011-08-08/2011-08-11",
+    "paper_number": "AIAA 2011-6714",
+    "doi": "10.2514/6.2011-6714",
+    "publisher_url": "https://arc.aiaa.org/doi/10.2514/6.2011-6714",
+    "author_institution_metadata_url": "https://teacher.buaa.edu.cn/yuwenbin/zh_CN/lwcg/157999/content/19603.htm"
+  },
+  "source_access": {
+    "observed_on": "2026-08-15",
+    "publisher_access": "metadata-and-abstract-only",
+    "authorized_full_text_in_repository": false,
+    "stored_paper_bytes": false,
+    "paper_equation_fidelity": "unverified",
+    "effect": "The citation and research claim are attributable; Eq17, Eq18 and aerodynamic curve fidelity to the paper are not claimed by this bundle."
+  },
+  "formula_authority": {
+    "model_id": "MODEL-CAVH-LEGACY-TRANSCRIBED-FORMULA-001",
+    "status": "accepted",
+    "accepted_scope": "Fixture-local scientific qualification of the archived Legacy transcription using independent analytic and high-precision implementations.",
+    "source_kind": "legacy-transcription-plus-independent-derivation",
+    "legacy_archive_sha256": "2159a324fd897e4bd508c140a36c9165d744e4e4e61861c5b568201707f988e5",
+    "legacy_commit": "a63621c368aa8e7889547689bcce9c7686b886ac",
+    "legacy_formula_path": "user/example_08_cavh_geographic_3dof_custom/components/cavh_glide_range_guidance.hpp",
+    "legacy_formula_regions": ["490-526", "528-603"],
+    "legacy_test_path": "tests/test_cavh_glide_range_guidance.cpp",
+    "legacy_test_limitation": "The Legacy tests repeat the production algebra and therefore are behavioral checks rather than an independent scientific oracle."
+  },
+  "assumptions": [
+    {
+      "id": "ASSUMPTION-CAVH-SI",
+      "statement": "Inputs use SI units; altitude is positive away from the reference sphere, speed and gravity magnitude are positive, and rho_h is the density derivative with respect to altitude."
+    },
+    {
+      "id": "ASSUMPTION-CAVH-SPHERE",
+      "statement": "The local spherical radius is r = reference_radius + altitude and remains strictly positive."
+    },
+    {
+      "id": "ASSUMPTION-CAVH-VERTICAL-LIFT",
+      "statement": "The formulas use CLv_star = CL_star * cos(bank); the accepted domain requires CLv_star to be strictly positive."
+    },
+    {
+      "id": "ASSUMPTION-CAVH-PARABOLIC-POLAR",
+      "statement": "The analytic envelope uses CL = CL0 + CLalpha*alpha and CD = CD0(M) + K*CL^2 with positive CD0, K and CLalpha; the unconstrained positive-lift optimum must lie inside the declared alpha interval."
+    },
+    {
+      "id": "ASSUMPTION-CAVH-DERIVATIVES",
+      "statement": "Density is exponential for the derivative fixture, speed of sound is locally linear in altitude, and dCL_star/dMach is the analytic derivative of the fixture-local parabolic optimum."
+    },
+    {
+      "id": "ASSUMPTION-CAVH-EQUATION-IDENTITY",
+      "statement": "Eq17 and Eq18 are separate immutable strategies. A derivative degeneration, invalid domain or singular B denominator returns a structured failure and never selects another equation."
+    },
+    {
+      "id": "ASSUMPTION-CAVH-TDCT",
+      "statement": "TDCT computes error = gamma_reference - gamma_measured, alpha_raw = alpha_star + gain*error and alpha_command = clamp(alpha_raw, alpha_min, alpha_max), with a finite nonnegative gain."
+    }
+  ],
+  "excluded_claims": [
+    "paper-equation transcription fidelity",
+    "digitized aerodynamic curve fidelity or licensing",
+    "closed-loop stability, range optimality or heating-rate performance",
+    "production guidance, loader, compiler, kernel or session behavior"
+  ]
+}

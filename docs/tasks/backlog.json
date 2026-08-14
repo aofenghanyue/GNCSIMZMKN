@@ -204,7 +204,7 @@
       "id": "R0-SCI-004",
       "stage": "R0",
       "title": "Create the CAVH formula and guidance reference bundle",
-      "status": "planned",
+      "status": "done",
       "priority": "P1",
       "size": "L",
       "owner_role": "scientific_authority",
@@ -212,7 +212,7 @@
       "depends_on": ["R0-SCI-001", "R0-LEG-001", "R0-SPEC-001"],
       "deliverables": ["Paper citation and assumptions", "Eq17/Eq18 intermediate cases", "independent reference implementation"],
       "acceptance": ["Formula, derivative, envelope and TDCT checks isolate failures before closed-loop execution"],
-      "evidence": ["CAVH formula bundle"],
+      "evidence": ["Executable REF-CAVH-FORMULA-001 qualification bundle with verified citation metadata and explicit source-access boundary, seven assumptions, two analytic envelope cases, three full-intermediate Eq17/Eq18 cases, density/Mach/CL-star convergence ladders, four TDCT cases, eleven explicit failures and seven scientific mutations cross-checked by independent 80-digit Decimal and C++17 implementations in Debug and Release"],
       "architecture_refs": ["15 §10", "09 §16"]
     },
     {

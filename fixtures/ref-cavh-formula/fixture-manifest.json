@@ -1,31 +1,66 @@
 {
   "schema_version": "gnczmkn.fixture-manifest/1",
   "fixture_id": "REF-CAVH-FORMULA-001",
-  "status": "specification_only",
-  "purpose": "Validate CAVH glide-range guidance at formula and kernel boundaries before closed-loop use.",
+  "status": "executable",
+  "purpose": "Qualify the Legacy-transcribed CAVH glide-envelope, derivative, Eq17, Eq18 and TDCT semantics before any closed-loop product implementation.",
   "authority": "scientific_authority",
   "provenance": {
-    "source_refs": ["design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md#10-reference-bcavh-滑翔增程制导拆分"],
-    "notes": "Paper citation, edition and independent calculation are completed by R0-SCI-004."
+    "source_refs": [
+      "fixtures/ref-cavh-formula/source.json",
+      "reference/legacy/source-manifest.json",
+      "design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md#10-reference-bcavh-滑翔增程制导拆分",
+      "design-notes/gnczmkn-architecture-roadmap/09-research-workflows-and-tool-adapters.md#16-论文复现可复现研究包"
+    ],
+    "notes": "The accepted fixture-local identity qualifies an independently implemented transcription of the archived Legacy equations. Eq17 and Eq18 are immutable variants, and every fallback or domain disposition is explicit. Paper metadata is verified while equation-by-equation paper fidelity remains unclaimed until authorized full text is available."
   },
   "expected_facts": [
     {
-      "id": "FACT-CAVH-EQ17",
-      "claim": "Eq17 intermediate quantities and final gamma reference agree with the approved independent reference.",
-      "tolerance_policy": "Quantity-specific tolerances and units to be frozen by R0-SCI-004."
+      "id": "FACT-CAVH-ENVELOPE-DERIVATIVE",
+      "claim": "The analytic parabolic-polar optimum, exponential-density derivative, Mach partials and Mach-dependent optimum derivative agree between independent 80-digit Decimal and C++17 implementations, including a convergent central-difference ladder.",
+      "tolerance_policy": "Formula values use fixture-local absolute-plus-relative tolerances; convergence status and domain dispositions are exact.",
+      "evidence_refs": [
+        "fixtures/ref-cavh-formula/cases.json",
+        "oracles/ref-cavh-formula/reference.json",
+        "tests/cavh_formula.cpp",
+        "tools/cavh_formula_reference.py"
+      ]
     },
     {
-      "id": "FACT-CAVH-EQ18",
-      "claim": "Eq18 intermediate quantities and final gamma reference agree with the approved independent reference.",
-      "tolerance_policy": "Quantity-specific tolerances and units to be frozen by R0-SCI-004."
+      "id": "FACT-CAVH-EQ17-EQ18",
+      "claim": "Eq17 and Eq18 expose each A and B intermediate with units and produce independently matched gamma references for unbanked, banked and Mach-altitude-coupled cases.",
+      "tolerance_policy": "Formula values use fixture-local absolute-plus-relative tolerances; formula identity and intermediate names are exact.",
+      "evidence_refs": [
+        "fixtures/ref-cavh-formula/cases.json",
+        "oracles/ref-cavh-formula/reference.json",
+        "tests/cavh_formula.cpp",
+        "tools/cavh_formula_reference.py"
+      ]
     },
     {
-      "id": "FACT-CAVH-DOMAIN",
-      "claim": "Domain, derivative and denominator failures are reported without an undeclared fallback.",
-      "tolerance_policy": "Exact status and fallback-disposition equality."
+      "id": "FACT-CAVH-TDCT-DOMAIN",
+      "claim": "TDCT sign and saturation semantics are executable, Eq17 derivative degeneration cannot silently select Eq18, and envelope, formula, denominator and command failures return exact statuses.",
+      "tolerance_policy": "Status, fallback disposition and saturation identity are exact; finite commands and mutation differences use fixture-local formula tolerances.",
+      "evidence_refs": [
+        "fixtures/ref-cavh-formula/cases.json",
+        "oracles/ref-cavh-formula/reference.json",
+        "tests/cavh_formula.cpp",
+        "tools/cavh_formula_reference.py"
+      ]
     }
   ],
-  "required_artifacts": ["paper citation and version", "assumption ledger", "Eq17 cases", "Eq18 cases", "derivative reference", "glide-envelope reference", "TDCT reference", "closed-loop comparison"],
-  "acceptance": ["Each intermediate quantity has units and tolerance", "Independent implementation agrees within approved bounds", "Fallback and domain failures are explicit"],
-  "open_tasks": ["R0-SCI-004"]
+  "required_artifacts": [
+    "fixtures/ref-cavh-formula/README.md",
+    "fixtures/ref-cavh-formula/source.json",
+    "fixtures/ref-cavh-formula/cases.json",
+    "oracles/ref-cavh-formula/reference.json",
+    "tests/cavh_formula.cpp",
+    "tools/cavh_formula_reference.py",
+    "CMakeLists.txt"
+  ],
+  "acceptance": [
+    "The bundle records the citation, source-access boundary, assumptions, model identity, equations, units, tolerances and every formula intermediate used by Eq17 and Eq18",
+    "The Python reference and C++17 probe share no implementation and neither imports product or Legacy code",
+    "Envelope, derivative, Eq17, Eq18 and TDCT failures are isolated before closed-loop execution, with no undeclared fallback",
+    "Paper-faithful reproduction, canonical aerodynamic assets, closed-loop guidance and product contracts remain outside this fixture-local qualification"
+  ]
 }

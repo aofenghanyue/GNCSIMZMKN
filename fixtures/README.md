@@ -2,14 +2,20 @@
 
 Fixture 是可复制、可校验、带 provenance 的规范实例。每个目录至少包含 `fixture-manifest.json`，并在 `specification_only` 阶段登记计划验证的 expected facts 与 tolerance policy。达到 executable 后加入权威输入、机器可比 expected values、失败样例和运行脚本。
 
-当前两个场景 fixture 保持 `specification_only`：
-
-- `ref-yyz-001`：R0 canonical 资格 source、资产索引、两区间 step/observation/diagnostic/terminal 映射与逐叶字段差异报告；30 秒 target 主链保持 `target_pending`；
-- `ref-cavh-formula`：复杂论文算法的公式级 reference。
+当前登记的 R0 fixture 均已达到各自声明的 `executable` 资格范围。每份
+manifest 的 excluded scope 继续约束产品能力与后续研究结论。
 
 `ref-scientific-conventions` 已达到 `executable`，冻结 SI、frame、整数 tick 与被动 Hamilton 四元数约定，并由隔离 C++17 property spike 和独立 Python 标准库实现交叉验证。
 
 `ref-minimal-3dof` 已达到 `executable`，包含显式初值、高精度闭式轨迹、独立 C++17 RK4 probe、收敛检查、committed-tick 终止和 candidate 丢弃失败用例。
+
+`ref-cavh-formula` 已达到 fixture-local `executable`，固定
+`MODEL-CAVH-LEGACY-TRANSCRIBED-FORMULA-001` 的解析抛物线包络、指数密度与
+Mach/最优升力系数导数、Eq17/Eq18 全部中间量及 TDCT 符号和饱和语义。80 位
+Decimal 与独立 C++17 probe 交叉检查两个包络案例、三组公式案例、四组 TDCT、
+十一条输入/公式失败和七条科学 mutation。Eq17 导数退化与分母奇异均显式失败，
+不允许静默切换公式或钳制分母。论文元数据已确认；逐式论文一致性、气动曲线、
+closed-loop 性能与产品 contract 仍在范围外。
 
 `ref-yyz-6dof-core` 已达到 `executable`，包含已接受的 fixture-local 惯性笛卡尔刚体方程、公式 intermediates、独立 Decimal/C++17 实现、解析平移与主轴自旋轨迹、非主轴无外力矩高精度轨迹、姿态与角速度四阶收敛、转动能和角动量模守恒检查、ExactGrid 终止、阶段失败及输入域拒绝。上层 `ref-yyz-001` 已选择该模型并提供 R0 canonical source、环境、气动、推进、制导控制、终止指标与逐字段容差；production YYZ 模型继续保持后续范围。
 
