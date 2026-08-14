@@ -129,7 +129,7 @@
       "id": "R0-LEG-001",
       "stage": "R0",
       "title": "Reproduce the legacy build, test suite and representative missions",
-      "status": "review",
+      "status": "done",
       "priority": "P0",
       "size": "M",
       "owner_role": "validation_lead",

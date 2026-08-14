@@ -10,6 +10,8 @@
 - 测试：27/27 通过；标签分布为 core 18、example 6、project 2、architecture-guard 1。
 - 历史上受工作目录影响的两个测试在干净 CTest 中通过，从 Legacy 源码根目录直接执行也均退出 0。
 - 五条代表任务均连续执行两次并退出 0；CSV 原始哈希一致，summary 剔除四类运行时易变行后的哈希一致。
+- CSV SHA-256 是跨干净提取复核的行为基线。summary 的 `normalized_sha256` 仍保留组件 `origin` 中的绝对源码根，只用于同一提取根内的双跑比较；跨工作区比较需先把源码根规范化为同一占位值。
+- 可执行文件 SHA-256 标识单次构建工件。冻结源码通过 `__FILE__` 把绝对源码路径写入可执行文件，因此不同提取根不要求二进制哈希相等。
 - 归档源码指纹前后均为 390 个文件，聚合哈希为 `ce443a79dc491326de45f4bfcbb9332ba5d2d1fcf7b69bdabaf2bd2df002feb1`。
 - MSVC 19.50 能配置但不能编译 CAV-H 测试；该差异记录在 [compatibility-msvc-19.50.json](compatibility-msvc-19.50.json)，未修改冻结源码规避错误。
 
