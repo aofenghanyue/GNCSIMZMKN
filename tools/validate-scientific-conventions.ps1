@@ -158,10 +158,8 @@ $expectedUnitPairs = @(
 )
 
 $expectedInputPaths = @(
-    'CMakeLists.txt',
     'docs/adr/0006-si-frame-and-simulation-time-conventions.md',
     'docs/adr/0007-passive-hamilton-quaternion-convention.md',
-    'docs/tasks/work-packages/R0-SCI-001.md',
     'fixtures/ref-scientific-conventions/fixture-manifest.json',
     'fixtures/ref-scientific-conventions/conventions.json',
     'fixtures/ref-scientific-conventions/cases.json',

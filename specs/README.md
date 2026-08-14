@@ -11,11 +11,11 @@
 | `fixture-manifest.schema.json` | Fixture | reference fixture 包 |
 | `oracle-manifest.schema.json` | Fixture | 独立 oracle 与容差 |
 | `plan-proof-record.schema.json` | Fixture | Compiler proof 参考结构 |
-| `r0-schema-contract-lock.json` | Governance contract | 锁定上述三个 v1 contract 的 identity、bytes、field graph、locator 与 consumer policy |
+| `r0-schema-contract-lock.json` | Technical lock | 锁定上述三个 v1 contract 的 identity、bytes、field graph、locator 与 consumer policy |
 
 R0 contract instance 都携带 `schema_version`。fixture 与 oracle manifest 必须给出稳定 identity、provenance、expected facts 和 tolerance policy。`PlanProofRecord` 使用七类 proof kind，并把延期能力统一表示为 `DeferredUnsupported`。
 
-ADR-0004 与 `RECON-DEC-001`～`003` 已于 2026-08-12 接受。权威记录位于 `docs/governance/adr-dispositions/` 与 `docs/governance/reconciliation-dispositions/`；`tools/modules/R0SpecAcceptance.psm1` 从受审查 Git 对象重算文件集，并守卫 owner/reviewer、Hosted CI、任务状态与阶段边界。
+ADR-0004 直接记录 v1 identity、field graph、evidence locator 和 PlanProofRecord 边界。`r0-schema-contract-lock.json` 与 schema validator 保护这些技术约束，不依赖机器角色签署或任务验收收据。
 
 ## 一致性验证
 

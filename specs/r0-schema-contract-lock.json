@@ -10,21 +10,21 @@
       "id": "RECON-DEC-001",
       "outcome": "keep-current",
       "status": "accepted",
-      "record_ref": "docs/governance/reconciliation-dispositions/RECON-DEC-001-2026-08-12.json",
+      "record_ref": "docs/adr/0004-r0-json-schema-contracts.md",
       "boundary": "The three current v1 schema identities, instance versions, raw bytes and field graphs stay fixed."
     },
     {
       "id": "RECON-DEC-002",
       "outcome": "repository-root-only",
       "status": "accepted",
-      "record_ref": "docs/governance/reconciliation-dispositions/RECON-DEC-002-2026-08-12.json",
+      "record_ref": "docs/adr/0004-r0-json-schema-contracts.md",
       "boundary": "Executable evidence locators use repository-root-relative forward-slash paths and resolve to tracked, nonempty, regular Git blobs."
     },
     {
       "id": "RECON-DEC-003",
       "outcome": "keep-current",
       "status": "accepted",
-      "record_ref": "docs/governance/reconciliation-dispositions/RECON-DEC-003-2026-08-12.json",
+      "record_ref": "docs/adr/0004-r0-json-schema-contracts.md",
       "boundary": "PlanProofRecord v1 premises remain a flat scalar object-map snapshot; typed prerequisite graphs and PlanProofIndex require v2."
     }
   ],

@@ -5,7 +5,7 @@
   "purpose": "Prove that executable facts require committed evidence files.",
   "authority": "validation_lead",
   "provenance": {
-    "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"]
+    "source_refs": ["docs/adr/0004-r0-json-schema-contracts.md"]
   },
   "expected_facts": [
     {

@@ -5,8 +5,6 @@
 - Owners: Architecture Lead
 - Related tasks: R0-ARCH-001, R0-ARCH-002
 - Architecture references: reference-glossary、02 §13、01 §16
-- Accepted disposition: [ADR-0005-2026-08-12](../governance/adr-dispositions/ADR-0005-2026-08-12.json)
-- Reconciliation dispositions: [RECON-DEC-006](../governance/reconciliation-dispositions/RECON-DEC-006-2026-08-12.json)、[RECON-DEC-007](../governance/reconciliation-dispositions/RECON-DEC-007-2026-08-12.json)
 
 ## Context
 
@@ -22,15 +20,13 @@ R0 需要让术语、模块依赖和 Legacy 迁移归属可被自动检查。直
 
 完整 `architecture-baseline.json` 与 conformance report 由上述输入确定性生成。派生物包含源路径和按 UTF-8、LF、无 BOM 归一化计算的 SHA-256，并记录生成器与入口脚本的同类 hash；检查模式会重新生成后比较。它们只用于治理、审查和测试，不被产品 runtime 读取。
 
-### 2026-08-12 R0 accepted amendment
+### Retained R0 constraints
 
 `RECON-DEC-006` 的接受结果为 `logical-only-keep-current`。`packages_user` 与 `composition_root` 仅作为 02 §13 的 source/composition rule label：前者描述 `packages/`、`user/` 经 Model SDK descriptor 接缝贡献能力，后者描述同时看到 packages、adapters 与 Application host 的组合位置。两者不进入 ADR-0003/1 的九模块集合、`authority-registry/1` 的 module/owner 字段或 CMake interface-module identity。改变该边界需要 superseding ADR 与 registry schema version 变更。
 
 `RECON-DEC-007` 的接受结果为 `keep-current-22-owner-consumer-map`。审计中的 33 项 candidate responsibility 已按 `22 + 3 + 2 + 6` 完整分类：22 项与当前 owner/consumer 对齐；3 项 owner split 暂不导入；2 项进入上述逻辑路由并留给 `R0-ARCH-002` 的 source-boundary guard；6 项属于 5 个尚无 glossary §9 migration row 的名称。v1 registry 保留 22 条现有映射，不增加 responsibility overlay。后续新增名称或细粒度 owner 需要先登记 glossary migration、提交迁移证据并修订 ADR/schema。
 
-`docs/architecture/r0-architecture-review-contract.json` 为本轮机器审查锁。它精确记录九模块顺序、两个逻辑标签、33 项分类、11 个权威/生成输入的规范化 bytes 与 SHA-256、零 runtime consumer 范围及 35 个必需 mutation。该锁只覆盖列出的术语、ownership、ADR-0003、物理分区、CMake 与派生物 source set；全库 include 方向、未知 CamelCase、未来 descriptor/state/transaction fitness 继续归 `R0-ARCH-002`。
-
-Architecture Lead 与独立 Validation Lead 已对技术提交 `29f455efebd72113c1d311bc674a78c638265f34` 及文件集 SHA-256 `16d566512cd3d0bdb8e4f9fc84f3c8709328708aba7b4f95b4570b8a3f6a9561` 分别给出 `accept-as-written` 与 `approved`。上述 disposition、两项 reconciliation record 和任务接受记录共同固定本 amendment；`R0-ARCH-002`、rights/provenance、G0/G1 与 R1 解锁边界继续独立闭合。
+九模块顺序、两个逻辑标签和 22 条 Legacy ownership 映射由 ADR、authority registry、派生基线和直接负向测试共同保护。全库 include 方向和未来 descriptor/state/transaction fitness 继续归 `R0-ARCH-002`。
 
 ## Consequences
 
@@ -39,7 +35,7 @@ Architecture Lead 与独立 Validation Lead 已对技术提交 `29f455efebd72113
 - Positive: Legacy 拆分仍有唯一 primary owner，跨模块消费者不会变成共同写入者。
 - Costs: 权威 Markdown 表结构和 ADR dependency block 成为受校验的 authoring contract。
 - Risks: PowerShell parser 只支持当前明确表格与 dependency notation；格式升级必须带反例和版本调整。
-- Scope: `conformant` 只表示审查锁列出的 source set 与派生投影一致，不表示全库源码依赖、命名或未来 R1 contract 已完成。
+- Scope: `conformant` 只表示列出的 source set 与派生投影一致，不表示全库源码依赖、命名或未来 R1 contract 已完成。
 - Modules kept unchanged: `framework/`、`packages/`、`adapters/`、`user/`、`reference/legacy/`。
 
 ## Alternatives considered
@@ -59,7 +55,7 @@ Architecture Lead 与独立 Validation Lead 已对技术提交 `29f455efebd72113
 - capability section/header/identity/commitment/gate 与 authority reference 受结构校验；合法值之间的 ownership、status 与 source-root 漂移由权威快照拒绝；
 - CMake module dependency 的未知 target、变量/generator 表达、非 `INTERFACE` visibility 与 ADR dependency block 漂移均 fail closed；
 - 派生 JSON 必须逐字节 UTF-8、无 BOM、LF，BOM/CRLF mutation 会被拒绝；
-- 产品路径对 baseline、registry、review contract 或 report 的 runtime 消费计数保持为零。
+- 产品路径对 baseline、registry 或 report 的 runtime 消费计数保持为零。
 
 ## Supersession rule
 

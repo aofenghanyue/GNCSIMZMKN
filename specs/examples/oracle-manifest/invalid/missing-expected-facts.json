@@ -3,7 +3,7 @@
   "oracle_set_id": "ORACLE-EXAMPLE-002",
   "status": "planned",
   "provenance": {
-    "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"]
+    "source_refs": ["docs/adr/0004-r0-json-schema-contracts.md"]
   },
   "oracles": [
     {
@@ -13,7 +13,7 @@
       "claim": "This claim has no expected facts.",
       "reference_kind": "analytic identity",
       "tolerance_policy": "Exact equality.",
-      "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"]
+    "source_refs": ["docs/adr/0004-r0-json-schema-contracts.md"]
     }
   ]
 }

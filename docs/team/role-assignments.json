@@ -1,30 +1,23 @@
 {
-  "schema_version": "gnczmkn.team-roles/3",
-  "updated_at": "2026-08-12",
-  "decision_status": "complete",
-  "authorization_ref": "docs/governance/r0-owner-authorization.json",
+  "schema_version": "gnczmkn.team-roles/4",
+  "updated_at": "2026-08-14",
+  "decision_status": "owner-controlled",
   "assignment_policy": {
-    "required_fields": ["assignee", "reviewer"],
-    "identities_resolve_through_authorization": true,
-    "reviewer_must_differ_from_assignee": true,
-    "reviewer_task_must_differ_from_assignee_task": true,
-    "placeholder_assignments_forbidden": true,
-    "machine_identity_must_be_explicit": true,
-    "high_risk_independence": {
-      "roles": ["scientific_authority", "architecture_lead"],
-      "assignees_must_differ": true,
-      "assignee_tasks_must_differ": true
-    }
+    "product_scope_authority": "repository-owner",
+    "machine_agents_may_implement_and_test": true,
+    "machine_agents_may_finally_approve": false,
+    "assignee_represents_active_work_only": true,
+    "independent_review_is_risk_based": true
   },
   "roles": [
-    {"id": "product_owner", "assignee": "r0-po-agent", "reviewer": "r0-validation-agent", "required": true},
-    {"id": "scientific_authority", "assignee": "r0-science-agent", "reviewer": "r0-architecture-agent", "required": true},
-    {"id": "architecture_lead", "assignee": "r0-architecture-agent", "reviewer": "r0-validation-agent", "required": true},
-    {"id": "model_sdk_lead", "assignee": "r0-science-agent", "reviewer": "r0-architecture-agent", "required": true},
-    {"id": "compiler_lead", "assignee": "r0-architecture-agent", "reviewer": "r0-validation-agent", "required": true},
-    {"id": "runtime_numerics_lead", "assignee": "r0-validation-agent", "reviewer": "r0-po-agent", "required": true},
-    {"id": "evidence_workflow_lead", "assignee": "r0-validation-agent", "reviewer": "r0-po-agent", "required": true},
-    {"id": "application_lead", "assignee": null, "reviewer": null, "required": false},
-    {"id": "validation_lead", "assignee": "r0-validation-agent", "reviewer": "r0-po-agent", "required": true}
+    {"id": "product_owner", "assignee": "repository-owner", "required": true},
+    {"id": "scientific_authority", "assignee": null, "required": true},
+    {"id": "architecture_lead", "assignee": null, "required": true},
+    {"id": "model_sdk_lead", "assignee": null, "required": false},
+    {"id": "compiler_lead", "assignee": null, "required": false},
+    {"id": "runtime_numerics_lead", "assignee": null, "required": false},
+    {"id": "evidence_workflow_lead", "assignee": null, "required": false},
+    {"id": "application_lead", "assignee": null, "required": false},
+    {"id": "validation_lead", "assignee": null, "required": false}
   ]
 }

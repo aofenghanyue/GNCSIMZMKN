@@ -477,7 +477,7 @@ Summary 必须分别给出 `match`、`approved_difference`、`retired`、`target
 
 ## 14. Mutation 与生产 evaluator
 
-生产 validator/comparator 必须同时用于正常 bundle 和 [`R0-SCI-003` 工作包](../tasks/work-packages/R0-SCI-003.md)中的 `YYZ-MUT-001`–`020`。覆盖面至少包括：
+生产 validator/comparator 必须同时用于正常 bundle 和 [`R0-SCI-003`](../tasks/backlog.json) 的直接失败用例。覆盖面至少包括：
 
 | Evaluator | 必须拒绝的代表错误 |
 | --- | --- |

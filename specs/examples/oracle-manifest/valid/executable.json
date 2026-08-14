@@ -3,7 +3,7 @@
   "oracle_set_id": "ORACLE-EXAMPLE-EXECUTABLE-001",
   "status": "executable",
   "provenance": {
-    "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"]
+    "source_refs": ["docs/adr/0004-r0-json-schema-contracts.md"]
   },
   "oracles": [
     {
@@ -14,7 +14,7 @@
       "expected_facts": ["The repository contains specs/README.md."],
       "reference_kind": "repository file closure",
       "tolerance_policy": "Exact file existence.",
-      "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"],
+      "source_refs": ["docs/adr/0004-r0-json-schema-contracts.md"],
       "artifact_refs": ["specs/README.md"]
     }
   ]

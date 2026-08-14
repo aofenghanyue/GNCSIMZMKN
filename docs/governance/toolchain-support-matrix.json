@@ -13,10 +13,8 @@
   "qualification_policy": {
     "supported_requires": [
       "accepted-adr",
-      "complete-required-role-assignments",
       "successful-fixed-runner-ci"
     ],
-    "evidence_receipt": "docs/quality/hosted-ci-evidence-R0-GOV-001.json",
     "hosted_runner_identity": "fixed-image-family-plus-exact-per-run-identity",
     "warnings_as_errors": true,
     "required_configuration": "Release",
@@ -51,9 +49,8 @@
         "python": ">=3.8"
       },
       "evidence_refs": [
-        "docs/tasks/work-packages/R0-GOV-001.md",
-        ".github/workflows/ci.yml",
-        "docs/quality/hosted-ci-evidence-R0-GOV-001.json"
+        "docs/adr/0009-accountable-roles-and-candidate-toolchain.md",
+        ".github/workflows/ci.yml"
       ]
     },
     {
@@ -84,9 +81,8 @@
         "python": ">=3.8"
       },
       "evidence_refs": [
-        "docs/tasks/work-packages/R0-GOV-001.md",
-        ".github/workflows/ci.yml",
-        "docs/quality/hosted-ci-evidence-R0-GOV-001.json"
+        "docs/adr/0009-accountable-roles-and-candidate-toolchain.md",
+        ".github/workflows/ci.yml"
       ]
     }
   ],

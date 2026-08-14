@@ -3,7 +3,7 @@
   "oracle_set_id": "ORACLE-EXECUTABLE-MISSING-ARTIFACT-001",
   "status": "capturing",
   "provenance": {
-    "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"]
+    "source_refs": ["docs/adr/0004-r0-json-schema-contracts.md"]
   },
   "oracles": [
     {
@@ -14,7 +14,7 @@
       "expected_facts": ["The evidence file exists."],
       "reference_kind": "contract negative example",
       "tolerance_policy": "Exact evidence closure.",
-      "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"],
+      "source_refs": ["docs/adr/0004-r0-json-schema-contracts.md"],
       "artifact_refs": []
     }
   ]

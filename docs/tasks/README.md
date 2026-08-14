@@ -1,37 +1,27 @@
 # 任务系统
 
-`backlog.json` 是唯一机器可读任务源。阶段分册解释目标和 gate，不复制任务状态。
+`backlog.json` 是唯一当前任务源。设计文档和聊天记录只提供说明，不复制任务状态。
 
 ## 状态
 
 | 状态 | 含义 |
 | --- | --- |
-| `planned` | 已登记，依赖尚未闭合 |
-| `ready` | 输入和依赖齐全，可以领取 |
-| `in_progress` | 已有 assignee 和活动分支 |
+| `planned` | 已登记，暂未领取或依赖未闭合 |
+| `ready` | 输入与依赖齐全，可以领取 |
+| `in_progress` | 有 assignee，正在产生可定位的实现 |
 | `blocked` | 缺少外部决定、资料或前置产物 |
-| `review` | 实现完成，等待科学/架构/代码评审 |
-| `done` | 验收与 evidence 全部通过 |
+| `review` | 实现与直接测试完成，等待必要的专业判断 |
+| `done` | 产物、acceptance 和可执行 evidence 闭合 |
 
-## 领取规则
+## 领取与交付
 
-1. 任务必须属于当前已解锁 gate。
-2. `depends_on` 中的任务全部为 `done`。
-3. 填写 `assignee` 和目标 review 日期。
-4. 核对 architecture refs、deliverables、acceptance 和 evidence。
-5. 创建 issue/PR，并在标题中保留 task ID。
+1. 选择当前 gate 内依赖已满足的一个纵向切片。
+2. 领取时填写 `assignee`；没有活动执行时保持 `null`。
+3. 实现最小成功路径和最关键失败路径。
+4. 同步直接受影响的契约与说明。
+5. 运行与变更风险相称的测试。
+6. 交付后清除活动 assignee，并更新真实状态。
 
-## 拆分规则
+`done` 依赖可运行产物和直接证据。AI 自评、机器互签、报告篇幅、commit hash 清单和 CI 收据副本不能代替测试结果。架构、科学、许可、阶段门或发布选择仍由对应 owner 决定。
 
-任务过大时可以新增子任务，父任务仍保留 gate 责任。子任务 ID 采用 `<parent>-A`、`<parent>-B`。拆分不能改变 owner、权威输出或阶段门；涉及这些变化时需要 ADR。
-
-## 完成规则
-
-`done` 需要：
-
-- 产物存在且可定位；
-- 自动测试通过；
-- 失败路径有证据；
-- 文档与 schema 同步；
-- 所需 reviewer 已批准；
-- 对应 evidence hash 或 CI run 可追踪。
+任务过大时优先缩小当前 acceptance。新增任务只用于可独立交付的真实切片，避免为审计流程创建子任务。

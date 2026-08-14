@@ -5,7 +5,6 @@
 - Owners: Architecture Lead, Validation Lead
 - Related tasks: R0-SPEC-001
 - Architecture references: 00A §3.4、05 §10.6、11 §5
-- Decision record: [ADR-0004-2026-08-12.json](../governance/adr-dispositions/ADR-0004-2026-08-12.json)
 
 ## Context
 
@@ -25,9 +24,9 @@ R0 契约采用 JSON Schema draft 2020-12 文档，并在每个 instance 中要�
 
 这些 schema 的成熟度为 `Fixture`。`specs/r0-schema-contract-lock.json` 以机器可读形式锁定三份 v1 的 `$id`、instance version、原始字节 SHA-256、字节数和 object field graph。该 lock 只服务 repository validation、fixture/oracle authoring、测试证据和治理评审，产品与 runtime consumer 数量固定为零。
 
-### Accepted reconciliation dispositions
+### Retained technical constraints
 
-Architecture Lead 与独立 Validation Lead 已对累计技术提交 `ee7157359e689114d0259a1ae7884a315b029bc1`、基线 `611a48a23ea02ecd0c210a2b101f5c5cbf5df0e6` 和 13 路径文件集完成复核。下列 disposition 自 2026-08-12 起生效：
+下列约束已进入 schema lock 和直接自动测试，并由 ADR-0010 保留：
 
 - `RECON-DEC-001 — keep-current`：保留 `https://internal.gnczmkn/schemas/{fixture-manifest|oracle-manifest|plan-proof-record}/1`、`gnczmkn.fixture-manifest/1`、`gnczmkn.oracle-manifest/1`、`gnczmkn.plan-proof-record/1` instance version 和现有字段图。candidate `urn:` identity、扁平 provenance、`oracle_refs` 与 typed oracle fact 不能写入同名 v1。
 - `RECON-DEC-002 — repository-root-only`：`executable`/`qualified` fixture 的 `required_artifacts`、fact `evidence_refs` 与 executable/qualified oracle 的 `artifact_refs` 使用仓库根相对、正斜杠、精确大小写的路径。每个 locator 必须解析为 stage-0 tracked、非空、mode 为 `100644` 或 `100755` 的 regular Git blob，并对应非空 regular worktree file。绝对路径、盘符路径、反斜杠、`.`/`..` segment、file URI、query、fragment、percent encoding、未跟踪文件、空 blob、symlink/gitlink 和大小写别名均失败。`source_refs` 继续承载 opaque provenance locator，不由本地 evidence resolver 解释。
@@ -61,8 +60,8 @@ Architecture Lead 与独立 Validation Lead 已对累计技术提交 `ee7157359e
 - 至少一个 valid fixture example 使用 HTTP 与 mission URI 形式的 `source_refs`，证明 provenance locator 不进入 executable evidence resolution；
 - CTest 与 `tools/verify-repository.ps1` 调用 schema conformance suite；
 - Git evidence 查询显式锚定 repository root，从仓库根、构建目录或其他调用目录执行时采用相同 locator 语义；
-- `tools/bootstrap.ps1` 在 Windows Debug/Release 通过；push run `31565404481` 与 pull-request run `31565406888` 的 Ubuntu/Windows 固定 profile 全部成功；PR 实际受测 merge commit、tree 与双 parent 已离线固化在任务验收记录中。
+- `tools/bootstrap.ps1` 在 Windows Debug/Release 通过；Ubuntu/Windows 固定 profile 由 CI workflow 持续验证。
 
 ## Supersession rule
 
-许可证/工具链决定允许采用经过版本锁定的通用 validator，或 R2 Compiler 需要当前子集无法表达的公共契约时，可以提交新 ADR 和 v2 schema identity，并提供双 validator conformance、迁移 fixture 和真实 consumer evidence。三项 reconciliation disposition 已分别固化为 `RECON-DEC-001`～`003` 的 accepted record；后续变更必须通过新版本和 superseding ADR。
+许可证/工具链决定允许采用经过版本锁定的通用 validator，或 R2 Compiler 需要当前子集无法表达的公共契约时，可以提交新 ADR 和 v2 schema identity，并提供双 validator conformance、迁移 fixture 和真实 consumer evidence。后续变更必须通过新版本和 superseding ADR。

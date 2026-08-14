@@ -1,44 +1,37 @@
 # 团队协作模型
 
-## 1. 角色
+## 角色与权限
 
 | 角色 | 最终责任 |
 | --- | --- |
-| Product Owner | 范围、优先级、预算与发布判断 |
+| Product Owner | 范围、优先级、预算、阶段门与发布判断 |
 | Scientific Authority | 数学、物理假设、reference、适用域与科学差异 |
-| Architecture Lead | 防火墙、依赖、owner、time、commit 与 ADR |
-| Model SDK Lead | contracts、definitions、recipes、algorithms 与 packages |
+| Architecture Lead | 依赖、owner、时间、提交语义与 ADR |
+| Model SDK Lead | definitions、recipes、algorithms 与 packages |
 | Compiler Lead | source、IR、binding、proof、plan 与 explain |
 | Runtime/Numerics Lead | Session、state、transaction、integration 与 determinism |
 | Evidence/Workflow Lead | observation、artifact、lineage、tasks 与 tool adapters |
-| Application Lead | CLI、Python、proposal、control 与 frontend adapters |
+| Application Lead | CLI、Python、control 与 frontend adapters |
 | Validation Lead | fixtures、oracles、failure injection、CI 与 gate evidence |
 
-小团队可以让一人承担多个角色。Scientific Authority 与 Architecture Lead 对高风险改动保持独立签字。
+小团队可以由同一人承担多个角色。仓库所有者负责产品范围和优先级，并在缺少已指派专业 owner 时保留最终决定。
 
-责任主体可以是可解析的人类身份，也可以是经过仓库所有者明确授权的机器智能体。机器智能体必须在授权登记中公开身份类型、实际 task/thread binding、角色范围和日期，且不得伪装成人类。未登记别名、泛化工具名称和占位符均不具备决策资格。同一事项的实现者与最终复核者必须来自不同责任主体和不同执行 task；Scientific Authority 与 Architecture Lead 继续保持独立。
+AI 智能体可以分析、实现、测试、整理证据和提出建议。它不能替代 Product Owner、Scientific Authority、Architecture Lead 或阶段门签署人，也不能通过创建多个 agent 获得独立批准资格。高风险选择需要仓库所有者或其明确指定的人确认。
 
-## 2. 决策规则
+## 决策规则
 
-- 目标架构语义变化：Architecture Lead + Scientific Authority + Product Owner。
-- 科学模型变化：Scientific Authority + 对应模块负责人。
-- 公共 API/schema：Architecture Lead + 至少一个真实 consumer 负责人。
-- 三方依赖、许可证和发布：Product Owner + Architecture Lead。
-- 普通局部实现：模块负责人 + reviewer。
+- 普通局部实现由当前任务 assignee 完成，并通过自动测试验证。
+- 科学公式、frame、单位、时间或容差的公共语义变化需要 Scientific Authority 或仓库所有者确认。
+- 模块依赖、state owner、公共 API/schema 和跨进程边界变化需要 Architecture Lead 或仓库所有者确认，并在影响公共语义时提交窄 ADR。
+- 三方依赖、许可证、外部分发、阶段门和发布由仓库所有者决定。
+- AI 应把待决问题压缩成一个具体选择、影响范围和推荐项，避免生成成套审批材料。
 
-## 3. 工作节奏
+## 工作节奏
 
-- 每周一次 gate/evidence 评审；
-- 每两周一次架构债务和开放 ADR 评审；
-- 每个纵向 slice 结束后举行科学差异评审；
-- 阶段门只依据已提交 evidence，不依据口头完成度。
+1. 从 backlog 选择一个依赖已满足的纵向切片。
+2. 先实现最小可执行路径和直接失败测试。
+3. 同步必要契约与说明。
+4. 运行与风险相称的验证。
+5. 交付可运行结果、剩余限制和一个明确下一步。
 
-## 4. 任务状态
-
-`planned → ready → in_progress → review → done`
-
-`blocked` 可以从任意未完成状态进入。阻塞记录需要说明缺少的输入、责任角色和下一次复查日期。
-
-## 5. 交接要求
-
-负责人离开任务前需要留下：当前 branch/commit、已完成产物、未通过测试、开放决策、复现命令和下一步。自由文本聊天记录不能充当唯一交接材料。
+聊天记录只用于协作。当前任务状态写入 backlog；跨会话恢复信息写入 `r0-execution-state.md`；稳定公共决定写入 ADR。

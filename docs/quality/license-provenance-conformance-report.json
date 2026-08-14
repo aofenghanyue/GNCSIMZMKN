@@ -10,7 +10,7 @@
                    "root_distribution_license_files":  0,
                    "decision_roles":  {
                                           "product_owner_assigned":  true,
-                                          "architecture_lead_assigned":  true
+                                          "architecture_lead_assigned":  false
                                       }
                },
     "inventory":  {
@@ -180,11 +180,6 @@
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
-                             "path":  "docs/tasks/work-packages/R0-GOV-002.md",
-                             "sha256":  "161a557abb0352711fdaa7c2747345d70bcad8582422f72ee4680cc74fdad704",
-                             "hash_normalization":  "utf8-lf-no-bom"
-                         },
-                         {
                              "path":  "reference/legacy/source-manifest.json",
                              "sha256":  "4e58f9b8c16e56052478a98738e03df3291795f0154cdf16cc1b8e947f017c74",
                              "hash_normalization":  "utf8-lf-no-bom"
@@ -211,7 +206,7 @@
                          },
                          {
                              "path":  "tools/validate-license-provenance.ps1",
-                             "sha256":  "51f6c886cee177d7e89e4a21d62dd37f3375099bfb112499e0318fdee4eda8ab",
+                             "sha256":  "2dc72f9ff1f67841cef1717bbd10d9dd7453d15a1454e74208aee68081569a33",
                              "hash_normalization":  "utf8-lf-no-bom"
                          }
                      ]

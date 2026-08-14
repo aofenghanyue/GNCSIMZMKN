@@ -27,7 +27,7 @@
 | semantic/evolution guards | 无目标 artifact | 未启用 | 需要 maturity、prerequisite 与 mutation 证据 |
 | orchestration | CTest + repository verification + fixed-runner workflow | 强：入口闭合 | 新 architecture-fitness validator 尚未接入 |
 
-已接受的 architecture baseline、review contract 与 task acceptance 分别覆盖 15、35 与 76 项 mutation：glossary/capability table、term/alias/authority、ownership、DAG/CMake、source hash、严格派生 bytes、逻辑边界、candidate responsibility、actor/decision/evidence/CI/state-document/boundary 均有真实失败路径。新任务应复用这些检查，避免复制第二份 terminology/DAG authority。
+architecture baseline 当前覆盖 15 项直接 mutation，包括 glossary、term/alias/authority、ownership、DAG/CMake、source hash 和派生 bytes。R0-ARCH-002 只补充可执行切片实际暴露的依赖与边界回归，避免复制第二份 terminology/DAG authority。
 
 ### 2.1 Candidate responsibility reconciliation
 

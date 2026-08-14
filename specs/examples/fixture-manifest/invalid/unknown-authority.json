@@ -5,7 +5,7 @@
   "purpose": "Prove that fixture authority must resolve to the repository role registry.",
   "authority": "invented_authority",
   "provenance": {
-    "source_refs": ["docs/tasks/work-packages/R0-SPEC-001.md"]
+    "source_refs": ["docs/adr/0004-r0-json-schema-contracts.md"]
   },
   "expected_facts": [
     {

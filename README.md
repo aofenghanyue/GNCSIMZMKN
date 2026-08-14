@@ -11,11 +11,10 @@
 
 ## 新成员从这里开始
 
-1. 阅读 [交接总览](docs/handoff/README.md)。
-2. 阅读 [项目章程](docs/handoff/project-charter.md) 与 [greenfield 边界](docs/handoff/greenfield-boundary.md)。
-3. 按 [架构阅读路线](docs/handoff/architecture-reading-guide.md) 阅读目标蓝图。
-4. 查看 [首轮任务](docs/tasks/first-wave.md) 与机器可读的 [任务台账](docs/tasks/backlog.json)。
-5. 领取任务前阅读 [协作规则](CONTRIBUTING.md) 和对应 ADR。
+1. 阅读 [R0 当前执行状态](docs/handoff/r0-execution-state.md)。
+2. 查看 [任务台账](docs/tasks/backlog.json) 与 [R0 推荐开发顺序](docs/tasks/first-wave.md)。
+3. 阅读当前任务直接引用的 ADR、架构分册和测试。
+4. 需要项目边界背景时再阅读 [交接总览](docs/handoff/README.md)。
 
 ## 构建空骨架
 

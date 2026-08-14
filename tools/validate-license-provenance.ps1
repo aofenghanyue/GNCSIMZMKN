@@ -43,7 +43,16 @@ function Test-HasField([object]$Object, [string]$Name) {
 }
 
 function Get-Sha256([string]$Path) {
-    return (Get-FileHash -LiteralPath $Path -Algorithm SHA256).Hash.ToLowerInvariant()
+    $stream = [System.IO.File]::OpenRead($Path)
+    $algorithm = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        return ([System.BitConverter]::ToString(
+                $algorithm.ComputeHash($stream))).Replace('-', '').ToLowerInvariant()
+    }
+    finally {
+        $algorithm.Dispose()
+        $stream.Dispose()
+    }
 }
 
 function Get-NormalizedTextSha256([string]$Path) {
@@ -457,7 +466,6 @@ $requiredPaths = @(
     'docs/governance/license-and-provenance-policy.md',
     'docs/governance/provenance-inventory.json',
     'docs/quality/provenance-review-checklist.md',
-    'docs/tasks/work-packages/R0-GOV-002.md',
     'reference/legacy/source-manifest.json',
     'reference/legacy/legacy-source.zip',
     'reference/legacy/legacy-source.sha256',
@@ -718,7 +726,6 @@ $inputRelativePaths = @(
     'docs/governance/license-and-provenance-policy.md',
     'docs/governance/provenance-inventory.json',
     'docs/quality/provenance-review-checklist.md',
-    'docs/tasks/work-packages/R0-GOV-002.md',
     'reference/legacy/source-manifest.json',
     'reference/legacy/legacy-source.sha256',
     'reference/legacy/legacy-source.zip',

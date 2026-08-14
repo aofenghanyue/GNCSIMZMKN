@@ -2,7 +2,7 @@
 
 ## 1. 文档目的与权威边界
 
-本文定义 [`R0-SCI-004`](../tasks/work-packages/R0-SCI-004.md) 在依赖和 owner decision 关闭后应如何构造、验证与审查 [`REF-CAVH-FORMULA-001`](../../fixtures/ref-cavh-formula/fixture-manifest.json)。本文不在准备阶段宣布某篇论文、某组方程或冻结实现正确；目标是让以下失败在 closed-loop execution 之前被稳定隔离：
+本文定义 [`R0-SCI-004`](../tasks/backlog.json) 在依赖和 owner decision 关闭后应如何构造、验证与审查 [`REF-CAVH-FORMULA-001`](../../fixtures/ref-cavh-formula/fixture-manifest.json)。本文不在准备阶段宣布某篇论文、某组方程或冻结实现正确；目标是让以下失败在 closed-loop execution 之前被稳定隔离：
 
 1. 来源、edition、页码、license 或 equation map 错误；
 2. Eq17/Eq18 转录、符号、单位或 intermediate 错误；
@@ -27,8 +27,8 @@
 
 - [15 参考纵向设计](../../design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md) §10 要求把 CAVH 拆成 definition/binding、prepared glide envelope、environment derivative query、Eq17/Eq18 kernel、TDCT、command、telemetry 与逐层验证；
 - [09 科学复现与工程适配](../../design-notes/gnczmkn-architecture-roadmap/09-research-workflows-and-tool-adapters.md) §16 要求 citation、claim、normalized equation、symbol、assumption、scenario、reference data、algorithm、discrepancy、verification、engineering wrapper 与 maturity 可追溯，并把 faithful reproduction、independent verification、engineering adaptation 分成不同 artifact；
-- [`R0-SCI-001`](../tasks/work-packages/R0-SCI-001.md) 准备了 SI、角度、binary64、整数 tick、domain 与数值失败的候选约定，但在 owner 接受前仍不是最终 science policy；
-- [`R0-LEG-001`](../tasks/work-packages/R0-LEG-001.md) 和[复现证据索引](../../reference/legacy/reproduction/r0-leg-001-20260810-07/evidence-index.json)只提供冻结行为证据；
+- [`R0-SCI-001`](../tasks/backlog.json) 准备了 SI、角度、binary64、整数 tick、domain 与数值失败的候选约定，owner 接受前仍属于候选 science policy；
+- [`R0-LEG-001`](../tasks/backlog.json) 和[复现证据索引](../../reference/legacy/reproduction/r0-leg-001-20260810-07/evidence-index.json)只提供冻结行为证据；
 - [`REF-CAVH-FORMULA-001` manifest](../../fixtures/ref-cavh-formula/fixture-manifest.json)要求 citation/version、assumption、Eq17、Eq18、derivative、glide envelope、TDCT 和 closed-loop artifacts。
 
 ### 2.2 外部出版物元数据候选

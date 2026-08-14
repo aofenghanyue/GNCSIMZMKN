@@ -2,7 +2,7 @@
 
 ## 1. 目的与非目标
 
-本文定义 [`R0-PERF-001`](../tasks/work-packages/R0-PERF-001.md) 在依赖和 owner decision 关闭后应如何建立 benchmark manifest、D0–D3 determinism target、baseline hardware/build profile、capacity workload、raw measurement evidence 与 budget。它服务于未来 R2 Compiler/Plan 和 R3 Session/layout/arena/queue 选择，不在 R0 准备阶段制造不存在的 target runtime 或性能承诺。
+本文定义 [`R0-PERF-001`](../tasks/backlog.json) 在依赖和 owner decision 关闭后应如何建立 benchmark manifest、D0–D3 determinism target、baseline hardware/build profile、capacity workload、raw measurement evidence 与 budget。它服务于未来 R2 Compiler/Plan 和 R3 Session/layout/arena/queue 选择，不在 R0 准备阶段制造尚未实现的 target runtime 或性能承诺。
 
 本文不做以下事情：
 
@@ -61,7 +61,7 @@ Raw hash 只证明审计读取的 bytes；Markdown 中的候选 budget 或本机
 
 ### 2.4 当前 CI 与依赖状态
 
-[CI workflow](../../.github/workflows/ci.yml)配置 Ubuntu 24.04/GCC 13 candidate 和 Windows 2025/VS 2026 candidate 的 Release correctness jobs，记录 runner/tool/compiler identity，但没有 benchmark job。Proposed [toolchain matrix](../governance/toolchain-support-matrix.json)仍是 `candidate-not-supported`；[R0-GOV-001](../tasks/work-packages/R0-GOV-001.md)记录 `ROLE-ASSIGNMENTS-MISSING`、`ADR-NOT-ACCEPTED`、`HOSTED-CI-PENDING` 三个 blocker。
+[CI workflow](../../.github/workflows/ci.yml)配置 Ubuntu 24.04/GCC 13 和 Windows 2025/VS 2026 的 Release correctness jobs，并记录 runner/tool/compiler identity；当前仍没有 benchmark job。[toolchain matrix](../governance/toolchain-support-matrix.json)记录受支持的构建 profile。
 
 `R0-SCI-002` 仍为 `planned`，[`REF-MINIMAL-3DOF-001`](../../fixtures/ref-minimal-3dof/fixture-manifest.json)为 `specification_only`。在 correctness producer/candidate/tolerance 未关闭前，benchmark 不得以错误或空计算换取速度。
 

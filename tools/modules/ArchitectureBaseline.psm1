@@ -920,7 +920,6 @@ function New-ArchitectureBaseline {
         Get-FileSourceRecord -RepoRoot $RepoRoot -RelativePath $RegistryRelativePath -Role 'ownership-authority'
         Get-FileSourceRecord -RepoRoot $RepoRoot -RelativePath 'CMakeLists.txt' -Role 'physical-target-graph'
         Get-FileSourceRecord -RepoRoot $RepoRoot -RelativePath 'tools/modules/ArchitectureBaseline.psm1' -Role 'baseline-generator'
-        Get-FileSourceRecord -RepoRoot $RepoRoot -RelativePath 'tools/modules/R0ArchitectureReview.psm1' -Role 'review-contract-guard'
         Get-FileSourceRecord -RepoRoot $RepoRoot -RelativePath 'tools/modules/JsonSchemaSubset.psm1' -Role 'strict-json-parser'
         Get-FileSourceRecord -RepoRoot $RepoRoot -RelativePath 'tools/validate-architecture-baseline.ps1' -Role 'baseline-entrypoint'
     )
@@ -1171,8 +1170,7 @@ function New-TerminologyConformanceReport {
     param(
         [Parameter(Mandatory = $true)]$Baseline,
         [Parameter(Mandatory = $true)][string]$BaselineJson,
-        [Parameter(Mandatory = $true)][int]$NegativeCaseCount,
-        [Parameter(Mandatory = $true)][int]$ReviewNegativeCaseCount
+        [Parameter(Mandatory = $true)][int]$NegativeCaseCount
     )
 
     $statusCounts = @($Baseline.terminology.allowed_statuses | ForEach-Object {
@@ -1207,7 +1205,6 @@ function New-TerminologyConformanceReport {
             modules = $moduleCount
             cmake_dependency_edges = $cmakeEdgeCount
             negative_cases = $NegativeCaseCount
-            review_contract_negative_cases = $ReviewNegativeCaseCount
             term_status_counts = @($statusCounts)
         })
         checks = @(
@@ -1218,7 +1215,7 @@ function New-TerminologyConformanceReport {
             [PSCustomObject]([ordered]@{ id = 'MODULE-DAG'; status = 'passed'; assertion = 'ADR-0003 dependency graph is closed and acyclic' }),
             [PSCustomObject]([ordered]@{ id = 'CMAKE-DAG'; status = 'passed'; assertion = 'CMake modules and edges stay within the ADR-0003 dependency closure' }),
             [PSCustomObject]([ordered]@{ id = 'SOURCE-HASH'; status = 'passed'; assertion = 'all derived inputs are pinned by SHA-256' }),
-            [PSCustomObject]([ordered]@{ id = 'NEGATIVE-CASES'; status = 'passed'; assertion = "$NegativeCaseCount baseline mutations and $ReviewNegativeCaseCount review-contract mutations were rejected" }),
+            [PSCustomObject]([ordered]@{ id = 'NEGATIVE-CASES'; status = 'passed'; assertion = "$NegativeCaseCount baseline mutations were rejected" }),
             [PSCustomObject]([ordered]@{ id = 'CLAIM-SCOPE'; status = 'passed'; assertion = 'conformance is limited to the listed authority source set and has zero runtime consumers' })
         )
     })
