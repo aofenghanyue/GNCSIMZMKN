@@ -1,63 +1,56 @@
-# ADR-0008: Internal-default license and provenance gate
+# ADR-0008: Owner-pending G1 distribution boundary
 
 - Status: Proposed
 - Date: 2026-08-10
-- Owners: Product Owner, Architecture Lead
-- Related tasks: R0-GOV-002
-- Architecture references: 03 §4、05 PackageManifest、08 §11–§12、08 §17、08 §21
+- Revised: 2026-08-15
+- Owner: Repository owner
+- Related task: R0-GOV-002
+- Architecture references: 03 §4、05 §3、08 §11–§12、08 §21
 
 ## Context
 
-仓库根目录没有分发许可证，冻结 Legacy archive 内也未发现 license/copying/notice 文件或标准许可证声明。GitHub 说明在没有许可证时默认版权规则仍然适用，仓库的公开可见性本身不提供通用复制、修改或分发许可；该说明同时明确不构成法律意见。[GitHub licensing a repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository)
+仓库根目录没有分发许可证。GitHub 的许可证说明指出，无许可证仓库仍受默认版权规则约束；公开仓库用户同时具有 GitHub 服务条款提供的查看和 fork 权限。仓库级许可证与平台访问权限需要分开判断。[GitHub licensing a repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository)
 
-当前 R0 已产生源码、架构蓝图、fixture、oracle、Legacy archive 与验证报告，并在隔离复现中使用 Eigen 3.4.0 和 w64devkit 2.9.1。Eigen 3.4.0 上游声明其内容主要采用 MPL-2.0，部分文件采用 BSD 或 LGPL，实际 include 范围仍需逐文件复核。[Eigen 3.4.0 COPYING.README](https://gitlab.com/libeigen/eigen/-/raw/3.4.0/COPYING.README) w64devkit 顶层源码有自己的许可证，同时发布包捆绑 GCC、MinGW-w64、CMake、Ninja 等多项组件，并明确提示 runtime 的许可证义务，不能以一个表达式概括整个工具包。[w64devkit v2.9.1](https://github.com/skeeto/w64devkit/releases/tag/v2.9.1)
+2026-08-15 的只读核对确认 origin `https://github.com/aofenghanyue/GNCSIMZMKN.git` 当前公开可见。现有公开暴露已经发生，后续本地策略无法撤回既有副本。仓库所有者仍需决定 G1 是否继续公开开发，以及怎样处置已经公开的 Legacy archive 和权利来源待确认的架构蓝图。
 
-R0-GOV-002 需要先建立 fail-closed 治理和可审计 inventory。最终仓库许可证会改变外部权利，按团队规则必须由 Product Owner 与 Architecture Lead 共同决定；当前两个角色均未指派，因此本 ADR 不选择 MIT、Apache-2.0、专有许可或其他分发方案。
+当前 Git 跟踪内容可完整划分为三类：仓库源码/文档/fixture/oracle、导入的架构蓝图、`reference/legacy/`。冻结 Legacy ZIP 的来源身份和 SHA-256 已固定，实时扫描仍未发现许可证命名文件或强许可证文本信号；该扫描只说明检测结果，未形成使用或再分发许可。
 
-## Decision
+当前 greenfield C++ target 没有产品第三方库。R0 验证使用宿主 Python、PowerShell、CMake 和编译器；固定 CI 使用 `actions/checkout`；隔离 Legacy 复现另用 Eigen 3.4.0 与 w64devkit 2.9.1。它们都在仓库外执行，没有进入当前项目分发包。Eigen 3.4.0 上游说明其主体采用 MPL-2.0，部分文件采用 BSD 或 LGPL；w64devkit 说明生成的 Windows binary 可能携带 runtime 许可义务，因此未来二进制分发必须按实际链接内容复核。[Eigen 3.4.0 COPYING.README](https://gitlab.com/libeigen/eigen/-/raw/3.4.0/COPYING.README) [w64devkit v2.9.1 licensing](https://github.com/skeeto/w64devkit/tree/v2.9.1#licenses)
 
-在本 ADR 被有权角色接受并明确选择许可证前，仓库采用 `internal-default / external-blocked` 治理状态。该状态是项目工作流限制，不授予或撤销任何法定权利，也不改变上游 GitHub 仓库的既有可见性。
+旧版 ADR 引入双角色批准、不可变回执、报告哈希锁和大量治理 mutation。ADR-0010 已撤销这类执行方式。本修订只保留会影响实际分发边界的检查。
 
-`docs/governance/provenance-inventory.json` 是 R0 治理证据，maturity 为 `governance-evidence-no-runtime-consumer`。每个代码、数据、archive、生成物或外部工具类别至少登记：稳定 identity、scope、owner role、purpose、精确来源、version/date、完整性策略、仓库承载方式、内部处理状态、外部分发状态、分类、许可证扫描结果、许可证结论、证据和 lineage parent。它不是 runtime 或公开 PackageManifest schema。
+## Pending owner decision
 
-许可证表达使用 SPDX 语义。已得出结论时使用 SPDX expression；自定义许可证只有在保存了完整许可证文本和稳定 `LicenseRef-*` 标识后才能使用。扫描未发现许可证信息记录为 `NONE`，无法或尚未得出许可证结论记录为 `NOASSERTION`。两者均不表示允许使用或分发。[SPDX license expressions](https://spdx.github.io/spdx-spec/v3.0.1/annexes/spdx-license-expressions/) [SPDX file information](https://spdx.github.io/spdx-spec/v2.2.2/file-information/)
+具体选择：G1 是否按“内部开发、停止新增外部分发”收口？
 
-当前所有 inventory 项的 concluded expression 为 `NOASSERTION`。本仓库内容与研究证据的外部分发为 `blocked-pending-accepted-adr`；Legacy archive 为 `blocked-pending-item-review` 且保持 evidence-only；Eigen、w64devkit 和宿主验证工具链为 `not-redistributed`。工具可执行或依赖可下载不等于项目可以重新打包它们。
+推荐接受。这样可以在不虚构权利结论的前提下关闭 R0 的内部处理规则，并把公开发布许可证、当前 public origin 处置和 Legacy/蓝图权利确认留给后续明确的发布任务。影响范围包括新 push、release、源码/二进制附件、公开数据集和 Legacy archive 分享；本地实现、fixture、oracle、测试与内部评审继续进行。
 
-引入第三方内容前必须保存精确上游 URL、版本或日期、原始 archive/hash、版权与许可证文本、逐文件或逐组件范围、用途、目标依赖层、修改情况、兼容性判断、notice/source/attribution 义务、数据权限与分类。无法编辑的第三方文件可用外部 annotation 映射，但 annotation 不能创造许可证；REUSE 的逐文件 SPDX 方法作为后续实现候选。[REUSE Specification](https://reuse.software/spec/)
+实现智能体无法自行决定该选择，因为它会改变仓库的分发对象、远端可见性和法律权利表达。
 
-外部导出必须 fail closed。Product Owner 与 Architecture Lead 批准前，导出计划需要闭合 ownership/permission、第三方兼容性、notice/source offer、数据授权、敏感信息、保密与访问范围、完整性、lineage、目标受众和保留期，并生成不可变 approval/export receipt。Artifact 和报告继承所有上游 code/data/tool 的许可证、分类和限制；缺失 parent provenance 时不得晋升或导出。
+## Interim boundary
 
-冻结 Legacy archive 不进入产品依赖、不修改、不公开再分发。其来源 commit、archive hash、字节数、ZIP entry 数、license signal scan 和 evidence-only 状态由静态门禁复核。若后续获得所有权或许可证据，需新审查记录，不能直接修改当前结论。
+在仓库所有者记录决定前：
 
-## Consequences
+1. 当前授权工作区可以继续实现、测试和保存 provenance；实现智能体不执行 push、release、公开附件发送或远端可见性变更。
+2. 仓库内容、架构蓝图和 Legacy reference 的许可证结论保持 `NOASSERTION`，外部分发状态保持 `blocked`。
+3. Legacy 保持只读、evidence-only，并从任何未来外部分发候选中单独排除，直到权属和许可证据闭合。
+4. Eigen、w64devkit、宿主工具链和 CI action 只按已记录用途在仓库外执行。任何 vendoring、runtime bundling 或二进制发布都需要新的直接复核。
+5. 生成 fixture、oracle、benchmark 或报告继续引用其来源。上游权利待确认时，派生内容继承外部分发阻断。
+6. SPDX `NONE` 表示文件内未发现许可证信息；`NOASSERTION` 表示尚未形成结论。两者都不提供分发许可。[SPDX File Information](https://spdx.github.io/spdx-spec/v2.2.2/file-information/)
 
-- Positive: 当前缺少授权和复杂第三方范围时，发布路径保持明确关闭。
-- Positive: code、asset、archive、generated artifact 与 external tool 使用同一 provenance vocabulary，并可沿 lineage 传播。
-- Positive: `NONE`、`NOASSERTION`、SPDX expression 与 `LicenseRef-*` 的含义可由工具检查。
-- Costs: 每个新增依赖、数据源和导出包都需要登记、证据保存与双角色审批。
-- Costs: 原始仓库已在 GitHub 可获取，该既有状态需要所有者单独审查；本 ADR 只阻止项目继续产生未经批准的外部分发行为。
-- Risks: 本阶段的 scan 只能证明未发现指定信号，不能证明作品没有版权、限制或外部来源。
-- Risks: 本 ADR 是工程治理记录，不替代适用司法辖区的法律审查。
-- Modules kept unchanged: `framework/`、`packages/`、`adapters/`、`apps/`、`user/` 和冻结 `reference/legacy/`。
+## Executable evidence
 
-## Alternatives considered
+`tools/validate-license-provenance.ps1` 直接读取 Git 跟踪文件、CMake、CI workflow、Legacy archive、复现环境和 `docs/governance/provenance-inventory.json`。它验证：
 
-- 立即加入 MIT 或 Apache-2.0：可以简化开源分发，但当前没有 owner/贡献权属证据和有权角色批准。
-- 立即加入自定义“研究用途”许可证：会产生实质分发条款，且兼容性、定义与执行成本尚未审查。
-- 仅保留自由文本提醒：无法阻止 `NOASSERTION` 被误标为可分发，也无法验证 Legacy 与依赖 hash。
-- 只记录生产链接依赖：会遗漏 build tool、数据、模型、媒体、archive 与生成 Artifact 的传递义务。
-- 依赖托管平台可见性：平台访问条款不能替代仓库级许可证和逐项 provenance。
+- 每个跟踪文件恰好进入一个实际分发范围；
+- 当前唯一跟踪 binary/archive 是明确登记的 Legacy ZIP；
+- `find_package(Python3)` 与固定 `actions/checkout` 都有外部输入记录；
+- CMake 没有未登记的下载式依赖；
+- Legacy SHA-256 与来源清单一致，并重新扫描许可证信号；
+- 同一判定器拒绝 owner decision 绕过、Legacy 外发、未登记 binary vendoring 和下载式 CMake 依赖。
 
-## Verification
+默认验证成功表示内部工作区事实闭合，同时明确返回 external distribution blocked。`-RequireExternalReady` 会在当前状态以退出码 2 拒绝外部分发。
 
-- `LICENSE-STATUS.md` 明确非授权性质、内部处理边界与外部导出门禁；
-- inventory 覆盖 repository、blueprint、research evidence、Legacy archive、Eigen、w64devkit、宿主验证工具链与固定 CI action；
-- validator 复核 Legacy hash、字节数、510 个 ZIP entries、391 个 file entries 和零 license signal；
-- validator 检查 required fields、唯一 identity、来源、状态 vocabulary、SPDX 结论与外部分发一致性；
-- in-memory mutation suite 拒绝重复 identity、缺失来源、`NOASSERTION` 外部分发、Legacy hash 漂移、错误许可证结论、无文本 `LicenseRef-*` 和 repository status 矛盾；
-- CTest、repository verification 和审查报告共同构成 gate evidence。
+## Supersession
 
-## Supersession rule
-
-Product Owner 与 Architecture Lead 在确认权属、贡献边界、第三方兼容性、数据权限和目标发布方式后，可以接受本 ADR 并补充明确许可证，或以新 ADR 替代。任何 repository license、贡献者协议、第三方分发、Legacy 分享、公开数据集或二进制发布变化都必须更新 inventory、policy、门禁与迁移/通知计划。
+仓库所有者确认 G1 分发范围后，可以接受本 ADR 的内部范围，或以明确的公开/受限分发许可证 ADR 替代。公开路线还需要逐项处置 Legacy、蓝图权利、贡献权属、第三方 notices 和实际二进制 runtime。

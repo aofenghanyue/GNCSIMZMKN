@@ -1,7 +1,7 @@
 {
   "schema_version": "gnczmkn.task-backlog/1",
   "current_gate": "R0",
-  "updated_at": "2026-08-14",
+  "updated_at": "2026-08-15",
   "status_values": ["planned", "ready", "in_progress", "blocked", "review", "done"],
   "tasks": [
     {
@@ -84,16 +84,16 @@
       "id": "R0-GOV-002",
       "stage": "R0",
       "title": "Decide repository, dependency and data licensing policy",
-      "status": "planned",
+      "status": "in_progress",
       "priority": "P0",
       "size": "M",
       "owner_role": "product_owner",
-      "assignee": null,
+      "assignee": "codex",
       "depends_on": ["B0-VER-001"],
-      "deliverables": ["License ADR", "third-party and data provenance policy"],
+      "deliverables": ["Decision-ready License ADR", "Executable tracked-scope, dependency, archive and provenance validator", "Minimal third-party and data provenance policy"],
       "acceptance": ["Internal and external sharing rules are explicit for code, assets and archives"],
-      "evidence": ["Accepted ADR and provenance checklist"],
-      "architecture_refs": ["03 §4", "05 package manifest", "08 lineage"]
+      "evidence": ["tools/validate-license-provenance.ps1", "Complete tracked-file scope coverage and direct external-readiness rejection", "Four key failure cases", "Owner decision still required for G1 distribution scope"],
+      "architecture_refs": ["03 §4", "05 §3", "08 §11–§12", "08 §21"]
     },
     {
       "id": "R0-ARCH-001",

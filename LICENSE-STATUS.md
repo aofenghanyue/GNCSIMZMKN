@@ -1,19 +1,13 @@
 # License status
 
-No distribution license has been selected for this repository.
+No repository distribution license has been selected. This notice is not a license grant.
 
-This status notice is not a license grant. Existing access to the repository, including access through its GitHub origin, does not by itself grant permission to copy, modify, publish, or redistribute its contents beyond rights supplied elsewhere.
+The GitHub origin was observed as public on 2026-08-15. Public visibility and GitHub's view/fork permissions do not supply a general repository distribution license; the repository owner still needs to decide the intended G1 distribution scope. See [GitHub's repository licensing guidance](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository).
 
-Internal handling is limited to the already-authorized project workspace and collaborators. Preserve source identity, integrity records, attribution, classification, and lineage; do not vendor new third-party code, data, models, media, fonts, archives, or binaries until they have an inventory record and review.
+Current implementation and validation may continue inside the already-authorized workspace. The implementation agent will not push, publish a release, send a public bundle, or change remote visibility without explicit authority.
 
-External sharing is blocked for source code, documentation, data assets, fixtures, reference archives, generated artifacts, reports, and binaries until all of the following are recorded:
+External distribution remains blocked for repository content, imported architecture blueprints, fixtures, oracles, benchmarks, reports, and binaries. The frozen Legacy reference remains read-only, evidence-only, and excluded from any external candidate until ownership and license evidence are resolved.
 
-1. an accepted license decision approved by the Product Owner and Architecture Lead;
-2. ownership or permission evidence for the material being shared;
-3. compatible third-party license conclusions and required notices/source offers;
-4. provenance, integrity, classification, sensitive-information, and export review;
-5. an immutable approval and export receipt.
+Eigen, w64devkit, host toolchains, Python, PowerShell, CMake, and CI actions are executed outside the repository and are not bundled in the current project. Any future vendoring, runtime bundling, container, installer, or binary release requires a review of the exact delivered components and their upstream terms.
 
-The frozen Legacy archive remains evidence-only and must not be redistributed. External tools and dependencies used from ignored workspaces remain subject to their upstream terms and must not be bundled into a project release without a separate review.
-
-The proposed controls are documented in [ADR-0008](docs/adr/0008-internal-default-license-and-provenance-gate.md) and the [license and provenance policy](docs/governance/license-and-provenance-policy.md). The decision is tracked as `R0-GOV-002` in `docs/tasks/backlog.json`.
+The current boundary and executable check are documented in [ADR-0008](docs/adr/0008-internal-default-license-and-provenance-gate.md) and the [license and provenance policy](docs/governance/license-and-provenance-policy.md).

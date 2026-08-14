@@ -51,7 +51,6 @@ $requiredPaths = @(
     'docs/governance/provenance-inventory.json',
     'docs/governance/toolchain-support-matrix.json',
     'docs/quality/provenance-review-checklist.md',
-    'docs/quality/license-provenance-conformance-report.json',
     'specs/r0-schema-contract-lock.json',
     'reference/legacy/source-manifest.json',
     'reference/legacy/legacy-source.zip',

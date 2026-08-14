@@ -1,6 +1,8 @@
 [CmdletBinding()]
 param(
-    [switch]$UpdateReport,
+    [string]$InventoryPath,
+    [switch]$RequireExternalReady,
+    [switch]$Json,
     [switch]$Quiet
 )
 
@@ -8,28 +10,15 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = 'Stop'
 
 $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
-$inventoryPath = Join-Path $repoRoot 'docs\governance\provenance-inventory.json'
-$reportPath = Join-Path $repoRoot 'docs\quality\license-provenance-conformance-report.json'
+if ([string]::IsNullOrWhiteSpace($InventoryPath)) {
+    $InventoryPath = Join-Path $repoRoot 'docs\governance\provenance-inventory.json'
+}
+elseif (-not [System.IO.Path]::IsPathRooted($InventoryPath)) {
+    $InventoryPath = Join-Path $repoRoot $InventoryPath
+}
+
 $errors = [System.Collections.Generic.List[string]]::new()
-$mutationResults = [System.Collections.Generic.List[object]]::new()
-
-function Add-Error([string]$Message) {
-    $script:errors.Add($Message)
-}
-
-function Read-Json([string]$Path) {
-    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
-        Add-Error "Required JSON is missing: $Path"
-        return $null
-    }
-    try {
-        return Get-Content -LiteralPath $Path -Raw -Encoding utf8 | ConvertFrom-Json
-    }
-    catch {
-        Add-Error "Invalid JSON: $Path :: $($_.Exception.Message)"
-        return $null
-    }
-}
+$negativeResults = [System.Collections.Generic.List[object]]::new()
 
 function Get-Field([object]$Object, [string]$Name) {
     if ($null -eq $Object) { return $null }
@@ -40,6 +29,17 @@ function Get-Field([object]$Object, [string]$Name) {
 
 function Test-HasField([object]$Object, [string]$Name) {
     return $null -ne $Object -and $null -ne $Object.PSObject.Properties[$Name]
+}
+
+function Read-Json([string]$Path) {
+    if (-not (Test-Path -LiteralPath $Path -PathType Leaf)) {
+        throw "Required JSON is missing: $Path"
+    }
+    return Get-Content -LiteralPath $Path -Raw -Encoding utf8 | ConvertFrom-Json
+}
+
+function Copy-JsonObject([object]$Value) {
+    return $Value | ConvertTo-Json -Depth 100 | ConvertFrom-Json
 }
 
 function Get-Sha256([string]$Path) {
@@ -55,791 +55,570 @@ function Get-Sha256([string]$Path) {
     }
 }
 
-function Get-NormalizedTextSha256([string]$Path) {
-    $text = [System.IO.File]::ReadAllText(
-        $Path, [System.Text.UTF8Encoding]::new($false, $true))
-    $normalized = $text.Replace("`r`n", "`n").Replace("`r", "`n")
-    $bytes = [System.Text.UTF8Encoding]::new($false).GetBytes($normalized)
-    $algorithm = [System.Security.Cryptography.SHA256]::Create()
-    try {
-        return ([System.BitConverter]::ToString(
-                $algorithm.ComputeHash($bytes))).Replace('-', '').ToLowerInvariant()
+function Get-ItemById([object[]]$Items, [string]$Id) {
+    return @($Items | Where-Object {
+            [string](Get-Field $_ 'id') -ceq $Id
+        }) | Select-Object -First 1
+}
+
+function Test-PathMatchesScope([string]$Path, [object]$Scope) {
+    $included = $false
+    foreach ($prefix in @(Get-Field $Scope 'include_prefixes')) {
+        $prefixText = [string]$prefix
+        if ($prefixText.Length -eq 0 -or
+            $Path.StartsWith($prefixText, [System.StringComparison]::Ordinal)) {
+            $included = $true
+            break
+        }
     }
-    finally {
-        $algorithm.Dispose()
+    if (-not $included) { return $false }
+
+    foreach ($prefix in @(Get-Field $Scope 'exclude_prefixes')) {
+        $prefixText = [string]$prefix
+        if ($prefixText.Length -gt 0 -and
+            $Path.StartsWith($prefixText, [System.StringComparison]::Ordinal)) {
+            return $false
+        }
+    }
+    return $true
+}
+
+function Test-LocalReferences(
+    [System.Collections.Generic.List[string]]$Issues,
+    [string]$Subject,
+    [object[]]$References) {
+    if ($References.Count -eq 0) {
+        $Issues.Add("$Subject has no source reference.")
+        return
+    }
+    foreach ($reference in $References) {
+        $text = [string]$reference
+        if ([string]::IsNullOrWhiteSpace($text)) {
+            $Issues.Add("$Subject has an empty source reference.")
+            continue
+        }
+        if ($text -match '^https?://') { continue }
+        if (-not (Test-Path -LiteralPath (Join-Path $repoRoot $text) -PathType Leaf)) {
+            $Issues.Add("$Subject references a missing local file: $text")
+        }
     }
 }
 
-function Test-InventoryObject([object]$Inventory) {
+function Test-InventoryObject(
+    [object]$Inventory,
+    [string[]]$TrackedFiles,
+    [string[]]$CMakeTexts,
+    [string[]]$WorkflowTexts,
+    [string[]]$RootLicenseFiles) {
     $issues = [System.Collections.Generic.List[string]]::new()
     if ($null -eq $Inventory) {
-        $issues.Add('Inventory is null.')
+        $issues.Add('Distribution inventory is null.')
         return $issues.ToArray()
     }
 
-    if ((Get-Field $Inventory 'schema_version') -ne 'gnczmkn.provenance-inventory/1') {
-        $issues.Add('Unsupported provenance inventory schema.')
-    }
-    if ((Get-Field $Inventory 'maturity') -ne 'governance-evidence-no-runtime-consumer') {
-        $issues.Add('Inventory maturity must remain governance-only during R0.')
+    if ((Get-Field $Inventory 'format_version') -ne 1) {
+        $issues.Add('Unsupported distribution inventory format.')
     }
     if ((Get-Field $Inventory 'task_id') -ne 'R0-GOV-002') {
-        $issues.Add('Inventory does not belong to R0-GOV-002.')
+        $issues.Add('Distribution inventory does not belong to R0-GOV-002.')
     }
 
-    $policy = Get-Field $Inventory 'policy'
-    if ((Get-Field $policy 'id') -ne 'GNC-LIC-PROV-001' -or
-        (Get-Field $policy 'status') -ne 'proposed') {
-        $issues.Add('Inventory policy identity/status differs from the Proposed policy.')
+    $repository = Get-Field $Inventory 'repository'
+    foreach ($field in @(
+            'owner_decision', 'recommended_g1_scope', 'license_conclusion',
+            'external_distribution', 'origin_remote', 'existing_public_exposure')) {
+        if (-not (Test-HasField $repository $field)) {
+            $issues.Add("Repository distribution state is missing '$field'.")
+        }
     }
-    $decisionOwners = @(Get-Field $policy 'decision_owners')
-    if (($decisionOwners -join ',') -ne 'product_owner,architecture_lead') {
-        $issues.Add('License decision owners must be Product Owner and Architecture Lead.')
+    $ownerDecision = [string](Get-Field $repository 'owner_decision')
+    $repositoryDistribution = [string](Get-Field $repository 'external_distribution')
+    if ($ownerDecision -eq 'pending' -and $repositoryDistribution -ne 'blocked') {
+        $issues.Add('Repository external distribution cannot be allowed while the owner decision is pending.')
+    }
+    if ($ownerDecision -eq 'pending' -and $RootLicenseFiles.Count -gt 0) {
+        $issues.Add('A root distribution license appeared while the repository owner decision is pending.')
+    }
+    if ($repositoryDistribution -eq 'allowed' -and $RootLicenseFiles.Count -eq 0) {
+        $issues.Add('Repository external distribution is allowed without a root license file.')
+    }
+    if ($repositoryDistribution -eq 'allowed' -and
+        [string](Get-Field $repository 'license_conclusion') -in @('NONE', 'NOASSERTION', '')) {
+        $issues.Add('Repository external distribution is allowed without a license conclusion.')
     }
 
-    $repositoryLicense = Get-Field $Inventory 'repository_license'
-    if ((Get-Field $repositoryLicense 'selected') -ne $false) {
-        $issues.Add('Repository license cannot be selected while ADR-0008 is Proposed.')
-    }
-    if ((Get-Field $repositoryLicense 'detected_expression') -ne 'NONE' -or
-        (Get-Field $repositoryLicense 'concluded_expression') -ne 'NOASSERTION') {
-        $issues.Add('Repository license detection/conclusion must remain NONE/NOASSERTION.')
-    }
-    if ((Get-Field $repositoryLicense 'external_distribution') -ne
-        'blocked-pending-accepted-adr') {
-        $issues.Add('Repository external distribution must remain blocked.')
-    }
-
-    $vocabulary = Get-Field $Inventory 'vocabulary'
-    $allowedScans = @(Get-Field $vocabulary 'scan_results')
-    $allowedPresence = @(Get-Field $vocabulary 'repository_presence')
-    $allowedInternal = @(Get-Field $vocabulary 'internal_handling')
-    $allowedExternal = @(Get-Field $vocabulary 'external_distribution')
-    $categoryClassifications = [System.Collections.Generic.Dictionary[string, string]]::new(
-        [System.StringComparer]::Ordinal)
-    $categoryClassifications.Add('repository-governed-content', 'internal-research')
-    $categoryClassifications.Add('imported-design-source', 'internal-research')
-    $categoryClassifications.Add('fixture-oracle-and-generated-evidence', 'internal-research')
-    $categoryClassifications.Add('frozen-reference-archive', 'internal-research')
-    $categoryClassifications.Add('external-build-dependency', 'external-dependency')
-    $categoryClassifications.Add('external-tool-bundle', 'external-tool')
-    $categoryClassifications.Add('external-validation-tools', 'external-tool')
-    $categoryClassifications.Add('external-ci-action', 'external-tool')
-    $allowedClassifications = @('internal-research', 'external-dependency', 'external-tool')
-    $allowedIntegrityKinds = @(
-        'per-file-git-object',
-        'manifest-and-per-file-sha256',
-        'sha256-zip-audit',
-        'sha256',
-        'environment-identity',
-        'git-commit')
-    foreach ($expected in @(
-            'no-license-information-found',
-            'license-information-present',
-            'not-scanned-nonredistributed-tool')) {
-        if ($expected -notin $allowedScans) {
-            $issues.Add("Missing scan vocabulary value: $expected")
-        }
-    }
-    foreach ($expected in @('tracked', 'embedded-archive', 'external-untracked')) {
-        if ($expected -notin $allowedPresence) {
-            $issues.Add("Missing repository-presence vocabulary value: $expected")
-        }
-    }
-    foreach ($expected in @('existing-access-only', 'evidence-only', 'subject-to-upstream-terms')) {
-        if ($expected -notin $allowedInternal) {
-            $issues.Add("Missing internal-handling vocabulary value: $expected")
-        }
-    }
-    foreach ($expected in @(
-            'blocked-pending-accepted-adr',
-            'blocked-pending-item-review',
-            'not-redistributed')) {
-        if ($expected -notin $allowedExternal) {
-            $issues.Add("Missing external-distribution vocabulary value: $expected")
-        }
-    }
-
-    $items = @(Get-Field $Inventory 'items')
-    if ($items.Count -eq 0) {
-        $issues.Add('Inventory has no items.')
+    $scopes = @(Get-Field $Inventory 'tracked_scopes')
+    if ($scopes.Count -eq 0) {
+        $issues.Add('Distribution inventory has no tracked scopes.')
         return $issues.ToArray()
     }
-
-    $requiredFields = @(
-        'id', 'category', 'scope', 'owner_role', 'purpose', 'source_refs',
-        'version', 'integrity', 'repository_presence', 'internal_handling',
-        'external_distribution', 'classification', 'license', 'lineage_parents')
-    $ids = @{}
-    foreach ($item in $items) {
-        foreach ($field in $requiredFields) {
-            if (-not (Test-HasField $item $field)) {
-                $issues.Add("Inventory item is missing required field '$field'.")
+    $scopeIds = @{}
+    $allowedBinaryPaths = [System.Collections.Generic.HashSet[string]]::new(
+        [System.StringComparer]::Ordinal)
+    foreach ($scope in $scopes) {
+        foreach ($field in @(
+                'id', 'include_prefixes', 'exclude_prefixes', 'handling',
+                'rights_status', 'license_conclusion', 'external_distribution',
+                'source_refs', 'allowed_binary_paths')) {
+            if (-not (Test-HasField $scope $field)) {
+                $issues.Add("Tracked scope is missing '$field'.")
             }
         }
-
-        $id = [string](Get-Field $item 'id')
+        $id = [string](Get-Field $scope 'id')
         if ([string]::IsNullOrWhiteSpace($id)) {
-            $issues.Add('Inventory item id is empty.')
+            $issues.Add('Tracked scope id is empty.')
         }
-        elseif ($ids.ContainsKey($id)) {
-            $issues.Add("Duplicate inventory item id: $id")
+        elseif ($scopeIds.ContainsKey($id)) {
+            $issues.Add("Duplicate tracked scope id: $id")
         }
         else {
-            $ids[$id] = $item
+            $scopeIds[$id] = $scope
         }
+        if (@(Get-Field $scope 'include_prefixes').Count -eq 0) {
+            $issues.Add("Tracked scope '$id' has no include prefix.")
+        }
+        Test-LocalReferences $issues "Tracked scope '$id'" @(Get-Field $scope 'source_refs')
 
-        $category = [string](Get-Field $item 'category')
-        $classification = [string](Get-Field $item 'classification')
-        if (-not $categoryClassifications.ContainsKey($category)) {
-            $issues.Add("Inventory item '$id' has unsupported category '$category'.")
+        $scopeDistribution = [string](Get-Field $scope 'external_distribution')
+        $scopeLicense = [string](Get-Field $scope 'license_conclusion')
+        $scopeRights = [string](Get-Field $scope 'rights_status')
+        if ($scopeDistribution -notin @('blocked', 'allowed')) {
+            $issues.Add("Tracked scope '$id' has unsupported external distribution '$scopeDistribution'.")
         }
-        if ($classification -cnotin $allowedClassifications) {
-            $issues.Add("Inventory item '$id' has unsupported classification '$classification'.")
+        if ($scopeDistribution -eq 'allowed' -and
+            ($scopeLicense -in @('NONE', 'NOASSERTION', '') -or $scopeRights -ne 'cleared')) {
+            $issues.Add("Tracked scope '$id' is externally allowed without cleared rights and a license conclusion.")
         }
-        elseif ($categoryClassifications.ContainsKey($category) -and
-            $classification -cne [string]$categoryClassifications[$category]) {
-            $issues.Add("Inventory item '$id' classification '$classification' is incompatible with category '$category'.")
-        }
-
-        $integrity = Get-Field $item 'integrity'
-        $integrityKind = [string](Get-Field $integrity 'kind')
-        if ($integrityKind -cnotin $allowedIntegrityKinds) {
-            $issues.Add("Inventory item '$id' has unsupported integrity kind '$integrityKind'.")
-        }
-        elseif ($integrityKind -cin @(
-                'per-file-git-object',
-                'manifest-and-per-file-sha256',
-                'environment-identity',
-                'git-commit') -and
-            [string]::IsNullOrWhiteSpace([string](Get-Field $integrity 'value'))) {
-            $issues.Add("Inventory item '$id' integrity value is empty.")
-        }
-        elseif ($integrityKind -cin @('sha256-zip-audit', 'sha256')) {
-            $integritySha = [string](Get-Field $integrity 'sha256')
-            $integrityBytes = Get-Field $integrity 'bytes'
-            if ($integritySha -cnotmatch '^[0-9a-f]{64}$') {
-                $issues.Add("Inventory item '$id' has an invalid SHA-256 integrity value.")
-            }
-            if (($integrityBytes -isnot [int] -and $integrityBytes -isnot [long]) -or
-                $integrityBytes -le 0) {
-                $issues.Add("Inventory item '$id' has an invalid integrity byte count.")
+        foreach ($path in @(Get-Field $scope 'allowed_binary_paths')) {
+            $pathText = [string]$path
+            if (-not $allowedBinaryPaths.Add($pathText)) {
+                $issues.Add("Tracked binary path is allowed by more than one scope: $pathText")
             }
         }
+    }
 
-        $sourceRefs = @(Get-Field $item 'source_refs')
-        if ($sourceRefs.Count -eq 0) {
-            $issues.Add("Inventory item '$id' has no source reference.")
+    if (-not $scopeIds.ContainsKey('legacy-reference')) {
+        $issues.Add('Tracked scope legacy-reference is missing.')
+    }
+    else {
+        $legacyScope = $scopeIds['legacy-reference']
+        if ((Get-Field $legacyScope 'handling') -ne 'evidence-only' -or
+            (Get-Field $legacyScope 'external_distribution') -ne 'blocked') {
+            $issues.Add('Legacy reference must remain evidence-only and externally blocked.')
         }
-        foreach ($sourceRef in $sourceRefs) {
-            if ([string]::IsNullOrWhiteSpace([string]$sourceRef)) {
-                $issues.Add("Inventory item '$id' has an empty source reference.")
-            }
-        }
+    }
 
-        $scope = Get-Field $item 'scope'
-        if ([string]::IsNullOrWhiteSpace([string](Get-Field $scope 'mode')) -or
-            @(Get-Field $scope 'include').Count -eq 0) {
-            $issues.Add("Inventory item '$id' has an incomplete scope.")
+    foreach ($path in $TrackedFiles) {
+        $matchingScopes = @($scopes | Where-Object {
+                Test-PathMatchesScope $path $_
+            })
+        if ($matchingScopes.Count -eq 0) {
+            $issues.Add("Tracked path matches no distribution scope: $path")
         }
+        elseif ($matchingScopes.Count -gt 1) {
+            $issues.Add("Tracked path matches multiple distribution scopes: $path")
+        }
+    }
 
-        $presence = [string](Get-Field $item 'repository_presence')
-        $internal = [string](Get-Field $item 'internal_handling')
-        $external = [string](Get-Field $item 'external_distribution')
-        if ($presence -notin $allowedPresence) {
-            $issues.Add("Inventory item '$id' has unsupported repository presence '$presence'.")
+    foreach ($path in $allowedBinaryPaths) {
+        if ($path -notin $TrackedFiles) {
+            $issues.Add("Allowed binary path is not tracked: $path")
         }
-        if ($internal -notin $allowedInternal) {
-            $issues.Add("Inventory item '$id' has unsupported internal handling '$internal'.")
+    }
+    $reviewRequiredExtensions = @(
+        '.zip', '.7z', '.tar', '.gz', '.bz2', '.xz', '.exe', '.dll', '.lib',
+        '.a', '.so', '.dylib', '.jar', '.whl', '.onnx', '.bin', '.pdf',
+        '.png', '.jpg', '.jpeg', '.gif', '.mat', '.docx', '.xlsx', '.pptx')
+    foreach ($path in $TrackedFiles) {
+        $extension = [System.IO.Path]::GetExtension($path).ToLowerInvariant()
+        if ($extension -in $reviewRequiredExtensions -and
+            -not $allowedBinaryPaths.Contains($path)) {
+            $issues.Add("Tracked binary or archive requires an explicit inventory entry: $path")
         }
-        if ($external -notin $allowedExternal) {
-            $issues.Add("Inventory item '$id' has unsupported external distribution '$external'.")
-        }
-        if ($presence -eq 'external-untracked' -and
-            @($sourceRefs | Where-Object { [string]$_ -match '^https://' }).Count -eq 0 -and
-            $id -ne 'host-validation-toolchain') {
-            $issues.Add("External item '$id' has no HTTPS upstream source.")
-        }
+    }
 
-        $license = Get-Field $item 'license'
+    $externalInputs = @(Get-Field $Inventory 'external_inputs')
+    if ($externalInputs.Count -eq 0) {
+        $issues.Add('Distribution inventory has no external inputs.')
+    }
+    $inputIds = @{}
+    $registeredCMakePackages = [System.Collections.Generic.HashSet[string]]::new(
+        [System.StringComparer]::Ordinal)
+    $registeredWorkflowUses = [System.Collections.Generic.HashSet[string]]::new(
+        [System.StringComparer]::Ordinal)
+    foreach ($input in $externalInputs) {
         foreach ($field in @(
-                'scan_result', 'detected_expression', 'concluded_expression',
-                'evidence_refs', 'scope_note', 'follow_up')) {
-            if ($null -eq (Get-Field $license $field)) {
-                $issues.Add("Inventory item '$id' license block is missing '$field'.")
+                'id', 'use_scope', 'version', 'bundled', 'source_refs',
+                'license_conclusion', 'distribution_effect')) {
+            if (-not (Test-HasField $input $field)) {
+                $issues.Add("External input is missing '$field'.")
             }
         }
-        $scanResult = [string](Get-Field $license 'scan_result')
-        $detectedExpression = [string](Get-Field $license 'detected_expression')
-        $concludedExpression = [string](Get-Field $license 'concluded_expression')
-        if ($scanResult -notin $allowedScans) {
-            $issues.Add("Inventory item '$id' has unsupported scan result '$scanResult'.")
+        $id = [string](Get-Field $input 'id')
+        if ([string]::IsNullOrWhiteSpace($id)) {
+            $issues.Add('External input id is empty.')
         }
-        if ($concludedExpression -ne 'NOASSERTION') {
-            $issues.Add("Inventory item '$id' has an unapproved license conclusion '$concludedExpression'.")
+        elseif ($inputIds.ContainsKey($id)) {
+            $issues.Add("Duplicate external input id: $id")
         }
-        if ($scanResult -eq 'no-license-information-found' -and
-            $detectedExpression -ne 'NONE') {
-            $issues.Add("Inventory item '$id' must record detected expression NONE.")
+        else {
+            $inputIds[$id] = $input
         }
-        if ($concludedExpression -eq 'NOASSERTION' -and
-            $external -notmatch '^(blocked-|not-redistributed$)') {
-            $issues.Add("NOASSERTION item '$id' cannot be externally distributable.")
+        Test-LocalReferences $issues "External input '$id'" @(Get-Field $input 'source_refs')
+        $bundled = Get-Field $input 'bundled'
+        if ($bundled -isnot [bool]) {
+            $issues.Add("External input '$id' has a non-boolean bundled field.")
         }
-        if ($concludedExpression -match 'LicenseRef-' -and
-            @((Get-Field $license 'evidence_refs') | Where-Object {
-                    [string]$_ -match '^(LICENSES|licenses)/'
-                }).Count -eq 0) {
-            $issues.Add("LicenseRef item '$id' has no preserved custom license text.")
+        elseif ($bundled) {
+            $license = [string](Get-Field $input 'license_conclusion')
+            if ($license -in @('NONE', 'NOASSERTION', '')) {
+                $issues.Add("Bundled external input '$id' has no license conclusion.")
+            }
+            if (@(Get-Field $input 'license_evidence_refs').Count -eq 0) {
+                $issues.Add("Bundled external input '$id' has no license evidence.")
+            }
+        }
+        foreach ($package in @(Get-Field $input 'cmake_packages')) {
+            $packageText = [string]$package
+            if ([string]::IsNullOrWhiteSpace($packageText)) { continue }
+            if (-not $registeredCMakePackages.Add($packageText)) {
+                $issues.Add("CMake package is registered by more than one external input: $packageText")
+            }
+        }
+        $workflowUse = [string](Get-Field $input 'workflow_uses')
+        if (-not [string]::IsNullOrWhiteSpace($workflowUse) -and
+            -not $registeredWorkflowUses.Add($workflowUse)) {
+            $issues.Add("Workflow use is registered by more than one external input: $workflowUse")
         }
     }
 
-    $requiredIds = @(
-        'repository-default-content',
-        'architecture-blueprint',
-        'r0-research-evidence',
-        'legacy-source-archive',
-        'eigen-3.4.0-legacy-reproduction',
-        'w64devkit-2.9.1-legacy-reproduction',
-        'host-validation-toolchain',
-        'github-actions-checkout-6.0.2')
-    foreach ($requiredId in $requiredIds) {
-        if (-not $ids.ContainsKey($requiredId)) {
-            $issues.Add("Required inventory item is missing: $requiredId")
+    $dependencyAcquisitionPattern =
+        '(?im)\b(FetchContent_(Declare|MakeAvailable)|ExternalProject_Add|CPMAddPackage)\s*\('
+    foreach ($text in $CMakeTexts) {
+        $activeText = (@($text -split "`r?`n" | Where-Object {
+                    $_ -notmatch '^\s*#'
+                }) -join "`n")
+        if ($activeText -match $dependencyAcquisitionPattern) {
+            $issues.Add('Unreviewed CMake dependency acquisition signal is present.')
         }
-    }
-
-    foreach ($item in $items) {
-        $id = [string](Get-Field $item 'id')
-        $parents = @(Get-Field $item 'lineage_parents')
-        $category = [string](Get-Field $item 'category')
-        $external = [string](Get-Field $item 'external_distribution')
-        if ($category -ceq 'fixture-oracle-and-generated-evidence') {
-            if ($parents.Count -eq 0) {
-                $issues.Add("Generated evidence item '$id' has no lineage parents.")
-            }
-            if ($external -cnotmatch '^blocked-') {
-                $issues.Add("Generated evidence item '$id' must remain externally blocked while upstream rights are unresolved.")
-            }
-        }
-        if (@($parents | Sort-Object -Unique).Count -ne $parents.Count) {
-            $issues.Add("Inventory item '$id' has duplicate lineage parents.")
-        }
-        foreach ($parent in $parents) {
-            if ([string]$parent -eq $id) {
-                $issues.Add("Inventory item '$id' is its own lineage parent.")
-            }
-            elseif (-not $ids.ContainsKey([string]$parent)) {
-                $issues.Add("Inventory item '$id' has missing lineage parent '$parent'.")
+        foreach ($match in [regex]::Matches(
+                $activeText,
+                '(?im)\bfind_package\s*\(\s*([A-Za-z0-9_.+-]+)')) {
+            $package = [string]$match.Groups[1].Value
+            if (-not $registeredCMakePackages.Contains($package)) {
+                $issues.Add("CMake package has no external-input record: $package")
             }
         }
     }
 
-    $remaining = @{}
-    foreach ($item in $items) {
-        $remaining[[string](Get-Field $item 'id')] = @(
-            Get-Field $item 'lineage_parents')
-    }
-    while ($remaining.Count -gt 0) {
-        $ready = [System.Collections.Generic.List[string]]::new()
-        foreach ($id in @($remaining.Keys)) {
-            $hasUnresolvedParent = $false
-            foreach ($parent in @($remaining[$id])) {
-                if ($remaining.ContainsKey([string]$parent)) {
-                    $hasUnresolvedParent = $true
-                    break
-                }
+    foreach ($text in $WorkflowTexts) {
+        foreach ($match in [regex]::Matches($text, '(?im)^\s*uses:\s*([^\s#]+)')) {
+            $workflowUse = [string]$match.Groups[1].Value
+            if (-not $registeredWorkflowUses.Contains($workflowUse)) {
+                $issues.Add("Workflow dependency has no external-input record: $workflowUse")
             }
-            if (-not $hasUnresolvedParent) {
-                $ready.Add([string]$id)
-            }
-        }
-        if ($ready.Count -eq 0) {
-            $issues.Add('Inventory lineage contains a cycle.')
-            break
-        }
-        foreach ($id in $ready) {
-            $remaining.Remove($id)
-        }
-    }
-
-    if ($ids.ContainsKey('legacy-source-archive')) {
-        $legacy = $ids['legacy-source-archive']
-        $integrity = Get-Field $legacy 'integrity'
-        $expected = [ordered]@{
-            sha256 = '2159a324fd897e4bd508c140a36c9165d744e4e4e61861c5b568201707f988e5'
-            bytes = 990450
-            zip_entries = 510
-            file_entries = 391
-            directory_entries = 119
-            uncompressed_file_bytes = 2708191
-            license_named_entries = 0
-            license_text_signal_entries = 0
-        }
-        foreach ($name in $expected.Keys) {
-            if ((Get-Field $integrity $name) -ne $expected[$name]) {
-                $issues.Add("Legacy inventory integrity field '$name' differs from the frozen audit.")
-            }
-        }
-        if ((Get-Field $legacy 'internal_handling') -ne 'evidence-only' -or
-            (Get-Field $legacy 'external_distribution') -ne
-            'blocked-pending-item-review') {
-            $issues.Add('Legacy archive must remain evidence-only and externally blocked.')
-        }
-    }
-
-    $externalExpected = [ordered]@{
-        'eigen-3.4.0-legacy-reproduction' = [ordered]@{
-            version = '3.4.0'
-            sha256 = 'eba3f3d414d2f8cba2919c78ec6daab08fc71ba2ba4ae502b7e5d4d99fc02cda'
-            bytes = 3704940
-        }
-        'w64devkit-2.9.1-legacy-reproduction' = [ordered]@{
-            version = '2.9.1'
-            sha256 = '9208c19755cd4964b7915b9afcf02c66d493a4c870c4b3e83f6c538d9c1237a5'
-            bytes = 61462208
-        }
-    }
-    foreach ($id in $externalExpected.Keys) {
-        if (-not $ids.ContainsKey($id)) { continue }
-        $item = $ids[$id]
-        $expected = $externalExpected[$id]
-        $integrity = Get-Field $item 'integrity'
-        if ((Get-Field $item 'version') -ne $expected.version -or
-            (Get-Field $integrity 'sha256') -ne $expected.sha256 -or
-            (Get-Field $integrity 'bytes') -ne $expected.bytes) {
-            $issues.Add("Pinned external identity differs for '$id'.")
-        }
-        if ((Get-Field $item 'repository_presence') -ne 'external-untracked' -or
-            (Get-Field $item 'external_distribution') -ne 'not-redistributed') {
-            $issues.Add("Pinned external item '$id' must remain untracked and not redistributed.")
-        }
-    }
-
-    if ($ids.ContainsKey('github-actions-checkout-6.0.2')) {
-        $checkout = $ids['github-actions-checkout-6.0.2']
-        $integrity = Get-Field $checkout 'integrity'
-        if ((Get-Field $checkout 'version') -ne '6.0.2' -or
-            (Get-Field $integrity 'kind') -ne 'git-commit' -or
-            (Get-Field $integrity 'value') -ne
-            'de0fac2e4500dabe0009e67214ff5f5447ce83dd') {
-            $issues.Add('Pinned actions/checkout identity differs from the reviewed v6.0.2 commit.')
-        }
-        if ((Get-Field $checkout 'repository_presence') -ne 'external-untracked' -or
-            (Get-Field $checkout 'external_distribution') -ne 'not-redistributed') {
-            $issues.Add('Pinned actions/checkout must remain untracked and not redistributed.')
         }
     }
 
     return $issues.ToArray()
 }
 
-function Invoke-Mutation(
+function Get-ExternalBlockers([object]$Inventory) {
+    $blockers = [System.Collections.Generic.List[string]]::new()
+    $repository = Get-Field $Inventory 'repository'
+    if ((Get-Field $repository 'owner_decision') -ne 'accepted') {
+        $blockers.Add('repository-owner-distribution-decision-pending')
+    }
+    if ((Get-Field $repository 'external_distribution') -ne 'allowed') {
+        $blockers.Add('repository-distribution-blocked')
+    }
+    $publicExposure = Get-Field $repository 'existing_public_exposure'
+    if ((Get-Field $publicExposure 'owner_disposition') -ne 'resolved') {
+        $blockers.Add('existing-public-origin-disposition-pending')
+    }
+    foreach ($scope in @(Get-Field $Inventory 'tracked_scopes')) {
+        if ((Get-Field $scope 'external_distribution') -ne 'allowed') {
+            $blockers.Add("scope:$([string](Get-Field $scope 'id')):$([string](Get-Field $scope 'rights_status'))")
+        }
+    }
+    return $blockers.ToArray()
+}
+
+function Invoke-NegativeCase(
     [string]$Name,
     [string]$ExpectedDiagnostic,
-    [scriptblock]$Mutation) {
-    $copy = $script:inventory | ConvertTo-Json -Depth 100 | ConvertFrom-Json
-    & $Mutation $copy
-    $mutationIssues = @(Test-InventoryObject $copy)
-    $diagnosticMatched = @($mutationIssues | Where-Object {
+    [object]$CandidateInventory,
+    [string[]]$CandidateTrackedFiles,
+    [string[]]$CandidateCMakeTexts,
+    [string[]]$CandidateWorkflowTexts,
+    [string[]]$CandidateRootLicenseFiles) {
+    $issues = @(Test-InventoryObject `
+            $CandidateInventory `
+            $CandidateTrackedFiles `
+            $CandidateCMakeTexts `
+            $CandidateWorkflowTexts `
+            $CandidateRootLicenseFiles)
+    $matched = @($issues | Where-Object {
             $_.IndexOf($ExpectedDiagnostic, [System.StringComparison]::OrdinalIgnoreCase) -ge 0
         }).Count -gt 0
-    $rejected = $mutationIssues.Count -gt 0 -and $diagnosticMatched
-    if ($mutationIssues.Count -eq 0) {
-        Add-Error "Mutation was not rejected: $Name"
+    if (-not $matched) {
+        $script:errors.Add(
+            "Negative case '$Name' did not produce '$ExpectedDiagnostic': $($issues -join ' | ')")
     }
-    elseif (-not $diagnosticMatched) {
-        Add-Error "Mutation '$Name' failed for the wrong reason: $($mutationIssues -join ' | ')"
-    }
-    $script:mutationResults.Add([pscustomobject][ordered]@{
+    $script:negativeResults.Add([pscustomobject][ordered]@{
             name = $Name
-            rejected = $rejected
-            expected_diagnostic = $ExpectedDiagnostic
-            diagnostic_matched = $diagnosticMatched
-            detected_issue_count = $mutationIssues.Count
+            rejected = $matched
         })
 }
 
-$requiredPaths = @(
-    'LICENSE-STATUS.md',
-    'docs/adr/0008-internal-default-license-and-provenance-gate.md',
-    'docs/governance/license-and-provenance-policy.md',
-    'docs/governance/provenance-inventory.json',
-    'docs/quality/provenance-review-checklist.md',
-    'reference/legacy/source-manifest.json',
-    'reference/legacy/legacy-source.zip',
-    'reference/legacy/legacy-source.sha256',
-    'reference/legacy/reproduction/current.json',
-    'tools/validate-license-provenance.ps1')
-foreach ($relativePath in $requiredPaths) {
-    if (-not (Test-Path -LiteralPath (Join-Path $repoRoot $relativePath) -PathType Leaf)) {
-        Add-Error "Required license/provenance path is missing: $relativePath"
-    }
-}
+try {
+    $inventory = Read-Json $InventoryPath
 
-$inventory = Read-Json $inventoryPath
-$script:inventory = $inventory
-if ($null -ne $inventory) {
-    foreach ($issue in @(Test-InventoryObject $inventory)) {
-        Add-Error $issue
+    $trackedFiles = @(& git -C $repoRoot -c core.quotepath=false ls-files)
+    if ($LASTEXITCODE -ne 0 -or $trackedFiles.Count -eq 0) {
+        throw 'Cannot enumerate tracked repository files.'
     }
-
-    foreach ($item in @(Get-Field $inventory 'items')) {
-        $id = [string](Get-Field $item 'id')
-        foreach ($sourceRef in @(Get-Field $item 'source_refs')) {
-            if ([string]$sourceRef -match '^https://') { continue }
-            $sourcePath = Join-Path $repoRoot ([string]$sourceRef)
-            if (-not (Test-Path -LiteralPath $sourcePath -PathType Leaf)) {
-                Add-Error "Local source reference for '$id' is missing: $sourceRef"
-            }
-        }
-        foreach ($evidenceRef in @(Get-Field (Get-Field $item 'license') 'evidence_refs')) {
-            if ([string]$evidenceRef -match '^https://') { continue }
-            $evidencePath = Join-Path $repoRoot ([string]$evidenceRef)
-            if (-not (Test-Path -LiteralPath $evidencePath -PathType Leaf)) {
-                Add-Error "Local license evidence for '$id' is missing: $evidenceRef"
-            }
-        }
-    }
-}
-
-$licenseStatusPath = Join-Path $repoRoot 'LICENSE-STATUS.md'
-if (Test-Path -LiteralPath $licenseStatusPath -PathType Leaf) {
-    $licenseStatus = Get-Content -LiteralPath $licenseStatusPath -Raw -Encoding utf8
-    foreach ($requiredText in @(
-            'No distribution license has been selected for this repository.',
-            'This status notice is not a license grant.',
-            'External sharing is blocked',
-            'The frozen Legacy archive remains evidence-only')) {
-        if (-not $licenseStatus.Contains($requiredText)) {
-            Add-Error "LICENSE-STATUS.md is missing required safeguard text: $requiredText"
-        }
-    }
-}
-
-$adrPath = Join-Path $repoRoot 'docs\adr\0008-internal-default-license-and-provenance-gate.md'
-if (Test-Path -LiteralPath $adrPath -PathType Leaf) {
-    $adrText = Get-Content -LiteralPath $adrPath -Raw -Encoding utf8
-    if ($adrText -notmatch '(?m)^- Status: Proposed$' -or
-        $adrText -notmatch '(?m)^- Owners: Product Owner, Architecture Lead$') {
-        Add-Error 'ADR-0008 must remain Proposed with both decision-owner roles.'
-    }
-}
-
-$rootLicenseFiles = @(Get-ChildItem -LiteralPath $repoRoot -File | Where-Object {
-        $_.Name -match '^(?i)(LICENSE|LICENCE|COPYING|UNLICENSE)(\..*)?$'
-    })
-if ($rootLicenseFiles.Count -gt 0) {
-    Add-Error "A repository distribution license file exists while ADR-0008 is Proposed: $($rootLicenseFiles.Name -join ', ')"
-}
-
-$legacyArchivePath = Join-Path $repoRoot 'reference\legacy\legacy-source.zip'
-$legacyAudit = $null
-if (Test-Path -LiteralPath $legacyArchivePath -PathType Leaf) {
-    Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue
-    $archive = [System.IO.Compression.ZipFile]::OpenRead($legacyArchivePath)
-    try {
-        $fileEntries = @($archive.Entries | Where-Object {
-                -not [string]::IsNullOrEmpty($_.Name)
-            })
-        $directoryEntries = @($archive.Entries | Where-Object {
-                [string]::IsNullOrEmpty($_.Name)
-            })
-        $licenseNamePattern = '(?i)(^|/)(licen[cs]e|copying|notice|copyright)(\.[^/]*)?$'
-        $licenseTextPattern = '(?im)SPDX-License-Identifier|Copyright\s*(\(c\)|©)|Licensed under the|Permission is hereby granted, free of charge|GNU (GENERAL|LESSER) PUBLIC LICENSE|Mozilla Public License'
-        $licenseNamedEntries = @($fileEntries | Where-Object {
-                $_.FullName -match $licenseNamePattern
-            })
-        $licenseTextSignalEntries = [System.Collections.Generic.List[string]]::new()
-        $textExtensions = @(
-            '', '.md', '.txt', '.hpp', '.h', '.cpp', '.c', '.cmake',
-            '.json', '.ps1', '.py', '.m', '.gitignore')
-        foreach ($entry in $fileEntries) {
-            if ($entry.Length -gt 1048576 -or
-                [System.IO.Path]::GetExtension($entry.FullName).ToLowerInvariant() -notin
-                $textExtensions) {
-                continue
-            }
-            $reader = [System.IO.StreamReader]::new(
-                $entry.Open(), [System.Text.Encoding]::UTF8, $true)
-            try {
-                $content = $reader.ReadToEnd()
-            }
-            finally {
-                $reader.Dispose()
-            }
-            if ($content -match $licenseTextPattern) {
-                $licenseTextSignalEntries.Add($entry.FullName)
-            }
-        }
-        $legacyAudit = [pscustomobject][ordered]@{
-            sha256 = Get-Sha256 $legacyArchivePath
-            bytes = (Get-Item -LiteralPath $legacyArchivePath).Length
-            zip_entries = $archive.Entries.Count
-            file_entries = $fileEntries.Count
-            directory_entries = $directoryEntries.Count
-            uncompressed_file_bytes = [long](
-                $fileEntries | Measure-Object -Property Length -Sum).Sum
-            license_named_entries = $licenseNamedEntries.Count
-            license_text_signal_entries = $licenseTextSignalEntries.Count
-        }
-    }
-    finally {
-        $archive.Dispose()
-    }
-}
-
-if ($null -ne $legacyAudit -and $null -ne $inventory) {
-    $legacyItem = @((Get-Field $inventory 'items') | Where-Object {
-            (Get-Field $_ 'id') -eq 'legacy-source-archive'
-        }) | Select-Object -First 1
-    if ($null -ne $legacyItem) {
-        $integrity = Get-Field $legacyItem 'integrity'
-        foreach ($field in @(
-                'sha256', 'bytes', 'zip_entries', 'file_entries',
-                'directory_entries', 'uncompressed_file_bytes',
-                'license_named_entries', 'license_text_signal_entries')) {
-            if ((Get-Field $legacyAudit $field) -ne (Get-Field $integrity $field)) {
-                Add-Error "Live Legacy audit differs from inventory field '$field'."
-            }
-        }
-    }
-}
-
-$legacyManifest = Read-Json (Join-Path $repoRoot 'reference\legacy\source-manifest.json')
-if ($null -ne $legacyManifest -and $null -ne $legacyAudit) {
-    $manifestArchive = Get-Field $legacyManifest 'archive'
-    if ((Get-Field $manifestArchive 'sha256') -ne $legacyAudit.sha256 -or
-        (Get-Field $manifestArchive 'bytes') -ne $legacyAudit.bytes) {
-        Add-Error 'Legacy source manifest differs from the live archive audit.'
-    }
-}
-
-$pointer = Read-Json (Join-Path $repoRoot 'reference\legacy\reproduction\current.json')
-$environmentRelativePath = $null
-$environment = $null
-if ($null -ne $pointer) {
-    $environmentRelativePath = ([string](Get-Field $pointer 'path')).Replace('\', '/') +
-        '/environment-manifest.json'
-    $environment = Read-Json (Join-Path $repoRoot $environmentRelativePath)
-}
-if ($null -ne $environment -and $null -ne $inventory) {
-    $items = @(Get-Field $inventory 'items')
-    $dependencyPairs = [ordered]@{
-        'eigen-3.4.0-legacy-reproduction' = 'eigen'
-        'w64devkit-2.9.1-legacy-reproduction' = 'w64devkit'
-    }
-    foreach ($itemId in $dependencyPairs.Keys) {
-        $item = @($items | Where-Object { (Get-Field $_ 'id') -eq $itemId }) |
-            Select-Object -First 1
-        $dependency = Get-Field (Get-Field $environment 'dependencies') $dependencyPairs[$itemId]
-        if ($null -eq $item -or $null -eq $dependency) {
-            Add-Error "Cannot compare reproduction dependency identity for '$itemId'."
-            continue
-        }
-        $integrity = Get-Field $item 'integrity'
-        if ((Get-Field $item 'version') -ne (Get-Field $dependency 'version') -or
-            (Get-Field $integrity 'sha256') -ne (Get-Field $dependency 'archive_sha256') -or
-            (Get-Field $integrity 'bytes') -ne (Get-Field $dependency 'archive_bytes')) {
-            Add-Error "Inventory differs from reproduction evidence for '$itemId'."
-        }
-    }
-}
-
-if ($null -ne $inventory) {
-    Invoke-Mutation 'duplicate-item-id' 'Duplicate inventory item id' {
-        param($value)
-        $value.items[1].id = $value.items[0].id
-    }
-    Invoke-Mutation 'missing-source-provenance' 'has no source reference' {
-        param($value)
-        $value.items[0].source_refs = @()
-    }
-    Invoke-Mutation 'noassertion-external-distribution' 'cannot be externally distributable' {
-        param($value)
-        $value.items[0].external_distribution = 'allowed'
-    }
-    Invoke-Mutation 'legacy-hash-drift' "Legacy inventory integrity field 'sha256' differs" {
-        param($value)
-        $value.items[3].integrity.sha256 = ('0' * 64)
-    }
-    Invoke-Mutation 'unapproved-license-conclusion' 'has an unapproved license conclusion' {
-        param($value)
-        $value.items[0].license.concluded_expression = 'MIT'
-    }
-    Invoke-Mutation 'license-ref-without-text' 'has no preserved custom license text' {
-        param($value)
-        $value.items[0].license.concluded_expression = 'LicenseRef-GNC-Private'
-    }
-    Invoke-Mutation 'repository-license-status-contradiction' 'Repository license cannot be selected' {
-        param($value)
-        $value.repository_license.selected = $true
-    }
-    Invoke-Mutation 'checkout-action-pin-drift' 'Pinned actions/checkout identity differs' {
-        param($value)
-        $checkout = @($value.items | Where-Object {
-                $_.id -eq 'github-actions-checkout-6.0.2'
-            }) | Select-Object -First 1
-        $checkout.integrity.value = ('0' * 40)
-    }
-    Invoke-Mutation 'unknown-item-category' 'has unsupported category' {
-        param($value)
-        $value.items[2].category = 'Fixture-Oracle-And-Generated-Evidence'
-    }
-    Invoke-Mutation 'generated-classification-mismatch' 'is incompatible with category' {
-        param($value)
-        $value.items[2].classification = 'external-tool'
-    }
-    Invoke-Mutation 'generated-missing-lineage' 'has no lineage parents' {
-        param($value)
-        $value.items[2].lineage_parents = @()
-    }
-    Invoke-Mutation 'generated-unresolved-lineage' 'has missing lineage parent' {
-        param($value)
-        $value.items[2].lineage_parents = @($value.items[2].lineage_parents) +
-            @('missing-upstream-record')
-    }
-    Invoke-Mutation 'generated-restriction-downgrade' 'must remain externally blocked' {
-        param($value)
-        $value.items[2].external_distribution = 'not-redistributed'
-    }
-    Invoke-Mutation 'generated-missing-integrity' 'integrity value is empty' {
-        param($value)
-        $value.items[2].integrity.value = ''
-    }
-}
-
-$roles = Read-Json (Join-Path $repoRoot 'docs\team\role-assignments.json')
-$roleState = [ordered]@{}
-foreach ($roleId in @('product_owner', 'architecture_lead')) {
-    $role = @((Get-Field $roles 'roles') | Where-Object {
-            (Get-Field $_ 'id') -eq $roleId
-        }) | Select-Object -First 1
-    $roleState[$roleId + '_assigned'] = (
-        $null -ne $role -and
-        -not [string]::IsNullOrWhiteSpace([string](Get-Field $role 'assignee')))
-}
-
-$inputRelativePaths = @(
-    'LICENSE-STATUS.md',
-    'docs/adr/0008-internal-default-license-and-provenance-gate.md',
-    'docs/governance/license-and-provenance-policy.md',
-    'docs/governance/provenance-inventory.json',
-    'docs/quality/provenance-review-checklist.md',
-    'reference/legacy/source-manifest.json',
-    'reference/legacy/legacy-source.sha256',
-    'reference/legacy/legacy-source.zip',
-    'reference/legacy/reproduction/current.json',
-    $environmentRelativePath,
-    'tools/validate-license-provenance.ps1') | Where-Object {
-        -not [string]::IsNullOrWhiteSpace([string]$_)
-    }
-$inputHashes = [System.Collections.Generic.List[object]]::new()
-foreach ($relativePath in $inputRelativePaths) {
-    $absolutePath = Join-Path $repoRoot $relativePath
-    if (-not (Test-Path -LiteralPath $absolutePath -PathType Leaf)) { continue }
-    $isBinary = [System.IO.Path]::GetExtension($absolutePath) -eq '.zip'
-    $inputHashes.Add([pscustomobject][ordered]@{
-            path = ([string]$relativePath).Replace('\', '/')
-            sha256 = if ($isBinary) {
-                Get-Sha256 $absolutePath
-            }
-            else {
-                Get-NormalizedTextSha256 $absolutePath
-            }
-            hash_normalization = if ($isBinary) { 'raw-bytes' } else { 'utf8-lf-no-bom' }
+    $trackedFiles = @($trackedFiles | ForEach-Object {
+            ([string]$_).Replace('\', '/')
         })
-}
 
-$items = if ($null -ne $inventory) { @(Get-Field $inventory 'items') } else { @() }
-$noAssertionCount = @($items | Where-Object {
-        (Get-Field (Get-Field $_ 'license') 'concluded_expression') -eq 'NOASSERTION'
-    }).Count
-$blockedCount = @($items | Where-Object {
-        [string](Get-Field $_ 'external_distribution') -match '^blocked-'
-    }).Count
-$notRedistributedCount = @($items | Where-Object {
-        (Get-Field $_ 'external_distribution') -eq 'not-redistributed'
-    }).Count
-
-$expectedReport = [pscustomobject][ordered]@{
-    schema_version = 'gnczmkn.license-provenance-conformance/1'
-    task_id = 'R0-GOV-002'
-    reviewed_on = '2026-08-10'
-    status = 'passed'
-    policy = [ordered]@{
-        id = 'GNC-LIC-PROV-001'
-        adr_status = 'Proposed'
-        repository_distribution_license_selected = $false
-        root_distribution_license_files = $rootLicenseFiles.Count
-        decision_roles = $roleState
+    $cmakeTexts = [System.Collections.Generic.List[string]]::new()
+    foreach ($path in $trackedFiles | Where-Object {
+            $_ -notlike 'reference/legacy/*' -and
+            ([System.IO.Path]::GetFileName($_) -eq 'CMakeLists.txt' -or
+                [System.IO.Path]::GetExtension($_) -eq '.cmake')
+        }) {
+        $cmakeTexts.Add((Get-Content -LiteralPath (Join-Path $repoRoot $path) -Raw -Encoding utf8))
     }
-    inventory = [ordered]@{
-        item_count = $items.Count
-        noassertion_count = $noAssertionCount
-        externally_blocked_count = $blockedCount
-        external_not_redistributed_count = $notRedistributedCount
-        runtime_consumers = 0
-    }
-    legacy_archive_audit = $legacyAudit
-    pinned_external_inputs = @(
-        [ordered]@{
-            id = 'eigen-3.4.0-legacy-reproduction'
-            version = '3.4.0'
-            sha256 = 'eba3f3d414d2f8cba2919c78ec6daab08fc71ba2ba4ae502b7e5d4d99fc02cda'
-            repository_presence = 'external-untracked'
-            external_distribution = 'not-redistributed'
-        },
-        [ordered]@{
-            id = 'w64devkit-2.9.1-legacy-reproduction'
-            version = '2.9.1'
-            sha256 = '9208c19755cd4964b7915b9afcf02c66d493a4c870c4b3e83f6c538d9c1237a5'
-            repository_presence = 'external-untracked'
-            external_distribution = 'not-redistributed'
-        },
-        [ordered]@{
-            id = 'github-actions-checkout-6.0.2'
-            version = '6.0.2'
-            git_commit = 'de0fac2e4500dabe0009e67214ff5f5447ce83dd'
-            repository_presence = 'external-untracked'
-            external_distribution = 'not-redistributed'
-        })
-    mutation_tests = @($mutationResults)
-    input_hashes = @($inputHashes)
-}
 
-if ($errors.Count -eq 0) {
-    if ($UpdateReport) {
-        $json = $expectedReport | ConvertTo-Json -Depth 20
-        $json = $json.Replace("`r`n", "`n").Replace("`r", "`n")
-        [System.IO.File]::WriteAllText(
-            $reportPath,
-            $json + "`n",
-            [System.Text.UTF8Encoding]::new($false))
+    $workflowTexts = [System.Collections.Generic.List[string]]::new()
+    foreach ($path in $trackedFiles | Where-Object {
+            $_ -like '.github/workflows/*.yml' -or $_ -like '.github/workflows/*.yaml'
+        }) {
+        $workflowTexts.Add((Get-Content -LiteralPath (Join-Path $repoRoot $path) -Raw -Encoding utf8))
+    }
+
+    $rootLicenseFiles = @(Get-ChildItem -LiteralPath $repoRoot -File | Where-Object {
+            $_.Name -match '^(?i)(LICENSE|LICENCE|COPYING|UNLICENSE)(\.(md|txt|rst))?$'
+        } | ForEach-Object { $_.Name })
+
+    foreach ($issue in @(Test-InventoryObject `
+            $inventory `
+            $trackedFiles `
+            $cmakeTexts.ToArray() `
+            $workflowTexts.ToArray() `
+            $rootLicenseFiles)) {
+        $errors.Add($issue)
+    }
+
+    $legacyScope = Get-ItemById @(Get-Field $inventory 'tracked_scopes') 'legacy-reference'
+    $legacyArchive = Get-Field $legacyScope 'archive'
+    $legacyPath = Join-Path $repoRoot ([string](Get-Field $legacyArchive 'path'))
+    $legacyAudit = $null
+    if (-not (Test-Path -LiteralPath $legacyPath -PathType Leaf)) {
+        $errors.Add('Legacy archive is missing.')
     }
     else {
-        $actualReport = Read-Json $reportPath
-        if ($null -ne $actualReport) {
-            $actualCanonical = $actualReport | ConvertTo-Json -Depth 20 -Compress
-            $expectedCanonical = $expectedReport | ConvertTo-Json -Depth 20 -Compress
-            if ($actualCanonical -ne $expectedCanonical) {
-                Add-Error 'License/provenance conformance report is stale; run with -UpdateReport.'
+        Add-Type -AssemblyName System.IO.Compression.FileSystem -ErrorAction SilentlyContinue
+        $archive = [System.IO.Compression.ZipFile]::OpenRead($legacyPath)
+        try {
+            $fileEntries = @($archive.Entries | Where-Object {
+                    -not [string]::IsNullOrEmpty($_.Name)
+                })
+            $licenseNamePattern = '(?i)(^|/)(licen[cs]e|copying|notice|copyright)(\.[^/]*)?$'
+            $licenseTextPattern = '(?im)SPDX-License-Identifier|Copyright\s*(\(c\)|©)|Licensed under the|Permission is hereby granted, free of charge|GNU (GENERAL|LESSER) PUBLIC LICENSE|Mozilla Public License'
+            $licenseNamedEntries = @($fileEntries | Where-Object {
+                    $_.FullName -match $licenseNamePattern
+                })
+            $licenseTextEntries = [System.Collections.Generic.List[string]]::new()
+            $textExtensions = @(
+                '', '.md', '.txt', '.hpp', '.h', '.cpp', '.c', '.cmake',
+                '.json', '.ps1', '.py', '.m', '.gitignore')
+            foreach ($entry in $fileEntries) {
+                if ($entry.Length -gt 1048576 -or
+                    [System.IO.Path]::GetExtension($entry.FullName).ToLowerInvariant() -notin
+                    $textExtensions) {
+                    continue
+                }
+                $reader = [System.IO.StreamReader]::new(
+                    $entry.Open(), [System.Text.Encoding]::UTF8, $true)
+                try {
+                    $content = $reader.ReadToEnd()
+                }
+                finally {
+                    $reader.Dispose()
+                }
+                if ($content -match $licenseTextPattern) {
+                    $licenseTextEntries.Add($entry.FullName)
+                }
+            }
+            $legacyAudit = [pscustomobject][ordered]@{
+                sha256 = Get-Sha256 $legacyPath
+                bytes = (Get-Item -LiteralPath $legacyPath).Length
+                file_entries = $fileEntries.Count
+                license_named_entries = $licenseNamedEntries.Count
+                license_text_signal_entries = $licenseTextEntries.Count
             }
         }
+        finally {
+            $archive.Dispose()
+        }
+
+        if ($legacyAudit.sha256 -ne (Get-Field $legacyArchive 'sha256') -or
+            $legacyAudit.bytes -ne (Get-Field $legacyArchive 'bytes')) {
+            $errors.Add('Legacy archive identity differs from the distribution inventory.')
+        }
+        $legacyManifest = Read-Json (Join-Path $repoRoot 'reference\legacy\source-manifest.json')
+        $manifestArchive = Get-Field $legacyManifest 'archive'
+        if ($legacyAudit.sha256 -ne (Get-Field $manifestArchive 'sha256') -or
+            $legacyAudit.bytes -ne (Get-Field $manifestArchive 'bytes')) {
+            $errors.Add('Legacy archive identity differs from its source manifest.')
+        }
+    }
+
+    $reproductionPointer = Read-Json (
+        Join-Path $repoRoot 'reference\legacy\reproduction\current.json')
+    $environmentPath = Join-Path $repoRoot (
+        ([string](Get-Field $reproductionPointer 'path')).Replace('/', '\') +
+        '\environment-manifest.json')
+    $environment = Read-Json $environmentPath
+    $externalInputs = @(Get-Field $inventory 'external_inputs')
+    foreach ($mapping in @(
+            @{ item = 'eigen-3.4.0-legacy-reproduction'; environment = 'eigen' },
+            @{ item = 'w64devkit-2.9.1-legacy-reproduction'; environment = 'w64devkit' })) {
+        $item = Get-ItemById $externalInputs $mapping.item
+        $dependency = Get-Field (Get-Field $environment 'dependencies') $mapping.environment
+        $integrity = Get-Field $item 'integrity'
+        if ($null -eq $item -or $null -eq $dependency -or
+            (Get-Field $item 'version') -ne (Get-Field $dependency 'version') -or
+            (Get-Field $integrity 'sha256') -ne (Get-Field $dependency 'archive_sha256') -or
+            (Get-Field $integrity 'bytes') -ne (Get-Field $dependency 'archive_bytes')) {
+            $errors.Add("External input identity differs from Legacy reproduction evidence: $($mapping.item)")
+        }
+    }
+
+    $candidate = Copy-JsonObject $inventory
+    $candidate.repository.external_distribution = 'allowed'
+    Invoke-NegativeCase `
+        'owner-decision-bypass' `
+        'owner decision is pending' `
+        $candidate `
+        $trackedFiles `
+        $cmakeTexts.ToArray() `
+        $workflowTexts.ToArray() `
+        $rootLicenseFiles
+
+    $candidate = Copy-JsonObject $inventory
+    $candidateLegacy = Get-ItemById @($candidate.tracked_scopes) 'legacy-reference'
+    $candidateLegacy.external_distribution = 'allowed'
+    $candidateLegacy.rights_status = 'cleared'
+    $candidateLegacy.license_conclusion = 'MIT'
+    Invoke-NegativeCase `
+        'legacy-external-distribution' `
+        'Legacy reference must remain evidence-only and externally blocked' `
+        $candidate `
+        $trackedFiles `
+        $cmakeTexts.ToArray() `
+        $workflowTexts.ToArray() `
+        $rootLicenseFiles
+
+    Invoke-NegativeCase `
+        'unreviewed-vendored-binary' `
+        'Tracked binary or archive requires an explicit inventory entry' `
+        (Copy-JsonObject $inventory) `
+        @($trackedFiles + 'vendor/unreviewed.dll') `
+        $cmakeTexts.ToArray() `
+        $workflowTexts.ToArray() `
+        $rootLicenseFiles
+
+    Invoke-NegativeCase `
+        'unreviewed-cmake-download' `
+        'Unreviewed CMake dependency acquisition signal' `
+        (Copy-JsonObject $inventory) `
+        $trackedFiles `
+        @($cmakeTexts.ToArray() + 'FetchContent_Declare(unreviewed URL https://example.invalid/source.zip)') `
+        $workflowTexts.ToArray() `
+        $rootLicenseFiles
+
+    $externalBlockers = @(Get-ExternalBlockers $inventory)
+    $scopeCounts = [System.Collections.Generic.List[object]]::new()
+    foreach ($scope in @(Get-Field $inventory 'tracked_scopes')) {
+        $scopeCounts.Add([pscustomobject][ordered]@{
+                id = [string](Get-Field $scope 'id')
+                tracked_files = @($trackedFiles | Where-Object {
+                        Test-PathMatchesScope $_ $scope
+                    }).Count
+            })
+    }
+
+    $summary = [pscustomobject][ordered]@{
+        task_id = 'R0-GOV-002'
+        validation = if ($errors.Count -eq 0) { 'passed' } else { 'failed' }
+        internal_workspace = [ordered]@{
+            ready = $errors.Count -eq 0
+            tracked_files = $trackedFiles.Count
+            scope_coverage = @($scopeCounts)
+        }
+        external_distribution = [ordered]@{
+            ready = $errors.Count -eq 0 -and $externalBlockers.Count -eq 0
+            blockers = $externalBlockers
+        }
+        build_inputs = [ordered]@{
+            cmake_documents = $cmakeTexts.Count
+            workflow_documents = $workflowTexts.Count
+            external_inputs = $externalInputs.Count
+        }
+        legacy_archive = $legacyAudit
+        negative_cases = @($negativeResults)
+        validation_errors = @($errors)
+    }
+
+    if ($errors.Count -gt 0) {
+        if ($Json) {
+            $summary | ConvertTo-Json -Depth 10
+        }
+        else {
+            Write-Host "License/provenance validation failed with $($errors.Count) issue(s):"
+            foreach ($errorMessage in $errors) {
+                Write-Host " - $errorMessage"
+            }
+        }
+        exit 1
+    }
+
+    if ($RequireExternalReady -and $externalBlockers.Count -gt 0) {
+        if ($Json) {
+            $summary | ConvertTo-Json -Depth 10
+        }
+        elseif (-not $Quiet) {
+            Write-Host 'External distribution is blocked:'
+            foreach ($blocker in $externalBlockers) {
+                Write-Host " - $blocker"
+            }
+        }
+        exit 2
+    }
+
+    if ($Json) {
+        $summary | ConvertTo-Json -Depth 10
+    }
+    elseif (-not $Quiet) {
+        Write-Host 'License/provenance validation passed.'
+        Write-Host "Tracked scope coverage: $($trackedFiles.Count)/$($trackedFiles.Count)"
+        Write-Host "External distribution: blocked by $($externalBlockers.Count) unresolved item(s)"
+        Write-Host "Negative cases rejected: $(@($negativeResults | Where-Object { $_.rejected }).Count)/$($negativeResults.Count)"
     }
 }
-
-if ($errors.Count -gt 0) {
-    Write-Host "License/provenance validation failed with $($errors.Count) issue(s):"
-    foreach ($errorMessage in $errors) {
-        Write-Host " - $errorMessage"
+catch {
+    if ($Json) {
+        [pscustomobject][ordered]@{
+            task_id = 'R0-GOV-002'
+            validation = 'failed'
+            error = $_.Exception.Message
+        } | ConvertTo-Json -Depth 4
+    }
+    else {
+        Write-Host "License/provenance validation failed: $($_.Exception.Message)"
     }
     exit 1
-}
-
-if (-not $Quiet) {
-    Write-Host 'License/provenance validation passed.'
-    Write-Host "Inventory items: $($items.Count); NOASSERTION: $noAssertionCount"
-    Write-Host "Legacy archive: $($legacyAudit.file_entries) files; license signals: $($legacyAudit.license_named_entries + $legacyAudit.license_text_signal_entries)"
-    Write-Host "Mutation tests rejected: $(@($mutationResults | Where-Object { $_.rejected }).Count)/$($mutationResults.Count)"
 }
