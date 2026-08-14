@@ -55,6 +55,7 @@ struct ProbeResult {
     bool case_local_replay_input_rejected = false;
     bool replay_result_mismatch_rejected = false;
     bool input_declaration_order_accepted = false;
+    bool case_source_column_order_accepted = false;
     bool legacy_case_directory_change_accepted = false;
 };
 
@@ -160,6 +161,18 @@ ProbeResult runProbe() {
     result.input_declaration_order_accepted = sameSemanticMission(
         result.effective_mission, reordered_mission);
 
+    CaseRow reordered_case{matrix.front().source_case_id, {}};
+    const std::vector<std::pair<std::string, double>> reordered_fields{
+        {"aero.drag_bias", -0.03},
+        {"engine.temp_level", 2.0},
+    };
+    for (const auto& [field, value] : reordered_fields) {
+        reordered_case.values[field] = value;
+    }
+    result.case_source_column_order_accepted = sameSemanticMission(
+        result.effective_mission,
+        materialize(base, reordered_case, requested_inputs, "case_000001"));
+
     Mission missing_input = result.effective_mission;
     missing_input.perturbation_inputs.erase("aero.drag_bias");
     result.missing_injected_input_rejected =
@@ -224,6 +237,9 @@ void writeJson(const ProbeResult& result) {
               << ",\"input_declaration_order_accepted\":"
               << (result.input_declaration_order_accepted ?
                   "true" : "false")
+              << ",\"case_source_column_order_accepted\":"
+              << (result.case_source_column_order_accepted ?
+                  "true" : "false")
               << ",\"legacy_case_directory_change_accepted\":"
               << (result.legacy_case_directory_change_accepted
                       ? "true" : "false")
@@ -263,6 +279,8 @@ int main(int argc, char** argv) {
                 "ordinary replay result mismatch was accepted");
         require(result.input_declaration_order_accepted,
                 "input declaration order changed effective mission semantics");
+        require(result.case_source_column_order_accepted,
+                "case-source column order changed effective mission semantics");
         require(result.legacy_case_directory_change_accepted,
                 "Legacy case directory changed semantic identity");
         writeJson(result);

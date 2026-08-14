@@ -64,6 +64,7 @@
       "effective_mission_json_format": "ignored after JSON parsing",
       "dataset_column_order": "ignored after required semantic field mapping",
       "requested_input_declaration_order": "ignored after distinct field identities are resolved",
+      "case_source_column_order": "ignored after unique matrix field identities are resolved",
       "legacy_case_index_and_directory": "ignored",
       "simflow_and_ordinary_replay": "same semantic mission and dataset"
     },
@@ -115,6 +116,11 @@
     {
       "id": "PASS-SIMFLOW-INPUT-DECLARATION-REORDERED",
       "mutation": "Reverse the two distinct requested input identities before materialization",
+      "expected_status": "accepted"
+    },
+    {
+      "id": "PASS-SIMFLOW-CASE-SOURCE-COLUMNS-REORDERED",
+      "mutation": "Reverse the case_id and numeric field columns while preserving header-value identity",
       "expected_status": "accepted"
     }
   ],

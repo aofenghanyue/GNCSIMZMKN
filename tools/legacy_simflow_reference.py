@@ -160,8 +160,11 @@ def verify_capture(case: dict, repo_root: Path) -> tuple[
 def parse_case_source(raw: bytes) -> list[dict]:
     with io.StringIO(raw.decode("utf-8"), newline="") as stream:
         reader = csv.DictReader(stream)
-        require(reader.fieldnames == [
-            "case_id", "engine.temp_level", "aero.drag_bias"],
+        expected_fields = {
+            "case_id", "engine.temp_level", "aero.drag_bias"}
+        require(reader.fieldnames is not None and
+                len(reader.fieldnames) == len(expected_fields) and
+                set(reader.fieldnames) == expected_fields,
             "SimFlow matrix header differs")
         rows = list(reader)
     require(len(rows) == 2 and
@@ -174,6 +177,21 @@ def parse_case_source(raw: bytes) -> list[dict]:
             "aero.drag_bias": decimal(row["aero.drag_bias"]),
         },
     } for row in rows]
+
+
+def permute_case_source_columns(raw: bytes) -> bytes:
+    with io.StringIO(raw.decode("utf-8"), newline="") as stream:
+        rows = list(csv.reader(stream))
+    require(rows and len(rows[0]) > 1,
+            "SimFlow matrix permutation requires multiple columns")
+    order = list(reversed(range(len(rows[0]))))
+    require(all(len(row) == len(order) for row in rows),
+            "SimFlow matrix row width differs")
+    output = io.StringIO(newline="")
+    writer = csv.writer(output, lineterminator="\n")
+    for row in rows:
+        writer.writerow([row[index] for index in order])
+    return output.getvalue().encode("utf-8")
 
 
 def parse_dataset(raw: bytes) -> list[dict]:
@@ -452,9 +470,14 @@ def main() -> int:
     require(set(equivalence_by_id) == {
         "PASS-SIMFLOW-LEGACY-CASE-DIRECTORY-RENAMED",
         "PASS-SIMFLOW-INPUT-DECLARATION-REORDERED",
+        "PASS-SIMFLOW-CASE-SOURCE-COLUMNS-REORDERED",
     } and all(entry["expected_status"] == "accepted"
               for entry in equivalence_by_id.values()),
             "SimFlow equivalence-case definition differs")
+    reordered_matrix = parse_case_source(
+        permute_case_source_columns(case_raw))
+    require(reordered_matrix == matrix,
+            "Case-source column order changed matrix semantics")
     reordered_mission = materialize_independently(
         base, selected, selected_record["vehicle_id"],
         list(reversed(requested_inputs)))
@@ -469,7 +492,7 @@ def main() -> int:
                    "Legacy identity equivalence")
     validate_mission(renamed_mission, expected_mission,
                      "Output-directory equivalence")
-    checks += 6
+    checks += 8
 
     first_stdout, probe = run_probe(arguments.probe)
     second_stdout, second_probe = run_probe(arguments.probe)
@@ -495,10 +518,11 @@ def main() -> int:
             "case_local_replay_input_rejected",
             "replay_result_mismatch_rejected",
             "input_declaration_order_accepted",
+            "case_source_column_order_accepted",
             "legacy_case_directory_change_accepted"):
         require(probe[flag] is True,
                 f"C++ SimFlow probe did not enforce {flag}")
-    checks += 13
+    checks += 14
 
     decision = oracle["disposition_decision"]
     require(decision["status"] in {"needs_owner_decision", "accepted"},
@@ -525,6 +549,7 @@ def main() -> int:
         "ordinary_replay_fresh_root": True,
         "effective_mission_standalone": True,
         "input_declaration_order_equivalent": True,
+        "case_source_column_order_equivalent": True,
         "deterministic_target_case_id": "pending",
         "disposition_status": decision["status"],
     }, separators=(",", ":")))
