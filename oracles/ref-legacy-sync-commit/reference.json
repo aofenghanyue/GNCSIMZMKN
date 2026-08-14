@@ -1,0 +1,77 @@
+{
+  "schema_version": "gnczmkn.legacy-sync-commit-reference/1",
+  "fixture_id": "REF-LEGACY-SYNC-COMMIT-001",
+  "oracle_id": "ORACLE-YYZ-SYNC-03",
+  "case_id": "CASE-LEGACY-SYNC-LINEAR-COUPLING",
+  "input_identity": {
+    "path": "fixtures/ref-legacy-sync-commit/input.json",
+    "bytes": 1408,
+    "sha256": "b262d83cf7747792d80df2c21538579db8d163ee1d9465e2994d083196f93da0"
+  },
+  "reference_method": {
+    "implementation": "CPython standard library Decimal",
+    "precision_digits": 50,
+    "derivation": "Evaluate both candidates from the same committed t_k snapshot, then compare with an intentionally premature mass commit."
+  },
+  "legacy_observation": {
+    "runtime_test": "test_publish_semantics",
+    "runtime_test_status": "passed",
+    "mass_final_kg": "8",
+    "position_final": "10",
+    "source_assertion": "tests/test_publish_semantics.cpp verifies both final values after one dt=1 RK4 step",
+    "implementation_fact": "framework/include/gnc/core/simulator.hpp appends all pending states before entering its setState loop"
+  },
+  "expected": {
+    "mass_final_kg": "8",
+    "position_final": "10",
+    "premature_position_final": "8",
+    "required_events": [
+      "candidate-complete:mass",
+      "candidate-complete:position",
+      "commit:mass",
+      "commit:position"
+    ],
+    "ordering_rule": "Every candidate-complete event precedes every commit event.",
+    "commit_iteration_order": "unconstrained"
+  },
+  "tolerances": {
+    "scalar_absolute": "1e-12",
+    "event_identity": "exact",
+    "event_partial_order": "exact"
+  },
+  "failure_case": {
+    "id": "FAIL-SYNC-EARLY-MASS-COMMIT",
+    "journal": [
+      "candidate-complete:mass",
+      "commit:mass",
+      "candidate-complete:position",
+      "commit:position"
+    ],
+    "expected_status": "rejected",
+    "discriminating_position_final": "8"
+  },
+  "disposition_decision": {
+    "status": "needs_owner_decision",
+    "owner_role": "validation_lead",
+    "facts": [
+      {
+        "fact_id": "FACT-SYNC-CANDIDATE-BARRIER",
+        "recommended_disposition": "Preserve",
+        "difference_reason": "ScientificInvariant",
+        "target_mapping": "IntegrationScopePlan candidate/commit boundary"
+      },
+      {
+        "fact_id": "FACT-SYNC-SNAPSHOT-COUPLING",
+        "recommended_disposition": "Preserve",
+        "difference_reason": "ScientificInvariant",
+        "target_mapping": "cross-system reads remain at committed t_k during candidate evaluation"
+      },
+      {
+        "fact_id": "FACT-SYNC-LEGACY-SURFACE",
+        "recommended_disposition": "Retire",
+        "difference_reason": "AccidentalStructure",
+        "target_mapping": "pending_states container, setState loop order and Legacy interface names"
+      }
+    ]
+  }
+}

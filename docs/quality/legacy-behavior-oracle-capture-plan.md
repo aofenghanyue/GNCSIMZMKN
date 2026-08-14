@@ -1,8 +1,8 @@
 # R0-LEG-002 Legacy 行为 oracle 捕获计划
 
-- 文档状态：Preparation design
-- 实现成熟度：未实现；不得作为 G1 或 runtime migration pass evidence
-- 任务：`R0-LEG-002`（backlog 保持 `planned`）
+- 文档状态：Implementation tracking
+- 实现成熟度：`ORACLE-YYZ-SYNC-03` 处于 `capturing`；其余六条未实现；不得作为 G1 或 runtime migration pass evidence
+- 任务：`R0-LEG-002`（backlog 为 `in_progress`）
 - 日期：2026-08-10
 - Authority owner role：Validation Lead
 - 协作 owner roles：Runtime Numerics Lead、Scientific Authority、Architecture Lead
@@ -55,16 +55,11 @@ canonical Legacy 捕获候选应优先复用 `R0-LEG-001` 已成功验证的 Win
 | Mapping | legacy observable、target semantic object、target evidence 状态；未实现时显式 `pending` |
 | Integrity | raw/derived/artifact index 的 SHA-256、缺失/漂移 verdict、deterministic rerun verdict |
 
-### 3.1 尚未闭合的 schema 决策
+### 3.1 当前切片的契约路由
 
-现有 `gnczmkn.oracle-manifest/1` 有 id、claim、expected facts、tolerance policy、source refs 和 artifact refs，但没有显式 input hash 或 classification。`R0-LEG-002` 不得把二者塞进自由文本来绕过机器验收。
+现有 `gnczmkn.oracle-manifest/1` 继续承担集合索引，只引用实际 artifact。首个 `ORACLE-YYZ-SYNC-03` 切片使用 fixture-local `input.json` 与 `reference.json`，由当前 Python comparator 和 C++ probe 直接消费；`reference.json` 对 `input.json` 原始 bytes 记录 SHA-256，并把处置建议保存为枚举字段与独立 decision status。
 
-激活前由 R0-SPEC-001/Architecture Lead 在以下路由中明确选择：
-
-1. 使用已批准的通用 fixture/evidence contract 作为 sidecar，并让 oracle manifest 只引用它；或
-2. 提交 ADR，定义新的 oracle/evidence schema version、hash canonicalization、兼容与迁移规则。
-
-无论选择哪条路，hash 都必须覆盖逻辑路径与原始 bytes，排序/聚合规则必须跨平台确定；分类必须是枚举并带 owner/approval，不能用 notes 代替。
+这组 fixture-local JSON 不扩展公共 schema。后续出现第二个共享 consumer 或跨 bundle 合并需求时，再以窄 ADR 决定通用 sidecar 或 oracle schema revision。当前 `needs_owner_decision` 不能把 `R0-LEG-002` 或关联 oracle 标为完成。
 
 ## 4. 分类模型
 
@@ -133,19 +128,9 @@ raw trace 至少使用以下稳定概念字段；具体 schema 名称待第 3.1 
 6. tolerance 只作用于声明的数值字段，不作用于 event identity、顺序、source/input hash 或分类；
 7. Legacy 与未来 target 的输出分别运行，再由 comparator 读取；target 不 link/call Legacy。
 
-## 9. 同一 evaluator 的故障矩阵
+## 9. 当前直接失败检查
 
-生产 validator 和 mutation tests 必须调用同一组 identity、completeness、trace、comparison、classification 与 integrity evaluator。最小 mutation 集为工作包中的 `LEG-ORACLE-MUT-001`～`014`，并补充以下单元级边界：
-
-- 重复/未知 oracle id、fact id 或 artifact ref；
-- input 清单排序或 path separator 改变导致跨平台 hash 不一致；
-- tolerance 作用到未声明字段、NaN 或无穷值；
-- Preserve fact 缺 target semantic mapping；
-- Retire fact 被复制进 expected comparison；
-- Fix 缺 defect/approval，或 NeedsDecision 被记为 pass；
-- raw trace 有事件而 expected 派生器静默丢弃；
-- 双跑只保留第二次，无法证明 deterministic comparison；
-- capture workspace 指向 `reference/legacy/extracted/` 或产品 build target 依赖 Legacy。
+`ORACLE-YYZ-SYNC-03` 当前只有一个已复现且能区分语义的失败用例：在 position candidate 完成前提交 mass。Python evaluator 和 C++ probe 都必须拒绝该 journal，并证明错误路径会得到 `position=8`。重复 id、跨平台聚合 hash、通用 classification completeness 等检查留到出现当前 consumer 或直接回归后再增加。
 
 ## 10. 退出检查
 
@@ -156,7 +141,7 @@ raw trace 至少使用以下稳定概念字段；具体 schema 名称待第 3.1 
 - schema 缺口、owner 和 ADR gate 显式保留；
 - canonical Legacy capture 环境与 target 平台证据分离，MSVC gap 没有被掩盖；
 - capture 仅发生于隔离 build workspace，产品 tree 与冻结 Legacy 零修改；
-- 14 个代表 failure mutation 和额外 completeness 边界已定义；
+- 首个切片包含 early-commit 直接失败用例；其余失败检查随具体 oracle consumer 增加；
 - target 尚不存在的对象显式为 pending，没有 vacuous pass；
-- backlog 仍为 `planned`、assignee 为空、依赖仍为 `review`；
+- `R0-LEG-001` 已完成，`R0-LEG-002` 保持 `in_progress`，首个切片的处置决定仍显式待定；
 - UTF-8、Markdown links、repository verification 与 `git diff --check` 通过。

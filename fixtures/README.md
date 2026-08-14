@@ -11,4 +11,6 @@ Fixture 是可复制、可校验、带 provenance 的规范实例。每个目录
 
 `ref-minimal-3dof` 已达到 `executable`，包含显式初值、高精度闭式轨迹、独立 C++17 RK4 probe、收敛检查、committed-tick 终止和 candidate 丢弃失败用例。
 
+`ref-legacy-sync-commit` 处于 `capturing`，已把 `ORACLE-YYZ-SYNC-03` 的冻结来源、独立 Decimal 结果、C++17 candidate/commit journal 和 early-commit 失败用例连成可执行切片；Preserve/Retire 处置等待仓库所有者确认。
+
 禁止把蓝图中的演示数值直接升级为 golden。Scientific Authority 需要确认来源、公式和容差。

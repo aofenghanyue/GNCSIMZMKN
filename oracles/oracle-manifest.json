@@ -1,7 +1,7 @@
 {
   "schema_version": "gnczmkn.oracle-manifest/1",
   "oracle_set_id": "ORACLE-GNCZMKN-R0-001",
-  "status": "planned",
+  "status": "capturing",
   "provenance": {
     "source_refs": [
       "reference/legacy/source-manifest.json",
@@ -35,13 +35,21 @@
     {
       "id": "ORACLE-YYZ-SYNC-03",
       "level": "closure",
-      "status": "planned",
+      "status": "capturing",
       "claim": "Continuous candidates are computed before a synchronized commit.",
-      "expected_facts": ["Every continuous candidate precedes the single synchronized commit for the step."],
+      "expected_facts": [
+        "Every continuous candidate completes before any commit for the step.",
+        "The distinguishing linear case ends at mass=8 and position=10; an early mass commit produces position=8."
+      ],
       "reference_kind": "transaction trace",
-      "tolerance_policy": "exact event ordering; numeric values use variable tolerance",
+      "tolerance_policy": "exact event identity and candidate-before-commit partial order; synthetic scalar values use absolute tolerance 1e-12",
       "source_refs": ["reference/legacy/source-manifest.json"],
-      "artifact_refs": []
+      "artifact_refs": [
+        "fixtures/ref-legacy-sync-commit/input.json",
+        "oracles/ref-legacy-sync-commit/reference.json",
+        "tests/legacy_sync_commit.cpp",
+        "tools/legacy_sync_commit_reference.py"
+      ]
     },
     {
       "id": "ORACLE-YYZ-GROUP-04",

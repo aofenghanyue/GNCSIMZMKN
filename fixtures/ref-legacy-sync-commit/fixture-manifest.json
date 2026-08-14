@@ -1,0 +1,65 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-LEGACY-SYNC-COMMIT-001",
+  "status": "capturing",
+  "purpose": "Make the Legacy independent-candidate and synchronized-commit behavior executable without linking Legacy into product or reference probes.",
+  "authority": "validation_lead",
+  "provenance": {
+    "source_refs": [
+      "docs/adr/0001-greenfield-and-legacy-reference.md",
+      "design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md#10-旧行为-oracle-怎样保护迁移",
+      "reference/legacy/source-manifest.json",
+      "reference/legacy/reproduction/r0-leg-001-20260810-07/evidence-index.json"
+    ],
+    "notes": "The Python comparator verifies the frozen archive, two raw source entries, the recorded passing Legacy CTest and the exact input bytes. Decimal analysis and the isolated C++17 journal probe independently exercise the distinguishing case."
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-SYNC-CANDIDATE-BARRIER",
+      "claim": "Both continuous candidates complete before either committed state is changed.",
+      "tolerance_policy": "Event identity, multiplicity and candidate-before-commit partial order are exact.",
+      "evidence_refs": [
+        "fixtures/ref-legacy-sync-commit/input.json",
+        "oracles/ref-legacy-sync-commit/reference.json",
+        "tests/legacy_sync_commit.cpp",
+        "tools/legacy_sync_commit_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-SYNC-SNAPSHOT-COUPLING",
+      "claim": "For mass'=−2 and position'=committed mass over dt=1, the committed result is mass=8 and position=10; premature mass commit produces position=8.",
+      "tolerance_policy": "Synthetic scalar results use absolute tolerance 1e-12; the early-commit discriminator must remain nonzero.",
+      "evidence_refs": [
+        "oracles/ref-legacy-sync-commit/reference.json",
+        "tests/legacy_sync_commit.cpp",
+        "tools/legacy_sync_commit_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-SYNC-PROVENANCE",
+      "claim": "The observation is tied to the frozen Legacy archive, simulator and test entries, and a passing recorded runtime test.",
+      "tolerance_policy": "Paths, byte counts and SHA-256 values are exact.",
+      "evidence_refs": [
+        "fixtures/ref-legacy-sync-commit/input.json",
+        "reference/legacy/reproduction/r0-leg-001-20260810-07/logs/legacy-ctest-all.log"
+      ]
+    }
+  ],
+  "required_artifacts": [
+    "fixtures/ref-legacy-sync-commit/README.md",
+    "fixtures/ref-legacy-sync-commit/input.json",
+    "oracles/ref-legacy-sync-commit/reference.json",
+    "tests/legacy_sync_commit.cpp",
+    "tools/legacy_sync_commit_reference.py",
+    "CMakeLists.txt"
+  ],
+  "acceptance": [
+    "Verifies frozen source and runtime-test evidence before comparing behavior",
+    "Independent Decimal and C++17 implementations agree on mass=8, position=10 and the position=8 early-commit control",
+    "Rejects a journal containing any commit before both candidates complete",
+    "Preserve and Retire recommendations remain visibly pending until the repository owner accepts the disposition choice"
+  ],
+  "open_tasks": [
+    "R0-LEG-002"
+  ]
+}

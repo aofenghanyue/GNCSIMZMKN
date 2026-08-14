@@ -1,0 +1,45 @@
+{
+  "schema_version": "gnczmkn.legacy-sync-commit-input/1",
+  "fixture_id": "REF-LEGACY-SYNC-COMMIT-001",
+  "oracle_id": "ORACLE-YYZ-SYNC-03",
+  "case_id": "CASE-LEGACY-SYNC-LINEAR-COUPLING",
+  "time": {
+    "initial_s": "0",
+    "step_s": "1"
+  },
+  "committed_state": {
+    "mass_kg": "10",
+    "position": "0"
+  },
+  "dynamics": {
+    "mass_rate_kg_per_s": "-2",
+    "position_rate_source": "committed mass state",
+    "integration_method": "fixed-step classical RK4"
+  },
+  "legacy_source": {
+    "archive": {
+      "path": "reference/legacy/legacy-source.zip",
+      "prefix": "GNCZMKN-legacy-a63621c/",
+      "bytes": 990450,
+      "sha256": "2159a324fd897e4bd508c140a36c9165d744e4e4e61861c5b568201707f988e5"
+    },
+    "entries": [
+      {
+        "path": "framework/include/gnc/core/simulator.hpp",
+        "bytes": 21226,
+        "sha256": "455b22e68fdd4511a85f9a1c20547d022261cdf3397aabfd5f85115764edae78"
+      },
+      {
+        "path": "tests/test_publish_semantics.cpp",
+        "bytes": 27073,
+        "sha256": "48c5b86ea7a88a3c7702d5abdf89bcebaf8e8dfa331289317453a698f3802e08"
+      }
+    ],
+    "runtime_test": {
+      "id": "test_publish_semantics",
+      "evidence_path": "reference/legacy/reproduction/r0-leg-001-20260810-07/logs/legacy-ctest-all.log",
+      "evidence_bytes": 4131,
+      "evidence_sha256": "c9b4140b5c6dfe0917036f12ce0dca07005c6913b68751f2649d728d33899c2d"
+    }
+  }
+}
