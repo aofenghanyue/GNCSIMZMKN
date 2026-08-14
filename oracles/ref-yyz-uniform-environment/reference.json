@@ -1,0 +1,189 @@
+{
+  "schema_version": "gnczmkn.yyz-uniform-environment-reference/1",
+  "fixture_id": "REF-YYZ-UNIFORM-ENVIRONMENT-001",
+  "oracle_id": "ORACLE-YYZ-UNIFORM-ENVIRONMENT-001",
+  "model_id": "MODEL-YYZ-UNIFORM-ENVIRONMENT-001",
+  "status": "executable",
+  "precision": {
+    "decimal_digits": 80
+  },
+  "input_identity": {
+    "path": "fixtures/ref-yyz-uniform-environment/cases.json",
+    "bytes": 6904,
+    "sha256": "2eee82970a4fac68a5aab0dd863dac1c03599d0bf028449bcf67654e2f775cde"
+  },
+  "cases": {
+    "CASE-YYZ-UNIFORM-ENVIRONMENT-CONSUMER-LINK": {
+      "id": "CASE-YYZ-UNIFORM-ENVIRONMENT-CONSUMER-LINK",
+      "query": {
+        "position_I_m": [
+          "100",
+          "-20",
+          "1000"
+        ],
+        "position_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "sample_tick": 12,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 3
+      },
+      "response": {
+        "model_id": "MODEL-YYZ-UNIFORM-ENVIRONMENT-001",
+        "quality": "Valid",
+        "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "sample_tick": 12,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 3,
+        "gravity_I_mps2": [
+          "0",
+          "0",
+          "-9.80665"
+        ],
+        "airmass_velocity_I_mps": [
+          "5",
+          "0",
+          "0"
+        ],
+        "density_kgpm3": "1.225",
+        "speed_of_sound_mps": "340.294"
+      },
+      "consumer_link": {
+        "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "sample_tick": 12,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 3,
+        "vehicle_velocity_I_mps": [
+          "205",
+          "35",
+          "-10"
+        ],
+        "relative_velocity_I_mps": [
+          "200",
+          "35",
+          "-10"
+        ],
+        "speed_squared_m2ps2": "41325",
+        "speed_mps": "203.28551350256121976442123642351509229947508163776782018941776282490709521377411",
+        "dynamic_pressure_Pa": "25311.5625",
+        "mach": "0.59738200938765073661134559064666168753923102269733765564311378638738001614419916",
+        "force_I_N": [
+          "100",
+          "0",
+          "0"
+        ],
+        "mass_kg": "50",
+        "mass_reciprocal_per_kg": "0.02",
+        "force_acceleration_I_mps2": [
+          "2",
+          "0",
+          "0"
+        ],
+        "total_acceleration_I_mps2": [
+          "2",
+          "0",
+          "-9.80665"
+        ]
+      }
+    },
+    "CASE-YYZ-UNIFORM-ENVIRONMENT-ZERO-DENSITY": {
+      "id": "CASE-YYZ-UNIFORM-ENVIRONMENT-ZERO-DENSITY",
+      "query": {
+        "position_I_m": [
+          "-1000000",
+          "2000000",
+          "-3000000"
+        ],
+        "position_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "sample_tick": 33,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 4
+      },
+      "response": {
+        "model_id": "MODEL-YYZ-UNIFORM-ENVIRONMENT-001",
+        "quality": "Valid",
+        "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "sample_tick": 33,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 4,
+        "gravity_I_mps2": [
+          "0.1",
+          "-0.2",
+          "-9.7"
+        ],
+        "airmass_velocity_I_mps": [
+          "-3",
+          "4",
+          "5"
+        ],
+        "density_kgpm3": "0",
+        "speed_of_sound_mps": "0.5"
+      },
+      "consumer_link": {
+        "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "sample_tick": 33,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 4,
+        "vehicle_velocity_I_mps": [
+          "97",
+          "4",
+          "5"
+        ],
+        "relative_velocity_I_mps": [
+          "100",
+          "0",
+          "0"
+        ],
+        "speed_squared_m2ps2": "10000",
+        "speed_mps": "100",
+        "dynamic_pressure_Pa": "0",
+        "mach": "200",
+        "force_I_N": [
+          "10",
+          "-20",
+          "30"
+        ],
+        "mass_kg": "20",
+        "mass_reciprocal_per_kg": "0.05",
+        "force_acceleration_I_mps2": [
+          "0.5",
+          "-1",
+          "1.5"
+        ],
+        "total_acceleration_I_mps2": [
+          "0.6",
+          "-1.2",
+          "-8.2"
+        ]
+      }
+    }
+  },
+  "equivalence_results": [
+    {
+      "id": "EQUIV-YYZ-UNIFORM-ENVIRONMENT-POSITION-TICK",
+      "status": "passed",
+      "max_abs_physical_difference": "0"
+    }
+  ],
+  "invalid_input_rejections": [
+    "INVALID-YYZ-UNIFORM-ENVIRONMENT-FRAME-MISMATCH",
+    "INVALID-YYZ-UNIFORM-ENVIRONMENT-CLOCK-MISMATCH",
+    "INVALID-YYZ-UNIFORM-ENVIRONMENT-REVISION-MISMATCH",
+    "INVALID-YYZ-UNIFORM-ENVIRONMENT-NEGATIVE-TICK",
+    "INVALID-YYZ-UNIFORM-ENVIRONMENT-NONFINITE-POSITION",
+    "INVALID-YYZ-UNIFORM-ENVIRONMENT-NONFINITE-GRAVITY",
+    "INVALID-YYZ-UNIFORM-ENVIRONMENT-NONFINITE-WIND",
+    "INVALID-YYZ-UNIFORM-ENVIRONMENT-NEGATIVE-DENSITY",
+    "INVALID-YYZ-UNIFORM-ENVIRONMENT-NONPOSITIVE-SOUND-SPEED"
+  ],
+  "mutation_results": [
+    {
+      "id": "MUTATION-YYZ-UNIFORM-ENVIRONMENT-LEGACY-DENSITY-DECAY",
+      "status": "rejected",
+      "max_abs_physical_difference": "19000.068483020418682599244480313016405032704568475287270939708299091056686180963"
+    },
+    {
+      "id": "MUTATION-YYZ-UNIFORM-ENVIRONMENT-LEGACY-GRAVITY-DECAY",
+      "status": "rejected",
+      "max_abs_physical_difference": "0.0306786605456589322252221728944485425898017206039996349157758165176850800541142"
+    }
+  ]
+}

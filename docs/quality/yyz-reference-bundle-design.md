@@ -265,7 +265,7 @@ R0-SCI-001 提供的 SI、frame、binary64、integer tick、ExactGrid 和 quater
 | Rotation | `omega_dot^B = I_B^-1 (M^B - omega^B × (I_B omega^B))`（仅在批准假设下） | angular momentum、gyroscopic term、net moment、condition/domain | inertia tensor/time variation、solver、singular policy |
 | Attitude | Accepted passive Hamilton convention `q_dot_I_B = -0.5 * pure(omega^B_IB) ⊗ q_I_B` | quaternion norm、product terms、candidate norm | normalization timing、adapter |
 | Air data | `v_rel^I=v_vehicle^I-v_airmass^I`；`pure(v_rel^B)=q_I_B pure(v_rel^I) inverse(q_I_B)`；`V=norm(v_rel^B)`；`alpha=atan2(w,u)`；`beta=atan2(v,sqrt(u^2+w^2))`；`qbar=0.5 rho V^2`；`Mach=V/a` | sample/frame identity、wind subtraction、quaternion products、u/v/w、horizontal speed、V/rho/a | canonical atmosphere/wind source、sensor validity、aero applicability |
-| Environment | atmosphere/gravity/wind query | geoposition/time conversion、rho/a/g/wind | model/version/constants/domain |
+| Environment | supplied uniform definition + finite inertial position/tick query → environment response | query identity、position/tick invariance、rho/a/gravity_I/airmass_velocity_I、air-data/rigid-core consumer values | canonical Earth/altitude model、constants/assets、wind profile、applicability |
 | Guidance | approved estimate/target/phase → typed GuidanceCommand | LOS/reference/errors、mode/mechanism state、limits | law、rate、held/max-age、feedback semantics |
 | Control | approved attitude/rate error → MomentCommand | reference/error terms、gain/feedforward、saturation | error representation、sequence/singularity、anti-windup |
 | Allocation | Moment/ForceCommand → ActuatorCommand | effectiveness matrix、solve residual、unclamped/clamped command | solver、limits、failure/reconfiguration policy |
@@ -285,6 +285,8 @@ R0-SCI-001 提供的 SI、frame、binary64、integer tick、ExactGrid 和 quater
 `REF-YYZ-AIR-DATA-KINEMATICS-001` 已执行 fixture-local supplied air-data 子集：同一边界的 Truth、WindQuery 与 AtmosphereQuery 携带显式 frame、clock 和 tick identity；右手体轴采用 `x-forward/y-right/z-down`；`q_I_B` 按被动 Hamilton 方向把惯性系相对风速转到体轴。`V>0` 且 `sqrt(u^2+w^2)>0`，zero-relative 与 pure-lateral 输入直接产生 domain error。Rearward flow 保持可计算，角度和声速分母均无 epsilon/floor。80 位 Decimal reference 与独立 C++17 probe 覆盖五个公式 case、两条等价性、九条失败和四条 Legacy 风格 mutation。Canonical atmosphere、wind、sensor、aero applicability 与产品 contract 仍待后续确定。
 
 `REF-YYZ-AERO-DIMENSIONALIZATION-001` 已执行 fixture-local supplied coefficient 子集：右手 `x-forward/y-right/z-down` 体轴下，`F_B=qbar*S_ref*[-C_A,C_Y,-C_N]`，`M_aero_ref_B=qbar*S_ref*[b_ref*C_l,c_ref*C_m,b_ref*C_n]`，并以 `r_CoM_to_aero_ref_B × F_B` 搬移到质心。输入要求有限非负动压、有限正参考面积/展长/弦长、有限系数和参考点，并要求 frame、clock、tick 与 configuration revision 同边界一致。80 位 Decimal reference 与独立 C++17 probe 覆盖三个公式 case、两个尺度等价变换、十条失败和三条 sign/scale/reference-vector mutation。Coefficient lookup、插值/外推、asset provenance/适用域、canonical 几何与产品 contract 仍待后续确定。
+
+`REF-YYZ-UNIFORM-ENVIRONMENT-001` 已执行 fixture-local supplied uniform environment 子集：pure query 接收有限惯性系位置、非负 tick、clock 与 configuration revision，返回位置/时间不变的 `gravity_I_mps2`、`airmass_velocity_I_mps`、`density_kgpm3` 和 `speed_of_sound_mps`。响应在同一 sample identity 进入已接受的 air-data `v_rel/qbar/Mach` 与 rigid-core `force_I/m+gravity_I` 关系。80 位 Decimal reference 与独立 C++17 probe 覆盖普通 consumer link、零密度/亚单位声速边界、position/tick 等价、严格输入域和 Legacy-style altitude density/gravity decay。Earth/geodetic/rotation、海拔模型、压力/温度/湿度、风廓线/阵风、canonical constants/assets 与产品 contract 仍待后续确定。
 
 ### 7.3 Legacy 公式不可原样继承的地方
 

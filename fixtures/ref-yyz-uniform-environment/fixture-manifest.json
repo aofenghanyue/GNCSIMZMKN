@@ -1,0 +1,66 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-YYZ-UNIFORM-ENVIRONMENT-001",
+  "status": "executable",
+  "purpose": "Provide an executable fixture-local pure query for supplied uniform gravity, air-mass velocity, density and speed of sound, with direct air-data and rigid-core consumer links.",
+  "authority": "scientific_authority",
+  "provenance": {
+    "source_refs": [
+      "docs/adr/0006-si-frame-and-simulation-time-conventions.md",
+      "design-notes/gnczmkn-architecture-roadmap/04-domain-contracts-and-interface-layer.md#58-environmentsample",
+      "design-notes/gnczmkn-architecture-roadmap/14-cycle-dataflow-state-transaction-and-continuous-closure.md#34-purequery",
+      "docs/quality/yyz-reference-bundle-design.md#72-公式覆盖矩阵",
+      "reference/legacy/source-index.md"
+    ],
+    "notes": "The Scientific Authority accepted supplied position- and time-invariant fields for this fixture-local scope. Legacy altitude decay appears only as rejected behavior; the bundle has no product or Legacy runtime dependency."
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-YYZ-UNIFORM-ENVIRONMENT-RESPONSE",
+      "claim": "Independent 80-digit Decimal and C++17 implementations return the supplied inertial gravity, air-mass velocity, density and speed of sound for every valid query position and tick.",
+      "tolerance_policy": "Model, frame, clock, tick, revision and quality identities are exact; finite physical values use the fixture-local absolute-plus-relative tolerance.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-uniform-environment/cases.json",
+        "oracles/ref-yyz-uniform-environment/reference.json",
+        "tests/yyz_uniform_environment.cpp",
+        "tools/yyz_uniform_environment_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-YYZ-UNIFORM-ENVIRONMENT-CONSUMERS",
+      "claim": "The response feeds the accepted air-data formulas and rigid-core translational formula at the same sample identity, including valid zero density and sub-one speed of sound.",
+      "tolerance_policy": "Consumer frame/time/revision identities are exact; relative velocity, speed, dynamic pressure, Mach and acceleration use the fixture-local formula tolerance.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-uniform-environment/cases.json",
+        "oracles/ref-yyz-uniform-environment/reference.json",
+        "tests/yyz_uniform_environment.cpp",
+        "tools/yyz_uniform_environment_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-YYZ-UNIFORM-ENVIRONMENT-DOMAIN",
+      "claim": "The executable preserves physical values across position/tick changes, rejects incompatible identity and invalid numeric domains, and detects Legacy-style altitude density and gravity decay.",
+      "tolerance_policy": "Equivalence, rejection and mutation dispositions are exact; no tolerance repairs an invalid query or definition.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-uniform-environment/cases.json",
+        "oracles/ref-yyz-uniform-environment/reference.json",
+        "tests/yyz_uniform_environment.cpp",
+        "tools/yyz_uniform_environment_reference.py"
+      ]
+    }
+  ],
+  "required_artifacts": [
+    "fixtures/ref-yyz-uniform-environment/README.md",
+    "fixtures/ref-yyz-uniform-environment/cases.json",
+    "oracles/ref-yyz-uniform-environment/reference.json",
+    "tests/yyz_uniform_environment.cpp",
+    "tools/yyz_uniform_environment_reference.py",
+    "CMakeLists.txt"
+  ],
+  "acceptance": [
+    "The bundle records explicit model/query identities, every supplied field, direct downstream formula results, invariance and strict failure cases",
+    "The Python reference and C++17 probe share no implementation and neither imports product or Legacy code",
+    "Earth, altitude models, canonical constants, environment assets and product contracts remain outside this fixture-local slice"
+  ],
+  "open_tasks": ["R0-SCI-003"]
+}

@@ -108,6 +108,14 @@ if(GNC_BUILD_TESTS)
         gnc_yyz_aero_dimensionalization_probe PRIVATE cxx_std_17)
     gnc_enable_warnings(gnc_yyz_aero_dimensionalization_probe)
 
+    # R0 YYZ scientific oracle: fixture-local supplied uniform environment.
+    add_executable(
+        gnc_yyz_uniform_environment_probe
+        tests/yyz_uniform_environment.cpp)
+    target_compile_features(
+        gnc_yyz_uniform_environment_probe PRIVATE cxx_std_17)
+    gnc_enable_warnings(gnc_yyz_uniform_environment_probe)
+
     # R0 Legacy behavior oracle: independent journal, no Legacy linkage.
     add_executable(
         gnc_legacy_sync_commit_probe
@@ -178,6 +186,9 @@ if(GNC_BUILD_TESTS)
     add_test(
         NAME r0.yyz-aero-dimensionalization.probe
         COMMAND gnc_yyz_aero_dimensionalization_probe --self-check)
+    add_test(
+        NAME r0.yyz-uniform-environment.probe
+        COMMAND gnc_yyz_uniform_environment_probe --self-check)
     add_test(
         NAME r0.legacy-sync-commit.probe
         COMMAND gnc_legacy_sync_commit_probe --self-check)
@@ -315,6 +326,19 @@ if(GNC_BUILD_TESTS)
             ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-aero-dimensionalization/reference.json
             --probe
             $<TARGET_FILE:gnc_yyz_aero_dimensionalization_probe>)
+    add_test(
+        NAME r0.yyz-uniform-environment.oracle
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/yyz_uniform_environment_reference.py
+            --cases
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-yyz-uniform-environment/cases.json
+            --oracle
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-uniform-environment/reference.json
+            --probe
+            $<TARGET_FILE:gnc_yyz_uniform_environment_probe>)
     add_test(
         NAME r0.legacy-sync-commit.oracle
         COMMAND

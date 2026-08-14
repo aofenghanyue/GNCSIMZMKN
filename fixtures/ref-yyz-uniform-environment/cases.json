@@ -1,0 +1,137 @@
+{
+  "schema_version": "gnczmkn.yyz-uniform-environment-cases/1",
+  "fixture_id": "REF-YYZ-UNIFORM-ENVIRONMENT-001",
+  "oracle_id": "ORACLE-YYZ-UNIFORM-ENVIRONMENT-001",
+  "model_choice": {
+    "status": "accepted",
+    "owner_role": "scientific_authority",
+    "accepted_scope": "Fixture-local pure environment query returning supplied position- and time-invariant gravity, air-mass velocity, density and speed of sound in one inertial Cartesian frame.",
+    "equations": [
+      "gravity_I(query) = supplied gravity_I",
+      "airmass_velocity_I(query) = supplied airmass_velocity_I",
+      "density(query) = supplied density",
+      "speed_of_sound(query) = supplied speed_of_sound",
+      "v_relative_I = v_vehicle_I - airmass_velocity_I",
+      "qbar = 0.5 * density * dot(v_relative_I, v_relative_I)",
+      "Mach = norm(v_relative_I) / speed_of_sound",
+      "acceleration_I = force_I / mass + gravity_I"
+    ],
+    "domain_policy": "Definition, query and consumer-link values are finite; query frame, clock and configuration revision match the definition; sample tick and revision are nonnegative; density is nonnegative; speed of sound, consumer mass and consumer relative speed are strictly positive.",
+    "excluded": [
+      "Earth shape, rotation, geodetic conversion and geopotential altitude",
+      "altitude-dependent atmosphere or gravity",
+      "pressure, temperature, humidity and viscosity",
+      "wind profiles, gusts, perturbations and derivatives",
+      "canonical constants, canonical environment applicability and assets",
+      "public product contracts and R1-R8 runtime capability"
+    ]
+  },
+  "model": {
+    "model_id": "MODEL-YYZ-UNIFORM-ENVIRONMENT-001",
+    "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+    "clock_domain": "clock.fixture.yyz.simulation@1",
+    "quality": "Valid",
+    "query_execution_form": "fixture-local-pure-query",
+    "physical_response_invariance": "independent of finite query position and nonnegative sample tick",
+    "validity_domain": [
+      "all supplied and derived scalar values are finite",
+      "density_kgpm3 >= 0",
+      "speed_of_sound_mps > 0",
+      "query position uses the declared inertial frame",
+      "query and consumer samples use the declared clock, tick and configuration revision"
+    ]
+  },
+  "tolerances": {
+    "formula_absolute": 2e-12,
+    "formula_relative": 2e-12,
+    "stored_decimal_absolute": "1e-68"
+  },
+  "cases": [
+    {
+      "id": "CASE-YYZ-UNIFORM-ENVIRONMENT-CONSUMER-LINK",
+      "definition": {
+        "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 3,
+        "gravity_I_mps2": [0.0, 0.0, -9.80665],
+        "airmass_velocity_I_mps": [5.0, 0.0, 0.0],
+        "density_kgpm3": 1.225,
+        "speed_of_sound_mps": 340.294
+      },
+      "query": {
+        "position_I_m": [100.0, -20.0, 1000.0],
+        "position_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "sample_tick": 12,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 3
+      },
+      "consumer_probe": {
+        "vehicle_velocity_I_mps": [205.0, 35.0, -10.0],
+        "force_I_N": [100.0, 0.0, 0.0],
+        "mass_kg": 50.0,
+        "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "sample_tick": 12,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 3
+      }
+    },
+    {
+      "id": "CASE-YYZ-UNIFORM-ENVIRONMENT-ZERO-DENSITY",
+      "definition": {
+        "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 4,
+        "gravity_I_mps2": [0.1, -0.2, -9.7],
+        "airmass_velocity_I_mps": [-3.0, 4.0, 5.0],
+        "density_kgpm3": 0.0,
+        "speed_of_sound_mps": 0.5
+      },
+      "query": {
+        "position_I_m": [-1000000.0, 2000000.0, -3000000.0],
+        "position_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "sample_tick": 33,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 4
+      },
+      "consumer_probe": {
+        "vehicle_velocity_I_mps": [97.0, 4.0, 5.0],
+        "force_I_N": [10.0, -20.0, 30.0],
+        "mass_kg": 20.0,
+        "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "sample_tick": 33,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 4
+      }
+    }
+  ],
+  "equivalence_cases": [
+    {
+      "id": "EQUIV-YYZ-UNIFORM-ENVIRONMENT-POSITION-TICK",
+      "operation": "change the consumer-link query position from [100,-20,1000] to [101,-22,10000] and move its sample identity from tick 12 to tick 112",
+      "expected": "the physical environment response and downstream air-data/rigid-core formula results remain equal"
+    }
+  ],
+  "invalid_input_cases": [
+    {"id": "INVALID-YYZ-UNIFORM-ENVIRONMENT-FRAME-MISMATCH", "mutation": "change the query position frame", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-UNIFORM-ENVIRONMENT-CLOCK-MISMATCH", "mutation": "change the query clock domain", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-UNIFORM-ENVIRONMENT-REVISION-MISMATCH", "mutation": "change the query configuration revision", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-UNIFORM-ENVIRONMENT-NEGATIVE-TICK", "mutation": "set the query sample tick below zero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-UNIFORM-ENVIRONMENT-NONFINITE-POSITION", "mutation": "set one query position component to positive infinity", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-UNIFORM-ENVIRONMENT-NONFINITE-GRAVITY", "mutation": "set one supplied gravity component to positive infinity", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-UNIFORM-ENVIRONMENT-NONFINITE-WIND", "mutation": "set one supplied air-mass velocity component to positive infinity", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-UNIFORM-ENVIRONMENT-NEGATIVE-DENSITY", "mutation": "set supplied density below zero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-UNIFORM-ENVIRONMENT-NONPOSITIVE-SOUND-SPEED", "mutation": "set supplied speed of sound to zero", "expected_status": "input-domain-error"}
+  ],
+  "mutation_cases": [
+    {
+      "id": "MUTATION-YYZ-UNIFORM-ENVIRONMENT-LEGACY-DENSITY-DECAY",
+      "mutation": "apply rho*exp(-max(0,position_z)/7200) to the high-position equivalence query",
+      "expected_status": "oracle-mismatch"
+    },
+    {
+      "id": "MUTATION-YYZ-UNIFORM-ENVIRONMENT-LEGACY-GRAVITY-DECAY",
+      "mutation": "scale gravity by (6378137/(6378137+max(0,position_z)))^2 at the high-position equivalence query",
+      "expected_status": "oracle-mismatch"
+    }
+  ]
+}
