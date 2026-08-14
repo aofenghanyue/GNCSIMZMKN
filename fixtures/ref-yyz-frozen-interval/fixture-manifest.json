@@ -68,6 +68,5 @@
     "The bundle executes the sampled-to-interval-to-commit path across all eight accepted fixture-local consumers",
     "The Decimal analytic reference and C++17 RK4 probe share no implementation and neither imports product or Legacy code",
     "Canonical assets, product metrics and post-candidate mass geometry remain outside this slice"
-  ],
-  "open_tasks": ["R0-SCI-003"]
+  ]
 }

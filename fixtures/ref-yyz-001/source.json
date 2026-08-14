@@ -1,0 +1,126 @@
+{
+  "schema_version": "gnczmkn.yyz-r0-qualification-source/1",
+  "fixture_id": "REF-YYZ-001",
+  "source_id": "mission.fixture.yyz.lookup-altitude-hold@1",
+  "qualification_choice": {
+    "status": "accepted",
+    "scope": "R0 fixture-local scientific qualification",
+    "choice": "Use the existing two-interval lookup-composed mission as the canonical executable REF-YYZ-001 qualification profile for R0.",
+    "impact": "This profile closes source, assets, formula, trajectory, terminal, observation, diagnostic and cross-implementation tolerance evidence over the currently accepted applicability domain.",
+    "locked_boundaries": [
+      "No product MissionSource schema, loader, Compiler, Plan, Session, Observation, Diagnostic or Artifact runtime is introduced.",
+      "No 30 second stability, pitch overshoot, control allocation, control-surface or actuator-dynamics claim is inferred.",
+      "The target architecture profile remains independently identifiable and cannot contribute a passing scientific field to this qualification result."
+    ]
+  },
+  "profiles": {
+    "qualification": {
+      "profile_id": "profile.fixture.yyz.r0-qualification@1",
+      "status": "executable",
+      "research_question": "Can the accepted fixture-local YYZ formulas, identities and causal time relations execute through two committed intervals with current-boundary guidance/control and a reproducible terminal result?",
+      "clock": {
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "base_rate_hz": 10,
+        "base_dt_s": 0.1,
+        "initial_tick": 0,
+        "terminal_tick": 2,
+        "duration_s": 0.2,
+        "evaluation_mode": "AtGrid"
+      },
+      "schedule": {
+        "guidance_interval_ticks": 1,
+        "controller_interval_ticks": 1,
+        "ideal_actuation_interval_ticks": 1,
+        "observation_interval_ticks": 1,
+        "command_relation": "current-cycle-held-over-[t_k,t_k+1)"
+      },
+      "vehicle": {
+        "subject": "vehicle.fixture.yyz@1",
+        "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "configuration_id": "configuration.fixture.yyz.clean@1",
+        "configuration_revision": 11,
+        "mass_state_id": "mass.fixture.yyz.vehicle@1",
+        "initial_state": {
+          "position_I_m": [0.0, 0.0, 1000.0],
+          "velocity_I_mps": [110.0, 0.0, 0.0],
+          "q_I_B_wxyz": [1.0, 0.0, 0.0, 0.0],
+          "omega_BI_B_radps": [0.0, 0.0, 0.0],
+          "committed_mass_kg": 100.0
+        }
+      },
+      "guidance_control": {
+        "guidance_law_id": "guidance.fixture.yyz.altitude-pd@1",
+        "controller_law_id": "controller.fixture.yyz.pitch-moment-pd@1",
+        "actuation_model_id": "actuation.fixture.yyz.ideal-body-moment@1",
+        "observation_source": "current-committed-rigid-sample",
+        "target_altitude_m": 1000.0,
+        "altitude_axis": "+I-z",
+        "attitude_projection": "pure-pitch-q_I_B",
+        "realized_axis": "+B-y"
+      },
+      "termination": {
+        "plan_id": "termination-plan.fixture.yyz.mission-complete@1",
+        "composition": "any",
+        "grid_policy": "inclusive-AtGrid",
+        "priority_policy": "higher-integer-then-ascending-predicate-id",
+        "expected_terminal_tick": 2,
+        "expected_action": "Complete",
+        "expected_reason_code": "downrange-goal",
+        "terminal_observation_must_precede_result": true
+      }
+    },
+    "target_architecture": {
+      "profile_id": "profile.target.yyz.00a-altitude-hold@1",
+      "status": "target_pending",
+      "authority": "target architecture example",
+      "source_ref": "design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md#2-作者写下什么",
+      "research_question": "Can a YYZ 6DoF vehicle track a 1000 m altitude command for 30 seconds with pitch overshoot no greater than 8 percent?",
+      "base_rate_hz": 100,
+      "duration_s": 30.0,
+      "component_rates_hz": {
+        "navigation": 100,
+        "guidance": 20,
+        "controller": 50,
+        "plant_output": 100,
+        "observation": 25
+      },
+      "author_initial_values": {
+        "latitude_deg": 31.2304,
+        "longitude_deg": 121.4737,
+        "altitude_m": 1000.0,
+        "speed_mps": 220.0,
+        "heading_deg": 90.0,
+        "flight_path_deg": 0.0,
+        "bank_deg": 0.0,
+        "mass_kg": 680.0
+      },
+      "pending_capabilities": [
+        "approved geodetic-to-inertial mapping",
+        "production package and component definitions",
+        "Compiler and integer schedule lowering",
+        "Session step transaction and observation sealing",
+        "production controller, allocator and actuator path",
+        "30 second trajectory, pitch-overshoot metric and durable evidence"
+      ],
+      "scientific_verdict_contribution": "none"
+    }
+  },
+  "asset_index_ref": "fixtures/ref-yyz-001/asset-index.json",
+  "composition": {
+    "fixture_id": "REF-YYZ-MISSION-COMPOSITION-001",
+    "oracle_id": "ORACLE-YYZ-MISSION-COMPOSITION-001",
+    "model_id": "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-004",
+    "case_id": "CASE-YYZ-MISSION-COMPOSITION-BASELINE",
+    "cases_path": "fixtures/ref-yyz-mission-composition/cases.json",
+    "oracle_path": "oracles/ref-yyz-mission-composition/reference.json"
+  },
+  "semantic_coverage": {
+    "source": "profiles.qualification",
+    "step": "composition.case.execution_trace + interval_executions + committed_samples",
+    "observation": "composition.case.terminal_observation",
+    "diagnostic": "composition.diagnostic_results",
+    "trajectory_and_terminal": "composition.case.committed_samples + second_interval_convergence + mission_result",
+    "tolerance_and_difference": "oracles/ref-yyz-001/reference.json#/difference_report"
+  }
+}

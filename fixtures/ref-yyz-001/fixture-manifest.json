@@ -1,31 +1,97 @@
 {
   "schema_version": "gnczmkn.fixture-manifest/1",
   "fixture_id": "REF-YYZ-001",
-  "status": "specification_only",
-  "purpose": "Close the target architecture path from mission source to evidence and next proposal.",
+  "status": "executable",
+  "purpose": "Provide the canonical executable R0 YYZ qualification source, selected scientific assets, two-interval source-to-result reference and leaf-level cross-implementation difference report while preserving the 30 second architecture example as target-pending.",
   "authority": "scientific_authority",
   "provenance": {
-    "source_refs": ["design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md", "design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md"],
-    "notes": "Normative architecture fixture; scientific values remain gated by R0-SCI-003."
+    "source_refs": [
+      "docs/adr/0006-si-frame-and-simulation-time-conventions.md",
+      "docs/adr/0007-passive-hamilton-quaternion-convention.md",
+      "design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md",
+      "design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md#2-reference-a-yyz-cartesian-6dof-轻量闭环",
+      "design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md#4-reference-a-的周期执行表",
+      "design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md#8-aeropropulsionmass-与-closure-的边界",
+      "design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md#20-reference-slice-的验收证据",
+      "fixtures/ref-yyz-mission-composition/cases.json",
+      "oracles/ref-yyz-mission-composition/reference.json"
+    ],
+    "notes": "The repository owner accepted the recommended R0 qualification choices and requested subsequent current-R0 recommendations to be accepted and recorded by default. The current two-interval lookup-composed mission is therefore canonical only for the declared fixture-local qualification scope. The 00A 30 second, 100 Hz author example remains a separately identified target profile with no scientific verdict contribution. Product schemas, loaders, Compiler, Session and durable evidence remain locked."
   },
   "expected_facts": [
     {
-      "id": "FACT-YYZ-PLAN-RATE",
-      "claim": "The 100 Hz base rate lowers the 20 Hz guidance request to an integer interval of five ticks.",
-      "tolerance_policy": "Exact integer equality."
+      "id": "FACT-YYZ-CANONICAL-PROFILE-SEPARATION",
+      "claim": "The executable two-interval R0 qualification profile and the 30 second target architecture profile retain separate identities, values, status and verdict authority.",
+      "tolerance_policy": "Profile ids, status and target scientific_verdict_contribution are exact.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-001/source.json",
+        "fixtures/ref-yyz-001/cases.json",
+        "tools/yyz_canonical_bundle_reference.py",
+        "oracles/ref-yyz-001/reference.json"
+      ]
     },
     {
-      "id": "FACT-YYZ-STEP-COMMIT",
-      "claim": "A pre-commit failure leaves the state epoch unchanged and a successful step seals observation against its ModelCommit.",
-      "tolerance_policy": "Exact epoch, ordering and commit-reference equality."
+      "id": "FACT-YYZ-CANONICAL-SOURCE-ASSETS",
+      "claim": "The canonical qualification initial condition, clock, frames, configuration, twelve component identities and seven selected asset families resolve exactly to the executable mission composition inputs.",
+      "tolerance_policy": "Identity, path, structure and selected input values are exact against the accepted source cases.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-001/source.json",
+        "fixtures/ref-yyz-001/asset-index.json",
+        "fixtures/ref-yyz-001/cases.json",
+        "tools/yyz_canonical_bundle_reference.py",
+        "oracles/ref-yyz-001/reference.json"
+      ]
     },
     {
-      "id": "FACT-YYZ-TRAJECTORY",
-      "claim": "Trajectory and terminal metrics agree with the approved independent or legacy-classified reference.",
-      "tolerance_policy": "Field-specific numeric tolerances to be frozen by R0-SCI-003."
+      "id": "FACT-YYZ-CANONICAL-STEP-OBSERVATION-DIAGNOSTIC",
+      "claim": "The R0 source resolves to machine-valid step trace, atomic rigid/mass commits, committed terminal observation and three structured precommit failure projections with rollback proof.",
+      "tolerance_policy": "Ordering, tick, commit, identity, diagnostic linkage and rollback fields are exact; scientific numeric leaves use the declared field policy.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-mission-composition/cases.json",
+        "oracles/ref-yyz-mission-composition/reference.json",
+        "oracles/ref-yyz-001/reference.json",
+        "tests/yyz_mission_composition.cpp"
+      ]
+    },
+    {
+      "id": "FACT-YYZ-CANONICAL-TRAJECTORY-TERMINAL",
+      "claim": "Independent Python and C++17 implementations reproduce three committed samples, two causal intervals, fourth-order convergence and the tick-2 downrange completion result.",
+      "tolerance_policy": "Formula/state fields use 2e-12 absolute plus relative bounds, convergence ratios also permit 5e-4 absolute difference and every ratio remains at least 12; categorical terminal fields are exact.",
+      "evidence_refs": [
+        "oracles/ref-yyz-mission-composition/reference.json",
+        "oracles/ref-yyz-001/reference.json",
+        "tools/yyz_canonical_bundle_reference.py",
+        "tests/yyz_mission_composition.cpp"
+      ]
+    },
+    {
+      "id": "FACT-YYZ-CANONICAL-DIFFERENCE-REPORT",
+      "claim": "Every C++ probe leaf has an explicit semantic path, expected value, observed value, tolerance policy, allowed bound or exact rule, absolute difference when numeric and passing verdict.",
+      "tolerance_policy": "The report must cover the complete probe tree with zero failed fields and must preserve the frozen formula and convergence tolerances exactly.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-001/cases.json",
+        "oracles/ref-yyz-001/reference.json",
+        "tools/yyz_canonical_bundle_reference.py",
+        "CMakeLists.txt"
+      ]
     }
   ],
-  "required_artifacts": ["authoritative mission source", "aero/propulsion/mass assets", "formula intermediate values", "PlanProofRecord set", "step journal facts", "ObservationBatch", "diagnostic failure case", "trajectory and terminal metrics", "tolerance and difference report"],
-  "acceptance": ["All example values have confirmed provenance", "Legacy and target results can be compared by semantic field identity", "Every difference has an approved classification"],
-  "open_tasks": ["R0-SCI-003"]
+  "required_artifacts": [
+    "fixtures/ref-yyz-001/README.md",
+    "fixtures/ref-yyz-001/source.json",
+    "fixtures/ref-yyz-001/asset-index.json",
+    "fixtures/ref-yyz-001/cases.json",
+    "fixtures/ref-yyz-mission-composition/cases.json",
+    "oracles/ref-yyz-mission-composition/reference.json",
+    "oracles/ref-yyz-001/reference.json",
+    "tools/yyz_canonical_bundle_reference.py",
+    "tests/yyz_mission_composition.cpp",
+    "CMakeLists.txt"
+  ],
+  "acceptance": [
+    "One command resolves the canonical source and assets, regenerates the independent mission reference, runs the C++17 probe and verifies every reported field",
+    "The qualification source maps to executable step, observation, terminal and diagnostic facts while the target architecture profile remains target-pending",
+    "Six canonical boundary mutations plus the inherited fourteen input cases, ten scientific/time mutations and three structured diagnostics are rejected",
+    "The bundle introduces no product schema, loader, Compiler, Session or durable evidence capability"
+  ]
 }

@@ -1,0 +1,219 @@
+{
+  "schema_version": "gnczmkn.yyz-r0-asset-index/1",
+  "fixture_id": "REF-YYZ-001",
+  "asset_index_id": "asset-index.fixture.yyz.r0-qualification@1",
+  "source_id": "mission.fixture.yyz.lookup-altitude-hold@1",
+  "scope": "Immutable fixture-local scientific inputs and executable reference identities for the R0 qualification profile.",
+  "component_bindings": [
+    {
+      "role": "rigid_body",
+      "cases_path": "fixtures/ref-yyz-6dof-core/cases.json",
+      "oracle_path": "oracles/ref-yyz-6dof-core/reference.json",
+      "fixture_id": "REF-YYZ-6DOF-CORE-001",
+      "oracle_id": "ORACLE-YYZ-6DOF-CORE-001",
+      "model_id": "MODEL-YYZ-6DOF-RIGID-CORE-001"
+    },
+    {
+      "role": "force_moment_closure",
+      "cases_path": "fixtures/ref-yyz-force-moment-closure/cases.json",
+      "oracle_path": "oracles/ref-yyz-force-moment-closure/reference.json",
+      "fixture_id": "REF-YYZ-FORCE-MOMENT-CLOSURE-001",
+      "oracle_id": "ORACLE-YYZ-FORCE-MOMENT-CLOSURE-001",
+      "model_id": "MODEL-YYZ-FORCE-MOMENT-CLOSURE-001"
+    },
+    {
+      "role": "air_data",
+      "cases_path": "fixtures/ref-yyz-air-data-kinematics/cases.json",
+      "oracle_path": "oracles/ref-yyz-air-data-kinematics/reference.json",
+      "fixture_id": "REF-YYZ-AIR-DATA-KINEMATICS-001",
+      "oracle_id": "ORACLE-YYZ-AIR-DATA-KINEMATICS-001",
+      "model_id": "MODEL-YYZ-AIR-DATA-KINEMATICS-001"
+    },
+    {
+      "role": "aero_dimensionalization",
+      "cases_path": "fixtures/ref-yyz-aero-dimensionalization/cases.json",
+      "oracle_path": "oracles/ref-yyz-aero-dimensionalization/reference.json",
+      "fixture_id": "REF-YYZ-AERO-DIMENSIONALIZATION-001",
+      "oracle_id": "ORACLE-YYZ-AERO-DIMENSIONALIZATION-001",
+      "model_id": "MODEL-YYZ-AERO-DIMENSIONALIZATION-001"
+    },
+    {
+      "role": "aero_lookup",
+      "cases_path": "fixtures/ref-yyz-aero-lookup/cases.json",
+      "oracle_path": "oracles/ref-yyz-aero-lookup/reference.json",
+      "fixture_id": "REF-YYZ-AERO-LOOKUP-001",
+      "oracle_id": "ORACLE-YYZ-AERO-LOOKUP-001",
+      "model_id": "MODEL-YYZ-AERO-TRILINEAR-LOOKUP-001"
+    },
+    {
+      "role": "environment",
+      "cases_path": "fixtures/ref-yyz-uniform-environment/cases.json",
+      "oracle_path": "oracles/ref-yyz-uniform-environment/reference.json",
+      "fixture_id": "REF-YYZ-UNIFORM-ENVIRONMENT-001",
+      "oracle_id": "ORACLE-YYZ-UNIFORM-ENVIRONMENT-001",
+      "model_id": "MODEL-YYZ-UNIFORM-ENVIRONMENT-001"
+    },
+    {
+      "role": "propulsion",
+      "cases_path": "fixtures/ref-yyz-propulsion-response/cases.json",
+      "oracle_path": "oracles/ref-yyz-propulsion-response/reference.json",
+      "fixture_id": "REF-YYZ-PROPULSION-RESPONSE-001",
+      "oracle_id": "ORACLE-YYZ-PROPULSION-RESPONSE-001",
+      "model_id": "MODEL-YYZ-PROPULSION-RESPONSE-001"
+    },
+    {
+      "role": "mass_properties",
+      "cases_path": "fixtures/ref-yyz-mass-properties/cases.json",
+      "oracle_path": "oracles/ref-yyz-mass-properties/reference.json",
+      "fixture_id": "REF-YYZ-MASS-PROPERTIES-001",
+      "oracle_id": "ORACLE-YYZ-MASS-PROPERTIES-001",
+      "model_id": "MODEL-YYZ-MASS-PROPERTIES-PROJECTION-001"
+    },
+    {
+      "role": "mass_evolution",
+      "cases_path": "fixtures/ref-yyz-scalar-burn-mass/cases.json",
+      "oracle_path": "oracles/ref-yyz-scalar-burn-mass/reference.json",
+      "fixture_id": "REF-YYZ-SCALAR-BURN-MASS-001",
+      "oracle_id": "ORACLE-YYZ-SCALAR-BURN-MASS-001",
+      "model_id": "MODEL-YYZ-SCALAR-BURN-CONSTANT-GEOMETRY-001"
+    },
+    {
+      "role": "frozen_interval",
+      "cases_path": "fixtures/ref-yyz-frozen-interval/cases.json",
+      "oracle_path": "oracles/ref-yyz-frozen-interval/reference.json",
+      "fixture_id": "REF-YYZ-FROZEN-INTERVAL-001",
+      "oracle_id": "ORACLE-YYZ-FROZEN-INTERVAL-001",
+      "model_id": "MODEL-YYZ-LOOKUP-FROZEN-INTERVAL-001"
+    },
+    {
+      "role": "atomic_mass_commit",
+      "cases_path": "fixtures/ref-yyz-two-interval-mass-commit/cases.json",
+      "oracle_path": "oracles/ref-yyz-two-interval-mass-commit/reference.json",
+      "fixture_id": "REF-YYZ-TWO-INTERVAL-MASS-COMMIT-001",
+      "oracle_id": "ORACLE-YYZ-TWO-INTERVAL-MASS-COMMIT-001",
+      "model_id": "MODEL-YYZ-TWO-INTERVAL-MASS-COMMIT-001"
+    },
+    {
+      "role": "run_evaluation",
+      "cases_path": "fixtures/ref-yyz-run-evaluation/cases.json",
+      "oracle_path": "oracles/ref-yyz-run-evaluation/reference.json",
+      "fixture_id": "REF-YYZ-RUN-EVALUATION-001",
+      "oracle_id": "ORACLE-YYZ-RUN-EVALUATION-001",
+      "model_id": "MODEL-YYZ-RUN-EVALUATION-001"
+    }
+  ],
+  "selected_assets": [
+    {
+      "role": "environment",
+      "asset_id": "environment.fixture.yyz.uniform@1",
+      "source_case_path": "fixtures/ref-yyz-frozen-interval/cases.json#/cases/CASE-YYZ-FROZEN-INTERVAL-COMPOSED-TRAJECTORY/environment_sample",
+      "payload": {
+        "gravity_I_mps2": [0.0, 0.0, -9.80665],
+        "velocity_airmass_I_mps": [10.0, 0.0, 0.0],
+        "density_kgpm3": 1.225,
+        "speed_of_sound_mps": 340.0
+      }
+    },
+    {
+      "role": "mass_properties",
+      "asset_id": "mass-properties.fixture.yyz.constant-geometry@1",
+      "source_case_path": "fixtures/ref-yyz-frozen-interval/cases.json#/cases/CASE-YYZ-FROZEN-INTERVAL-COMPOSED-TRAJECTORY/mass_properties_sample",
+      "payload": {
+        "initial_mass_kg": 100.0,
+        "r_body_origin_to_CoM_B_m": [0.2, 0.0, 0.0],
+        "inertia_about_CoM_B_kgm2_row_major": [10.0, 0.0, 0.0, 0.0, 20.0, 0.0, 0.0, 0.0, 30.0]
+      }
+    },
+    {
+      "role": "aerodynamics",
+      "asset_id": "aero-table.fixture.yyz.multiaffine@1",
+      "source_case_path": "fixtures/ref-yyz-frozen-interval/cases.json#/cases/CASE-YYZ-FROZEN-INTERVAL-COMPOSED-TRAJECTORY/aero_lookup",
+      "payload": {
+        "model_id": "MODEL-YYZ-AERO-TRILINEAR-LOOKUP-001",
+        "configuration_id": "configuration.fixture.yyz.clean@1",
+        "reference_area_m2": 1.0,
+        "reference_span_m": 1.0,
+        "reference_chord_m": 1.0,
+        "r_body_origin_to_application_B_m": [0.2, 0.0, -1.3888888888888888888888888888888888888888888888888888888888888888888888888888889],
+        "layout": "mach-major-alpha-middle-beta-fastest",
+        "mach_axis": [0.2, 0.6],
+        "alpha_axis_rad": [-0.1, 0.1],
+        "beta_axis_rad": [-0.05, 0.05],
+        "coefficient_rows_CA_CY_CN_Cl_Cm_Cn": [
+          [0.006, 0.0245, -0.0795, 0.005, 0.014, -0.00755],
+          [0.006, -0.0245, -0.0805, -0.005, 0.014, 0.00755],
+          [0.05, 0.0245, 0.0795, 0.005, -0.106, -0.00785],
+          [0.05, -0.0245, 0.0805, -0.005, -0.106, 0.00785],
+          [0.018, 0.0235, -0.0795, 0.005, 0.022, -0.00795],
+          [0.018, -0.0235, -0.0805, -0.005, 0.022, 0.00795],
+          [0.07, 0.0235, 0.0795, 0.005, -0.098, -0.00825],
+          [0.07, -0.0235, 0.0805, -0.005, -0.098, 0.00825]
+        ]
+      }
+    },
+    {
+      "role": "propulsion",
+      "asset_id": "propulsion-response.fixture.yyz.main@1",
+      "source_case_path": "fixtures/ref-yyz-frozen-interval/cases.json#/cases/CASE-YYZ-FROZEN-INTERVAL-COMPOSED-TRAJECTORY/propulsion_response",
+      "payload": {
+        "thrust_magnitude_N": 100.0,
+        "thrust_direction_B_unit": [1.0, 0.0, 0.0],
+        "r_body_origin_to_application_B_m": [0.2, 0.2, 0.0],
+        "intrinsic_moment_at_application_B_Nm": [0.0, 0.0, 20.0],
+        "fuel_consumption_rate_kgps": 0.5
+      }
+    },
+    {
+      "role": "guidance_control",
+      "asset_id": "guidance-control.fixture.yyz.altitude-pitch@1",
+      "source_case_path": "fixtures/ref-yyz-mission-composition/cases.json#/cases/CASE-YYZ-MISSION-COMPOSITION-BASELINE/guidance_control",
+      "payload": {
+        "altitude_error_gain_rad_per_m": 0.02,
+        "vertical_speed_gain_rad_s_per_m": 0.05,
+        "pitch_command_limit_rad": 0.04,
+        "pitch_error_gain_Nm_per_rad": 500.0,
+        "pitch_rate_gain_Nm_s_per_rad": 80.0,
+        "moment_command_limit_Nm": 25.0,
+        "realization_gain": 1.0
+      }
+    },
+    {
+      "role": "numerical_policy",
+      "asset_id": "numerical.fixture.yyz.rk4-frozen-interval@1",
+      "source_case_path": "fixtures/ref-yyz-mission-composition/cases.json#/model",
+      "payload": {
+        "integration_strategy": "FrozenInterval",
+        "integrator": "classical-RK4",
+        "base_dt_s": 0.1,
+        "convergence_substeps": [1, 2, 4, 8],
+        "minimum_error_reduction_ratio": 12.0
+      }
+    },
+    {
+      "role": "termination_observation",
+      "asset_id": "termination-observation.fixture.yyz.two-interval@1",
+      "source_case_path": "fixtures/ref-yyz-mission-composition/cases.json#/cases/CASE-YYZ-MISSION-COMPOSITION-BASELINE",
+      "payload": {
+        "termination_plan_id": "termination-plan.fixture.yyz.mission-complete@1",
+        "terminal_tick": 2,
+        "expected_reason_code": "downrange-goal",
+        "terminal_observation_fields": [
+          "position_I_m",
+          "velocity_I_mps",
+          "q_I_B_wxyz",
+          "omega_BI_B_radps",
+          "committed_mass_kg",
+          "metrics",
+          "decision"
+        ]
+      }
+    }
+  ],
+  "applicability": [
+    "The component cases and oracles resolve exactly to the declared executable fixture/model identities.",
+    "The aerodynamic query remains inside the closed Mach, alpha and beta table domain.",
+    "Mass uses the accepted scalar-burn constant-geometry model over two 0.1 second intervals.",
+    "The guidance/controller/ideal-actuation values qualify causal signs, limits and moment realization only.",
+    "The target architecture profile and Legacy scenario have separate source identities and no expected trajectory fields in this index."
+  ]
+}

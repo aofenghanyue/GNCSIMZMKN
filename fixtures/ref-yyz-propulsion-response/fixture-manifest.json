@@ -63,6 +63,5 @@
     "The bundle records explicit source/frame/time/configuration identity, formula inputs, force and moment intermediates, mass-flow integral and direct consumer results",
     "The Python reference and C++17 probe share no implementation and neither imports product or Legacy code",
     "Throttle/enable mapping, engine/fuel dynamics, dry-mass policy, canonical assets, configuration transitions and product contracts remain outside this slice"
-  ],
-  "open_tasks": ["R0-SCI-003"]
+  ]
 }

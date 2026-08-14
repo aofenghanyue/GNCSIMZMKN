@@ -61,6 +61,5 @@
     "The bundle records explicit model/query identities, every supplied field, direct downstream formula results, invariance and strict failure cases",
     "The Python reference and C++17 probe share no implementation and neither imports product or Legacy code",
     "Earth, altitude models, canonical constants, environment assets and product contracts remain outside this fixture-local slice"
-  ],
-  "open_tasks": ["R0-SCI-003"]
+  ]
 }

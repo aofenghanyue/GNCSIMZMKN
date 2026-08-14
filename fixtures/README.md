@@ -4,14 +4,14 @@ Fixture 是可复制、可校验、带 provenance 的规范实例。每个目录
 
 当前两个场景 fixture 保持 `specification_only`：
 
-- `ref-yyz-001`：source→plan→session→observation→evidence 主链；
+- `ref-yyz-001`：R0 canonical 资格 source、资产索引、两区间 step/observation/diagnostic/terminal 映射与逐叶字段差异报告；30 秒 target 主链保持 `target_pending`；
 - `ref-cavh-formula`：复杂论文算法的公式级 reference。
 
 `ref-scientific-conventions` 已达到 `executable`，冻结 SI、frame、整数 tick 与被动 Hamilton 四元数约定，并由隔离 C++17 property spike 和独立 Python 标准库实现交叉验证。
 
 `ref-minimal-3dof` 已达到 `executable`，包含显式初值、高精度闭式轨迹、独立 C++17 RK4 probe、收敛检查、committed-tick 终止和 candidate 丢弃失败用例。
 
-`ref-yyz-6dof-core` 已达到 `executable`，包含已接受的 fixture-local 惯性笛卡尔刚体方程、公式 intermediates、独立 Decimal/C++17 实现、解析平移与主轴自旋轨迹、非主轴无外力矩高精度轨迹、姿态与角速度四阶收敛、转动能和角动量模守恒检查、ExactGrid 终止、阶段失败及输入域拒绝。canonical mission、环境、气动、推进、制导控制、终止指标与生产容差仍在 `R0-SCI-003` 后续范围内。
+`ref-yyz-6dof-core` 已达到 `executable`，包含已接受的 fixture-local 惯性笛卡尔刚体方程、公式 intermediates、独立 Decimal/C++17 实现、解析平移与主轴自旋轨迹、非主轴无外力矩高精度轨迹、姿态与角速度四阶收敛、转动能和角动量模守恒检查、ExactGrid 终止、阶段失败及输入域拒绝。上层 `ref-yyz-001` 已选择该模型并提供 R0 canonical source、环境、气动、推进、制导控制、终止指标与逐字段容差；production YYZ 模型继续保持后续范围。
 
 `ref-yyz-force-moment-closure` 已达到 `executable`，包含已接受的 fixture-local `FrozenInterval` 体轴力/矩闭合、质心到作用点的力矩搬移、按 source identity 的规范化结果、独立 Decimal/C++17 实现、闭合到刚体核心的解析短轨迹、贡献顺序等价、五条输入域拒绝和三条物理 mutation。重力保持独立惯性加速度；canonical 子系统模型、可变质量属性和 candidate/algebraic closure 仍在后续范围内。
 
@@ -35,7 +35,9 @@ Fixture 是可复制、可校验、带 provenance 的规范实例。每个目录
 
 `ref-yyz-run-evaluation` 已达到 `executable`，把上述三份 committed boundary sample 投影为 duration、downrange、remaining/consumed mass、terminal/peak speed 及极值指标，并在 AtGrid 边界执行 inclusive any-of 终止。complete 路径在 tick 2 同时满足 duration 与 downrange，按优先级选定 downrange；abort 路径在 tick 1 命中 remaining-mass floor。80 位 Decimal 与独立 C++17 实现完成 599 项交叉检查、predicate 顺序等价、十二条输入拒绝和五条 candidate visibility、阈值、优先级、终端封存顺序及终止后读取 mutation。两条路径均先封存 terminal observation，再冻结 fixture-local result；canonical thresholds、连续事件定位、产品 evaluator/Observation/RunOutcome contract 与 evidence durability 仍在后续范围内。
 
-`ref-yyz-mission-composition` 已达到 `executable`，提供当前 YYZ 科学资产的单入口 source-to-result 组合。它解析十二个既有 component fixture/oracle/model identity，以 lookup-composed `FrozenInterval` 作为因果数值生产者，在 tick 1 原子提交 rigid candidate 与 `99.95 kg` mass candidate；committed tick-1 高度和垂向速度随后进入限幅 altitude PD guidance 与 pitch-moment PD controller，unit-gain 零延迟理想变换把 `20 N·m` 指令加入下一段 Closure。Python 80 位 Decimal resolver 与独立 C++17 probe 重算两段 air-data、三线性系数、力/矩、质量和 full-state RK4，完成 1409 项交叉检查、四阶受控收敛、binding 顺序等价、十四条输入拒绝、十条跨边界/控制 mutation 和三类结构化 precommit 诊断。现有 supplied-`240 N` 双区间轨迹继续承担 atomic-commit 时间语义；canonical source/assets、生产 controller/allocator/actuator、长时稳定性、超调指标和 durable evidence 保持在后续范围内。
+`ref-yyz-mission-composition` 已达到 `executable`，提供当前 YYZ 科学资产的单入口 source-to-result 组合。它解析十二个既有 component fixture/oracle/model identity，以 lookup-composed `FrozenInterval` 作为因果数值生产者，在 tick 1 原子提交 rigid candidate 与 `99.95 kg` mass candidate；committed tick-1 高度和垂向速度随后进入限幅 altitude PD guidance 与 pitch-moment PD controller，unit-gain 零延迟理想变换把 `20 N·m` 指令加入下一段 Closure。Python 80 位 Decimal resolver 与独立 C++17 probe 重算两段 air-data、三线性系数、力/矩、质量和 full-state RK4，完成 1409 项交叉检查、四阶受控收敛、binding 顺序等价、十四条输入拒绝、十条跨边界/控制 mutation 和三类结构化 precommit 诊断。现有 supplied-`240 N` 双区间轨迹继续承担 atomic-commit 时间语义；上层 `ref-yyz-001` 已消费它并固定 R0 canonical source/assets。生产 controller/allocator/actuator、长时稳定性、超调指标和 durable evidence 保持在后续范围内。
+
+`ref-yyz-001` 已达到 fixture-local `executable`。它把现有 composition 固定为 R0 canonical 资格剖面，显式给出初始条件、时钟、frame、终止口径、十二个 component binding 和七类输入资产；00A 的 30 秒、100 Hz author example 使用独立 `target_pending` profile，不能贡献当前科学通过字段。canonical reference 先重算 80 位 Python mission oracle，再逐叶比较 C++17 probe 的 1010 个字段并记录 observed value、absolute difference 与 allowed bound；六条新增负例拒绝 target/qualification 混用、source/asset 漂移及 tolerance 放宽。该 bundle 没有引入产品 MissionSource、Compiler、Session 或 durable evidence 能力。
 
 `ref-legacy-sync-commit` 已达到 `executable`，将 `ORACLE-YYZ-SYNC-03` 的冻结来源、独立 Decimal 结果、C++17 candidate/commit journal 和 early-commit 失败用例连成切片；已接受的处置保留 candidate barrier 与 committed-`t_k` 读取，并退出 Legacy 实现形状。
 

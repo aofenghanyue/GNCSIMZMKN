@@ -62,6 +62,5 @@
     "The bundle evaluates both complete and abort paths from committed samples and preserves the first terminal boundary",
     "The Decimal reference and C++17 probe share no implementation and neither imports product or Legacy code",
     "Canonical thresholds, continuous location, lifecycle, durability and public contracts remain outside this slice"
-  ],
-  "open_tasks": ["R0-SCI-003"]
+  ]
 }

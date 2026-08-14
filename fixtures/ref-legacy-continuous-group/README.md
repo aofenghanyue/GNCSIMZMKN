@@ -29,4 +29,4 @@ Run the repository checks through CTest:
 ctest --preset dev -R "r0.legacy-continuous-group" --output-on-failure
 ```
 
-The main CMake graph validates frozen traces and independent references. Raw Legacy regeneration uses the fixed `R0-LEG-001` extraction environment and standalone harness. The bundle is `executable`: shared candidates, one scope commit and unique identity-bound membership are preserved; the Legacy group surface and manual vector packing are retired. Target YYZ trajectory tolerances remain pending `R0-SCI-003`.
+The main CMake graph validates frozen traces and independent references. Raw Legacy regeneration uses the fixed `R0-LEG-001` extraction environment and standalone harness. The bundle is `executable`: shared candidates, one scope commit and unique identity-bound membership are preserved; the Legacy group surface and manual vector packing are retired. The executable `REF-YYZ-001` R0 qualification bundle now owns the current YYZ trajectory tolerances; full Legacy-to-target trajectory classification remains outside this fixture.

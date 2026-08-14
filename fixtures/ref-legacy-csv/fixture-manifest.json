@@ -29,7 +29,7 @@
     {
       "id": "FACT-CSV-PUBLISHED-BOUNDARY",
       "claim": "Altitude and vertical velocity come from the state published at each recorded t_k boundary.",
-      "tolerance_policy": "The frozen Legacy state seed uses absolute tolerance 1e-9; target YYZ field tolerances remain pending R0-SCI-003.",
+      "tolerance_policy": "The frozen Legacy state seed uses absolute tolerance 1e-9; current R0 YYZ qualification fields use the REF-YYZ-001 difference policy, while full Legacy-to-target trajectory classification remains outside this fixture.",
       "evidence_refs": [
         "fixtures/ref-legacy-csv/semantic-fields.json",
         "oracles/ref-legacy-csv/reference.json",
@@ -77,8 +77,5 @@
     "Column permutation, finite Decimal-equivalent text, unmapped-column changes and duplicate unmapped headers are accepted after header mapping",
     "Missing t0, shifted t_k, stale published state, missing or non-finite required values, and duplicate required header are rejected",
     "The accepted disposition preserves each row's t_k boundary and published-state projection while retiring Legacy column order, concatenated headers, numeric text format, session filename and output directory"
-  ],
-  "open_tasks": [
-    "R0-SCI-003"
   ]
 }

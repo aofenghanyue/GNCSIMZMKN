@@ -60,6 +60,5 @@
     "The bundle records supplied coefficients, explicit reference geometry, every formula intermediate, the aerodynamic reference point and a closure-ready contribution",
     "The Python reference and C++17 probe share no implementation and neither imports product or Legacy code",
     "Coefficient lookup, interpolation, asset provenance, canonical geometry and product contracts remain outside this fixture-local slice"
-  ],
-  "open_tasks": ["R0-SCI-003"]
+  ]
 }

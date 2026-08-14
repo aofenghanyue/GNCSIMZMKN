@@ -62,6 +62,5 @@
     "The bundle executes two contiguous FrozenIntervals with candidate-only mass and atomic rigid/mass commits",
     "The Decimal piecewise-analytic reference and C++17 RK4 probe share no implementation and neither imports product or Legacy code",
     "Query recomputation, fuel geometry, depletion events, canonical assets and product contracts remain outside this slice"
-  ],
-  "open_tasks": ["R0-SCI-003"]
+  ]
 }

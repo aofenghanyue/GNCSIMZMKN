@@ -63,6 +63,5 @@
     "The bundle records committed projection identity, full inertia, CoM-to-application geometry, direct Closure/rigid-core consumers and candidate publication timing",
     "The Python reference and C++17 probe share no implementation and neither imports product or Legacy code",
     "Mass evolution remains outside this projection-only identity; REF-YYZ-SCALAR-BURN-MASS-001 covers the accepted constant-geometry scalar-burn approximation"
-  ],
-  "open_tasks": ["R0-SCI-003"]
+  ]
 }

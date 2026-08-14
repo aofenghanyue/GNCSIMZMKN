@@ -1,0 +1,68 @@
+{
+  "schema_version": "gnczmkn.yyz-r0-qualification-cases/1",
+  "fixture_id": "REF-YYZ-001",
+  "oracle_id": "ORACLE-YYZ-001",
+  "model_id": "MODEL-YYZ-R0-QUALIFICATION-BUNDLE-001",
+  "source_id": "mission.fixture.yyz.lookup-altitude-hold@1",
+  "asset_index_id": "asset-index.fixture.yyz.r0-qualification@1",
+  "source_path": "fixtures/ref-yyz-001/source.json",
+  "asset_index_path": "fixtures/ref-yyz-001/asset-index.json",
+  "mission_cases_path": "fixtures/ref-yyz-mission-composition/cases.json",
+  "mission_oracle_path": "oracles/ref-yyz-mission-composition/reference.json",
+  "accepted_case": {
+    "id": "CASE-YYZ-001-R0-QUALIFICATION",
+    "qualification_profile_id": "profile.fixture.yyz.r0-qualification@1",
+    "target_profile_id": "profile.target.yyz.00a-altitude-hold@1",
+    "composition_case_id": "CASE-YYZ-MISSION-COMPOSITION-BASELINE",
+    "expected_component_count": 12,
+    "expected_asset_count": 7,
+    "expected_committed_sample_count": 3,
+    "expected_interval_count": 2,
+    "expected_terminal_tick": 2,
+    "expected_terminal_reason_code": "downrange-goal",
+    "expected_invalid_input_rejections": 14,
+    "expected_mutation_rejections": 10,
+    "expected_structured_diagnostics": 3
+  },
+  "difference_policy": {
+    "exact_fields": "Identity, string, boolean, integer, null, list shape and object key-set comparisons are exact.",
+    "formula_absolute": "2e-12",
+    "formula_relative": "2e-12",
+    "convergence_ratio_absolute": "5e-4",
+    "minimum_convergence_error_reduction_ratio": "12",
+    "stored_decimal_absolute": "1e-68",
+    "report_granularity": "one entry for every C++ probe leaf compared with the independent Python oracle"
+  },
+  "invalid_input_cases": [
+    {
+      "id": "INVALID-YYZ-001-TARGET-PROFILE-AS-EXECUTABLE",
+      "mutation": "change the target architecture profile status to executable",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ-001-TARGET-VERDICT-CONTRIBUTION",
+      "mutation": "allow the target architecture profile to contribute a scientific verdict",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ-001-SOURCE-INITIAL-MASS",
+      "mutation": "change canonical source initial mass away from the selected mass asset",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ-001-ASSET-BINDING-MISSING",
+      "mutation": "remove one executable component binding from the canonical asset index",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ-001-AERO-TABLE-VALUE",
+      "mutation": "change one canonical aerodynamic coefficient away from the selected FrozenInterval input",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ-001-TOLERANCE-WIDENING",
+      "mutation": "widen the formula absolute tolerance beyond the mission composition policy",
+      "expected_status": "input-domain-error"
+    }
+  ]
+}

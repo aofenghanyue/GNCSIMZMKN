@@ -1,8 +1,8 @@
 # REF-YYZ-001 科学、行为与 target conformance bundle 设计
 
-- 文档状态：Implementation in progress
-- 实现成熟度：多个 fixture-local 科学切片已达到 `executable`；完整 bundle 不得作为 G1、canonical YYZ model 或 Session pass evidence
-- 任务：`R0-SCI-003`（backlog 为 `in_progress`）
+- 文档状态：R0 qualification implemented；target architecture 与 runtime conformance 保持后续阶段范围
+- 实现成熟度：`REF-YYZ-001` fixture-local R0 qualification bundle 已达到 `executable`；它不作为 G1、production YYZ model 或 Session pass evidence
+- 任务：`R0-SCI-003`（backlog 为 `done`）
 - 日期：2026-08-10
 - Authority owner role：Scientific Authority
 - 协作 owner roles：Validation Lead、Runtime Numerics Lead、Model SDK Lead、Architecture Lead
@@ -113,13 +113,13 @@ R0-LEG-001 的 YYZ 双跑观察为：
 - summary 每次 9,402 bytes，去除已声明非语义行后的 SHA-256 `8da7f1064d1d9eaf242e65fcd39140f0adde5fdd00bb59fcb626e32af002ebed`；
 - CSV 有 201 个旧列，项目装配有 24 个旧节点；二者都是 accidental structure，不是 target expected。
 
-现有 reproduction 只提交了 report/log/hash，没有提交 raw CSV bytes。R0-SCI-003 若要检查数值，必须从冻结 ZIP 在全新隔离 workspace fresh capture；不能从 hash、日志摘要或 `nominal.csv` 初始/规划输入反推 output trajectory。
+现有 reproduction 只提交了 report/log/hash，没有提交 raw CSV bytes。当前 R0 qualification 未从 hash、日志摘要或 `nominal.csv` 初始/规划输入反推 Legacy output trajectory；未来若开展完整 Legacy-to-target 数值分类，需要从冻结 ZIP 在全新隔离 workspace fresh capture。
 
 ### 3.4 Independent science 的当前实现与空缺
 
 `REF-YYZ-6DOF-CORE-001` 已实现并接受 fixture-local 惯性笛卡尔刚体核心：supplied uniform gravity、常正质量、常对称正定体轴惯量、质心处总力、质心总力矩、被动 Hamilton `q_I_B`、固定步长经典 RK4，以及每次导数求值前和提交前归一化。独立 60 位 Decimal reference 与 C++17 probe 覆盖公式 intermediates、解析匀速平移、解析主轴自旋、非主轴无外力矩高精度轨迹、姿态与角速度四阶收敛、转动能与角动量模守恒、ExactGrid 终止、阶段失败整候选丢弃和七类输入域拒绝。
 
-完整 `REF-YYZ-001` 仍缺 canonical mission 与资产、Earth/atmosphere/wind、coefficient lookup 与适用域、engine/fuel 与 mass evolution、制导控制、闭环轨迹、canonical terminal、pitch overshoot 指标和生产 tolerance report。当前 executable 仅在已接受的 fixture-local applicability domain 内提供科学事实，不能代表 00A 或 Legacy mission 的完整 YYZ 6DoF truth。
+`REF-YYZ-001` 现已在已接受的 fixture-local applicability domain 内提供 canonical R0 qualification source、uniform environment、coefficient lookup 与适用域、propulsion、mass evolution、制导控制、两区间闭环轨迹、terminal 和逐叶 tolerance/difference report。该资格剖面只覆盖当前短时公式、时间语义和失败路径；00A 的 30 秒稳定性与 pitch overshoot、production controller/allocator/actuator、Legacy 全轨迹差异以及 target runtime conformance 仍处于对应后续范围。
 
 ## 4. Scenario 冲突与 authority decision
 

@@ -61,6 +61,5 @@
     "The bundle fixes strict prepared axes, trilinear interpolation, inclusive applicability, no extrapolation and the existing coefficient convention",
     "The Decimal reference and C++17 probe share no implementation and neither imports product or Legacy code",
     "Canonical assets, loaders, nonzero rates/surfaces, derivative queries and product contracts remain outside this slice"
-  ],
-  "open_tasks": ["R0-SCI-003"]
+  ]
 }

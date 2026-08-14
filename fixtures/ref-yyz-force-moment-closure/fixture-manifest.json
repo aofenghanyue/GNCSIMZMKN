@@ -60,6 +60,5 @@
     "The bundle records per-source wrench transport, canonical totals, the frozen rigid-core input and an analytic trajectory",
     "The Python reference and C++17 probe share no implementation and neither imports product or Legacy code",
     "The canonical aero, propulsion, mass, configuration and gravity models remain outside this fixture-local slice"
-  ],
-  "open_tasks": ["R0-SCI-003"]
+  ]
 }

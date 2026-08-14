@@ -534,6 +534,21 @@ if(GNC_BUILD_TESTS)
             --probe
             $<TARGET_FILE:gnc_yyz_mission_composition_probe>)
     add_test(
+        NAME r0.yyz-canonical-bundle.oracle
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/yyz_canonical_bundle_reference.py
+            --cases
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-yyz-001/cases.json
+            --repo-root
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            --oracle
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-001/reference.json
+            --probe
+            $<TARGET_FILE:gnc_yyz_mission_composition_probe>)
+    add_test(
         NAME r0.legacy-sync-commit.oracle
         COMMAND
             ${Python3_EXECUTABLE}

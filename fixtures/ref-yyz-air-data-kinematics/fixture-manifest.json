@@ -60,6 +60,5 @@
     "The bundle records formula inputs, quaternion intermediates, physical outputs, exact sample identity, equivalence checks and direct domain failures",
     "The Python reference and C++17 probe share no implementation and neither imports product or Legacy code",
     "Canonical environment, sensor, aerodynamic validity and product contracts remain outside this fixture-local slice"
-  ],
-  "open_tasks": ["R0-SCI-003"]
+  ]
 }

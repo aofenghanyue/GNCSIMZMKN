@@ -60,6 +60,5 @@
     "The executable bundle records formula intermediates, analytic and high-precision trajectories, RK4 convergence, rotational invariants, ExactGrid termination and direct domain failures",
     "The Python reference and C++17 probe share no implementation and neither imports product or Legacy code",
     "The Scientific Authority accepted the exact fixture-local model and normalization policy; the canonical YYZ mission, environment, subsystem models, terminal metric and production tolerances remain outside this slice"
-  ],
-  "open_tasks": ["R0-SCI-003"]
+  ]
 }
