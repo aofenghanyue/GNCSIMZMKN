@@ -117,7 +117,7 @@ R0-LEG-001 的 YYZ 双跑观察为：
 
 ### 3.4 Independent science 的当前实现与空缺
 
-`REF-YYZ-6DOF-CORE-001` 已实现并接受 fixture-local 惯性笛卡尔刚体核心：supplied uniform gravity、常正质量、常对称正定体轴惯量、质心处总力、质心总力矩、被动 Hamilton `q_I_B`、固定步长经典 RK4，以及每次导数求值前和提交前归一化。独立 60 位 Decimal reference 与 C++17 probe 覆盖公式 intermediates、解析匀速平移、解析主轴自旋、四阶收敛、ExactGrid 终止、阶段失败整候选丢弃和七类输入域拒绝。
+`REF-YYZ-6DOF-CORE-001` 已实现并接受 fixture-local 惯性笛卡尔刚体核心：supplied uniform gravity、常正质量、常对称正定体轴惯量、质心处总力、质心总力矩、被动 Hamilton `q_I_B`、固定步长经典 RK4，以及每次导数求值前和提交前归一化。独立 60 位 Decimal reference 与 C++17 probe 覆盖公式 intermediates、解析匀速平移、解析主轴自旋、非主轴无外力矩高精度轨迹、姿态与角速度四阶收敛、转动能与角动量模守恒、ExactGrid 终止、阶段失败整候选丢弃和七类输入域拒绝。
 
 完整 `REF-YYZ-001` 仍缺 canonical mission 与资产、环境、气动、推进、制导控制、闭环轨迹、canonical terminal、pitch overshoot 指标和生产 tolerance report。当前 executable 仅在已接受的 fixture-local applicability domain 内提供科学事实，不能代表 00A 或 Legacy mission 的完整 YYZ 6DoF truth。
 

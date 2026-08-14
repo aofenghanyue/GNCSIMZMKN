@@ -282,6 +282,138 @@ def analytic_spin_state(case: dict, time_s: Decimal) -> dict:
     }
 
 
+STATE_FIELDS = (
+    "position_I_m",
+    "velocity_I_mps",
+    "q_I_B_wxyz",
+    "omega_BI_B_radps",
+)
+
+
+def state_derivative_reference(state: dict, inputs: dict) -> dict:
+    formula = formula_reference({"state": state, "inputs": inputs})
+    return {
+        "position_I_m": formula["position_derivative_I_mps"],
+        "velocity_I_mps": formula["velocity_derivative_I_mps2"],
+        "q_I_B_wxyz": formula["q_derivative_I_B_per_s"],
+        "omega_BI_B_radps": formula["omega_derivative_B_radps2"],
+    }
+
+
+def add_scaled_state(state: dict, derivative: dict,
+                     factor: Decimal) -> dict:
+    return {
+        field: add(state[field], scale(derivative[field], factor))
+        for field in STATE_FIELDS
+    }
+
+
+def weighted_state_derivative(k1: dict, k2: dict,
+                              k3: dict, k4: dict) -> dict:
+    one_sixth = Decimal(1) / Decimal(6)
+    return {
+        field: scale(add(add(k1[field], scale(k2[field], Decimal(2))),
+                         add(scale(k3[field], Decimal(2)), k4[field])),
+                     one_sixth)
+        for field in STATE_FIELDS
+    }
+
+
+def decimal_rk4_step(state: dict, inputs: dict,
+                     dt_s: Decimal) -> tuple[dict, Decimal]:
+    require(dt_s > 0, "Decimal RK4 dt must be positive")
+    k1 = state_derivative_reference(state, inputs)
+    k2 = state_derivative_reference(
+        add_scaled_state(state, k1, dt_s / Decimal(2)), inputs)
+    k3 = state_derivative_reference(
+        add_scaled_state(state, k2, dt_s / Decimal(2)), inputs)
+    k4 = state_derivative_reference(
+        add_scaled_state(state, k3, dt_s), inputs)
+    candidate = add_scaled_state(
+        state, weighted_state_derivative(k1, k2, k3, k4), dt_s)
+    candidate_norm = dot(
+        candidate["q_I_B_wxyz"], candidate["q_I_B_wxyz"]).sqrt()
+    norm_residual = abs(candidate_norm - Decimal(1))
+    candidate["q_I_B_wxyz"] = normalize_quaternion(
+        candidate["q_I_B_wxyz"], "Decimal RK4 candidate q_I_B")
+    validate_inputs(candidate, inputs)
+    return candidate, norm_residual
+
+
+def rotational_invariants(state: dict, inputs: dict) -> dict:
+    inertia = matrix(inputs["inertia_B_kgm2_row_major"], "inertia_B")
+    omega = vector(state["omega_BI_B_radps"], "omega_BI_B")
+    angular_momentum = matrix_vector(inertia, omega)
+    return {
+        "rotational_kinetic_energy_J":
+            Decimal("0.5") * dot(omega, angular_momentum),
+        "angular_momentum_norm_kgm2ps":
+            dot(angular_momentum, angular_momentum).sqrt(),
+    }
+
+
+def decimal_integrate(case: dict, dt_value: object,
+                      sample_dt_value: object | None = None) -> dict:
+    dt_s = decimal(dt_value)
+    steps = exact_grid_steps(case["duration_s"], dt_s)
+    sample_dt_s = dt_s if sample_dt_value is None else decimal(sample_dt_value)
+    sample_interval = exact_grid_steps(sample_dt_s, dt_s)
+    require(sample_interval > 0 and steps % sample_interval == 0,
+            "stored trajectory sample grid must align to reference dt")
+
+    state = state_from_case(case)
+    initial_invariants = rotational_invariants(state, case["inputs"])
+    maximum_norm_residual = Decimal(0)
+    maximum_energy_drift = Decimal(0)
+    maximum_momentum_drift = Decimal(0)
+    samples = [{"tick": 0, "time_s": Decimal(0), **state}]
+    for step in range(steps):
+        state, norm_residual = decimal_rk4_step(
+            state, case["inputs"], dt_s)
+        maximum_norm_residual = max(maximum_norm_residual, norm_residual)
+        invariants = rotational_invariants(state, case["inputs"])
+        maximum_energy_drift = max(
+            maximum_energy_drift,
+            abs(invariants["rotational_kinetic_energy_J"] -
+                initial_invariants["rotational_kinetic_energy_J"]))
+        maximum_momentum_drift = max(
+            maximum_momentum_drift,
+            abs(invariants["angular_momentum_norm_kgm2ps"] -
+                initial_invariants["angular_momentum_norm_kgm2ps"]))
+        committed_step = step + 1
+        if committed_step % sample_interval == 0:
+            samples.append({
+                "tick": committed_step // sample_interval,
+                "time_s": Decimal(committed_step) * dt_s,
+                **state,
+            })
+    return {
+        "trajectory": samples,
+        "final_state": state,
+        "maximum_precommit_quaternion_norm_residual":
+            maximum_norm_residual,
+        "initial_invariants": initial_invariants,
+        "maximum_invariant_drift": {
+            "rotational_kinetic_energy_J": maximum_energy_drift,
+            "angular_momentum_norm_kgm2ps": maximum_momentum_drift,
+        },
+    }
+
+
+def quaternion_chord(lhs: list[Decimal], rhs: list[Decimal]) -> Decimal:
+    left = normalize_quaternion(lhs, "left q_I_B")
+    right = normalize_quaternion(rhs, "right q_I_B")
+    if dot(left, right) < 0:
+        right = scale(right, Decimal(-1))
+    difference = subtract(left, right)
+    return dot(difference, difference).sqrt()
+
+
+def vector_l2_difference(lhs: list[Decimal], rhs: list[Decimal]) -> Decimal:
+    difference = subtract(lhs, rhs)
+    return dot(difference, difference).sqrt()
+
+
 def exact_grid_steps(duration: object, dt: object) -> int:
     duration_decimal = decimal(duration)
     dt_decimal = decimal(dt)
@@ -394,7 +526,17 @@ def build_reference(cases: dict, raw_cases: bytes) -> dict:
     formula_case = by_id["CASE-YYZ6-COUPLED-DERIVATIVE"]
     translation_case = by_id["CASE-YYZ6-CONSTANT-TRANSLATION"]
     spin_case = by_id["CASE-YYZ6-PRINCIPAL-SPIN-CONVERGENCE"]
+    coupled_case = by_id[
+        "CASE-YYZ6-TORQUE-FREE-COUPLED-CONVERGENCE"]
     failure_case = by_id["CASE-YYZ6-RK-STAGE-DOMAIN-FAILURE"]
+    coupled_reference = decimal_integrate(
+        coupled_case, coupled_case["reference_integration_dt_s"],
+        coupled_case["stored_trajectory_dt_s"])
+    coupled_confirmation = decimal_integrate(
+        coupled_case, coupled_case["reference_confirmation_dt_s"],
+        coupled_case["duration_s"])
+    coupled_final = coupled_reference["final_state"]
+    confirmation_final = coupled_confirmation["final_state"]
     return stringify({
         "schema_version": "gnczmkn.yyz-6dof-core-reference/1",
         "fixture_id": FIXTURE_ID,
@@ -408,7 +550,7 @@ def build_reference(cases: dict, raw_cases: bytes) -> dict:
         "reference_method": {
             "implementation": "CPython standard-library decimal",
             "precision_digits": getcontext().prec,
-            "solution": "direct high-precision formula evaluation plus closed-form constant translation and principal-axis spin",
+            "solution": "direct formula evaluation, closed-form constant translation and principal-axis spin, plus fine-step Decimal RK4 for coupled torque-free rotation",
         },
         "model_choice_status": cases["model_choice"]["status"],
         "cases": {
@@ -432,6 +574,30 @@ def build_reference(cases: dict, raw_cases: bytes) -> dict:
                     analytic_spin_state),
                 "analytic_final": analytic_spin_state(
                     spin_case, decimal(spin_case["duration_s"])),
+            },
+            coupled_case["id"]: {
+                "high_precision_trajectory":
+                    coupled_reference["trajectory"],
+                "high_precision_final": coupled_final,
+                "reference_convergence": {
+                    "reference_integration_dt_s": decimal(
+                        coupled_case["reference_integration_dt_s"]),
+                    "reference_confirmation_dt_s": decimal(
+                        coupled_case["reference_confirmation_dt_s"]),
+                    "final_quaternion_chord": quaternion_chord(
+                        coupled_final["q_I_B_wxyz"],
+                        confirmation_final["q_I_B_wxyz"]),
+                    "final_angular_rate_l2_radps": vector_l2_difference(
+                        coupled_final["omega_BI_B_radps"],
+                        confirmation_final["omega_BI_B_radps"]),
+                },
+                "maximum_precommit_quaternion_norm_residual":
+                    coupled_reference[
+                        "maximum_precommit_quaternion_norm_residual"],
+                "initial_invariants":
+                    coupled_reference["initial_invariants"],
+                "maximum_invariant_drift":
+                    coupled_reference["maximum_invariant_drift"],
             },
             failure_case["id"]: {
                 "failure": failure_reference(failure_case),
@@ -486,7 +652,9 @@ def orientation_error(actual: list[object], expected: list[object]) -> float:
 
 def compare_state(checks: Checks, actual: dict, expected: dict,
                   tolerances: dict, orientation_limit: Decimal,
-                  label: str) -> None:
+                  label: str,
+                  angular_rate_absolute: Decimal | None = None,
+                  angular_rate_relative: Decimal | None = None) -> None:
     compare_vector(
         checks, actual["position_I_m"], expected["position_I_m"],
         decimal(tolerances["position_absolute_m"]),
@@ -497,8 +665,11 @@ def compare_state(checks: Checks, actual: dict, expected: dict,
         decimal(tolerances["velocity_relative"]), f"{label}.velocity")
     compare_vector(
         checks, actual["omega_BI_B_radps"], expected["omega_BI_B_radps"],
-        decimal(tolerances["angular_rate_absolute_radps"]),
-        decimal(tolerances["angular_rate_relative"]), f"{label}.omega")
+        (decimal(tolerances["angular_rate_absolute_radps"])
+         if angular_rate_absolute is None else angular_rate_absolute),
+        (decimal(tolerances["angular_rate_relative"])
+         if angular_rate_relative is None else angular_rate_relative),
+        f"{label}.omega")
     error = Decimal(str(orientation_error(
         actual["q_I_B_wxyz"], expected["q_I_B_wxyz"])))
     checks.require(error <= orientation_limit,
@@ -589,6 +760,33 @@ def verify_reference(cases: dict, raw_cases: bytes, oracle: dict,
         compare_vector(checks, stored_spin_final[field],
                        recomputed_spin_final[field], stored_tolerance,
                        Decimal(0), f"stored spin final {field}")
+
+    coupled_id = "CASE-YYZ6-TORQUE-FREE-COUPLED-CONVERGENCE"
+    stored_coupled = oracle["cases"][coupled_id]
+    recomputed_coupled = recomputed["cases"][coupled_id]
+    checks.require(stored_coupled == recomputed_coupled,
+                   "stored torque-free coupled reference differs")
+    reference_confirmation_limit = decimal(
+        cases["tolerances"]["reference_confirmation_state_error_max"])
+    checks.require(
+        decimal(stored_coupled["reference_convergence"][
+            "final_quaternion_chord"]) <= reference_confirmation_limit,
+        "Decimal torque-free quaternion reference did not converge")
+    checks.require(
+        decimal(stored_coupled["reference_convergence"][
+            "final_angular_rate_l2_radps"]) <=
+        reference_confirmation_limit,
+        "Decimal torque-free angular-rate reference did not converge")
+    checks.require(
+        decimal(stored_coupled[
+            "maximum_precommit_quaternion_norm_residual"]) <=
+        decimal(cases["tolerances"][
+            "maximum_precommit_quaternion_norm_residual"]),
+        "Decimal torque-free quaternion norm residual exceeds the limit")
+    for invariant, drift in stored_coupled[
+            "maximum_invariant_drift"].items():
+        checks.require(decimal(drift) <= reference_confirmation_limit,
+                       f"Decimal torque-free {invariant} drift exceeds the limit")
 
     failure_id = "CASE-YYZ6-RK-STAGE-DOMAIN-FAILURE"
     checks.require(oracle["cases"][failure_id]["failure"] ==
@@ -716,6 +914,155 @@ def verify_reference(cases: dict, raw_cases: bytes, oracle: dict,
                    decimal(tolerances["finest_orientation_error_max_rad"]),
                    "finest orientation error exceeds limit")
 
+    coupled_case = by_id[coupled_id]
+    expected_coupled_trajectory = stored_coupled[
+        "high_precision_trajectory"]
+    actual_coupled_trajectory = probe["coupled_reference_trajectory"]
+    checks.require(
+        len(actual_coupled_trajectory) == len(expected_coupled_trajectory),
+        "C++ torque-free coupled trajectory length differs")
+    coupled_orientation_limit = decimal(
+        tolerances["coupled_reference_orientation_error_max_rad"])
+    coupled_angular_rate_limit = decimal(
+        tolerances["coupled_reference_angular_rate_error_max_radps"])
+    for index, (actual, expected) in enumerate(zip(
+            actual_coupled_trajectory, expected_coupled_trajectory)):
+        checks.require(actual["tick"] == expected["tick"],
+                       f"C++ torque-free coupled tick {index} differs")
+        compare_scalar(checks, actual["time_s"], expected["time_s"],
+                       decimal(tolerances["time_absolute_s"]), Decimal(0),
+                       f"C++ torque-free coupled time {index}")
+        compare_state(
+            checks, actual, expected, tolerances,
+            coupled_orientation_limit,
+            f"C++ torque-free coupled sample {index}",
+            coupled_angular_rate_limit, Decimal(0))
+
+    coupled_convergence = probe["coupled_convergence"]
+    coupled_ladder = coupled_case["dt_ladder_s"]
+    checks.require(len(coupled_convergence) == len(coupled_ladder),
+                   "C++ torque-free convergence ladder length differs")
+    coupled_final = stored_coupled["high_precision_final"]
+    initial_invariants = stored_coupled["initial_invariants"]
+    previous_orientation_error = None
+    previous_angular_rate_error = None
+    previous_energy_drift = None
+    previous_momentum_drift = None
+    for index, (entry, expected_dt) in enumerate(zip(
+            coupled_convergence, coupled_ladder)):
+        compare_scalar(checks, entry["dt_s"], expected_dt,
+                       decimal(tolerances["time_absolute_s"]), Decimal(0),
+                       f"torque-free convergence dt {index}")
+        compare_state(
+            checks, entry["final_state"], coupled_final, tolerances,
+            coupled_orientation_limit,
+            f"C++ torque-free convergence final state {index}",
+            coupled_angular_rate_limit, Decimal(0))
+        orientation = Decimal(str(orientation_error(
+            entry["final_state"]["q_I_B_wxyz"],
+            coupled_final["q_I_B_wxyz"])))
+        angular_rate = vector_l2_difference(
+            [decimal(value) for value in
+             entry["final_state"]["omega_BI_B_radps"]],
+            [decimal(value) for value in
+             coupled_final["omega_BI_B_radps"]])
+        checks.require(orientation > 0,
+                       f"torque-free orientation error {index} is not positive")
+        checks.require(angular_rate > 0,
+                       f"torque-free angular-rate error {index} is not positive")
+
+        computed_invariants = rotational_invariants(
+            entry["final_state"], coupled_case["inputs"])
+        compare_scalar(
+            checks, entry["rotational_kinetic_energy_J"],
+            computed_invariants["rotational_kinetic_energy_J"],
+            formula_absolute, formula_relative,
+            f"torque-free energy {index}")
+        compare_scalar(
+            checks, entry["angular_momentum_norm_kgm2ps"],
+            computed_invariants["angular_momentum_norm_kgm2ps"],
+            formula_absolute, formula_relative,
+            f"torque-free angular-momentum norm {index}")
+        energy_drift = abs(
+            computed_invariants["rotational_kinetic_energy_J"] -
+            decimal(initial_invariants["rotational_kinetic_energy_J"]))
+        momentum_drift = abs(
+            computed_invariants["angular_momentum_norm_kgm2ps"] -
+            decimal(initial_invariants[
+                "angular_momentum_norm_kgm2ps"]))
+        compare_scalar(checks, entry["energy_absolute_drift_J"],
+                       energy_drift, formula_absolute, formula_relative,
+                       f"torque-free energy drift {index}")
+        compare_scalar(
+            checks,
+            entry[
+                "angular_momentum_norm_absolute_drift_kgm2ps"],
+            momentum_drift, formula_absolute, formula_relative,
+            f"torque-free angular-momentum drift {index}")
+        checks.require(
+            decimal(entry[
+                "max_precommit_quaternion_norm_residual"]) <=
+            decimal(tolerances[
+                "maximum_precommit_quaternion_norm_residual"]),
+            f"torque-free quaternion norm residual {index} exceeds limit")
+
+        if previous_orientation_error is not None:
+            checks.require(orientation < previous_orientation_error,
+                           f"torque-free orientation error {index} did not decrease")
+            checks.require(angular_rate < previous_angular_rate_error,
+                           f"torque-free angular-rate error {index} did not decrease")
+            orientation_order = Decimal(str(math.log(
+                float(previous_orientation_error / orientation), 2.0)))
+            angular_rate_order = Decimal(str(math.log(
+                float(previous_angular_rate_error / angular_rate), 2.0)))
+            checks.require(
+                orientation_order >= decimal(tolerances[
+                    "minimum_observed_orientation_order"]),
+                f"torque-free orientation order {index} is below the limit")
+            checks.require(
+                angular_rate_order >= decimal(tolerances[
+                    "minimum_observed_angular_rate_order"]),
+                f"torque-free angular-rate order {index} is below the limit")
+            checks.require(energy_drift < previous_energy_drift,
+                           f"torque-free energy drift {index} did not decrease")
+            checks.require(momentum_drift < previous_momentum_drift,
+                           f"torque-free momentum drift {index} did not decrease")
+        previous_orientation_error = orientation
+        previous_angular_rate_error = angular_rate
+        previous_energy_drift = energy_drift
+        previous_momentum_drift = momentum_drift
+
+    checks.require(
+        previous_orientation_error is not None and
+        previous_orientation_error <= decimal(
+            tolerances["coupled_finest_orientation_error_max_rad"]),
+        "torque-free finest orientation error exceeds the limit")
+    checks.require(
+        previous_angular_rate_error is not None and
+        previous_angular_rate_error <= decimal(
+            tolerances["coupled_finest_angular_rate_error_max_radps"]),
+        "torque-free finest angular-rate error exceeds the limit")
+    checks.require(
+        previous_energy_drift is not None and
+        previous_energy_drift <= decimal(
+            tolerances["coupled_finest_energy_drift_max_J"]),
+        "torque-free finest energy drift exceeds the limit")
+    checks.require(
+        previous_momentum_drift is not None and
+        previous_momentum_drift <= decimal(tolerances[
+            "coupled_finest_angular_momentum_norm_drift_max_kgm2ps"]),
+        "torque-free finest angular-momentum drift exceeds the limit")
+    checks.require(
+        decimal(coupled_convergence[0]["energy_absolute_drift_J"]) <=
+        decimal(tolerances["coupled_coarsest_energy_drift_max_J"]),
+        "torque-free coarsest energy drift exceeds the limit")
+    checks.require(
+        decimal(coupled_convergence[0][
+            "angular_momentum_norm_absolute_drift_kgm2ps"]) <=
+        decimal(tolerances[
+            "coupled_coarsest_angular_momentum_norm_drift_max_kgm2ps"]),
+        "torque-free coarsest angular-momentum drift exceeds the limit")
+
     expected_failure = oracle["cases"][failure_id]["failure"]
     actual_failure = probe["stage_failure"]
     for field in ("code", "stage", "failed_step_start_tick",
@@ -748,6 +1095,11 @@ def verify_reference(cases: dict, raw_cases: bytes, oracle: dict,
         "orientation_convergence_levels": len(convergence),
         "finest_orientation_error_rad":
             str(convergence[-1]["orientation_error_rad"]),
+        "coupled_convergence_levels": len(coupled_convergence),
+        "coupled_finest_orientation_error_rad":
+            str(previous_orientation_error),
+        "coupled_finest_angular_rate_error_radps":
+            str(previous_angular_rate_error),
         "stage_failure_rejected": True,
         "invalid_input_cases_rejected": len(actual_invalid),
     }

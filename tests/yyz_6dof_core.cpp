@@ -19,6 +19,10 @@ constexpr const char* kModelChoiceStatus = "accepted";
 constexpr double kFormulaTolerance = 2.0e-12;
 constexpr double kTranslationTolerance = 2.0e-12;
 constexpr double kSpinReferenceOrientationLimit = 2.0e-4;
+constexpr double kCoupledEnergyDriftLimit = 2.0e-6;
+constexpr double kCoupledMomentumDriftLimit = 2.0e-6;
+constexpr double kCoupledFinestEnergyDriftLimit = 1.0e-9;
+constexpr double kCoupledFinestMomentumDriftLimit = 1.0e-9;
 constexpr double kMinimumObservedOrder = 3.8;
 constexpr double kFinestOrientationErrorLimit = 1.0e-8;
 constexpr double kQuaternionNormResidualLimit = 1.0e-4;
@@ -94,6 +98,16 @@ struct ConvergenceLevel {
     State final_state;
 };
 
+struct CoupledConvergenceLevel {
+    double dt_s = 0.0;
+    double maximum_norm_residual = 0.0;
+    double rotational_kinetic_energy_j = 0.0;
+    double angular_momentum_norm_kgm2ps = 0.0;
+    double energy_absolute_drift_j = 0.0;
+    double angular_momentum_norm_absolute_drift_kgm2ps = 0.0;
+    State final_state;
+};
+
 struct FailureResult {
     std::string code;
     std::string stage;
@@ -111,6 +125,8 @@ struct ProbeResult {
     double translation_terminal_time_s = 0.0;
     std::vector<Sample> spin_reference_trajectory;
     std::vector<ConvergenceLevel> convergence;
+    std::vector<Sample> coupled_reference_trajectory;
+    std::vector<CoupledConvergenceLevel> coupled_convergence;
     FailureResult failure;
     std::vector<std::string> invalid_input_rejections;
 };
@@ -178,6 +194,10 @@ Vec3 cross(const Vec3& lhs, const Vec3& rhs) {
         lhs.z * rhs.x - lhs.x * rhs.z,
         lhs.x * rhs.y - lhs.y * rhs.x,
     };
+}
+
+double dot(const Vec3& lhs, const Vec3& rhs) {
+    return lhs.x * rhs.x + lhs.y * rhs.y + lhs.z * rhs.z;
 }
 
 Quaternion add(const Quaternion& lhs, const Quaternion& rhs) {
@@ -591,6 +611,41 @@ State analyticSpin(const State& initial, double time_s) {
     };
 }
 
+ModelInputs coupledTorqueFreeInputs() {
+    return {
+        80.0,
+        matrix({40.0, 0.0, 0.0,
+                0.0, 50.0, 0.0,
+                0.0, 0.0, 60.0}),
+        {0.0, 0.0, 0.0},
+        {0.0, 0.0, 0.0},
+        {0.0, 0.0, 0.0},
+    };
+}
+
+State coupledTorqueFreeInitialState() {
+    return {
+        {4.0, -3.0, 100.0},
+        {12.0, -2.0, 0.5},
+        {0.8, 0.2, -0.4, 0.4},
+        {0.7, -0.4, 1.1},
+    };
+}
+
+double rotationalKineticEnergy(const State& state,
+                               const ModelInputs& inputs) {
+    const Vec3 angular_momentum = multiply(
+        inputs.inertia_b_kgm2, state.omega_bi_b_radps);
+    return 0.5 * dot(state.omega_bi_b_radps, angular_momentum);
+}
+
+double angularMomentumNorm(const State& state,
+                           const ModelInputs& inputs) {
+    const Vec3 angular_momentum = multiply(
+        inputs.inertia_b_kgm2, state.omega_bi_b_radps);
+    return std::sqrt(dot(angular_momentum, angular_momentum));
+}
+
 double orientationError(const Quaternion& actual_value,
                         const Quaternion& expected_value) {
     const Quaternion actual = normalize(actual_value);
@@ -697,6 +752,81 @@ ProbeResult runProbe() {
     require(result.convergence.back().orientation_error_rad <=
                 kFinestOrientationErrorLimit,
             "principal-spin finest orientation error exceeds the limit");
+
+    const State coupled_initial = coupledTorqueFreeInitialState();
+    const ModelInputs coupled_inputs = coupledTorqueFreeInputs();
+    result.coupled_reference_trajectory = integrate(
+        coupled_initial, coupled_inputs, 0.2, 1.0);
+    for (const auto& sample : result.coupled_reference_trajectory) {
+        const Vec3 expected_position = add(
+            coupled_initial.position_i_m,
+            scale(coupled_initial.velocity_i_mps, sample.time_s));
+        require(maxAbsDifference(
+                    sample.state.position_i_m, expected_position) <=
+                    kTranslationTolerance &&
+                maxAbsDifference(
+                    sample.state.velocity_i_mps,
+                    coupled_initial.velocity_i_mps) <=
+                    kTranslationTolerance,
+                "torque-free coupled translation differs from analytic truth");
+    }
+    require(maxAbsDifference(
+                result.coupled_reference_trajectory.back().state.
+                    omega_bi_b_radps,
+                coupled_initial.omega_bi_b_radps) > 0.1,
+            "torque-free coupled case did not exercise gyroscopic evolution");
+
+    const double initial_energy = rotationalKineticEnergy(
+        coupled_initial, coupled_inputs);
+    const double initial_momentum_norm = angularMomentumNorm(
+        coupled_initial, coupled_inputs);
+    const std::array<double, 5> coupled_dt_ladder{
+        0.2, 0.1, 0.05, 0.025, 0.0125};
+    std::optional<double> previous_energy_drift;
+    std::optional<double> previous_momentum_drift;
+    for (double dt_s : coupled_dt_ladder) {
+        double maximum_residual = 0.0;
+        const auto trajectory = integrate(
+            coupled_initial, coupled_inputs, dt_s, 1.0,
+            &maximum_residual);
+        CoupledConvergenceLevel level;
+        level.dt_s = dt_s;
+        level.maximum_norm_residual = maximum_residual;
+        level.final_state = trajectory.back().state;
+        level.rotational_kinetic_energy_j = rotationalKineticEnergy(
+            level.final_state, coupled_inputs);
+        level.angular_momentum_norm_kgm2ps = angularMomentumNorm(
+            level.final_state, coupled_inputs);
+        level.energy_absolute_drift_j = std::abs(
+            level.rotational_kinetic_energy_j - initial_energy);
+        level.angular_momentum_norm_absolute_drift_kgm2ps = std::abs(
+            level.angular_momentum_norm_kgm2ps - initial_momentum_norm);
+        require(level.energy_absolute_drift_j <= kCoupledEnergyDriftLimit,
+                "torque-free energy drift exceeds the coarse limit");
+        require(level.angular_momentum_norm_absolute_drift_kgm2ps <=
+                    kCoupledMomentumDriftLimit,
+                "torque-free angular-momentum drift exceeds the coarse limit");
+        require(maximum_residual <= kQuaternionNormResidualLimit,
+                "torque-free quaternion norm residual exceeds the limit");
+        if (previous_energy_drift.has_value()) {
+            require(level.energy_absolute_drift_j < *previous_energy_drift,
+                    "torque-free energy drift did not decrease");
+            require(level.angular_momentum_norm_absolute_drift_kgm2ps <
+                        *previous_momentum_drift,
+                    "torque-free angular-momentum drift did not decrease");
+        }
+        previous_energy_drift = level.energy_absolute_drift_j;
+        previous_momentum_drift =
+            level.angular_momentum_norm_absolute_drift_kgm2ps;
+        result.coupled_convergence.push_back(level);
+    }
+    require(result.coupled_convergence.back().energy_absolute_drift_j <=
+                kCoupledFinestEnergyDriftLimit,
+            "torque-free finest energy drift exceeds the limit");
+    require(result.coupled_convergence.back().
+                angular_momentum_norm_absolute_drift_kgm2ps <=
+                kCoupledFinestMomentumDriftLimit,
+            "torque-free finest angular-momentum drift exceeds the limit");
 
     const State failure_initial{
         {0.0, 0.0, 0.0},
@@ -892,6 +1022,32 @@ void writeJson(const ProbeResult& result) {
             std::cout << "null";
         }
         std::cout << ",\"final_state\":";
+        writeState(level.final_state);
+        std::cout << '}';
+    }
+    std::cout << "]";
+    std::cout << ",\"coupled_reference_trajectory\":";
+    writeTrajectory(result.coupled_reference_trajectory);
+    std::cout << ",\"coupled_convergence\":[";
+    for (std::size_t index = 0;
+         index < result.coupled_convergence.size(); ++index) {
+        if (index != 0) {
+            std::cout << ',';
+        }
+        const auto& level = result.coupled_convergence[index];
+        std::cout << "{\"dt_s\":" << level.dt_s
+                  << ",\"max_precommit_quaternion_norm_residual\":"
+                  << level.maximum_norm_residual
+                  << ",\"rotational_kinetic_energy_J\":"
+                  << level.rotational_kinetic_energy_j
+                  << ",\"angular_momentum_norm_kgm2ps\":"
+                  << level.angular_momentum_norm_kgm2ps
+                  << ",\"energy_absolute_drift_J\":"
+                  << level.energy_absolute_drift_j
+                  << ",\"angular_momentum_norm_absolute_drift_kgm2ps\":"
+                  << level.
+                        angular_momentum_norm_absolute_drift_kgm2ps
+                  << ",\"final_state\":";
         writeState(level.final_state);
         std::cout << '}';
     }

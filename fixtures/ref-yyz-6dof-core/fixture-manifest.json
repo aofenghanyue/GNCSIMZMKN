@@ -27,8 +27,8 @@
     },
     {
       "id": "FACT-YYZ6-CORE-TRAJECTORY",
-      "claim": "Classical RK4 reproduces the constant-translation analytic trajectory and converges at fourth order toward the principal-axis spin orientation.",
-      "tolerance_policy": "Tick and ExactGrid time are exact; position, velocity and angular rate use separate fixture-local tolerances; orientation uses relative rotation angle, strictly decreasing error and minimum observed order 3.8.",
+      "claim": "Classical RK4 reproduces the constant-translation analytic trajectory, converges at fourth order toward the principal-axis spin orientation, and converges in orientation and angular rate toward the high-precision non-principal torque-free trajectory while preserving rotational invariants.",
+      "tolerance_policy": "Tick and ExactGrid time are exact; position, velocity and angular rate use separate fixture-local tolerances; orientation uses relative rotation angle; principal-axis and coupled errors decrease strictly with minimum observed order 3.8; torque-free energy and angular-momentum drift decrease across the step ladder and satisfy coarse and finest limits.",
       "evidence_refs": [
         "fixtures/ref-yyz-6dof-core/cases.json",
         "oracles/ref-yyz-6dof-core/reference.json",
@@ -57,7 +57,7 @@
     "CMakeLists.txt"
   ],
   "acceptance": [
-    "The executable bundle records formula intermediates, analytic trajectories, RK4 convergence, ExactGrid termination and direct domain failures",
+    "The executable bundle records formula intermediates, analytic and high-precision trajectories, RK4 convergence, rotational invariants, ExactGrid termination and direct domain failures",
     "The Python reference and C++17 probe share no implementation and neither imports product or Legacy code",
     "The Scientific Authority accepted the exact fixture-local model and normalization policy; the canonical YYZ mission, environment, subsystem models, terminal metric and production tolerances remain outside this slice"
   ],

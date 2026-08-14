@@ -56,8 +56,18 @@
     "angular_rate_relative": 2e-12,
     "translation_orientation_error_max_rad": 2e-12,
     "spin_reference_orientation_error_max_rad": 0.0002,
+    "coupled_reference_orientation_error_max_rad": 0.000006,
+    "coupled_reference_angular_rate_error_max_radps": 0.0000002,
     "minimum_observed_orientation_order": 3.8,
+    "minimum_observed_angular_rate_order": 3.8,
     "finest_orientation_error_max_rad": 1e-8,
+    "coupled_finest_orientation_error_max_rad": 1e-9,
+    "coupled_finest_angular_rate_error_max_radps": 1e-10,
+    "coupled_coarsest_energy_drift_max_J": 2e-6,
+    "coupled_coarsest_angular_momentum_norm_drift_max_kgm2ps": 2e-6,
+    "coupled_finest_energy_drift_max_J": 1e-9,
+    "coupled_finest_angular_momentum_norm_drift_max_kgm2ps": 1e-9,
+    "reference_confirmation_state_error_max": "1e-12",
     "maximum_precommit_quaternion_norm_residual": 0.0001,
     "time_absolute_s": 1e-14,
     "stored_decimal_absolute": "1e-48"
@@ -119,6 +129,32 @@
       "duration_s": 2.0,
       "reference_trajectory_dt_s": 0.4,
       "dt_ladder_s": [0.4, 0.2, 0.1, 0.05, 0.025]
+    },
+    {
+      "id": "CASE-YYZ6-TORQUE-FREE-COUPLED-CONVERGENCE",
+      "kind": "high_precision_convergence",
+      "initial_state": {
+        "position_I_m": [4.0, -3.0, 100.0],
+        "velocity_I_mps": [12.0, -2.0, 0.5],
+        "q_I_B_wxyz": [0.8, 0.2, -0.4, 0.4],
+        "omega_BI_B_radps": [0.7, -0.4, 1.1]
+      },
+      "inputs": {
+        "mass_kg": 80.0,
+        "inertia_B_kgm2_row_major": [40.0, 0.0, 0.0, 0.0, 50.0, 0.0, 0.0, 0.0, 60.0],
+        "force_B_N": [0.0, 0.0, 0.0],
+        "moment_B_Nm": [0.0, 0.0, 0.0],
+        "gravity_I_mps2": [0.0, 0.0, 0.0]
+      },
+      "duration_s": 1.0,
+      "stored_trajectory_dt_s": 0.2,
+      "reference_integration_dt_s": 0.0005,
+      "reference_confirmation_dt_s": 0.001,
+      "dt_ladder_s": [0.2, 0.1, 0.05, 0.025, 0.0125],
+      "invariants": [
+        "rotational kinetic energy",
+        "angular momentum magnitude"
+      ]
     },
     {
       "id": "CASE-YYZ6-RK-STAGE-DOMAIN-FAILURE",

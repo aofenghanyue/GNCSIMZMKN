@@ -40,7 +40,7 @@
 - `R0-LEG-002` 已完成；七条 oracle 均达到 `executable`。仓库所有者已接受只读 publish、`t_k` truth 刷新、固定宏阶段顺序、candidate barrier、committed-`t_k` 读取、共享 RK candidate、单次 scope commit、唯一 identity-bound membership、CSV `t_k`/published-state 边界、停止状态 Observation 先于 RunOutcome、SimFlow 预运行自包含任务物化与 ordinary compile/run replay，并接受对应 Legacy 实现形状退出的逐事实处置。
 - `R0-SCI-001` 已由仓库所有者接受并完成。
 - `R0-SCI-002` 已完成，executable bundle 通过独立解析、RK4 收敛、终止与失败检查。
-- `R0-SCI-003` 已进入 `in_progress`；仓库所有者已接受首个 fixture-local 刚体核心范围与四元数归一化策略，`REF-YYZ-6DOF-CORE-001` 提供独立公式 intermediates、解析轨迹、RK4 收敛、ExactGrid 终止及关键失败用例。完整 `REF-YYZ-001` 仍待 mission、环境、气动、推进、制导控制、终止指标与生产容差闭合。
+- `R0-SCI-003` 已进入 `in_progress`；仓库所有者已接受首个 fixture-local 刚体核心范围与四元数归一化策略，`REF-YYZ-6DOF-CORE-001` 提供独立公式 intermediates、解析轨迹、非主轴无外力矩高精度轨迹、姿态与角速度收敛、转动守恒量、ExactGrid 终止及关键失败用例。仓库所有者同时接受下一项 `FrozenInterval` 力矩闭合范围。完整 `REF-YYZ-001` 仍待 mission、环境、气动、推进、制导控制、终止指标与生产容差闭合。
 - 其余 R0 任务保持 `planned`。
 
 ## 下一条开发主线
