@@ -1,0 +1,65 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-YYZ-AERO-DIMENSIONALIZATION-001",
+  "status": "executable",
+  "purpose": "Provide executable fixture-local dimensionalization of supplied aerodynamic coefficients and a closure-ready wrench at the center of mass.",
+  "authority": "scientific_authority",
+  "provenance": {
+    "source_refs": [
+      "docs/adr/0006-si-frame-and-simulation-time-conventions.md",
+      "design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md#63-airdata",
+      "design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md#84-closure",
+      "docs/quality/yyz-reference-bundle-design.md#72-公式覆盖矩阵"
+    ],
+    "notes": "The Scientific Authority accepted the fixture-local body-axis signs, separate span/chord moment scales and r_CoM_to_aero_ref_B transport direction. The bundle has no product or Legacy dependency."
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-YYZ-AERO-DIMENSIONALIZATION",
+      "claim": "Independent 80-digit Decimal and C++17 implementations agree on pressure-area scaling, body-axis force signs, separate span/chord moment scaling and the dimensional wrench.",
+      "tolerance_policy": "Frame, clock, sample, revision and coefficient-convention identities are exact; finite formula values use the fixture-local absolute-plus-relative tolerance.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-aero-dimensionalization/cases.json",
+        "oracles/ref-yyz-aero-dimensionalization/reference.json",
+        "tests/yyz_aero_dimensionalization.cpp",
+        "tools/yyz_aero_dimensionalization_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-YYZ-AERO-CLOSURE-LINK",
+      "claim": "Each result carries the aerodynamic reference point, its intrinsic moment and a body-frame moment transported to the center of mass using r_CoM_to_aero_ref_B cross F_B.",
+      "tolerance_policy": "Source, frame, configuration revision and half-open tick interval are exact; vector values use the fixture-local formula tolerance.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-aero-dimensionalization/cases.json",
+        "oracles/ref-yyz-aero-dimensionalization/reference.json",
+        "tests/yyz_aero_dimensionalization.cpp",
+        "tools/yyz_aero_dimensionalization_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-YYZ-AERO-FAILURE",
+      "claim": "The executable accepts zero dynamic pressure, rejects incompatible identity and invalid numeric domains, preserves two physical factorizations and detects three sign, scale and reference-vector mutations.",
+      "tolerance_policy": "Equivalence, input rejection and mutation dispositions are exact.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-aero-dimensionalization/cases.json",
+        "oracles/ref-yyz-aero-dimensionalization/reference.json",
+        "tests/yyz_aero_dimensionalization.cpp",
+        "tools/yyz_aero_dimensionalization_reference.py"
+      ]
+    }
+  ],
+  "required_artifacts": [
+    "fixtures/ref-yyz-aero-dimensionalization/README.md",
+    "fixtures/ref-yyz-aero-dimensionalization/cases.json",
+    "oracles/ref-yyz-aero-dimensionalization/reference.json",
+    "tests/yyz_aero_dimensionalization.cpp",
+    "tools/yyz_aero_dimensionalization_reference.py",
+    "CMakeLists.txt"
+  ],
+  "acceptance": [
+    "The bundle records supplied coefficients, explicit reference geometry, every formula intermediate, the aerodynamic reference point and a closure-ready contribution",
+    "The Python reference and C++17 probe share no implementation and neither imports product or Legacy code",
+    "Coefficient lookup, interpolation, asset provenance, canonical geometry and product contracts remain outside this fixture-local slice"
+  ],
+  "open_tasks": ["R0-SCI-003"]
+}

@@ -272,7 +272,7 @@ R0-SCI-001 提供的 SI、frame、binary64、integer tick、ExactGrid 和 quater
 | Actuator | command + committed actuator state → sample/interval/candidate | lag target、rate-limit delta、position clamp | exact discretization/ODE、`dt=0` init、sample time |
 | Propulsion | command/config/state → force/moment/mass-flow interval | throttle/enable scale、application-point cross product、flow integral | engine dynamics、phase/config、fuel exhaustion |
 | Mass | committed mass/fuel + flow interval → MassProperties/candidate | consumed mass、dry clamp decision、CG/inertia | conservation model、scale semantics、domain failure |
-| Aero | state/air/actuator/config + assets → AeroResponse | operating point、lookup bracket/weights、coefficients、dimensional force/moment | axes/sign、coefficient meaning、interpolation/extrapolation |
+| Aero | supplied coefficients + qbar/reference geometry → AeroResponse；完整路径后续再接 state/air/actuator/config + assets | `qbar*S`、`[-C_A,+C_Y,-C_N]`、`[b*C_l,cbar*C_m,b*C_n]`、aero reference point、transported CoM moment | coefficient lookup、interpolation/extrapolation、asset applicability、canonical geometry |
 | Closure | body-frame aero + prop + other force/moment responses → FormInput；`g^I` 保持独立惯性加速度 | each contribution by source/frame、application point、transported moment、total force/moment、configuration revision、validity interval | canonical response sources/application points、candidate/algebraic strategy |
 | Integration | committed state + frozen/approved interval model → candidate | every RK stage input/derivative/state/status | solver, stage guard, normalization/projection policy |
 | Termination | committed/published semantic facts → typed decision | each predicate, priority, tick/time/state ref | exact predicates、StopBefore/After、terminal observation |
@@ -283,6 +283,8 @@ R0-SCI-001 提供的 SI、frame、binary64、integer tick、ExactGrid 和 quater
 `REF-YYZ-FORCE-MOMENT-CLOSURE-001` 已执行 fixture-local `FrozenInterval` 子集：每个贡献携带唯一 source identity、同一 body frame、configuration revision 与半开 validity interval，按 `M_CoM^B = M_application^B + r_CoM_to_application^B × F^B` 搬移并在 RK stages 内保持总量。Decimal 解析 reference 与独立 C++17 closure→rigid-core 路径交叉验证。Canonical aero、propulsion、mass、configuration 和 gravity model 仍待后续确定；variable mass/CoM/inertia、CandidateState 与 AlgebraicSolve 不在此切片范围内。
 
 `REF-YYZ-AIR-DATA-KINEMATICS-001` 已执行 fixture-local supplied air-data 子集：同一边界的 Truth、WindQuery 与 AtmosphereQuery 携带显式 frame、clock 和 tick identity；右手体轴采用 `x-forward/y-right/z-down`；`q_I_B` 按被动 Hamilton 方向把惯性系相对风速转到体轴。`V>0` 且 `sqrt(u^2+w^2)>0`，zero-relative 与 pure-lateral 输入直接产生 domain error。Rearward flow 保持可计算，角度和声速分母均无 epsilon/floor。80 位 Decimal reference 与独立 C++17 probe 覆盖五个公式 case、两条等价性、九条失败和四条 Legacy 风格 mutation。Canonical atmosphere、wind、sensor、aero applicability 与产品 contract 仍待后续确定。
+
+`REF-YYZ-AERO-DIMENSIONALIZATION-001` 已执行 fixture-local supplied coefficient 子集：右手 `x-forward/y-right/z-down` 体轴下，`F_B=qbar*S_ref*[-C_A,C_Y,-C_N]`，`M_aero_ref_B=qbar*S_ref*[b_ref*C_l,c_ref*C_m,b_ref*C_n]`，并以 `r_CoM_to_aero_ref_B × F_B` 搬移到质心。输入要求有限非负动压、有限正参考面积/展长/弦长、有限系数和参考点，并要求 frame、clock、tick 与 configuration revision 同边界一致。80 位 Decimal reference 与独立 C++17 probe 覆盖三个公式 case、两个尺度等价变换、十条失败和三条 sign/scale/reference-vector mutation。Coefficient lookup、插值/外推、asset provenance/适用域、canonical 几何与产品 contract 仍待后续确定。
 
 ### 7.3 Legacy 公式不可原样继承的地方
 

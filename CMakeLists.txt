@@ -100,6 +100,14 @@ if(GNC_BUILD_TESTS)
         gnc_yyz_air_data_kinematics_probe PRIVATE cxx_std_17)
     gnc_enable_warnings(gnc_yyz_air_data_kinematics_probe)
 
+    # R0 YYZ scientific oracle: fixture-local aero dimensionalization.
+    add_executable(
+        gnc_yyz_aero_dimensionalization_probe
+        tests/yyz_aero_dimensionalization.cpp)
+    target_compile_features(
+        gnc_yyz_aero_dimensionalization_probe PRIVATE cxx_std_17)
+    gnc_enable_warnings(gnc_yyz_aero_dimensionalization_probe)
+
     # R0 Legacy behavior oracle: independent journal, no Legacy linkage.
     add_executable(
         gnc_legacy_sync_commit_probe
@@ -167,6 +175,9 @@ if(GNC_BUILD_TESTS)
     add_test(
         NAME r0.yyz-air-data-kinematics.probe
         COMMAND gnc_yyz_air_data_kinematics_probe --self-check)
+    add_test(
+        NAME r0.yyz-aero-dimensionalization.probe
+        COMMAND gnc_yyz_aero_dimensionalization_probe --self-check)
     add_test(
         NAME r0.legacy-sync-commit.probe
         COMMAND gnc_legacy_sync_commit_probe --self-check)
@@ -291,6 +302,19 @@ if(GNC_BUILD_TESTS)
             ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-air-data-kinematics/reference.json
             --probe
             $<TARGET_FILE:gnc_yyz_air_data_kinematics_probe>)
+    add_test(
+        NAME r0.yyz-aero-dimensionalization.oracle
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/yyz_aero_dimensionalization_reference.py
+            --cases
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-yyz-aero-dimensionalization/cases.json
+            --oracle
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-aero-dimensionalization/reference.json
+            --probe
+            $<TARGET_FILE:gnc_yyz_aero_dimensionalization_probe>)
     add_test(
         NAME r0.legacy-sync-commit.oracle
         COMMAND

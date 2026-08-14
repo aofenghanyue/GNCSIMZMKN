@@ -12,6 +12,7 @@
 - `yyz_6dof_core_reference.py`：以 60 位 CPython `decimal` 独立计算已接受的 fixture-local YYZ 刚体公式与解析轨迹，并验证 C++17 probe 的 intermediates、RK4 收敛、ExactGrid 终止、candidate 丢弃和输入域失败路径。
 - `yyz_force_moment_closure_reference.py`：以 60 位 CPython `decimal` 独立计算已接受的 fixture-local `FrozenInterval` 体轴力/矩闭合与解析短轨迹，并验证 C++17 probe 的逐来源力矩搬移、重力分离、贡献顺序等价、输入域失败和物理 mutation。
 - `yyz_air_data_kinematics_reference.py`：以 80 位 CPython `decimal` 独立计算已接受的 fixture-local supplied air-data 风速相减、被动四元数旋转、alpha/beta、动压与 Mach，并验证 C++17 probe 的同边界身份、等价性、严格输入域和四条 sign/direction/clamp mutation。
+- `yyz_aero_dimensionalization_reference.py`：以 80 位 CPython `decimal` 独立计算已接受的 fixture-local supplied aerodynamic coefficients 到体轴力/矩、aerodynamic reference point 与质心 wrench 的映射，并验证 C++17 probe 的尺度等价性、严格输入域和三条 sign/scale/reference-vector mutation。
 - `legacy_sync_commit_reference.py`：核对冻结 Legacy 来源与已通过测试证据，以 `decimal` 推导同步候选结果，并交叉验证独立 C++17 candidate/commit journal 和 early-commit 失败用例。
 - `legacy_publish_reference.py`：核对冻结 Legacy 来源与已通过测试证据，以 `decimal` 推导 publish 边界轨迹，并交叉验证独立 C++17 状态投影、双跑确定性和 committed-state mutation 失败用例。
 - `legacy_phase_reference.py`：核对冻结 Legacy 来源、环境、capture harness 和两份原始 trace，交叉验证独立 C++17 七阶段调度、双跑确定性、phase swap 与 duplicate 失败用例。

@@ -17,6 +17,8 @@ Fixture 是可复制、可校验、带 provenance 的规范实例。每个目录
 
 `ref-yyz-air-data-kinematics` 已达到 `executable`，包含已接受的 fixture-local 右手 `x-forward/y-right/z-down` 体轴、风速相减、被动 Hamilton 惯性系到体轴旋转、无 clamp 的 alpha/beta、动压与 Mach 公式。80 位 Decimal 与独立 C++17 实现交叉检查五个公式 case、两条等价性、九条输入域失败和四条 sign/direction/clamp mutation；canonical 环境、传感器、气动适用域和产品 contract 仍在后续范围内。
 
+`ref-yyz-aero-dimensionalization` 已达到 `executable`，包含已接受的 fixture-local supplied coefficient 维度化：`[-C_A,+C_Y,-C_N]` 体轴力映射，roll/yaw 使用展长、pitch 使用参考弦长，以及从显式 aerodynamic reference point 到质心的力矩搬移。80 位 Decimal 与独立 C++17 实现交叉检查三个公式 case、两条等价性、十条输入域失败和三条 sign/scale/reference-vector mutation；coefficient lookup、插值、asset provenance、canonical 几何与产品 contract 仍在后续范围内。
+
 `ref-legacy-sync-commit` 已达到 `executable`，将 `ORACLE-YYZ-SYNC-03` 的冻结来源、独立 Decimal 结果、C++17 candidate/commit journal 和 early-commit 失败用例连成切片；已接受的处置保留 candidate barrier 与 committed-`t_k` 读取，并退出 Legacy 实现形状。
 
 `ref-legacy-publish` 已达到 `executable`，交叉验证 publish 前后状态恒等、truth 边界时间、解析轨迹与 publish-time mutation 失败；已接受的处置保留只读发布与 `t_k` 边界刷新，并退出 Legacy 发布接口和存储形状。

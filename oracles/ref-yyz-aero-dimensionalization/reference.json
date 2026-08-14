@@ -1,0 +1,301 @@
+{
+  "schema_version": "gnczmkn.yyz-aero-dimensionalization-reference/1",
+  "fixture_id": "REF-YYZ-AERO-DIMENSIONALIZATION-001",
+  "oracle_id": "ORACLE-YYZ-AERO-DIMENSIONALIZATION-001",
+  "model_id": "MODEL-YYZ-AERO-DIMENSIONALIZATION-001",
+  "status": "executable",
+  "precision": {
+    "decimal_digits": 80
+  },
+  "input_identity": {
+    "path": "fixtures/ref-yyz-aero-dimensionalization/cases.json",
+    "bytes": 8096,
+    "sha256": "4e5c3f425a5be5e5b332247fec93e15b1bd3ea885a4e9acd06cf1d40453dc84f"
+  },
+  "cases": {
+    "CASE-YYZ-AERO-DIMENSIONALIZATION-ASYMMETRIC": {
+      "id": "CASE-YYZ-AERO-DIMENSIONALIZATION-ASYMMETRIC",
+      "context": {
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "body_axes": "x-forward_y-right_z-down",
+        "sample_tick": 17,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 9
+      },
+      "coefficient_convention_id": "convention.fixture.yyz.aero-body-axes@1",
+      "dynamic_pressure_Pa": "25000",
+      "reference_area_m2": "0.12",
+      "reference_span_m": "1.8",
+      "reference_chord_m": "0.45",
+      "coefficient_vector_CA_CY_CN_Cl_Cm_Cn": [
+        "0.1",
+        "-0.02",
+        "0.3",
+        "0.01",
+        "-0.04",
+        "0.03"
+      ],
+      "r_CoM_to_aero_ref_B_m": [
+        "0.2",
+        "0",
+        "-0.1"
+      ],
+      "pressure_area_N": "3000",
+      "force_coefficient_vector_B": [
+        "-0.1",
+        "-0.02",
+        "-0.3"
+      ],
+      "force_at_aero_ref_B_N": [
+        "-300",
+        "-60",
+        "-900"
+      ],
+      "moment_length_coefficient_vector_B_m": [
+        "0.018",
+        "-0.018",
+        "0.054"
+      ],
+      "moment_at_aero_ref_B_Nm": [
+        "54",
+        "-54",
+        "162"
+      ],
+      "transport_moment_B_Nm": [
+        "-6",
+        "210",
+        "-12"
+      ],
+      "moment_about_CoM_B_Nm": [
+        "48",
+        "156",
+        "150"
+      ],
+      "closure_contribution": {
+        "source_id": "aero.body",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "configuration_revision": 9,
+        "valid_from_tick": 17,
+        "valid_until_tick": 18,
+        "force_B_N": [
+          "-300",
+          "-60",
+          "-900"
+        ],
+        "r_CoM_to_application_B_m": [
+          "0.2",
+          "0",
+          "-0.1"
+        ],
+        "moment_at_application_B_Nm": [
+          "54",
+          "-54",
+          "162"
+        ]
+      }
+    },
+    "CASE-YYZ-AERO-DIMENSIONALIZATION-SEPARATE-LENGTHS": {
+      "id": "CASE-YYZ-AERO-DIMENSIONALIZATION-SEPARATE-LENGTHS",
+      "context": {
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "body_axes": "x-forward_y-right_z-down",
+        "sample_tick": 18,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 9
+      },
+      "coefficient_convention_id": "convention.fixture.yyz.aero-body-axes@1",
+      "dynamic_pressure_Pa": "800",
+      "reference_area_m2": "2.5",
+      "reference_span_m": "12",
+      "reference_chord_m": "3",
+      "coefficient_vector_CA_CY_CN_Cl_Cm_Cn": [
+        "0",
+        "0",
+        "0",
+        "0.02",
+        "-0.03",
+        "0.04"
+      ],
+      "r_CoM_to_aero_ref_B_m": [
+        "0",
+        "0",
+        "0"
+      ],
+      "pressure_area_N": "2000",
+      "force_coefficient_vector_B": [
+        "0",
+        "0",
+        "0"
+      ],
+      "force_at_aero_ref_B_N": [
+        "0",
+        "0",
+        "0"
+      ],
+      "moment_length_coefficient_vector_B_m": [
+        "0.24",
+        "-0.09",
+        "0.48"
+      ],
+      "moment_at_aero_ref_B_Nm": [
+        "480",
+        "-180",
+        "960"
+      ],
+      "transport_moment_B_Nm": [
+        "0",
+        "0",
+        "0"
+      ],
+      "moment_about_CoM_B_Nm": [
+        "480",
+        "-180",
+        "960"
+      ],
+      "closure_contribution": {
+        "source_id": "aero.body",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "configuration_revision": 9,
+        "valid_from_tick": 18,
+        "valid_until_tick": 19,
+        "force_B_N": [
+          "0",
+          "0",
+          "0"
+        ],
+        "r_CoM_to_application_B_m": [
+          "0",
+          "0",
+          "0"
+        ],
+        "moment_at_application_B_Nm": [
+          "480",
+          "-180",
+          "960"
+        ]
+      }
+    },
+    "CASE-YYZ-AERO-DIMENSIONALIZATION-ZERO-DYNAMIC-PRESSURE": {
+      "id": "CASE-YYZ-AERO-DIMENSIONALIZATION-ZERO-DYNAMIC-PRESSURE",
+      "context": {
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "body_axes": "x-forward_y-right_z-down",
+        "sample_tick": 19,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 10
+      },
+      "coefficient_convention_id": "convention.fixture.yyz.aero-body-axes@1",
+      "dynamic_pressure_Pa": "0",
+      "reference_area_m2": "4",
+      "reference_span_m": "7",
+      "reference_chord_m": "2",
+      "coefficient_vector_CA_CY_CN_Cl_Cm_Cn": [
+        "-0.5",
+        "0.25",
+        "0.75",
+        "0.1",
+        "-0.2",
+        "0.3"
+      ],
+      "r_CoM_to_aero_ref_B_m": [
+        "-3",
+        "4",
+        "0.5"
+      ],
+      "pressure_area_N": "0",
+      "force_coefficient_vector_B": [
+        "0.5",
+        "0.25",
+        "-0.75"
+      ],
+      "force_at_aero_ref_B_N": [
+        "0",
+        "0",
+        "0"
+      ],
+      "moment_length_coefficient_vector_B_m": [
+        "0.7",
+        "-0.4",
+        "2.1"
+      ],
+      "moment_at_aero_ref_B_Nm": [
+        "0",
+        "0",
+        "0"
+      ],
+      "transport_moment_B_Nm": [
+        "0",
+        "0",
+        "0"
+      ],
+      "moment_about_CoM_B_Nm": [
+        "0",
+        "0",
+        "0"
+      ],
+      "closure_contribution": {
+        "source_id": "aero.body",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "configuration_revision": 10,
+        "valid_from_tick": 19,
+        "valid_until_tick": 20,
+        "force_B_N": [
+          "0",
+          "0",
+          "0"
+        ],
+        "r_CoM_to_application_B_m": [
+          "-3",
+          "4",
+          "0.5"
+        ],
+        "moment_at_application_B_Nm": [
+          "0",
+          "0",
+          "0"
+        ]
+      }
+    }
+  },
+  "equivalence_results": [
+    {
+      "id": "EQUIV-YYZ-AERO-PRESSURE-AREA-FACTORIZATION",
+      "status": "passed",
+      "max_abs_wrench_difference": "0"
+    },
+    {
+      "id": "EQUIV-YYZ-AERO-LENGTH-COEFFICIENT-FACTORIZATION",
+      "status": "passed",
+      "max_abs_wrench_difference": "0"
+    }
+  ],
+  "invalid_input_rejections": [
+    "INVALID-YYZ-AERO-FRAME-MISMATCH",
+    "INVALID-YYZ-AERO-CLOCK-MISMATCH",
+    "INVALID-YYZ-AERO-SAMPLE-TICK-MISMATCH",
+    "INVALID-YYZ-AERO-REVISION-MISMATCH",
+    "INVALID-YYZ-AERO-NONFINITE-COEFFICIENT",
+    "INVALID-YYZ-AERO-NEGATIVE-DYNAMIC-PRESSURE",
+    "INVALID-YYZ-AERO-NONPOSITIVE-AREA",
+    "INVALID-YYZ-AERO-NONPOSITIVE-SPAN",
+    "INVALID-YYZ-AERO-NONPOSITIVE-CHORD",
+    "INVALID-YYZ-AERO-NONFINITE-REFERENCE-POINT"
+  ],
+  "mutation_results": [
+    {
+      "id": "MUTATION-YYZ-AERO-DIRECT-BODY-SIGNS",
+      "status": "rejected",
+      "max_abs_wrench_difference": "1800"
+    },
+    {
+      "id": "MUTATION-YYZ-AERO-SINGLE-REFERENCE-LENGTH",
+      "status": "rejected",
+      "max_abs_wrench_difference": "162"
+    },
+    {
+      "id": "MUTATION-YYZ-AERO-REVERSED-REFERENCE-VECTOR",
+      "status": "rejected",
+      "max_abs_wrench_difference": "420"
+    }
+  ]
+}

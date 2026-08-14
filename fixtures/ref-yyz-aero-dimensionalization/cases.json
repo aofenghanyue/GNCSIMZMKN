@@ -1,0 +1,177 @@
+{
+  "schema_version": "gnczmkn.yyz-aero-dimensionalization-cases/1",
+  "fixture_id": "REF-YYZ-AERO-DIMENSIONALIZATION-001",
+  "oracle_id": "ORACLE-YYZ-AERO-DIMENSIONALIZATION-001",
+  "model_choice": {
+    "status": "accepted",
+    "owner_role": "scientific_authority",
+    "accepted_scope": "Fixture-local dimensionalization of supplied body-axis aerodynamic coefficients with explicit reference geometry, aerodynamic reference point and a closure-ready center-of-mass wrench.",
+    "body_axes": "right-handed x-forward, y-right, z-down",
+    "coefficient_order": ["C_A", "C_Y", "C_N", "C_l", "C_m", "C_n"],
+    "equations": [
+      "F_B = qbar * S_ref * [-C_A, C_Y, -C_N]",
+      "M_aero_ref_B = qbar * S_ref * [b_ref*C_l, c_ref*C_m, b_ref*C_n]",
+      "M_CoM_B = M_aero_ref_B + r_CoM_to_aero_ref_B x F_B"
+    ],
+    "excluded": [
+      "coefficient table lookup, interpolation and extrapolation",
+      "coefficient asset provenance and canonical applicability",
+      "rate, control and actuator derivatives",
+      "canonical reference geometry",
+      "public product contracts and R1-R8 runtime capability"
+    ]
+  },
+  "model": {
+    "model_id": "MODEL-YYZ-AERO-DIMENSIONALIZATION-001",
+    "body_frame_id": "frame.fixture.yyz.body@1",
+    "body_axes": "x-forward_y-right_z-down",
+    "clock_domain": "clock.fixture.yyz.simulation@1",
+    "coefficient_convention_id": "convention.fixture.yyz.aero-body-axes@1",
+    "source_id": "aero.body",
+    "application_vector_identity": "r_CoM_to_aero_ref_B",
+    "validity_domain": [
+      "dynamic pressure is finite and nonnegative",
+      "reference area, span and chord are finite and strictly positive",
+      "all supplied coefficients and reference-point components are finite",
+      "frame, clock, sample tick and configuration revision identities agree"
+    ]
+  },
+  "tolerances": {
+    "formula_absolute": 2e-12,
+    "formula_relative": 2e-12,
+    "stored_decimal_absolute": "1e-48"
+  },
+  "cases": [
+    {
+      "id": "CASE-YYZ-AERO-DIMENSIONALIZATION-ASYMMETRIC",
+      "context": {
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "body_axes": "x-forward_y-right_z-down",
+        "sample_tick": 17,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 9
+      },
+      "air_data": {
+        "dynamic_pressure_Pa": 25000.0,
+        "sample_tick": 17,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 9
+      },
+      "geometry": {
+        "reference_area_m2": 0.12,
+        "reference_span_m": 1.8,
+        "reference_chord_m": 0.45,
+        "r_CoM_to_aero_ref_B_m": [0.2, 0.0, -0.1],
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "sample_tick": 17,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 9
+      },
+      "coefficients": {
+        "convention_id": "convention.fixture.yyz.aero-body-axes@1",
+        "coefficient_vector_CA_CY_CN_Cl_Cm_Cn": [0.10, -0.02, 0.30, 0.01, -0.04, 0.03],
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "sample_tick": 17,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 9
+      }
+    },
+    {
+      "id": "CASE-YYZ-AERO-DIMENSIONALIZATION-SEPARATE-LENGTHS",
+      "context": {
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "body_axes": "x-forward_y-right_z-down",
+        "sample_tick": 18,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 9
+      },
+      "air_data": {
+        "dynamic_pressure_Pa": 800.0,
+        "sample_tick": 18,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 9
+      },
+      "geometry": {
+        "reference_area_m2": 2.5,
+        "reference_span_m": 12.0,
+        "reference_chord_m": 3.0,
+        "r_CoM_to_aero_ref_B_m": [0.0, 0.0, 0.0],
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "sample_tick": 18,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 9
+      },
+      "coefficients": {
+        "convention_id": "convention.fixture.yyz.aero-body-axes@1",
+        "coefficient_vector_CA_CY_CN_Cl_Cm_Cn": [0.0, 0.0, 0.0, 0.02, -0.03, 0.04],
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "sample_tick": 18,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 9
+      }
+    },
+    {
+      "id": "CASE-YYZ-AERO-DIMENSIONALIZATION-ZERO-DYNAMIC-PRESSURE",
+      "context": {
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "body_axes": "x-forward_y-right_z-down",
+        "sample_tick": 19,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 10
+      },
+      "air_data": {
+        "dynamic_pressure_Pa": 0.0,
+        "sample_tick": 19,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 10
+      },
+      "geometry": {
+        "reference_area_m2": 4.0,
+        "reference_span_m": 7.0,
+        "reference_chord_m": 2.0,
+        "r_CoM_to_aero_ref_B_m": [-3.0, 4.0, 0.5],
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "sample_tick": 19,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 10
+      },
+      "coefficients": {
+        "convention_id": "convention.fixture.yyz.aero-body-axes@1",
+        "coefficient_vector_CA_CY_CN_Cl_Cm_Cn": [-0.5, 0.25, 0.75, 0.1, -0.2, 0.3],
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "sample_tick": 19,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 10
+      }
+    }
+  ],
+  "equivalence_cases": [
+    {
+      "id": "EQUIV-YYZ-AERO-PRESSURE-AREA-FACTORIZATION",
+      "operation": "multiply dynamic pressure by five and divide reference area by five",
+      "expected": "the complete dimensional wrench remains equal"
+    },
+    {
+      "id": "EQUIV-YYZ-AERO-LENGTH-COEFFICIENT-FACTORIZATION",
+      "operation": "double span and chord while halving the three moment coefficients",
+      "expected": "the complete dimensional wrench remains equal"
+    }
+  ],
+  "invalid_input_cases": [
+    {"id": "INVALID-YYZ-AERO-FRAME-MISMATCH", "mutation": "change the coefficient body frame", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AERO-CLOCK-MISMATCH", "mutation": "change the air-data clock domain", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AERO-SAMPLE-TICK-MISMATCH", "mutation": "change the geometry sample tick", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AERO-REVISION-MISMATCH", "mutation": "change the coefficient configuration revision", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AERO-NONFINITE-COEFFICIENT", "mutation": "set one coefficient to positive infinity", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AERO-NEGATIVE-DYNAMIC-PRESSURE", "mutation": "set dynamic pressure below zero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AERO-NONPOSITIVE-AREA", "mutation": "set reference area to zero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AERO-NONPOSITIVE-SPAN", "mutation": "set reference span to zero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AERO-NONPOSITIVE-CHORD", "mutation": "set reference chord to zero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AERO-NONFINITE-REFERENCE-POINT", "mutation": "set one aerodynamic reference-point component to positive infinity", "expected_status": "input-domain-error"}
+  ],
+  "mutation_cases": [
+    {"id": "MUTATION-YYZ-AERO-DIRECT-BODY-SIGNS", "mutation": "map force coefficients as [C_A,C_Y,C_N]", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-AERO-SINGLE-REFERENCE-LENGTH", "mutation": "use reference span for pitch moment", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-AERO-REVERSED-REFERENCE-VECTOR", "mutation": "transport the moment with r_aero_ref_to_CoM_B", "expected_status": "oracle-mismatch"}
+  ]
+}

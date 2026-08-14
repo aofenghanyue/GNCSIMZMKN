@@ -40,12 +40,12 @@
 - `R0-LEG-002` 已完成；七条 oracle 均达到 `executable`。仓库所有者已接受只读 publish、`t_k` truth 刷新、固定宏阶段顺序、candidate barrier、committed-`t_k` 读取、共享 RK candidate、单次 scope commit、唯一 identity-bound membership、CSV `t_k`/published-state 边界、停止状态 Observation 先于 RunOutcome、SimFlow 预运行自包含任务物化与 ordinary compile/run replay，并接受对应 Legacy 实现形状退出的逐事实处置。
 - `R0-SCI-001` 已由仓库所有者接受并完成。
 - `R0-SCI-002` 已完成，executable bundle 通过独立解析、RK4 收敛、终止与失败检查。
-- `R0-SCI-003` 已进入 `in_progress`；仓库所有者已接受 fixture-local 刚体核心、四元数归一化策略、`FrozenInterval` 力/矩闭合和 supplied air-data kinematics 范围。`REF-YYZ-6DOF-CORE-001` 提供独立公式 intermediates、解析与高精度轨迹、收敛、转动守恒量、ExactGrid 终止及关键失败用例；`REF-YYZ-FORCE-MOMENT-CLOSURE-001` 提供逐来源力矩搬移、规范化闭合、重力分离、闭合到刚体核心的解析短轨迹、输入域拒绝与物理 mutation；`REF-YYZ-AIR-DATA-KINEMATICS-001` 提供 80 位 Decimal 与独立 C++17 风速相减、被动旋转、alpha/beta、动压、Mach、等价性、输入域拒绝和 Legacy clamp mutation。完整 `REF-YYZ-001` 仍待 mission、环境、气动、推进、制导控制、终止指标与生产容差闭合。
+- `R0-SCI-003` 已进入 `in_progress`；仓库所有者已接受 fixture-local 刚体核心、四元数归一化策略、`FrozenInterval` 力/矩闭合、supplied air-data kinematics 和 supplied aerodynamic coefficient dimensionalization 范围。`REF-YYZ-6DOF-CORE-001` 提供独立公式 intermediates、解析与高精度轨迹、收敛、转动守恒量、ExactGrid 终止及关键失败用例；`REF-YYZ-FORCE-MOMENT-CLOSURE-001` 提供逐来源力矩搬移、规范化闭合、重力分离、闭合到刚体核心的解析短轨迹、输入域拒绝与物理 mutation；`REF-YYZ-AIR-DATA-KINEMATICS-001` 提供 80 位 Decimal 与独立 C++17 风速相减、被动旋转、alpha/beta、动压、Mach、等价性、输入域拒绝和 Legacy clamp mutation；`REF-YYZ-AERO-DIMENSIONALIZATION-001` 提供 `[-C_A,+C_Y,-C_N]` 力映射、展长/弦长分离力矩尺度、显式 aerodynamic reference point、质心力矩搬移、输入域拒绝和关键 mutation。完整 `REF-YYZ-001` 仍待 mission、环境、coefficient lookup/适用域、推进、制导控制、终止指标与生产容差闭合。
 - 其余 R0 任务保持 `planned`。
 
 ## 下一条开发主线
 
-1. 继续 `R0-SCI-003` 单一主线，在已验证刚体核心、`FrozenInterval` 闭合与 supplied air-data 之后，窄复核 aero coefficient 到体轴力/矩的 dimensionalization、轴向与符号口径及参考几何。
+1. 继续 `R0-SCI-003` 单一主线，在已验证的 air-data、aero dimensionalization、closure 与 rigid-body 链上，窄复核 fixture-local uniform environment sample 的重力、密度、声速和风场输入域；canonical atmosphere/Earth model 与产品 contract 保持范围外。
 2. 继续保持单一 R0 主线，不展开 gate、性能、CAVH 或架构治理。
 
 ## 保留与恢复
