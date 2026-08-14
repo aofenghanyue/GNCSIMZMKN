@@ -100,6 +100,11 @@
       "expected_status": "rejected"
     },
     {
+      "id": "FAIL-CSV-MISSING-REQUIRED-COLUMN",
+      "mutation": "Remove each required semantic column in turn while keeping row widths consistent",
+      "expected_status": "rejected"
+    },
+    {
       "id": "FAIL-CSV-DUPLICATE-REQUIRED-HEADER",
       "mutation": "Encode the required altitude column twice",
       "expected_status": "rejected"

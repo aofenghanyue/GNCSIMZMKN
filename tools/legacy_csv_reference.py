@@ -323,6 +323,21 @@ def replace_required_numeric_value(raw: bytes, required_column: str,
     return output.getvalue().encode("utf-8")
 
 
+def remove_required_column(raw: bytes, required_column: str) -> bytes:
+    header, rows = parse_csv_rows(raw)
+    require(required_column in header,
+            "CSV mutation requires a mapped semantic column")
+    column_index = header.index(required_column)
+    del header[column_index]
+    for row in rows:
+        del row[column_index]
+    output = io.StringIO(newline="")
+    writer = csv.writer(output, lineterminator="\n")
+    writer.writerow(header)
+    writer.writerows(rows)
+    return output.getvalue().encode("utf-8")
+
+
 def duplicate_required_header(raw: bytes, required_column: str) -> bytes:
     header, rows = parse_csv_rows(raw)
     replacement_index = next(index for index, name in enumerate(header)
@@ -454,6 +469,7 @@ def main() -> int:
         "FAIL-CSV-MISSING-T0", "FAIL-CSV-SHIFTED-TK",
         "FAIL-CSV-STALE-PUBLISHED-STATE",
         "FAIL-CSV-NONFINITE-REQUIRED-VALUE",
+        "FAIL-CSV-MISSING-REQUIRED-COLUMN",
         "FAIL-CSV-DUPLICATE-REQUIRED-HEADER",
     } and all(entry["expected_status"] == "rejected"
               for entry in failure_by_id.values()),
@@ -469,6 +485,10 @@ def main() -> int:
         (fields_by_id[ALTITUDE_FIELD_ID]["legacy_column"], "Infinity"),
         (fields_by_id[VELOCITY_FIELD_ID]["legacy_column"], "-Infinity"),
     )
+    required_column_mutations = tuple(
+        fields_by_id[field_id]["legacy_column"]
+        for field_id in (
+            TIME_FIELD_ID, ALTITUDE_FIELD_ID, VELOCITY_FIELD_ID))
     require(rejected(lambda: validate_semantic_rows(
                 missing_t0, analytic, time_tolerance, state_tolerance,
                 "Missing-t0 mutation")) and
@@ -490,7 +510,12 @@ def main() -> int:
                         datasets[0], required_column, encoded_value),
                     fields_by_id)),
                 f"Non-finite CSV token was accepted: {encoded_value}")
-    checks += 8
+    for required_column in required_column_mutations:
+        require(rejected(lambda required_column=required_column:
+                         normalize_dataset(remove_required_column(
+                             datasets[0], required_column), fields_by_id)),
+                f"Missing CSV semantic column was accepted: {required_column}")
+    checks += 11
 
     first_stdout, probe = run_probe(arguments.probe)
     second_stdout, second_probe = run_probe(arguments.probe)
@@ -510,11 +535,12 @@ def main() -> int:
     for flag in (
             "column_permutation_accepted", "numeric_text_format_accepted",
             "unmapped_column_change_accepted",
-            "non_finite_required_value_rejected", "missing_t0_rejected",
+            "non_finite_required_value_rejected",
+            "missing_required_column_rejected", "missing_t0_rejected",
             "shifted_tk_rejected", "stale_published_state_rejected",
             "duplicate_required_header_rejected"):
         require(probe[flag] is True, f"C++ CSV probe did not enforce {flag}")
-    checks += 11
+    checks += 12
 
     decision = oracle["disposition_decision"]
     require(decision["status"] in {"needs_owner_decision", "accepted"},

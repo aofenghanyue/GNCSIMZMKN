@@ -35,6 +35,7 @@ struct ProbeResult {
     bool numeric_text_format_accepted = false;
     bool unmapped_column_change_accepted = false;
     bool non_finite_required_value_rejected = false;
+    bool missing_required_column_rejected = false;
     bool missing_t0_rejected = false;
     bool shifted_tk_rejected = false;
     bool stale_published_state_rejected = false;
@@ -196,11 +197,29 @@ ProbeResult runProbe() {
     for (const auto& mutation : non_finite_mutations) {
         auto non_finite_encoded = canonical_encoded;
         non_finite_encoded[0][mutation.first] = mutation.second;
+        const bool mutation_rejected = rejected([&]() {
+            (void)decodeByHeader(canonical_header, non_finite_encoded);
+        });
         result.non_finite_required_value_rejected =
-            result.non_finite_required_value_rejected && rejected([&]() {
-                (void)decodeByHeader(
-                    canonical_header, non_finite_encoded);
-            });
+            mutation_rejected && result.non_finite_required_value_rejected;
+    }
+
+    result.missing_required_column_rejected = true;
+    for (const std::size_t column_index : {0U, 1U, 2U}) {
+        auto missing_header = canonical_header;
+        auto missing_encoded = canonical_encoded;
+        const auto column_offset =
+            static_cast<std::vector<std::string>::difference_type>(
+                column_index);
+        missing_header.erase(missing_header.begin() + column_offset);
+        for (auto& row : missing_encoded) {
+            row.erase(row.begin() + column_offset);
+        }
+        const bool mutation_rejected = rejected([&]() {
+            (void)decodeByHeader(missing_header, missing_encoded);
+        });
+        result.missing_required_column_rejected =
+            mutation_rejected && result.missing_required_column_rejected;
     }
 
     auto missing_t0 = result.rows;
@@ -247,6 +266,8 @@ void writeJson(const ProbeResult& result) {
               << (result.unmapped_column_change_accepted ? "true" : "false")
               << ",\"non_finite_required_value_rejected\":"
               << (result.non_finite_required_value_rejected ? "true" : "false")
+              << ",\"missing_required_column_rejected\":"
+              << (result.missing_required_column_rejected ? "true" : "false")
               << ",\"missing_t0_rejected\":"
               << (result.missing_t0_rejected ? "true" : "false")
               << ",\"shifted_tk_rejected\":"
@@ -278,6 +299,8 @@ int main(int argc, char** argv) {
                 "unmapped column data changed semantic rows");
         require(result.non_finite_required_value_rejected,
                 "non-finite required numeric value was accepted");
+        require(result.missing_required_column_rejected,
+                "missing required semantic column was accepted");
         require(result.missing_t0_rejected,
                 "missing initial sample was accepted");
         require(result.shifted_tk_rejected,
