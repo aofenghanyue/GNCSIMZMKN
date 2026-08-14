@@ -1,0 +1,70 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-YYZ-MISSION-COMPOSITION-001",
+  "status": "executable",
+  "purpose": "Provide one executable fixture-local YYZ source-to-result composition over the current scientific component oracles.",
+  "authority": "scientific_authority",
+  "provenance": {
+    "source_refs": [
+      "docs/adr/0006-si-frame-and-simulation-time-conventions.md",
+      "docs/adr/0007-passive-hamilton-quaternion-convention.md",
+      "design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md#5-一个-step-怎样提交",
+      "design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md#6-observation-和-csv-怎样对应",
+      "design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md#4-reference-a-的周期执行表",
+      "design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md#8-aeropropulsionmass-与-closure-的边界",
+      "fixtures/ref-yyz-frozen-interval/cases.json",
+      "fixtures/ref-yyz-two-interval-mass-commit/cases.json",
+      "fixtures/ref-yyz-run-evaluation/cases.json"
+    ],
+    "notes": "The repository owner accepted fixture-local source composition, lookup-composed numerical production, atomic rigid/mass commit and terminal-observation-first result semantics. The supplied-force two-interval trajectory remains a separate temporal oracle."
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-YYZ-MISSION-COMPONENT-RESOLUTION",
+      "claim": "Every required scientific role resolves once to an executable fixture and matching oracle/model identity before numerical composition begins.",
+      "tolerance_policy": "Roles and identities are exact; declaration order is irrelevant.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-mission-composition/cases.json",
+        "oracles/ref-yyz-mission-composition/reference.json",
+        "tools/yyz_mission_composition_reference.py",
+        "tests/yyz_mission_composition.cpp"
+      ]
+    },
+    {
+      "id": "FACT-YYZ-MISSION-ATOMIC-COMMIT",
+      "claim": "The lookup-composed rigid candidate and scalar-burn mass candidate remain pending through the interval and become visible together in the tick-1 committed sample.",
+      "tolerance_policy": "Commit, tick, identity, visibility and mass handoff are exact; physical state values use the declared formula tolerance.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-mission-composition/cases.json",
+        "oracles/ref-yyz-mission-composition/reference.json",
+        "tools/yyz_mission_composition_reference.py",
+        "tests/yyz_mission_composition.cpp"
+      ]
+    },
+    {
+      "id": "FACT-YYZ-MISSION-TERMINAL-RESULT",
+      "claim": "Committed-boundary metrics select the higher-priority simultaneous completion at tick 1, seal the terminal observation against that commit and then freeze the mission result.",
+      "tolerance_policy": "Decision, priority, event order, commit reference and seal state are exact; metrics use the declared formula tolerance.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-mission-composition/cases.json",
+        "oracles/ref-yyz-mission-composition/reference.json",
+        "tools/yyz_mission_composition_reference.py",
+        "tests/yyz_mission_composition.cpp"
+      ]
+    }
+  ],
+  "required_artifacts": [
+    "fixtures/ref-yyz-mission-composition/README.md",
+    "fixtures/ref-yyz-mission-composition/cases.json",
+    "oracles/ref-yyz-mission-composition/reference.json",
+    "tools/yyz_mission_composition_reference.py",
+    "tests/yyz_mission_composition.cpp",
+    "CMakeLists.txt"
+  ],
+  "acceptance": [
+    "One command resolves the current scientific components and produces committed samples, interval facts, metrics, terminal observation and mission result",
+    "Independent Python and C++17 implementations reject identity, timing, visibility, commit and result-order regressions",
+    "The bundle introduces no product Mission, Compiler, Session, Observation or Artifact capability"
+  ],
+  "open_tasks": ["R0-SCI-003"]
+}

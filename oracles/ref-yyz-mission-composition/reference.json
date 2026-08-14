@@ -1,0 +1,665 @@
+{
+  "schema_version": "gnczmkn.yyz-mission-composition-reference/1",
+  "fixture_id": "REF-YYZ-MISSION-COMPOSITION-001",
+  "oracle_id": "ORACLE-YYZ-MISSION-COMPOSITION-001",
+  "model_id": "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-001",
+  "precision": {
+    "implementation": "Python Decimal semantic resolver over executable component oracles",
+    "decimal_digits": 80
+  },
+  "source_identity": {
+    "cases_path": "fixtures/ref-yyz-mission-composition/cases.json",
+    "dependency_count": 12
+  },
+  "cases": {
+    "CASE-YYZ-MISSION-COMPOSITION-BASELINE": {
+      "id": "CASE-YYZ-MISSION-COMPOSITION-BASELINE",
+      "mission_source_id": "mission.fixture.yyz.lookup-open-loop@1",
+      "execution_id": "execution.fixture.yyz.lookup-open-loop.0001",
+      "composition_model_id": "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-001",
+      "resolved_components": [
+        {
+          "role": "aero_dimensionalization",
+          "fixture_id": "REF-YYZ-AERO-DIMENSIONALIZATION-001",
+          "oracle_id": "ORACLE-YYZ-AERO-DIMENSIONALIZATION-001",
+          "model_id": "MODEL-YYZ-AERO-DIMENSIONALIZATION-001",
+          "status": "passed"
+        },
+        {
+          "role": "aero_lookup",
+          "fixture_id": "REF-YYZ-AERO-LOOKUP-001",
+          "oracle_id": "ORACLE-YYZ-AERO-LOOKUP-001",
+          "model_id": "MODEL-YYZ-AERO-TRILINEAR-LOOKUP-001",
+          "status": "passed"
+        },
+        {
+          "role": "air_data",
+          "fixture_id": "REF-YYZ-AIR-DATA-KINEMATICS-001",
+          "oracle_id": "ORACLE-YYZ-AIR-DATA-KINEMATICS-001",
+          "model_id": "MODEL-YYZ-AIR-DATA-KINEMATICS-001",
+          "status": "passed"
+        },
+        {
+          "role": "atomic_mass_commit",
+          "fixture_id": "REF-YYZ-TWO-INTERVAL-MASS-COMMIT-001",
+          "oracle_id": "ORACLE-YYZ-TWO-INTERVAL-MASS-COMMIT-001",
+          "model_id": "MODEL-YYZ-TWO-INTERVAL-MASS-COMMIT-001",
+          "status": "passed"
+        },
+        {
+          "role": "environment",
+          "fixture_id": "REF-YYZ-UNIFORM-ENVIRONMENT-001",
+          "oracle_id": "ORACLE-YYZ-UNIFORM-ENVIRONMENT-001",
+          "model_id": "MODEL-YYZ-UNIFORM-ENVIRONMENT-001",
+          "status": "passed"
+        },
+        {
+          "role": "force_moment_closure",
+          "fixture_id": "REF-YYZ-FORCE-MOMENT-CLOSURE-001",
+          "oracle_id": "ORACLE-YYZ-FORCE-MOMENT-CLOSURE-001",
+          "model_id": "MODEL-YYZ-FORCE-MOMENT-CLOSURE-001",
+          "status": "passed"
+        },
+        {
+          "role": "frozen_interval",
+          "fixture_id": "REF-YYZ-FROZEN-INTERVAL-001",
+          "oracle_id": "ORACLE-YYZ-FROZEN-INTERVAL-001",
+          "model_id": "MODEL-YYZ-LOOKUP-FROZEN-INTERVAL-001",
+          "status": "passed"
+        },
+        {
+          "role": "mass_evolution",
+          "fixture_id": "REF-YYZ-SCALAR-BURN-MASS-001",
+          "oracle_id": "ORACLE-YYZ-SCALAR-BURN-MASS-001",
+          "model_id": "MODEL-YYZ-SCALAR-BURN-CONSTANT-GEOMETRY-001",
+          "status": "passed"
+        },
+        {
+          "role": "mass_properties",
+          "fixture_id": "REF-YYZ-MASS-PROPERTIES-001",
+          "oracle_id": "ORACLE-YYZ-MASS-PROPERTIES-001",
+          "model_id": "MODEL-YYZ-MASS-PROPERTIES-PROJECTION-001",
+          "status": "passed"
+        },
+        {
+          "role": "propulsion",
+          "fixture_id": "REF-YYZ-PROPULSION-RESPONSE-001",
+          "oracle_id": "ORACLE-YYZ-PROPULSION-RESPONSE-001",
+          "model_id": "MODEL-YYZ-PROPULSION-RESPONSE-001",
+          "status": "passed"
+        },
+        {
+          "role": "rigid_body",
+          "fixture_id": "REF-YYZ-6DOF-CORE-001",
+          "oracle_id": "ORACLE-YYZ-6DOF-CORE-001",
+          "model_id": "MODEL-YYZ-6DOF-RIGID-CORE-001",
+          "status": "passed"
+        },
+        {
+          "role": "run_evaluation",
+          "fixture_id": "REF-YYZ-RUN-EVALUATION-001",
+          "oracle_id": "ORACLE-YYZ-RUN-EVALUATION-001",
+          "model_id": "MODEL-YYZ-RUN-EVALUATION-001",
+          "status": "passed"
+        }
+      ],
+      "execution_trace": [
+        {
+          "order": 0,
+          "event": "resolve-components",
+          "sample_tick": 0,
+          "component_count": 12
+        },
+        {
+          "order": 1,
+          "event": "publish-opening-commit",
+          "sample_tick": 0,
+          "commit_id": "commit.fixture.yyz.mission.0"
+        },
+        {
+          "order": 2,
+          "event": "evaluate-opening-boundary",
+          "sample_tick": 0,
+          "action": "Continue"
+        },
+        {
+          "order": 3,
+          "event": "evaluate-frozen-interval",
+          "sample_tick": 0,
+          "valid_until_tick": 1
+        },
+        {
+          "order": 4,
+          "event": "stage-rigid-and-mass-candidates",
+          "sample_tick": 0,
+          "candidate_tick": 1
+        },
+        {
+          "order": 5,
+          "event": "commit-rigid-and-mass",
+          "sample_tick": 1,
+          "commit_id": "commit.fixture.yyz.mission.1"
+        },
+        {
+          "order": 6,
+          "event": "evaluate-terminal-boundary",
+          "sample_tick": 1,
+          "action": "Complete"
+        },
+        {
+          "order": 7,
+          "event": "seal-terminal-observation",
+          "sample_tick": 1,
+          "commit_id": "commit.fixture.yyz.mission.1"
+        },
+        {
+          "order": 8,
+          "event": "freeze-mission-result",
+          "sample_tick": 1,
+          "status": "Completed"
+        }
+      ],
+      "committed_samples": [
+        {
+          "sample_tick": 0,
+          "time_s": "0",
+          "commit_id": "commit.fixture.yyz.mission.0",
+          "quality": "Valid",
+          "position_I_m": [
+            "0",
+            "0",
+            "1000"
+          ],
+          "velocity_I_mps": [
+            "110",
+            "0",
+            "0"
+          ],
+          "q_I_B_wxyz": [
+            "1",
+            "0",
+            "0",
+            "0"
+          ],
+          "omega_BI_B_radps": [
+            "0",
+            "0",
+            "0"
+          ],
+          "committed_mass_kg": "100"
+        },
+        {
+          "sample_tick": 1,
+          "time_s": "0.1",
+          "commit_id": "commit.fixture.yyz.mission.1",
+          "quality": "Valid",
+          "position_I_m": [
+            "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
+            "0",
+            "999.95096675"
+          ],
+          "velocity_I_mps": [
+            "109.90544117647058823529411764705882352941176470588235294117647058823529411764706",
+            "0",
+            "-0.980665"
+          ],
+          "q_I_B_wxyz": [
+            "1",
+            "0",
+            "0",
+            "0"
+          ],
+          "omega_BI_B_radps": [
+            "0",
+            "0",
+            "0"
+          ],
+          "committed_mass_kg": "99.95"
+        }
+      ],
+      "interval_execution": {
+        "sample_tick": 0,
+        "valid_from_tick": 0,
+        "valid_until_tick": 1,
+        "configuration_revision": 11,
+        "base_dt_s": "0.1",
+        "strategy": "FrozenInterval",
+        "environment_sample": {
+          "gravity_I_mps2": [
+            "0",
+            "0",
+            "-9.80665"
+          ],
+          "velocity_airmass_I_mps": [
+            "10",
+            "0",
+            "0"
+          ],
+          "density_kgpm3": "1.225",
+          "speed_of_sound_mps": "340"
+        },
+        "air_data": {
+          "velocity_relative_I_mps": [
+            "100",
+            "0",
+            "0"
+          ],
+          "velocity_relative_B_mps": [
+            "100",
+            "0",
+            "0"
+          ],
+          "airspeed_mps": "100",
+          "alpha_rad": "0",
+          "beta_rad": "0",
+          "dynamic_pressure_Pa": "6125",
+          "mach": "0.29411764705882352941176470588235294117647058823529411764705882352941176470588235"
+        },
+        "aero_lookup": {
+          "model_id": "MODEL-YYZ-AERO-TRILINEAR-LOOKUP-001",
+          "table_id": "aero-table.fixture.yyz.multiaffine@1",
+          "configuration_id": "configuration.fixture.yyz.clean@1",
+          "domain_status": "Interior",
+          "cell_indices_M_alpha_beta": [
+            0,
+            0,
+            0
+          ],
+          "weights_M_alpha_beta": [
+            "0.23529411764705882352941176470588235294117647058823529411764705882352941176470588",
+            "0.5",
+            "0.5"
+          ],
+          "coefficients_CA_CY_CN_Cl_Cm_Cn": [
+            "0.031764705882352941176470588235294117647058823529411764705882352941176470588235294",
+            "0",
+            "0",
+            "0",
+            "-0.044117647058823529411764705882352941176470588235294117647058823529411764705882353",
+            "0"
+          ]
+        },
+        "closure": {
+          "force_total_B_N": [
+            "-94.55882352941176470588235294117647058823529411764705882352941176470588235294118",
+            "0",
+            "0"
+          ],
+          "moment_total_about_CoM_B_Nm": [
+            "0",
+            "0.00000000000000000000000000000000000000000000000000000000000000000000000000001",
+            "0"
+          ]
+        },
+        "rigid_derivative_at_opening": {
+          "force_total_I_N": [
+            "-94.55882352941176470588235294117647058823529411764705882352941176470588235294118",
+            "0",
+            "0"
+          ],
+          "acceleration_I_mps2": [
+            "-0.9455882352941176470588235294117647058823529411764705882352941176470588235294118",
+            "0",
+            "-9.80665"
+          ],
+          "angular_momentum_B_kgm2ps": [
+            "0",
+            "0",
+            "0"
+          ],
+          "gyroscopic_moment_B_Nm": [
+            "0",
+            "0",
+            "0"
+          ],
+          "net_moment_B_Nm": [
+            "0",
+            "0.00000000000000000000000000000000000000000000000000000000000000000000000000001",
+            "0"
+          ],
+          "angular_acceleration_B_radps2": [
+            "0",
+            "0.0000000000000000000000000000000000000000000000000000000000000000000000000000005",
+            "0"
+          ],
+          "q_derivative_I_B_per_s": [
+            "0",
+            "0",
+            "0",
+            "0"
+          ]
+        },
+        "mass_transition": {
+          "mass_state_id": "mass.fixture.yyz.vehicle@1",
+          "opening_committed_mass_kg": "100",
+          "consumed_mass_kg": "0.05",
+          "pending_mass_candidate_kg": "99.95",
+          "pending_visibility_before_commit": "candidate-only",
+          "closing_committed_mass_kg": "99.95",
+          "closing_commit_kind": "atomic-rigid-and-mass"
+        }
+      },
+      "evaluation_trace": [
+        {
+          "sample_tick": 0,
+          "time_s": "0",
+          "commit_id": "commit.fixture.yyz.mission.0",
+          "metrics": {
+            "duration_s": "0",
+            "downrange_m": "0",
+            "vertical_displacement_m": "0",
+            "remaining_mass_kg": "100",
+            "consumed_mass_kg": "0",
+            "speed_mps": "110"
+          },
+          "predicate_results": [
+            {
+              "predicate_id": "downrange-goal",
+              "metric_id": "downrange_m",
+              "relation": ">=",
+              "threshold": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
+              "observed": "0",
+              "met": false,
+              "action": "Complete",
+              "reason_code": "downrange-goal",
+              "priority": 200
+            },
+            {
+              "predicate_id": "duration-limit",
+              "metric_id": "duration_s",
+              "relation": ">=",
+              "threshold": "0.1",
+              "observed": "0",
+              "met": false,
+              "action": "Complete",
+              "reason_code": "duration-complete",
+              "priority": 100
+            },
+            {
+              "predicate_id": "remaining-mass-floor",
+              "metric_id": "remaining_mass_kg",
+              "relation": "<=",
+              "threshold": "99.9",
+              "observed": "100",
+              "met": false,
+              "action": "Abort",
+              "reason_code": "remaining-mass-floor",
+              "priority": 300
+            }
+          ],
+          "decision": {
+            "action": "Continue",
+            "reason_code": "none",
+            "trigger_time_s": "0",
+            "subject": "vehicle.fixture.yyz@1",
+            "priority": 0,
+            "metrics": {
+              "duration_s": "0",
+              "downrange_m": "0",
+              "remaining_mass_kg": "100"
+            },
+            "message_key": "yyz.termination.continue",
+            "params": {}
+          }
+        },
+        {
+          "sample_tick": 1,
+          "time_s": "0.1",
+          "commit_id": "commit.fixture.yyz.mission.1",
+          "metrics": {
+            "duration_s": "0.1",
+            "downrange_m": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
+            "vertical_displacement_m": "-0.04903325",
+            "remaining_mass_kg": "99.95",
+            "consumed_mass_kg": "0.05",
+            "speed_mps": "109.90981623147616598966682202546269474992696001599703357691793928409462581010799"
+          },
+          "predicate_results": [
+            {
+              "predicate_id": "downrange-goal",
+              "metric_id": "downrange_m",
+              "relation": ">=",
+              "threshold": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
+              "observed": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
+              "met": true,
+              "action": "Complete",
+              "reason_code": "downrange-goal",
+              "priority": 200
+            },
+            {
+              "predicate_id": "duration-limit",
+              "metric_id": "duration_s",
+              "relation": ">=",
+              "threshold": "0.1",
+              "observed": "0.1",
+              "met": true,
+              "action": "Complete",
+              "reason_code": "duration-complete",
+              "priority": 100
+            },
+            {
+              "predicate_id": "remaining-mass-floor",
+              "metric_id": "remaining_mass_kg",
+              "relation": "<=",
+              "threshold": "99.9",
+              "observed": "99.95",
+              "met": false,
+              "action": "Abort",
+              "reason_code": "remaining-mass-floor",
+              "priority": 300
+            }
+          ],
+          "decision": {
+            "action": "Complete",
+            "reason_code": "downrange-goal",
+            "trigger_time_s": "0.1",
+            "subject": "vehicle.fixture.yyz@1",
+            "priority": 200,
+            "metrics": {
+              "duration_s": "0.1",
+              "downrange_m": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
+              "remaining_mass_kg": "99.95"
+            },
+            "message_key": "yyz.termination.downrange-goal",
+            "params": {}
+          }
+        }
+      ],
+      "metric_summary": {
+        "evaluated_sample_count": 2,
+        "duration_s": "0.1",
+        "downrange_m": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
+        "vertical_displacement_m": "-0.04903325",
+        "remaining_mass_kg": "99.95",
+        "consumed_mass_kg": "0.05",
+        "terminal_speed_mps": "109.90981623147616598966682202546269474992696001599703357691793928409462581010799",
+        "peak_speed_mps": "110",
+        "peak_speed_tick": 0,
+        "maximum_downrange_m": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
+        "maximum_downrange_tick": 1,
+        "minimum_remaining_mass_kg": "99.95",
+        "minimum_remaining_mass_tick": 1
+      },
+      "terminal_observation": {
+        "sample_tick": 1,
+        "time_s": "0.1",
+        "commit_id": "commit.fixture.yyz.mission.1",
+        "quality": "Valid",
+        "fields": {
+          "position_I_m": [
+            "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
+            "0",
+            "999.95096675"
+          ],
+          "velocity_I_mps": [
+            "109.90544117647058823529411764705882352941176470588235294117647058823529411764706",
+            "0",
+            "-0.980665"
+          ],
+          "q_I_B_wxyz": [
+            "1",
+            "0",
+            "0",
+            "0"
+          ],
+          "omega_BI_B_radps": [
+            "0",
+            "0",
+            "0"
+          ],
+          "committed_mass_kg": "99.95",
+          "metrics": {
+            "duration_s": "0.1",
+            "downrange_m": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
+            "vertical_displacement_m": "-0.04903325",
+            "remaining_mass_kg": "99.95",
+            "consumed_mass_kg": "0.05",
+            "speed_mps": "109.90981623147616598966682202546269474992696001599703357691793928409462581010799"
+          },
+          "decision": {
+            "action": "Complete",
+            "reason_code": "downrange-goal",
+            "trigger_time_s": "0.1",
+            "subject": "vehicle.fixture.yyz@1",
+            "priority": 200,
+            "metrics": {
+              "duration_s": "0.1",
+              "downrange_m": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
+              "remaining_mass_kg": "99.95"
+            },
+            "message_key": "yyz.termination.downrange-goal",
+            "params": {}
+          }
+        },
+        "event_order": [
+          "resolve-components",
+          "publish-opening-commit",
+          "evaluate-opening-boundary",
+          "evaluate-frozen-interval",
+          "stage-rigid-and-mass-candidates",
+          "commit-rigid-and-mass",
+          "evaluate-terminal-boundary",
+          "seal-terminal-observation",
+          "freeze-mission-result"
+        ],
+        "sealed": true
+      },
+      "mission_result": {
+        "final_status": "Completed",
+        "evidence_validity": "Valid",
+        "initial_tick": 0,
+        "final_tick": 1,
+        "final_time_s": "0.1",
+        "termination": {
+          "action": "Complete",
+          "reason_code": "downrange-goal",
+          "trigger_time_s": "0.1",
+          "subject": "vehicle.fixture.yyz@1",
+          "priority": 200,
+          "metrics": {
+            "duration_s": "0.1",
+            "downrange_m": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
+            "remaining_mass_kg": "99.95"
+          },
+          "message_key": "yyz.termination.downrange-goal",
+          "params": {}
+        },
+        "metrics": {
+          "evaluated_sample_count": 2,
+          "duration_s": "0.1",
+          "downrange_m": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
+          "vertical_displacement_m": "-0.04903325",
+          "remaining_mass_kg": "99.95",
+          "consumed_mass_kg": "0.05",
+          "terminal_speed_mps": "109.90981623147616598966682202546269474992696001599703357691793928409462581010799",
+          "peak_speed_mps": "110",
+          "peak_speed_tick": 0,
+          "maximum_downrange_m": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
+          "maximum_downrange_tick": 1,
+          "minimum_remaining_mass_kg": "99.95",
+          "minimum_remaining_mass_tick": 1
+        },
+        "terminal_observation_commit_id": "commit.fixture.yyz.mission.1",
+        "terminal_observation_sealed": true,
+        "frozen": true
+      }
+    }
+  },
+  "equivalence_results": [
+    {
+      "id": "EQUIV-YYZ-MISSION-COMPOSITION-BINDING-ORDER",
+      "status": "passed",
+      "resolved_role_count": 12,
+      "terminal_tick": 1,
+      "reason_code": "downrange-goal",
+      "max_abs_result_difference": "0"
+    }
+  ],
+  "invalid_input_rejections": [
+    "INVALID-YYZ-MISSION-COMPOSITION-DUPLICATE-ROLE",
+    "INVALID-YYZ-MISSION-COMPOSITION-MISSING-ROLE",
+    "INVALID-YYZ-MISSION-COMPOSITION-FIXTURE-ID",
+    "INVALID-YYZ-MISSION-COMPOSITION-ORACLE-ID",
+    "INVALID-YYZ-MISSION-COMPOSITION-MODEL-ID",
+    "INVALID-YYZ-MISSION-COMPOSITION-CLOCK",
+    "INVALID-YYZ-MISSION-COMPOSITION-REVISION",
+    "INVALID-YYZ-MISSION-COMPOSITION-DT",
+    "INVALID-YYZ-MISSION-COMPOSITION-RELATION",
+    "INVALID-YYZ-MISSION-COMPOSITION-NO-TERMINAL"
+  ],
+  "mutation_results": [
+    {
+      "id": "MUTATION-YYZ-MISSION-COMPOSITION-EARLY-MASS-VISIBILITY",
+      "status": "rejected",
+      "expected_opening_committed_mass_kg": "100",
+      "observed_opening_committed_mass_kg": "99.95",
+      "observed_opening_consumed_mass_kg": "0.05",
+      "max_abs_result_difference": "0.05"
+    },
+    {
+      "id": "MUTATION-YYZ-MISSION-COMPOSITION-NONATOMIC-MASS-COMMIT",
+      "status": "rejected",
+      "expected_closing_committed_mass_kg": "99.95",
+      "observed_closing_committed_mass_kg": "100",
+      "observed_terminal_consumed_mass_kg": "0",
+      "max_abs_result_difference": "0.05"
+    },
+    {
+      "id": "MUTATION-YYZ-MISSION-COMPOSITION-LOW-PRIORITY-WINS",
+      "status": "rejected",
+      "expected_reason_code": "downrange-goal",
+      "observed_reason_code": "duration-complete",
+      "expected_priority": 200,
+      "observed_priority": 100,
+      "max_abs_result_difference": "100"
+    },
+    {
+      "id": "MUTATION-YYZ-MISSION-COMPOSITION-RESULT-BEFORE-OBSERVATION",
+      "status": "rejected",
+      "expected_event_order": [
+        "resolve-components",
+        "publish-opening-commit",
+        "evaluate-opening-boundary",
+        "evaluate-frozen-interval",
+        "stage-rigid-and-mass-candidates",
+        "commit-rigid-and-mass",
+        "evaluate-terminal-boundary",
+        "seal-terminal-observation",
+        "freeze-mission-result"
+      ],
+      "observed_event_order": [
+        "resolve-components",
+        "publish-opening-commit",
+        "evaluate-opening-boundary",
+        "evaluate-frozen-interval",
+        "stage-rigid-and-mass-candidates",
+        "commit-rigid-and-mass",
+        "evaluate-terminal-boundary",
+        "freeze-mission-result",
+        "seal-terminal-observation"
+      ],
+      "observed_terminal_observation_sealed": false,
+      "max_abs_result_difference": "1"
+    }
+  ]
+}

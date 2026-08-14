@@ -172,6 +172,14 @@ if(GNC_BUILD_TESTS)
         gnc_yyz_run_evaluation_probe PRIVATE cxx_std_17)
     gnc_enable_warnings(gnc_yyz_run_evaluation_probe)
 
+    # R0 YYZ scientific oracle: fixture-local mission composition.
+    add_executable(
+        gnc_yyz_mission_composition_probe
+        tests/yyz_mission_composition.cpp)
+    target_compile_features(
+        gnc_yyz_mission_composition_probe PRIVATE cxx_std_17)
+    gnc_enable_warnings(gnc_yyz_mission_composition_probe)
+
     # R0 Legacy behavior oracle: independent journal, no Legacy linkage.
     add_executable(
         gnc_legacy_sync_commit_probe
@@ -266,6 +274,9 @@ if(GNC_BUILD_TESTS)
     add_test(
         NAME r0.yyz-run-evaluation.probe
         COMMAND gnc_yyz_run_evaluation_probe --self-check)
+    add_test(
+        NAME r0.yyz-mission-composition.probe
+        COMMAND gnc_yyz_mission_composition_probe --self-check)
     add_test(
         NAME r0.legacy-sync-commit.probe
         COMMAND gnc_legacy_sync_commit_probe --self-check)
@@ -507,6 +518,21 @@ if(GNC_BUILD_TESTS)
             ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-run-evaluation/reference.json
             --probe
             $<TARGET_FILE:gnc_yyz_run_evaluation_probe>)
+    add_test(
+        NAME r0.yyz-mission-composition.oracle
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/yyz_mission_composition_reference.py
+            --cases
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-yyz-mission-composition/cases.json
+            --repo-root
+            ${CMAKE_CURRENT_SOURCE_DIR}
+            --oracle
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-mission-composition/reference.json
+            --probe
+            $<TARGET_FILE:gnc_yyz_mission_composition_probe>)
     add_test(
         NAME r0.legacy-sync-commit.oracle
         COMMAND

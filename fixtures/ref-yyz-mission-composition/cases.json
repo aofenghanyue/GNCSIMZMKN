@@ -1,0 +1,279 @@
+{
+  "schema_version": "gnczmkn.yyz-mission-composition-cases/1",
+  "fixture_id": "REF-YYZ-MISSION-COMPOSITION-001",
+  "oracle_id": "ORACLE-YYZ-MISSION-COMPOSITION-001",
+  "model_choice": {
+    "status": "accepted",
+    "owner_role": "scientific_authority",
+    "accepted_scope": "Fixture-local executable composition from resolved YYZ scientific components through one lookup-composed FrozenInterval, an atomic rigid-and-mass commit, committed-boundary evaluation, a sealed terminal observation and a frozen mission result.",
+    "source_policy": "The source is a fixture input with explicit stable identities and component bindings. It does not define the product MissionSource schema or invoke a product Compiler, Plan, Session or Artifact runtime.",
+    "numeric_policy": "REF-YYZ-FROZEN-INTERVAL-001 supplies the causal environment-to-rigid candidate. The mass candidate and rigid candidate commit atomically at tick 1 before metrics and termination read them.",
+    "reuse_policy": "REF-YYZ-TWO-INTERVAL-MASS-COMMIT-001 contributes the accepted atomic commit time relation. Its independent supplied-force trajectory is not substituted for the lookup-composed trajectory.",
+    "termination_policy": "Metrics read committed samples only. Inclusive AtGrid any-of predicates use higher integer priority and ascending predicate_id tie-breaking. The terminal observation seals before the mission result freezes.",
+    "excluded": [
+      "canonical YYZ mission, qualification thresholds, assets and production tolerances",
+      "guidance, controller, allocator, actuator dynamics and closed-loop altitude-hold claims",
+      "product MissionSource, Compiler, PlanProofRecord, Session, ObservationBatch, RunOutcome and Artifact contracts",
+      "continuous event location, partial-time commit, persistence, evidence durability and R1-R8 runtime capability"
+    ]
+  },
+  "model": {
+    "model_id": "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-001",
+    "mission_source_id": "mission.fixture.yyz.lookup-open-loop@1",
+    "execution_id": "execution.fixture.yyz.lookup-open-loop.0001",
+    "subject": "vehicle.fixture.yyz@1",
+    "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+    "body_frame_id": "frame.fixture.yyz.body@1",
+    "clock_domain": "clock.fixture.yyz.simulation@1",
+    "mass_state_id": "mass.fixture.yyz.vehicle@1",
+    "configuration_id": "configuration.fixture.yyz.clean@1",
+    "configuration_revision": 11,
+    "base_dt_s": 0.1,
+    "initial_tick": 0,
+    "terminal_tick": 1,
+    "integration_strategy": "FrozenInterval",
+    "commit_policy": "atomic-rigid-and-mass",
+    "evaluation_mode": "AtGrid",
+    "evidence_validity": "Valid",
+    "validity_domain": [
+      "all required component roles resolve exactly once to executable fixtures and matching oracle/model identities",
+      "component paths are repository-relative JSON files beneath fixtures or oracles",
+      "the shared frame, clock, mass-state, configuration revision, tick interval and base_dt identities agree",
+      "the selected FrozenInterval case supplies a finite tick-1 rigid candidate and positive pending mass candidate",
+      "the rigid and mass candidates share one closing commit identity and become visible together",
+      "termination predicates use supported metrics, inclusive relations and nonnegative integer priorities",
+      "the first terminal committed boundary is sealed into the terminal observation before result freeze"
+    ]
+  },
+  "component_bindings": [
+    {
+      "role": "rigid_body",
+      "cases_path": "fixtures/ref-yyz-6dof-core/cases.json",
+      "oracle_path": "oracles/ref-yyz-6dof-core/reference.json",
+      "fixture_id": "REF-YYZ-6DOF-CORE-001",
+      "oracle_id": "ORACLE-YYZ-6DOF-CORE-001",
+      "model_id": "MODEL-YYZ-6DOF-RIGID-CORE-001"
+    },
+    {
+      "role": "force_moment_closure",
+      "cases_path": "fixtures/ref-yyz-force-moment-closure/cases.json",
+      "oracle_path": "oracles/ref-yyz-force-moment-closure/reference.json",
+      "fixture_id": "REF-YYZ-FORCE-MOMENT-CLOSURE-001",
+      "oracle_id": "ORACLE-YYZ-FORCE-MOMENT-CLOSURE-001",
+      "model_id": "MODEL-YYZ-FORCE-MOMENT-CLOSURE-001"
+    },
+    {
+      "role": "air_data",
+      "cases_path": "fixtures/ref-yyz-air-data-kinematics/cases.json",
+      "oracle_path": "oracles/ref-yyz-air-data-kinematics/reference.json",
+      "fixture_id": "REF-YYZ-AIR-DATA-KINEMATICS-001",
+      "oracle_id": "ORACLE-YYZ-AIR-DATA-KINEMATICS-001",
+      "model_id": "MODEL-YYZ-AIR-DATA-KINEMATICS-001"
+    },
+    {
+      "role": "aero_dimensionalization",
+      "cases_path": "fixtures/ref-yyz-aero-dimensionalization/cases.json",
+      "oracle_path": "oracles/ref-yyz-aero-dimensionalization/reference.json",
+      "fixture_id": "REF-YYZ-AERO-DIMENSIONALIZATION-001",
+      "oracle_id": "ORACLE-YYZ-AERO-DIMENSIONALIZATION-001",
+      "model_id": "MODEL-YYZ-AERO-DIMENSIONALIZATION-001"
+    },
+    {
+      "role": "aero_lookup",
+      "cases_path": "fixtures/ref-yyz-aero-lookup/cases.json",
+      "oracle_path": "oracles/ref-yyz-aero-lookup/reference.json",
+      "fixture_id": "REF-YYZ-AERO-LOOKUP-001",
+      "oracle_id": "ORACLE-YYZ-AERO-LOOKUP-001",
+      "model_id": "MODEL-YYZ-AERO-TRILINEAR-LOOKUP-001"
+    },
+    {
+      "role": "environment",
+      "cases_path": "fixtures/ref-yyz-uniform-environment/cases.json",
+      "oracle_path": "oracles/ref-yyz-uniform-environment/reference.json",
+      "fixture_id": "REF-YYZ-UNIFORM-ENVIRONMENT-001",
+      "oracle_id": "ORACLE-YYZ-UNIFORM-ENVIRONMENT-001",
+      "model_id": "MODEL-YYZ-UNIFORM-ENVIRONMENT-001"
+    },
+    {
+      "role": "propulsion",
+      "cases_path": "fixtures/ref-yyz-propulsion-response/cases.json",
+      "oracle_path": "oracles/ref-yyz-propulsion-response/reference.json",
+      "fixture_id": "REF-YYZ-PROPULSION-RESPONSE-001",
+      "oracle_id": "ORACLE-YYZ-PROPULSION-RESPONSE-001",
+      "model_id": "MODEL-YYZ-PROPULSION-RESPONSE-001"
+    },
+    {
+      "role": "mass_properties",
+      "cases_path": "fixtures/ref-yyz-mass-properties/cases.json",
+      "oracle_path": "oracles/ref-yyz-mass-properties/reference.json",
+      "fixture_id": "REF-YYZ-MASS-PROPERTIES-001",
+      "oracle_id": "ORACLE-YYZ-MASS-PROPERTIES-001",
+      "model_id": "MODEL-YYZ-MASS-PROPERTIES-PROJECTION-001"
+    },
+    {
+      "role": "mass_evolution",
+      "cases_path": "fixtures/ref-yyz-scalar-burn-mass/cases.json",
+      "oracle_path": "oracles/ref-yyz-scalar-burn-mass/reference.json",
+      "fixture_id": "REF-YYZ-SCALAR-BURN-MASS-001",
+      "oracle_id": "ORACLE-YYZ-SCALAR-BURN-MASS-001",
+      "model_id": "MODEL-YYZ-SCALAR-BURN-CONSTANT-GEOMETRY-001"
+    },
+    {
+      "role": "frozen_interval",
+      "cases_path": "fixtures/ref-yyz-frozen-interval/cases.json",
+      "oracle_path": "oracles/ref-yyz-frozen-interval/reference.json",
+      "fixture_id": "REF-YYZ-FROZEN-INTERVAL-001",
+      "oracle_id": "ORACLE-YYZ-FROZEN-INTERVAL-001",
+      "model_id": "MODEL-YYZ-LOOKUP-FROZEN-INTERVAL-001"
+    },
+    {
+      "role": "atomic_mass_commit",
+      "cases_path": "fixtures/ref-yyz-two-interval-mass-commit/cases.json",
+      "oracle_path": "oracles/ref-yyz-two-interval-mass-commit/reference.json",
+      "fixture_id": "REF-YYZ-TWO-INTERVAL-MASS-COMMIT-001",
+      "oracle_id": "ORACLE-YYZ-TWO-INTERVAL-MASS-COMMIT-001",
+      "model_id": "MODEL-YYZ-TWO-INTERVAL-MASS-COMMIT-001"
+    },
+    {
+      "role": "run_evaluation",
+      "cases_path": "fixtures/ref-yyz-run-evaluation/cases.json",
+      "oracle_path": "oracles/ref-yyz-run-evaluation/reference.json",
+      "fixture_id": "REF-YYZ-RUN-EVALUATION-001",
+      "oracle_id": "ORACLE-YYZ-RUN-EVALUATION-001",
+      "model_id": "MODEL-YYZ-RUN-EVALUATION-001"
+    }
+  ],
+  "cases": [
+    {
+      "id": "CASE-YYZ-MISSION-COMPOSITION-BASELINE",
+      "frozen_interval_case_id": "CASE-YYZ-FROZEN-INTERVAL-COMPOSED-TRAJECTORY",
+      "opening_commit_id": "commit.fixture.yyz.mission.0",
+      "closing_commit_id": "commit.fixture.yyz.mission.1",
+      "termination_plan_id": "termination-plan.fixture.yyz.mission-complete@1",
+      "predicates": [
+        {
+          "predicate_id": "remaining-mass-floor",
+          "metric_id": "remaining_mass_kg",
+          "relation": "<=",
+          "threshold": 99.9,
+          "action": "Abort",
+          "reason_code": "remaining-mass-floor",
+          "priority": 300
+        },
+        {
+          "predicate_id": "duration-limit",
+          "metric_id": "duration_s",
+          "relation": ">=",
+          "threshold": 0.1,
+          "action": "Complete",
+          "reason_code": "duration-complete",
+          "priority": 100
+        },
+        {
+          "predicate_id": "downrange-goal",
+          "metric_id": "downrange_m",
+          "relation": ">=",
+          "threshold": 10.995272058823529411764705882352941176470588235294117647058823529411764705882353,
+          "action": "Complete",
+          "reason_code": "downrange-goal",
+          "priority": 200
+        }
+      ],
+      "terminal_observation_fields": [
+        "position_I_m",
+        "velocity_I_mps",
+        "q_I_B_wxyz",
+        "omega_BI_B_radps",
+        "committed_mass_kg",
+        "metrics",
+        "decision"
+      ]
+    }
+  ],
+  "tolerances": {
+    "formula_absolute": 2e-12,
+    "formula_relative": 2e-12,
+    "stored_decimal_absolute": "1e-68"
+  },
+  "equivalence_cases": [
+    {
+      "id": "EQUIV-YYZ-MISSION-COMPOSITION-BINDING-ORDER",
+      "operation": "reverse component binding declaration order",
+      "expected": "resolved identities, committed samples, interval facts, evaluation, terminal observation and mission result remain equal"
+    }
+  ],
+  "invalid_input_cases": [
+    {
+      "id": "INVALID-YYZ-MISSION-COMPOSITION-DUPLICATE-ROLE",
+      "mutation": "duplicate one required component role",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ-MISSION-COMPOSITION-MISSING-ROLE",
+      "mutation": "remove the frozen_interval role",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ-MISSION-COMPOSITION-FIXTURE-ID",
+      "mutation": "change the aero_lookup fixture identity",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ-MISSION-COMPOSITION-ORACLE-ID",
+      "mutation": "change the propulsion oracle identity",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ-MISSION-COMPOSITION-MODEL-ID",
+      "mutation": "change the rigid_body model identity",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ-MISSION-COMPOSITION-CLOCK",
+      "mutation": "change the mission clock domain",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ-MISSION-COMPOSITION-REVISION",
+      "mutation": "change the mission configuration revision",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ-MISSION-COMPOSITION-DT",
+      "mutation": "change mission base_dt_s away from the FrozenInterval context",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ-MISSION-COMPOSITION-RELATION",
+      "mutation": "replace one inclusive predicate relation with a strict relation",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ-MISSION-COMPOSITION-NO-TERMINAL",
+      "mutation": "raise all completion thresholds beyond the committed trajectory",
+      "expected_status": "input-domain-error"
+    }
+  ],
+  "mutation_cases": [
+    {
+      "id": "MUTATION-YYZ-MISSION-COMPOSITION-EARLY-MASS-VISIBILITY",
+      "mutation": "publish the pending mass candidate in the opening committed sample",
+      "expected_status": "oracle-mismatch"
+    },
+    {
+      "id": "MUTATION-YYZ-MISSION-COMPOSITION-NONATOMIC-MASS-COMMIT",
+      "mutation": "commit the rigid candidate while retaining the opening committed mass",
+      "expected_status": "oracle-mismatch"
+    },
+    {
+      "id": "MUTATION-YYZ-MISSION-COMPOSITION-LOW-PRIORITY-WINS",
+      "mutation": "select the lower-priority duration predicate at the terminal boundary",
+      "expected_status": "oracle-mismatch"
+    },
+    {
+      "id": "MUTATION-YYZ-MISSION-COMPOSITION-RESULT-BEFORE-OBSERVATION",
+      "mutation": "freeze the mission result before sealing the terminal observation",
+      "expected_status": "oracle-mismatch"
+    }
+  ]
+}
