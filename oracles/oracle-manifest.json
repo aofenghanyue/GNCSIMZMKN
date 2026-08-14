@@ -13,13 +13,21 @@
     {
       "id": "ORACLE-YYZ-PUBLISH-01",
       "level": "component",
-      "status": "planned",
+      "status": "capturing",
       "claim": "Publishing t_k does not advance continuous state.",
-      "expected_facts": ["State hash, state epoch and tick are unchanged by publish."],
+      "expected_facts": [
+        "Committed state is exactly unchanged by publish at each boundary.",
+        "Published truth reflects committed state at t_k and retains that sample until the next publish boundary."
+      ],
       "reference_kind": "legacy behavior plus target invariant",
-      "tolerance_policy": "exact state hash equality",
+      "tolerance_policy": "exact publish state identity, sample time and event order; synthetic scalar values use absolute tolerance 1e-12",
       "source_refs": ["reference/legacy/source-manifest.json", "design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md#10-旧行为-oracle-怎样保护迁移"],
-      "artifact_refs": []
+      "artifact_refs": [
+        "fixtures/ref-legacy-publish/input.json",
+        "oracles/ref-legacy-publish/reference.json",
+        "tests/legacy_publish.cpp",
+        "tools/legacy_publish_reference.py"
+      ]
     },
     {
       "id": "ORACLE-YYZ-PHASE-02",
@@ -35,7 +43,7 @@
     {
       "id": "ORACLE-YYZ-SYNC-03",
       "level": "closure",
-      "status": "capturing",
+      "status": "executable",
       "claim": "Continuous candidates are computed before a synchronized commit.",
       "expected_facts": [
         "Every continuous candidate completes before any commit for the step.",

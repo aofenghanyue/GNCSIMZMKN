@@ -1,0 +1,54 @@
+{
+  "schema_version": "gnczmkn.legacy-publish-input/1",
+  "fixture_id": "REF-LEGACY-PUBLISH-001",
+  "oracle_id": "ORACLE-YYZ-PUBLISH-01",
+  "case_id": "CASE-LEGACY-PUBLISH-BOUNDARY",
+  "time": {
+    "initial_s": "0",
+    "step_s": "0.5"
+  },
+  "committed_state": {
+    "altitude_m": "1000",
+    "vertical_velocity_mps": "10"
+  },
+  "dynamics": {
+    "vertical_acceleration_mps2": "-2",
+    "integration_method": "fixed-step classical RK4"
+  },
+  "publish_policy": {
+    "source": "committed boundary state",
+    "truth_sample_time": "current boundary time",
+    "committed_state_mutation": "forbidden"
+  },
+  "legacy_source": {
+    "archive": {
+      "path": "reference/legacy/legacy-source.zip",
+      "prefix": "GNCZMKN-legacy-a63621c/",
+      "bytes": 990450,
+      "sha256": "2159a324fd897e4bd508c140a36c9165d744e4e4e61861c5b568201707f988e5"
+    },
+    "entries": [
+      {
+        "path": "framework/include/gnc/core/simulator.hpp",
+        "bytes": 21226,
+        "sha256": "455b22e68fdd4511a85f9a1c20547d022261cdf3397aabfd5f85115764edae78"
+      },
+      {
+        "path": "framework/include/gnc/forms/cartesian_3dof/components/point_mass.hpp",
+        "bytes": 7053,
+        "sha256": "ba250f9e472d301b2b1a9a70c255a2f948f0ac1c40113da8c92b25539efaa080"
+      },
+      {
+        "path": "tests/test_publish_semantics.cpp",
+        "bytes": 27073,
+        "sha256": "48c5b86ea7a88a3c7702d5abdf89bcebaf8e8dfa331289317453a698f3802e08"
+      }
+    ],
+    "runtime_test": {
+      "id": "test_publish_semantics",
+      "evidence_path": "reference/legacy/reproduction/r0-leg-001-20260810-07/logs/legacy-ctest-all.log",
+      "evidence_bytes": 4131,
+      "evidence_sha256": "c9b4140b5c6dfe0917036f12ce0dca07005c6913b68751f2649d728d33899c2d"
+    }
+  }
+}

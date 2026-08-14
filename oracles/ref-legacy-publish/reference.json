@@ -1,0 +1,81 @@
+{
+  "schema_version": "gnczmkn.legacy-publish-reference/1",
+  "fixture_id": "REF-LEGACY-PUBLISH-001",
+  "oracle_id": "ORACLE-YYZ-PUBLISH-01",
+  "case_id": "CASE-LEGACY-PUBLISH-BOUNDARY",
+  "input_identity": {
+    "path": "fixtures/ref-legacy-publish/input.json",
+    "bytes": 1752,
+    "sha256": "d1c601ec40c4b51271a2b3719326c06f11a61f07622a68aecfd144f10d809241"
+  },
+  "reference_method": {
+    "implementation": "CPython standard library Decimal",
+    "precision_digits": 50,
+    "derivation": "Project committed state at each publish boundary and solve the constant-acceleration trajectory analytically between boundaries."
+  },
+  "legacy_observation": {
+    "runtime_test": "test_publish_semantics",
+    "runtime_test_status": "passed",
+    "source_assertion": "The frozen test observes altitude=1000 and truth sample_time=0 before step 0, then committed altitude=1004.75 while truth sample_time remains 0 after the step.",
+    "implementation_fact": "The simulator publishes at the start of each step; PointMass publish refreshes truth from committed state at the current boundary time."
+  },
+  "expected": {
+    "altitude_before_publish_t0_m": "1000",
+    "velocity_before_publish_t0_mps": "10",
+    "altitude_after_publish_t0_m": "1000",
+    "velocity_after_publish_t0_mps": "10",
+    "truth_altitude_t0_m": "1000",
+    "truth_velocity_t0_mps": "10",
+    "truth_sample_time_t0_s": "0",
+    "altitude_after_commit_t1_m": "1004.75",
+    "velocity_after_commit_t1_mps": "9",
+    "truth_altitude_before_publish_t1_m": "1000",
+    "truth_sample_time_before_publish_t1_s": "0",
+    "altitude_after_publish_t1_m": "1004.75",
+    "velocity_after_publish_t1_mps": "9",
+    "truth_altitude_t1_m": "1004.75",
+    "truth_velocity_t1_mps": "9",
+    "truth_sample_time_t1_s": "0.5",
+    "events": [
+      "publish:t0",
+      "commit:t1",
+      "publish:t1"
+    ]
+  },
+  "tolerances": {
+    "scalar_absolute": "1e-12",
+    "publish_state_identity": "exact",
+    "sample_time": "exact",
+    "event_order": "exact"
+  },
+  "failure_case": {
+    "id": "FAIL-PUBLISH-MUTATES-COMMITTED-STATE",
+    "mutated_field": "committed.altitude_m",
+    "mutation": "+1",
+    "expected_status": "rejected"
+  },
+  "disposition_decision": {
+    "status": "needs_owner_decision",
+    "owner_role": "validation_lead",
+    "facts": [
+      {
+        "fact_id": "FACT-PUBLISH-STATE-READONLY",
+        "recommended_disposition": "Preserve",
+        "difference_reason": "ScientificInvariant",
+        "target_mapping": "Publish projects the committed boundary state without changing it"
+      },
+      {
+        "fact_id": "FACT-PUBLISH-TIME-BOUNDARY",
+        "recommended_disposition": "Preserve",
+        "difference_reason": "ScientificInvariant",
+        "target_mapping": "published truth identifies its t_k boundary and changes only at a publish boundary"
+      },
+      {
+        "fact_id": "FACT-PUBLISH-LEGACY-SURFACE",
+        "recommended_disposition": "Retire",
+        "difference_reason": "AccidentalStructure",
+        "target_mapping": "IPublishTask, PublishContext, callback names and Legacy truth storage shape"
+      }
+    ]
+  }
+}

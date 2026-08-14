@@ -84,6 +84,13 @@ if(GNC_BUILD_TESTS)
     target_compile_features(gnc_legacy_sync_commit_probe PRIVATE cxx_std_17)
     gnc_enable_warnings(gnc_legacy_sync_commit_probe)
 
+    # R0 Legacy publish oracle: independent projection, no Legacy linkage.
+    add_executable(
+        gnc_legacy_publish_probe
+        tests/legacy_publish.cpp)
+    target_compile_features(gnc_legacy_publish_probe PRIVATE cxx_std_17)
+    gnc_enable_warnings(gnc_legacy_publish_probe)
+
     add_test(NAME skeleton.library COMMAND gnc_skeleton_smoke)
     add_test(NAME skeleton.cli COMMAND gnc_sim --self-check)
     add_test(
@@ -95,6 +102,9 @@ if(GNC_BUILD_TESTS)
     add_test(
         NAME r0.legacy-sync-commit.probe
         COMMAND gnc_legacy_sync_commit_probe --self-check)
+    add_test(
+        NAME r0.legacy-publish.probe
+        COMMAND gnc_legacy_publish_probe --self-check)
 
     find_program(GNC_POWERSHELL_EXECUTABLE NAMES pwsh powershell)
     if(NOT GNC_POWERSHELL_EXECUTABLE)
@@ -172,6 +182,21 @@ if(GNC_BUILD_TESTS)
             ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-legacy-sync-commit/reference.json
             --probe
             $<TARGET_FILE:gnc_legacy_sync_commit_probe>
+            --repo-root
+            ${CMAKE_CURRENT_SOURCE_DIR})
+    add_test(
+        NAME r0.legacy-publish.oracle
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/legacy_publish_reference.py
+            --input
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-legacy-publish/input.json
+            --oracle
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-legacy-publish/reference.json
+            --probe
+            $<TARGET_FILE:gnc_legacy_publish_probe>
             --repo-root
             ${CMAKE_CURRENT_SOURCE_DIR})
 endif()

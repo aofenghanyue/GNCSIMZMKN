@@ -51,24 +51,24 @@
     "discriminating_position_final": "8"
   },
   "disposition_decision": {
-    "status": "needs_owner_decision",
+    "status": "accepted",
     "owner_role": "validation_lead",
     "facts": [
       {
         "fact_id": "FACT-SYNC-CANDIDATE-BARRIER",
-        "recommended_disposition": "Preserve",
+        "disposition": "Preserve",
         "difference_reason": "ScientificInvariant",
         "target_mapping": "IntegrationScopePlan candidate/commit boundary"
       },
       {
         "fact_id": "FACT-SYNC-SNAPSHOT-COUPLING",
-        "recommended_disposition": "Preserve",
+        "disposition": "Preserve",
         "difference_reason": "ScientificInvariant",
         "target_mapping": "cross-system reads remain at committed t_k during candidate evaluation"
       },
       {
         "fact_id": "FACT-SYNC-LEGACY-SURFACE",
-        "recommended_disposition": "Retire",
+        "disposition": "Retire",
         "difference_reason": "AccidentalStructure",
         "target_mapping": "pending_states container, setState loop order and Legacy interface names"
       }

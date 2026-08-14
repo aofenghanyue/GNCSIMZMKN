@@ -7,7 +7,7 @@ The frozen test starts with `mass=10` and `position=0`, evaluates `mass'=-2` and
 The bundle keeps three evidence layers separate:
 
 - [`input.json`](input.json) pins the raw fixture bytes, Legacy archive, relevant source entries and recorded runtime test;
-- [`reference.json`](../../oracles/ref-legacy-sync-commit/reference.json) contains the Decimal result, event partial order, failure case and pending disposition recommendation;
+- [`reference.json`](../../oracles/ref-legacy-sync-commit/reference.json) contains the Decimal result, event partial order, failure case and accepted fact-level disposition;
 - the C++17 probe emits an independent journal and deliberately reverses commit iteration, demonstrating that commit container order is outside the preserved fact.
 
 Run the two executable checks through CTest:
@@ -16,4 +16,4 @@ Run the two executable checks through CTest:
 ctest --preset dev -R "r0.legacy-sync-commit" --output-on-failure
 ```
 
-The bundle remains `capturing` until the repository owner accepts the recommended Preserve/Retire split. It does not include, link or execute Legacy production code.
+The bundle is `executable`. The accepted disposition preserves the candidate barrier and committed-`t_k` cross-system reads as scientific invariants, while retiring the Legacy container, commit-loop order and interface names. It does not include, link or execute Legacy production code.

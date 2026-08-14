@@ -1,0 +1,65 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-LEGACY-PUBLISH-001",
+  "status": "capturing",
+  "purpose": "Make the Legacy publish-boundary state and truth timing behavior executable without linking Legacy into product or reference probes.",
+  "authority": "validation_lead",
+  "provenance": {
+    "source_refs": [
+      "docs/adr/0001-greenfield-and-legacy-reference.md",
+      "design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md#10-旧行为-oracle-怎样保护迁移",
+      "reference/legacy/source-manifest.json",
+      "reference/legacy/reproduction/r0-leg-001-20260810-07/evidence-index.json"
+    ],
+    "notes": "The Python comparator verifies the frozen archive, three raw source entries, the recorded passing Legacy CTest and the exact input bytes. Decimal analysis and the isolated C++17 probe independently exercise both publish boundaries."
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-PUBLISH-STATE-READONLY",
+      "claim": "Publishing t_k projects the committed state without changing its altitude or vertical velocity.",
+      "tolerance_policy": "Committed-state values before and after each publish are exactly identical.",
+      "evidence_refs": [
+        "fixtures/ref-legacy-publish/input.json",
+        "oracles/ref-legacy-publish/reference.json",
+        "tests/legacy_publish.cpp",
+        "tools/legacy_publish_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-PUBLISH-TIME-BOUNDARY",
+      "claim": "Truth uses the committed state and current boundary time when published, then retains that sample until the next publish boundary.",
+      "tolerance_policy": "Sample time and event order are exact; synthetic trajectory values use absolute tolerance 1e-12.",
+      "evidence_refs": [
+        "oracles/ref-legacy-publish/reference.json",
+        "tests/legacy_publish.cpp",
+        "tools/legacy_publish_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-PUBLISH-PROVENANCE",
+      "claim": "The observation is tied to the frozen Legacy archive, simulator, PointMass and test entries, and a passing recorded runtime test.",
+      "tolerance_policy": "Paths, byte counts and SHA-256 values are exact.",
+      "evidence_refs": [
+        "fixtures/ref-legacy-publish/input.json",
+        "reference/legacy/reproduction/r0-leg-001-20260810-07/logs/legacy-ctest-all.log"
+      ]
+    }
+  ],
+  "required_artifacts": [
+    "fixtures/ref-legacy-publish/README.md",
+    "fixtures/ref-legacy-publish/input.json",
+    "oracles/ref-legacy-publish/reference.json",
+    "tests/legacy_publish.cpp",
+    "tools/legacy_publish_reference.py",
+    "CMakeLists.txt"
+  ],
+  "acceptance": [
+    "Verifies frozen source and runtime-test evidence before comparing behavior",
+    "Independent Decimal and C++17 implementations agree on both publish boundaries and the analytic t1 state",
+    "Rejects a publish operation that changes committed altitude",
+    "Preserve and Retire recommendations remain visibly pending until the repository owner accepts the disposition choice"
+  ],
+  "open_tasks": [
+    "R0-LEG-002"
+  ]
+}

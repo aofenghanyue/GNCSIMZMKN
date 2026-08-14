@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Independent Decimal reference and comparator for ORACLE-YYZ-SYNC-03."""
+"""Independent Decimal reference and comparator for ORACLE-YYZ-PUBLISH-01."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ import sys
 import zipfile
 
 
-ORACLE_ID = "ORACLE-YYZ-SYNC-03"
+ORACLE_ID = "ORACLE-YYZ-PUBLISH-01"
 
 
 def sha256_bytes(value: bytes) -> str:
@@ -46,16 +46,14 @@ def verify_legacy_identity(case: dict, repo_root: Path) -> int:
 
     with zipfile.ZipFile(archive_path, "r") as archive:
         for entry in source["entries"]:
-            logical_path = archive_record["prefix"] + entry["path"]
-            value = archive.read(logical_path)
+            value = archive.read(archive_record["prefix"] + entry["path"])
             require(len(value) == entry["bytes"],
                     f"Legacy entry byte count differs: {entry['path']}")
             require(sha256_bytes(value) == entry["sha256"],
                     f"Legacy entry SHA-256 differs: {entry['path']}")
 
     test_record = source["runtime_test"]
-    evidence_path = repo_root / test_record["evidence_path"]
-    evidence = evidence_path.read_bytes()
+    evidence = (repo_root / test_record["evidence_path"]).read_bytes()
     require(len(evidence) == test_record["evidence_bytes"],
             "Legacy CTest evidence byte count differs")
     require(sha256_bytes(evidence) == test_record["evidence_sha256"],
@@ -64,36 +62,38 @@ def verify_legacy_identity(case: dict, repo_root: Path) -> int:
     require(any("Test #11: test_publish_semantics" in line and
                 "Passed" in line for line in evidence_text.splitlines()),
             "Legacy CTest evidence does not contain the passing runtime test")
-    return 4
+    return 5
 
 
 def analytic_result(case: dict) -> dict[str, Decimal]:
     time = case["time"]
     state = case["committed_state"]
     dynamics = case["dynamics"]
+    t0 = decimal(time["initial_s"])
     dt = decimal(time["step_s"])
-    mass_initial = decimal(state["mass_kg"])
-    position_initial = decimal(state["position"])
-    mass_rate = decimal(dynamics["mass_rate_kg_per_s"])
-
-    mass_candidate = mass_initial + mass_rate * dt
-    position_candidate = position_initial + mass_initial * dt
-    premature_position = position_initial + mass_candidate * dt
+    altitude0 = decimal(state["altitude_m"])
+    velocity0 = decimal(state["vertical_velocity_mps"])
+    acceleration = decimal(dynamics["vertical_acceleration_mps2"])
+    altitude1 = altitude0 + velocity0 * dt + acceleration * dt * dt / 2
+    velocity1 = velocity0 + acceleration * dt
     return {
-        "mass_final_kg": mass_candidate,
-        "position_final": position_candidate,
-        "premature_position_final": premature_position,
+        "altitude_before_publish_t0_m": altitude0,
+        "velocity_before_publish_t0_mps": velocity0,
+        "altitude_after_publish_t0_m": altitude0,
+        "velocity_after_publish_t0_mps": velocity0,
+        "truth_altitude_t0_m": altitude0,
+        "truth_velocity_t0_mps": velocity0,
+        "truth_sample_time_t0_s": t0,
+        "altitude_after_commit_t1_m": altitude1,
+        "velocity_after_commit_t1_mps": velocity1,
+        "truth_altitude_before_publish_t1_m": altitude0,
+        "truth_sample_time_before_publish_t1_s": t0,
+        "altitude_after_publish_t1_m": altitude1,
+        "velocity_after_publish_t1_mps": velocity1,
+        "truth_altitude_t1_m": altitude1,
+        "truth_velocity_t1_mps": velocity1,
+        "truth_sample_time_t1_s": t0 + dt,
     }
-
-
-def validate_journal(journal: list[str]) -> bool:
-    candidates = ["candidate-complete:mass", "candidate-complete:position"]
-    commits = ["commit:mass", "commit:position"]
-    expected = set(candidates + commits)
-    if len(journal) != len(expected) or set(journal) != expected:
-        return False
-    return all(journal.index(candidate) < journal.index(commit)
-               for candidate in candidates for commit in commits)
 
 
 def compare_decimal(actual: object, expected: Decimal,
@@ -101,6 +101,19 @@ def compare_decimal(actual: object, expected: Decimal,
     error = abs(decimal(actual) - expected)
     require(error <= tolerance,
             f"{label} error {error} exceeds tolerance {tolerance}")
+
+
+def run_probe(path: Path) -> tuple[str, dict]:
+    completed = subprocess.run(
+        [str(path), "--self-check"],
+        check=False,
+        capture_output=True,
+        text=True,
+        encoding="utf-8",
+    )
+    require(completed.returncode == 0,
+            f"C++ probe failed: {completed.stderr.strip()}")
+    return completed.stdout, json.loads(completed.stdout)
 
 
 def main() -> int:
@@ -115,16 +128,13 @@ def main() -> int:
     input_bytes = arguments.input.read_bytes()
     case = json.loads(input_bytes.decode("utf-8"))
     oracle = read_json(arguments.oracle)
-
-    require(case["oracle_id"] == ORACLE_ID,
-            "Input belongs to a different oracle")
-    require(oracle["oracle_id"] == ORACLE_ID,
-            "Reference belongs to a different oracle")
-    require(sha256_bytes(input_bytes) ==
+    require(case["oracle_id"] == ORACLE_ID and
+            oracle["oracle_id"] == ORACLE_ID,
+            "Input or reference belongs to a different oracle")
+    require(len(input_bytes) == oracle["input_identity"]["bytes"] and
+            sha256_bytes(input_bytes) ==
             oracle["input_identity"]["sha256"],
-            "Input SHA-256 differs from the reference")
-    require(len(input_bytes) == oracle["input_identity"]["bytes"],
-            "Input byte count differs from the reference")
+            "Input byte identity differs from the reference")
 
     checks = verify_legacy_identity(case, arguments.repo_root.resolve())
     analytic = analytic_result(case)
@@ -135,57 +145,40 @@ def main() -> int:
                         f"reference {field}")
         checks += 1
 
-    require(analytic["position_final"] !=
-            analytic["premature_position_final"],
-            "Case does not distinguish the early-commit mutation")
-    require(not validate_journal(
-        ["candidate-complete:mass", "commit:mass",
-         "candidate-complete:position", "commit:position"]),
-        "Independent evaluator accepted an early commit")
-    checks += 2
-
-    completed = subprocess.run(
-        [str(arguments.probe), "--self-check"],
-        check=False,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-    )
-    repeated = subprocess.run(
-        [str(arguments.probe), "--self-check"],
-        check=False,
-        capture_output=True,
-        text=True,
-        encoding="utf-8",
-    )
-    require(completed.returncode == 0 and repeated.returncode == 0,
-            f"C++ probe failed: {completed.stderr.strip()}")
-    require(completed.stdout == repeated.stdout,
+    first_stdout, probe = run_probe(arguments.probe)
+    second_stdout, second_probe = run_probe(arguments.probe)
+    require(first_stdout == second_stdout and probe == second_probe,
             "C++ probe reruns differ")
-    probe = json.loads(completed.stdout)
     require(probe["oracle_id"] == ORACLE_ID and
             probe["status"] == "passed",
             "C++ probe returned an unexpected identity or status")
-    require(probe["candidate_barrier"] is True and
-            probe["early_commit_rejected"] is True,
-            "C++ probe did not enforce the barrier failure case")
-    require(validate_journal(probe["journal"]),
-            "C++ probe journal violates the candidate barrier")
-    checks += 4
+    checks += 2
 
     for field, value in analytic.items():
-        compare_decimal(probe[field], value, tolerance,
-                        f"C++ {field}")
+        compare_decimal(probe[field], value, tolerance, f"C++ {field}")
         checks += 1
+
+    for flag in ("state_unchanged_t0", "state_unchanged_t1",
+                 "truth_stale_between_boundaries", "mutation_rejected"):
+        require(probe[flag] is True, f"C++ probe did not enforce {flag}")
+        checks += 1
+    require(probe["events"] == expected["events"],
+            "C++ publish/commit event order differs")
+    checks += 1
+
+    failure = oracle["failure_case"]
+    require(failure["expected_status"] == "rejected" and
+            failure["mutated_field"] == "committed.altitude_m" and
+            probe["mutation_rejected"] is True,
+            "Publish mutation failure case is incomplete")
+    checks += 1
 
     decision = oracle["disposition_decision"]
     require(decision["status"] in {"needs_owner_decision", "accepted"},
             "Disposition decision has an unsupported status")
-    disposition_field = ("disposition" if decision["status"] == "accepted"
-                         else "recommended_disposition")
-    dispositions = {entry[disposition_field] for entry in decision["facts"]}
-    require(dispositions == {"Preserve", "Retire"},
-            "Disposition must separate Preserve and Retire")
+    require({entry["recommended_disposition"]
+             for entry in decision["facts"]} == {"Preserve", "Retire"},
+            "Disposition recommendation must separate Preserve and Retire")
     checks += 1
 
     print(json.dumps({
@@ -193,10 +186,11 @@ def main() -> int:
         "status": "passed",
         "checks": checks,
         "input_sha256": sha256_bytes(input_bytes),
-        "mass_final_kg": str(analytic["mass_final_kg"]),
-        "position_final": str(analytic["position_final"]),
-        "premature_position_final": str(
-            analytic["premature_position_final"]),
+        "altitude_after_commit_t1_m": str(
+            analytic["altitude_after_commit_t1_m"]),
+        "velocity_after_commit_t1_mps": str(
+            analytic["velocity_after_commit_t1_mps"]),
+        "reruns_identical": True,
         "disposition_status": decision["status"],
     }, separators=(",", ":")))
     return 0
@@ -207,5 +201,5 @@ if __name__ == "__main__":
         raise SystemExit(main())
     except (KeyError, OSError, ValueError, zipfile.BadZipFile,
             json.JSONDecodeError) as error:
-        print(f"legacy sync-commit reference failed: {error}", file=sys.stderr)
+        print(f"legacy publish reference failed: {error}", file=sys.stderr)
         raise SystemExit(1)

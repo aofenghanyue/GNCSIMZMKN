@@ -37,14 +37,14 @@
 - `R0-GOV-001`、`R0-ARCH-001`、`R0-SPEC-001` 保留为技术基线完成项。
 - `R0-GOV-002` 回到 `planned`，等待真实权利与分发输入。
 - `R0-LEG-001` 已完成；固定归档与工具链的干净复跑保持 27/27 测试、五条 CSV 基线和源码指纹一致。
-- `R0-LEG-002` 正在执行首个 `ORACLE-YYZ-SYNC-03` 切片；candidate barrier、独立解析结果和 early-commit 失败检查已落到 fixture-local 实现，处置分类等待仓库所有者确认。
+- `R0-LEG-002` 已完成可执行的 `ORACLE-YYZ-SYNC-03` 切片；仓库所有者已接受 candidate barrier、committed-`t_k` 读取和 Legacy 实现形状退出的逐事实处置。`ORACLE-YYZ-PUBLISH-01` 正在捕获，publish 状态恒等、truth 边界时间、独立解析结果和 mutation 失败检查已进入 fixture-local 实现，处置分类等待确认。
 - `R0-SCI-001` 已由仓库所有者接受并完成。
 - `R0-SCI-002` 已完成，executable bundle 通过独立解析、RK4 收敛、终止与失败检查。
 - 其余 R0 任务保持 `planned`。
 
 ## 下一条开发主线
 
-1. 完成 `ORACLE-YYZ-SYNC-03` 的交叉验证，并收敛唯一的 Preserve/Retire 处置选择。
+1. 完成 `ORACLE-YYZ-PUBLISH-01` 的完整验证，并收敛唯一的 Preserve/Retire 处置选择。
 2. 继续避免同时展开 gate、性能、YYZ、CAVH 和架构治理。
 
 ## 保留与恢复
