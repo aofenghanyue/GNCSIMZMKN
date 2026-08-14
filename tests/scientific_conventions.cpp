@@ -50,7 +50,7 @@ struct Check {
     std::size_t assertion_count = 0;
 };
 
-const std::array<std::string_view, 23> kRequiredCheckIds = {
+const std::array<std::string_view, 24> kRequiredCheckIds = {
     "quaternion.direction",
     "quaternion.hamilton-product",
     "quaternion.composition",
@@ -64,6 +64,7 @@ const std::array<std::string_view, 23> kRequiredCheckIds = {
     "quaternion.coefficient-validation",
     "quaternion.normalization-policy",
     "quaternion.body-rate-derivative",
+    "quaternion.inertial-rate-derivative",
     "quaternion.euler-round-trip",
     "quaternion.euler-singularity",
     "units.si-boundary",
@@ -254,6 +255,31 @@ Vec3 passiveRotate(const Quaternion& quaternion, const Vec3& vector) {
         throw std::domain_error("non-finite quaternion rotation output");
     }
     return {result.x, result.y, result.z};
+}
+
+Quaternion bodyRateDerivative(const Quaternion& quaternion,
+                              const Vec3& omega_body) {
+    const Quaternion unit = requireUnitQuaternion(quaternion);
+    if (!finite(omega_body)) {
+        throw std::domain_error("non-finite body angular rate");
+    }
+    return scale(hamilton(
+                     Quaternion{0.0, omega_body.x, omega_body.y, omega_body.z},
+                     unit),
+                 -0.5);
+}
+
+Quaternion inertialRateDerivative(const Quaternion& quaternion,
+                                  const Vec3& omega_inertial) {
+    const Quaternion unit = requireUnitQuaternion(quaternion);
+    if (!finite(omega_inertial)) {
+        throw std::domain_error("non-finite inertial angular rate");
+    }
+    return scale(hamilton(
+                     unit,
+                     Quaternion{0.0, omega_inertial.x, omega_inertial.y,
+                                omega_inertial.z}),
+                 -0.5);
 }
 
 Matrix3 passiveMatrix(const Quaternion& quaternion) {
@@ -675,14 +701,20 @@ void runFixtureObservations(std::vector<Observation>& observations,
                    "quaternion.serialization-wxyz", values(serialized),
                    {0.5, -0.5, 0.5, -0.5}, true);
 
-    const Quaternion pure_omega{0.0, 0.0, 0.0, 2.0};
-    const Quaternion derivative =
-        scale(hamilton(pure_omega, Quaternion{1.0, 0.0, 0.0, 0.0}),
-              -0.5);
+    const Quaternion derivative_attitude{0.5, 0.5, 0.5, 0.5};
     addObservation(observations, checks,
                    "quaternion.body-rate-derivative",
-                   "quaternion.body-rate-derivative", values(derivative),
-                   {0.0, 0.0, 0.0, -1.0});
+                   "quaternion.body-rate-derivative",
+                   values(bodyRateDerivative(
+                       derivative_attitude, Vec3{1.0, 2.0, 3.0})),
+                   {1.5, 0.0, -1.0, -0.5});
+
+    addObservation(observations, checks,
+                   "quaternion.inertial-rate-derivative",
+                   "quaternion.inertial-rate-derivative",
+                   values(inertialRateDerivative(
+                       derivative_attitude, Vec3{2.0, 3.0, 1.0})),
+                   {1.5, 0.0, -1.0, -0.5});
 
     const Vec3 euler = intrinsicZyxFromPassiveQuaternion(
         passiveQuaternionFromIntrinsicZyx(0.7, -0.4, 0.2));
@@ -788,6 +820,21 @@ void runRandomProperties(CheckBook& checks) {
         error = maxAbsDifference(round_trip, expected_vector);
         checks.observe("quaternion.inverse",
                        withinTolerance(round_trip, expected_vector), error);
+
+        const Vec3 omega_body{
+            generator.uniform(-5.0, 5.0),
+            generator.uniform(-5.0, 5.0),
+            generator.uniform(-5.0, 5.0),
+        };
+        const Vec3 omega_inertial = passiveRotate(first, omega_body);
+        const auto body_derivative = values(
+            bodyRateDerivative(first, omega_body));
+        const auto inertial_derivative = values(
+            inertialRateDerivative(first, omega_inertial));
+        error = maxAbsDifference(body_derivative, inertial_derivative);
+        checks.observe(
+            "quaternion.inertial-rate-derivative",
+            withinTolerance(body_derivative, inertial_derivative), error);
 
         const Vec3 expected_euler{
             generator.uniform(-2.8, 2.8),
@@ -1096,7 +1143,7 @@ int main(int argc, char** argv) {
         const Options options = parseOptions(argc, argv);
         CheckBook checks;
         std::vector<Observation> observations;
-        observations.reserve(16);
+        observations.reserve(17);
         runFixtureObservations(observations, checks);
         runRandomProperties(checks);
 

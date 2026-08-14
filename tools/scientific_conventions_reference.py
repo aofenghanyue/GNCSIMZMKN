@@ -126,6 +126,20 @@ def passive_rotate(quaternion, vector):
     return result[1:4]
 
 
+def body_rate_derivative(quaternion, omega_body):
+    unit = require_unit_quaternion(quaternion)
+    if not finite_sequence(omega_body, expected_length=3):
+        raise ValueError("body angular rate requires three finite coefficients")
+    return scale(hamilton([0.0] + list(omega_body), unit), -0.5)
+
+
+def inertial_rate_derivative(quaternion, omega_inertial):
+    unit = require_unit_quaternion(quaternion)
+    if not finite_sequence(omega_inertial, expected_length=3):
+        raise ValueError("inertial angular rate requires three finite coefficients")
+    return scale(hamilton(unit, [0.0] + list(omega_inertial)), -0.5)
+
+
 def passive_matrix(quaternion):
     w, x, y, z = require_unit_quaternion(quaternion)
     return [
@@ -379,8 +393,13 @@ def compute_observation(case):
     if operation == "serialize_wxyz":
         return list(values["quaternion_wxyz"])
     if operation == "body_rate_derivative":
-        pure_omega = [0.0] + list(values["omega_bi_b_radps"])
-        return scale(hamilton(pure_omega, values["q_i_b_wxyz"]), -0.5)
+        return body_rate_derivative(
+            values["q_i_b_wxyz"], values["omega_bi_b_radps"]
+        )
+    if operation == "inertial_rate_derivative":
+        return inertial_rate_derivative(
+            values["q_i_b_wxyz"], values["omega_bi_i_radps"]
+        )
     if operation == "euler_intrinsic_zyx_round_trip":
         quaternion = passive_quaternion_from_intrinsic_zyx(
             values["yaw_z_rad"], values["pitch_y_rad"], values["roll_x_rad"]
@@ -486,6 +505,8 @@ def check_id_for_observation(observation_id):
         return "quaternion.serialization-wxyz"
     if observation_id == "quaternion.body-rate-derivative":
         return "quaternion.body-rate-derivative"
+    if observation_id == "quaternion.inertial-rate-derivative":
+        return "quaternion.inertial-rate-derivative"
     if observation_id == "quaternion.euler-intrinsic-zyx-round-trip":
         return "quaternion.euler-round-trip"
     if observation_id.startswith("units."):
@@ -546,6 +567,19 @@ def run_property_checks(checks, sample_count, absolute, relative):
         round_trip = passive_rotate(inverse(first), quaternion_result)
         error = max_abs_difference(round_trip, vector)
         checks.observe("quaternion.inverse", within_tolerance(round_trip, vector, absolute, relative), error)
+
+        omega_body = [generator.uniform(-5.0, 5.0) for _ in range(3)]
+        omega_inertial = passive_rotate(first, omega_body)
+        body_derivative = body_rate_derivative(first, omega_body)
+        inertial_derivative = inertial_rate_derivative(first, omega_inertial)
+        error = max_abs_difference(body_derivative, inertial_derivative)
+        checks.observe(
+            "quaternion.inertial-rate-derivative",
+            within_tolerance(
+                body_derivative, inertial_derivative, absolute, relative
+            ),
+            error,
+        )
 
         yaw = generator.uniform(-2.8, 2.8)
         pitch = generator.uniform(-1.4, 1.4)

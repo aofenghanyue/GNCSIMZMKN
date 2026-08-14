@@ -131,6 +131,7 @@ $requiredCheckIds = @(
     'quaternion.coefficient-validation',
     'quaternion.normalization-policy',
     'quaternion.body-rate-derivative',
+    'quaternion.inertial-rate-derivative',
     'quaternion.euler-round-trip',
     'quaternion.euler-singularity',
     'units.si-boundary',
@@ -276,7 +277,7 @@ if ($null -ne $cases -and $null -ne $conventions) {
         Add-Issue 'Scientific case tolerance differs from the convention profile.'
     }
     $caseItems = @($cases.observations)
-    if ($caseItems.Count -ne 16) { Add-Issue "Expected 16 scientific observations, got $($caseItems.Count)." }
+    if ($caseItems.Count -ne 17) { Add-Issue "Expected 17 scientific observations, got $($caseItems.Count)." }
     Test-UniqueIds -Items $caseItems -Label 'Scientific observations'
     foreach ($case in $caseItems) {
         $expectedValues = @($case.expected)
@@ -555,8 +556,8 @@ function Test-Evidence {
     if ($evidence.status -cne 'pass') { Add-Issue 'Scientific evidence status is not pass.' }
     if ([int]$evidence.comparison.mismatches -ne 0) { Add-Issue 'Scientific evidence records cross-tool mismatches.' }
     if ($evidence.failure_path_tests.status -cne 'pass') { Add-Issue 'Scientific failure-path evidence status is not pass.' }
-    if ([int]$evidence.execution.cpp.checks -ne 23 -or [int]$evidence.execution.python.checks -ne 23) { Add-Issue 'Scientific evidence check counts drifted.' }
-    if ([int]$evidence.execution.cpp.observations -ne 16 -or [int]$evidence.execution.python.observations -ne 16) { Add-Issue 'Scientific evidence observation counts drifted.' }
+    if ([int]$evidence.execution.cpp.checks -ne 24 -or [int]$evidence.execution.python.checks -ne 24) { Add-Issue 'Scientific evidence check counts drifted.' }
+    if ([int]$evidence.execution.cpp.observations -ne 17 -or [int]$evidence.execution.python.observations -ne 17) { Add-Issue 'Scientific evidence observation counts drifted.' }
     if ([int]$evidence.execution.cpp.assertions -le 0 -or [int]$evidence.execution.python.assertions -le 0) { Add-Issue 'Scientific evidence assertion counts are incomplete.' }
     if ([int]$evidence.failure_path_tests.cases -lt 6 -or [int]$evidence.failure_path_tests.rejected -ne [int]$evidence.failure_path_tests.cases) { Add-Issue 'Scientific failure-path evidence is incomplete.' }
     Test-ExactSequence -Actual @($evidence.failure_path_tests.covered) -Expected @(

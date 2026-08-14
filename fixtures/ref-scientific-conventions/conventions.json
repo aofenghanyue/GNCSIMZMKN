@@ -115,6 +115,7 @@
       "quaternion.coefficient-validation",
       "quaternion.normalization-policy",
       "quaternion.body-rate-derivative",
+      "quaternion.inertial-rate-derivative",
       "quaternion.euler-round-trip",
       "quaternion.euler-singularity",
       "units.si-boundary",
