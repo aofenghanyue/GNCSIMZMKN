@@ -3256,10 +3256,10 @@
                          },
                          {
                              "path":  "tools/validate-license-provenance.ps1",
-                             "sha256":  "22f0a852092750d7b777674b5395a8cb95d53d3f79a55bf050c86c231a603c1d",
+                             "sha256":  "3e1f242e85df3de675a5ff540d72337c0716c5741d66dc79aa90d1b8adfc6356",
                              "hash_normalization":  "utf8-lf-no-bom",
-                             "stage_object_id":  "64d366a1fc656743f219e28ee649363f82d38a0d",
-                             "stage_blob_byte_length":  46213
+                             "stage_object_id":  "a4b83138bc59a3847f74acf11c7c36a635dcf104",
+                             "stage_blob_byte_length":  46216
                          },
                          {
                              "path":  "tools/validate-r0-architecture-acceptance.ps1",

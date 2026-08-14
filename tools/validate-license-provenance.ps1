@@ -1013,9 +1013,9 @@ if ($errors.Count -eq 0) {
     else {
         $actualReport = Read-Json $reportPath
         if ($null -ne $actualReport) {
-            $actualCanonical = $actualReport | ConvertTo-Json -Depth 20 -Compress
-            $expectedCanonical = $expectedReport | ConvertTo-Json -Depth 20 -Compress
-            if ($actualCanonical -ne $expectedCanonical) {
+            $actualCanonicalSha256 = Get-ObjectCanonicalSha256 $actualReport
+            $expectedCanonicalSha256 = Get-ObjectCanonicalSha256 $expectedReport
+            if ($actualCanonicalSha256 -cne $expectedCanonicalSha256) {
                 Add-Error 'License/provenance conformance report is stale; run with -UpdateReport.'
             }
         }
