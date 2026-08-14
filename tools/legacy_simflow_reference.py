@@ -366,8 +366,12 @@ def main() -> int:
             "Selected SimFlow source case differs")
     requested_inputs = template["materializer"]["config"]["vehicles"][
         selected_record["vehicle_id"]]["inputs"]
+    expected_input_ids = set(selected_record["numeric_inputs"])
     require(template["materializer"]["config"]["case_source"]["rows"] == [0] and
-            requested_inputs == ["engine.temp_level", "aero.drag_bias"],
+            isinstance(requested_inputs, list) and
+            len(requested_inputs) == len(expected_input_ids) and
+            all(isinstance(name, str) for name in requested_inputs) and
+            set(requested_inputs) == expected_input_ids,
             "SimFlow template selection differs")
     for field, value in selected_record["numeric_inputs"].items():
         require(selected["values"][field] == decimal(value),
@@ -443,12 +447,19 @@ def main() -> int:
             "A SimFlow semantic failure mutation was accepted")
     checks += 6
 
-    equivalence = oracle["equivalence_cases"]
-    require(len(equivalence) == 1 and
-            equivalence[0]["id"] ==
-            "PASS-SIMFLOW-LEGACY-CASE-DIRECTORY-RENAMED" and
-            equivalence[0]["expected_status"] == "accepted",
+    equivalence_by_id = {entry["id"]: entry
+                         for entry in oracle["equivalence_cases"]}
+    require(set(equivalence_by_id) == {
+        "PASS-SIMFLOW-LEGACY-CASE-DIRECTORY-RENAMED",
+        "PASS-SIMFLOW-INPUT-DECLARATION-REORDERED",
+    } and all(entry["expected_status"] == "accepted"
+              for entry in equivalence_by_id.values()),
             "SimFlow equivalence-case definition differs")
+    reordered_mission = materialize_independently(
+        base, selected, selected_record["vehicle_id"],
+        list(reversed(requested_inputs)))
+    validate_mission(reordered_mission, expected_mission,
+                     "Input-declaration-order equivalence")
     renamed_trace = copy.deepcopy(traces[0])
     renamed_trace["materialization"]["legacy_case_index"] = 99
     renamed_trace["materialization"]["legacy_case_directory_name"] = "renamed"
@@ -458,7 +469,7 @@ def main() -> int:
                    "Legacy identity equivalence")
     validate_mission(renamed_mission, expected_mission,
                      "Output-directory equivalence")
-    checks += 4
+    checks += 6
 
     first_stdout, probe = run_probe(arguments.probe)
     second_stdout, second_probe = run_probe(arguments.probe)
@@ -483,10 +494,11 @@ def main() -> int:
             "reused_batch_root_rejected",
             "case_local_replay_input_rejected",
             "replay_result_mismatch_rejected",
+            "input_declaration_order_accepted",
             "legacy_case_directory_change_accepted"):
         require(probe[flag] is True,
                 f"C++ SimFlow probe did not enforce {flag}")
-    checks += 12
+    checks += 13
 
     decision = oracle["disposition_decision"]
     require(decision["status"] in {"needs_owner_decision", "accepted"},
@@ -512,6 +524,7 @@ def main() -> int:
         "ordinary_replay_mode": "--config",
         "ordinary_replay_fresh_root": True,
         "effective_mission_standalone": True,
+        "input_declaration_order_equivalent": True,
         "deterministic_target_case_id": "pending",
         "disposition_status": decision["status"],
     }, separators=(",", ":")))

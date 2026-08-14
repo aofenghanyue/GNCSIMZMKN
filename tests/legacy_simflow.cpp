@@ -1,3 +1,4 @@
+#include <algorithm>
 #include <cmath>
 #include <iomanip>
 #include <iostream>
@@ -53,6 +54,7 @@ struct ProbeResult {
     bool reused_batch_root_rejected = false;
     bool case_local_replay_input_rejected = false;
     bool replay_result_mismatch_rejected = false;
+    bool input_declaration_order_accepted = false;
     bool legacy_case_directory_change_accepted = false;
 };
 
@@ -151,6 +153,13 @@ ProbeResult runProbe() {
         true,
     };
 
+    auto reordered_inputs = requested_inputs;
+    std::reverse(reordered_inputs.begin(), reordered_inputs.end());
+    const Mission reordered_mission = materialize(
+        base, matrix.front(), reordered_inputs, "case_000001");
+    result.input_declaration_order_accepted = sameSemanticMission(
+        result.effective_mission, reordered_mission);
+
     Mission missing_input = result.effective_mission;
     missing_input.perturbation_inputs.erase("aero.drag_bias");
     result.missing_injected_input_rejected =
@@ -212,6 +221,9 @@ void writeJson(const ProbeResult& result) {
               << (result.case_local_replay_input_rejected ? "true" : "false")
               << ",\"replay_result_mismatch_rejected\":"
               << (result.replay_result_mismatch_rejected ? "true" : "false")
+              << ",\"input_declaration_order_accepted\":"
+              << (result.input_declaration_order_accepted ?
+                  "true" : "false")
               << ",\"legacy_case_directory_change_accepted\":"
               << (result.legacy_case_directory_change_accepted
                       ? "true" : "false")
@@ -249,6 +261,8 @@ int main(int argc, char** argv) {
                 "ordinary replay input remained case-directory local");
         require(result.replay_result_mismatch_rejected,
                 "ordinary replay result mismatch was accepted");
+        require(result.input_declaration_order_accepted,
+                "input declaration order changed effective mission semantics");
         require(result.legacy_case_directory_change_accepted,
                 "Legacy case directory changed semantic identity");
         writeJson(result);

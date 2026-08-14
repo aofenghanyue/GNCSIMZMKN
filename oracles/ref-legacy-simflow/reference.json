@@ -63,6 +63,7 @@
     "equivalence": {
       "effective_mission_json_format": "ignored after JSON parsing",
       "dataset_column_order": "ignored after required semantic field mapping",
+      "requested_input_declaration_order": "ignored after distinct field identities are resolved",
       "legacy_case_index_and_directory": "ignored",
       "simflow_and_ordinary_replay": "same semantic mission and dataset"
     },
@@ -109,6 +110,11 @@
     {
       "id": "PASS-SIMFLOW-LEGACY-CASE-DIRECTORY-RENAMED",
       "mutation": "Change case_000001 and its numeric index while preserving source case, effective mission and replay result",
+      "expected_status": "accepted"
+    },
+    {
+      "id": "PASS-SIMFLOW-INPUT-DECLARATION-REORDERED",
+      "mutation": "Reverse the two distinct requested input identities before materialization",
       "expected_status": "accepted"
     }
   ],
