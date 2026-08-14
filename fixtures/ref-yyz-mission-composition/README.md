@@ -16,6 +16,18 @@ candidate. Metrics and inclusive AtGrid predicates read all three committed
 samples, select the higher-priority downrange completion at tick 2, seal the
 terminal observation and freeze the mission result.
 
+At tick 0 the 1000 m target matches the committed altitude, so the fixture
+guidance and controller contribute zero moment. At tick 1 the committed
+sample has descended to `999.95096675 m` with `-0.980665 m/s` vertical speed.
+The declared altitude PD law produces `0.050013915 rad`, applies the symmetric
+`0.04 rad` limit and sends that command to the pitch-moment PD controller.
+The controller produces `20 N·m`; a fixture-local unit-gain, zero-delay ideal
+transform realizes it as a `+B-y` moment over `[tick 1, tick 2)`. Closure adds
+that moment to the recomputed aerodynamic/propulsion moment before full-state
+RK4 integration. Five directed mutations reject a stale observation, the
+wrong vertical-rate feedback sign, a bypassed guidance limit, a dropped
+realized moment and a reversed realized-moment axis.
+
 `REF-YYZ-TWO-INTERVAL-MASS-COMMIT-001` remains the executable authority for
 the candidate → atomic commit → next consumer time relation. Its supplied
 `240 N` trajectory is intentionally kept separate from the lookup-composed
@@ -40,8 +52,10 @@ and `GNC-PHY-0201` codes are stable inside this fixture bundle only; this slice
 does not allocate a product code registry or product `DiagnosticRecord`
 contract.
 
-Canonical mission source, Compiler/Session contracts, guidance/control and
-durable evidence remain outside this R0 fixture.
+Canonical mission source, production guidance/controller tuning, allocation,
+control-surface effectiveness, actuator dynamics, long-horizon stability and
+overshoot claims, Compiler/Session contracts and durable evidence remain
+outside this R0 fixture.
 
 After configuring and building a preset, run CTest test
 `r0.yyz-mission-composition.oracle`.

@@ -15,11 +15,11 @@ import sys
 
 FIXTURE_ID = "REF-YYZ-MISSION-COMPOSITION-001"
 ORACLE_ID = "ORACLE-YYZ-MISSION-COMPOSITION-001"
-MODEL_ID = "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-003"
-CASES_SCHEMA = "gnczmkn.yyz-mission-composition-cases/3"
-REFERENCE_SCHEMA = "gnczmkn.yyz-mission-composition-reference/3"
-MISSION_SOURCE_ID = "mission.fixture.yyz.lookup-open-loop@1"
-EXECUTION_ID = "execution.fixture.yyz.lookup-open-loop.0001"
+MODEL_ID = "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-004"
+CASES_SCHEMA = "gnczmkn.yyz-mission-composition-cases/4"
+REFERENCE_SCHEMA = "gnczmkn.yyz-mission-composition-reference/4"
+MISSION_SOURCE_ID = "mission.fixture.yyz.lookup-altitude-hold@1"
+EXECUTION_ID = "execution.fixture.yyz.lookup-altitude-hold.0001"
 SUBJECT = "vehicle.fixture.yyz@1"
 INERTIAL_FRAME_ID = "frame.fixture.yyz.inertial-cartesian@1"
 BODY_FRAME_ID = "frame.fixture.yyz.body@1"
@@ -91,10 +91,12 @@ EVENT_ORDER = [
     "resolve-components",
     "publish-opening-commit",
     "evaluate-opening-boundary",
+    "evaluate-guidance-control-0",
     "evaluate-interval-0",
     "stage-commit-1",
     "commit-rigid-and-mass-1",
     "evaluate-intermediate-boundary",
+    "evaluate-guidance-control-1",
     "evaluate-interval-1",
     "stage-commit-2",
     "commit-rigid-and-mass-2",
@@ -207,7 +209,37 @@ def validate_case(case: dict) -> None:
                  case["closing_commit_id"]}) == 3 and
             isinstance(case["termination_plan_id"], str) and
             bool(case["termination_plan_id"]),
-            "mission-composition case identity differs")
+             "mission-composition case identity differs")
+    control = case["guidance_control"]
+    require(control["guidance_law_id"] ==
+                "guidance.fixture.yyz.altitude-pd@1" and
+            control["controller_law_id"] ==
+                "controller.fixture.yyz.pitch-moment-pd@1" and
+            control["actuation_model_id"] ==
+                "actuation.fixture.yyz.ideal-body-moment@1" and
+            control["observation_source"] ==
+                "current-committed-rigid-sample" and
+            control["altitude_axis"] == "+I-z" and
+            control["attitude_projection"] == "pure-pitch-q_I_B" and
+            control["realized_axis"] == "+B-y" and
+            control["command_timing"] ==
+                "current-cycle-held-over-[t_k,t_k+1)",
+            "guidance/control identity or timing differs")
+    target_altitude = decimal(control["target_altitude_m"])
+    gains = [
+        decimal(control["altitude_error_gain_rad_per_m"]),
+        decimal(control["vertical_speed_gain_rad_s_per_m"]),
+        decimal(control["pitch_error_gain_Nm_per_rad"]),
+        decimal(control["pitch_rate_gain_Nm_s_per_rad"]),
+    ]
+    pitch_limit = decimal(control["pitch_command_limit_rad"])
+    moment_limit = decimal(control["moment_command_limit_Nm"])
+    realization_gain = decimal(control["realization_gain"])
+    require(target_altitude.is_finite() and
+            all(value > 0 for value in gains) and
+            pitch_limit > 0 and moment_limit > 0 and
+            realization_gain == 1,
+            "guidance/control gains, limits or realization differ")
     predicates = case["predicates"]
     require(isinstance(predicates, list) and predicates,
             "termination plan must contain predicates")
@@ -546,6 +578,113 @@ def state_fields(state: dict) -> dict:
     }
 
 
+def symmetric_limit(value: Decimal, limit: Decimal) -> tuple[Decimal, bool]:
+    require(limit > 0, "symmetric command limit must be positive")
+    limited = max(-limit, min(limit, value))
+    return limited, limited != value
+
+
+def guidance_control_result(control: dict, frozen_module, *,
+                            evaluation_tick: int,
+                            observation_tick: int,
+                            observation_commit_id: str,
+                            observation_state: dict,
+                            reverse_vertical_speed_feedback: bool = False,
+                            bypass_guidance_limit: bool = False,
+                            drop_control_moment: bool = False,
+                            reverse_control_moment_sign: bool = False) -> dict:
+    state = state_fields(observation_state)
+    position = vector(state["position_I_m"], 3, "guidance position")
+    velocity = vector(state["velocity_I_mps"], 3, "guidance velocity")
+    attitude = vector(state["q_I_B_wxyz"], 4, "guidance attitude")
+    rate = vector(state["omega_BI_B_radps"], 3, "controller rate")
+    require(attitude[1] == 0 and attitude[3] == 0 and attitude[0] > 0,
+            "fixture pitch projection requires a nonsingular pure-y q_I_B")
+    pitch_rad = -Decimal(2) * frozen_module.atan2_decimal(
+        attitude[2], attitude[0])
+
+    target_altitude = decimal(control["target_altitude_m"])
+    altitude_gain = decimal(control["altitude_error_gain_rad_per_m"])
+    vertical_speed_gain = decimal(
+        control["vertical_speed_gain_rad_s_per_m"])
+    pitch_limit = decimal(control["pitch_command_limit_rad"])
+    altitude_error = target_altitude - position[2]
+    altitude_feedback = altitude_gain * altitude_error
+    vertical_speed_feedback = vertical_speed_gain * velocity[2]
+    if not reverse_vertical_speed_feedback:
+        vertical_speed_feedback = -vertical_speed_feedback
+    raw_pitch_command = altitude_feedback + vertical_speed_feedback
+    limited_pitch_command, guidance_saturated = symmetric_limit(
+        raw_pitch_command, pitch_limit)
+    pitch_command = (raw_pitch_command if bypass_guidance_limit
+                     else limited_pitch_command)
+
+    pitch_error_gain = decimal(control["pitch_error_gain_Nm_per_rad"])
+    pitch_rate_gain = decimal(control["pitch_rate_gain_Nm_s_per_rad"])
+    moment_limit = decimal(control["moment_command_limit_Nm"])
+    pitch_error = pitch_command - pitch_rad
+    proportional_moment = pitch_error_gain * pitch_error
+    rate_damping_moment = -pitch_rate_gain * rate[1]
+    raw_moment_command = proportional_moment + rate_damping_moment
+    moment_command, controller_saturated = symmetric_limit(
+        raw_moment_command, moment_limit)
+
+    realization_gain = decimal(control["realization_gain"])
+    realized_moment = realization_gain * moment_command
+    if drop_control_moment:
+        realized_moment = Decimal(0)
+    if reverse_control_moment_sign:
+        realized_moment = -realized_moment
+    return {
+        "source_observation": {
+            "sample_tick": observation_tick,
+            "commit_id": observation_commit_id,
+            "quality": "Valid",
+            "altitude_I_z_m": position[2],
+            "vertical_speed_I_z_mps": velocity[2],
+            "pitch_rad": pitch_rad,
+            "pitch_rate_B_y_radps": rate[1],
+        },
+        "guidance": {
+            "law_id": control["guidance_law_id"],
+            "evaluation_tick": evaluation_tick,
+            "target_altitude_m": target_altitude,
+            "altitude_error_m": altitude_error,
+            "altitude_feedback_rad": altitude_feedback,
+            "vertical_speed_feedback_rad": vertical_speed_feedback,
+            "raw_pitch_command_rad": raw_pitch_command,
+            "lower_limit_rad": -pitch_limit,
+            "upper_limit_rad": pitch_limit,
+            "pitch_command_rad": pitch_command,
+            "saturated": guidance_saturated and not bypass_guidance_limit,
+        },
+        "controller": {
+            "law_id": control["controller_law_id"],
+            "evaluation_tick": evaluation_tick,
+            "pitch_error_rad": pitch_error,
+            "proportional_moment_Nm": proportional_moment,
+            "rate_damping_moment_Nm": rate_damping_moment,
+            "raw_moment_command_Nm": raw_moment_command,
+            "lower_limit_Nm": -moment_limit,
+            "upper_limit_Nm": moment_limit,
+            "moment_command_Nm": moment_command,
+            "saturated": controller_saturated,
+        },
+        "ideal_moment_actuation": {
+            "model_id": control["actuation_model_id"],
+            "basis_configuration_revision": CONFIGURATION_REVISION,
+            "sample_tick": evaluation_tick,
+            "valid_from_tick": evaluation_tick,
+            "valid_until_tick": evaluation_tick + 1,
+            "zero_delay": True,
+            "realization_gain": realization_gain,
+            "force_contribution_B_N": [Decimal(0), Decimal(0), Decimal(0)],
+            "moment_contribution_about_CoM_B_Nm": [
+                Decimal(0), realized_moment, Decimal(0)],
+        },
+    }
+
+
 def interval_case(base: dict, tick: int, opening_state: dict,
                   opening_mass: Decimal) -> dict:
     value = copy.deepcopy(base)
@@ -661,7 +800,8 @@ def convergence_series(core_module, opening_state: dict, inputs: dict,
 
 
 def interval_execution(result: dict, opening_mass: Decimal,
-                       closing_mass: Decimal) -> dict:
+                       closing_mass: Decimal, control: dict,
+                       closure_without_control: dict) -> dict:
     mass = result["mass_visibility"]
     return {
         "sample_tick": result["context"]["sample_tick"],
@@ -674,6 +814,8 @@ def interval_execution(result: dict, opening_mass: Decimal,
         "environment_sample": result["environment_sample"],
         "air_data": result["air_data"],
         "aero_lookup": result["aero_lookup"],
+        "guidance_control": control,
+        "closure_without_control": closure_without_control,
         "closure": result["closure"],
         "rigid_derivative_at_opening": result["rigid_derivative_at_tick0"],
         "mass_transition": {
@@ -694,7 +836,12 @@ def compose(cases: dict, repo_root: Path, *,
             nonatomic_mass_commit: bool = False,
             stale_boundary_closure: bool = False,
             low_priority_wins: bool = False,
-            result_before_observation: bool = False) -> dict:
+            result_before_observation: bool = False,
+            stale_guidance_observation: bool = False,
+            reverse_vertical_speed_feedback: bool = False,
+            bypass_guidance_limit: bool = False,
+            drop_control_moment: bool = False,
+            reverse_control_moment_sign: bool = False) -> dict:
     validate_cases_identity(cases)
     case = cases["cases"][0]
     validate_case(case)
@@ -723,6 +870,25 @@ def compose(cases: dict, repo_root: Path, *,
     model = cases["model"]
     dt_s = decimal(model["base_dt_s"])
     opening_state = frozen_input["initial_state"]
+    control_definition = case["guidance_control"]
+    first_control = guidance_control_result(
+        control_definition, frozen_module, evaluation_tick=0,
+        observation_tick=0,
+        observation_commit_id=case["opening_commit_id"],
+        observation_state=opening_state,
+        reverse_vertical_speed_feedback=reverse_vertical_speed_feedback,
+        bypass_guidance_limit=bypass_guidance_limit,
+        drop_control_moment=drop_control_moment,
+        reverse_control_moment_sign=reverse_control_moment_sign)
+    first_closure_without_control = copy.deepcopy(first_result["closure"])
+    first_result["closure"] = copy.deepcopy(first_result["closure"])
+    first_result["closure"]["moment_total_about_CoM_B_Nm"] = [
+        value + contribution for value, contribution in zip(
+            vector(first_result["closure"]["moment_total_about_CoM_B_Nm"],
+                   3, "first interval Closure moment"),
+            first_control["ideal_moment_actuation"]
+                ["moment_contribution_about_CoM_B_Nm"])
+    ]
     source_opening_mass = decimal(
         frozen_input["mass_properties_sample"]["mass_kg"])
     current_visible_mass = decimal(
@@ -752,16 +918,41 @@ def compose(cases: dict, repo_root: Path, *,
         frozen_input, 1, intermediate_state, intermediate_mass)
     second_result = frozen_module.compose(
         second_input, include_trajectory=False)
+    second_closure_without_control = copy.deepcopy(second_result["closure"])
+    guidance_observation_state = (
+        opening_state if stale_guidance_observation else intermediate_state)
+    guidance_observation_tick = 0 if stale_guidance_observation else 1
+    guidance_observation_commit = (
+        case["opening_commit_id"] if stale_guidance_observation
+        else case["intermediate_commit_id"])
+    second_control = guidance_control_result(
+        control_definition, frozen_module, evaluation_tick=1,
+        observation_tick=guidance_observation_tick,
+        observation_commit_id=guidance_observation_commit,
+        observation_state=guidance_observation_state,
+        reverse_vertical_speed_feedback=reverse_vertical_speed_feedback,
+        bypass_guidance_limit=bypass_guidance_limit,
+        drop_control_moment=drop_control_moment,
+        reverse_control_moment_sign=reverse_control_moment_sign)
     if stale_boundary_closure:
         second_result = copy.deepcopy(second_result)
         second_result["air_data"] = copy.deepcopy(first_result["air_data"])
         second_result["aero_lookup"] = copy.deepcopy(
             first_result["aero_lookup"])
         second_result["closure"] = copy.deepcopy(first_result["closure"])
-        stale_inputs = core_inputs(
-            second_input, second_result, intermediate_mass)
-        second_result["rigid_derivative_at_tick0"] = rigid_derivative(
-            core_module, intermediate_state, stale_inputs)
+        second_closure_without_control = copy.deepcopy(
+            first_closure_without_control)
+    else:
+        second_result = copy.deepcopy(second_result)
+        second_result["closure"] = copy.deepcopy(second_result["closure"])
+        second_result["closure"]["moment_total_about_CoM_B_Nm"] = [
+            value + contribution for value, contribution in zip(
+                vector(second_result["closure"]
+                       ["moment_total_about_CoM_B_Nm"],
+                       3, "second interval Closure moment"),
+                second_control["ideal_moment_actuation"]
+                    ["moment_contribution_about_CoM_B_Nm"])
+        ]
     second_mass = second_result["mass_visibility"]
     second_candidate_mass = decimal(
         second_mass["pending_mass_candidate_kg"])
@@ -776,6 +967,8 @@ def compose(cases: dict, repo_root: Path, *,
             "second FrozenInterval mass handoff differs")
     second_inputs = core_inputs(
         second_input, second_result, intermediate_mass)
+    second_result["rigid_derivative_at_tick0"] = rigid_derivative(
+        core_module, intermediate_state, second_inputs)
     convergence = convergence_series(
         core_module, intermediate_state, second_inputs, dt_s,
         require_fourth_order=not stale_boundary_closure)
@@ -854,8 +1047,10 @@ def compose(cases: dict, repo_root: Path, *,
     }
     interval_executions = [
         interval_execution(first_result, source_opening_mass,
-                           intermediate_mass),
-        interval_execution(second_result, intermediate_mass, closing_mass),
+                           intermediate_mass, first_control,
+                           first_closure_without_control),
+        interval_execution(second_result, intermediate_mass, closing_mass,
+                           second_control, second_closure_without_control),
     ]
     execution_trace = [
         {"order": 0, "event": "resolve-components",
@@ -865,27 +1060,43 @@ def compose(cases: dict, repo_root: Path, *,
         {"order": 2, "event": "evaluate-opening-boundary",
          "sample_tick": 0,
          "action": evaluation_trace[0]["decision"]["action"]},
-        {"order": 3, "event": "evaluate-interval-0",
+        {"order": 3, "event": "evaluate-guidance-control-0",
+         "sample_tick": 0,
+         "observation_sample_tick":
+             first_control["source_observation"]["sample_tick"],
+         "pitch_command_rad":
+             first_control["guidance"]["pitch_command_rad"],
+         "moment_command_Nm":
+             first_control["controller"]["moment_command_Nm"]},
+        {"order": 4, "event": "evaluate-interval-0",
          "sample_tick": 0, "valid_until_tick": 1},
-        {"order": 4, "event": "stage-commit-1",
+        {"order": 5, "event": "stage-commit-1",
          "sample_tick": 0, "candidate_tick": 1},
-        {"order": 5, "event": "commit-rigid-and-mass-1",
+        {"order": 6, "event": "commit-rigid-and-mass-1",
          "sample_tick": 1, "commit_id": intermediate["commit_id"]},
-        {"order": 6, "event": "evaluate-intermediate-boundary",
+        {"order": 7, "event": "evaluate-intermediate-boundary",
          "sample_tick": 1,
          "action": evaluation_trace[1]["decision"]["action"]},
-        {"order": 7, "event": "evaluate-interval-1",
+        {"order": 8, "event": "evaluate-guidance-control-1",
+         "sample_tick": 1,
+         "observation_sample_tick":
+             second_control["source_observation"]["sample_tick"],
+         "pitch_command_rad":
+             second_control["guidance"]["pitch_command_rad"],
+         "moment_command_Nm":
+             second_control["controller"]["moment_command_Nm"]},
+        {"order": 9, "event": "evaluate-interval-1",
          "sample_tick": 1, "valid_until_tick": 2},
-        {"order": 8, "event": "stage-commit-2",
+        {"order": 10, "event": "stage-commit-2",
          "sample_tick": 1, "candidate_tick": 2},
-        {"order": 9, "event": "commit-rigid-and-mass-2",
+        {"order": 11, "event": "commit-rigid-and-mass-2",
          "sample_tick": 2, "commit_id": closing["commit_id"]},
-        {"order": 10, "event": "evaluate-terminal-boundary",
+        {"order": 12, "event": "evaluate-terminal-boundary",
          "sample_tick": 2,
          "action": terminal_boundary["decision"]["action"]},
-        {"order": 11, "event": "seal-terminal-observation",
+        {"order": 13, "event": "seal-terminal-observation",
          "sample_tick": 2, "commit_id": closing["commit_id"]},
-        {"order": 12, "event": "freeze-mission-result",
+        {"order": 14, "event": "freeze-mission-result",
          "sample_tick": 2, "status": final_status},
     ]
     return {
@@ -952,6 +1163,18 @@ def invalid_rejections(cases: dict, repo_root: Path) -> list[str]:
                     "threshold": 10,
                 }) for predicate in value["cases"][0]["predicates"]
             ],
+        "INVALID-YYZ-MISSION-COMPOSITION-GUIDANCE-GAIN":
+            lambda value: value["cases"][0]["guidance_control"].__setitem__(
+                "altitude_error_gain_rad_per_m", -0.01),
+        "INVALID-YYZ-MISSION-COMPOSITION-PITCH-LIMIT":
+            lambda value: value["cases"][0]["guidance_control"].__setitem__(
+                "pitch_command_limit_rad", 0),
+        "INVALID-YYZ-MISSION-COMPOSITION-MOMENT-LIMIT":
+            lambda value: value["cases"][0]["guidance_control"].__setitem__(
+                "moment_command_limit_Nm", 0),
+        "INVALID-YYZ-MISSION-COMPOSITION-ACTUATION-GAIN":
+            lambda value: value["cases"][0]["guidance_control"].__setitem__(
+                "realization_gain", 1.1),
     }
     rejected = []
     for specification in cases["invalid_input_cases"]:
@@ -977,6 +1200,16 @@ def mutation_results(cases: dict, repo_root: Path,
     stale = compose(cases, repo_root, stale_boundary_closure=True)
     low = compose(cases, repo_root, low_priority_wins=True)
     order = compose(cases, repo_root, result_before_observation=True)
+    stale_guidance = compose(
+        cases, repo_root, stale_guidance_observation=True)
+    wrong_vertical_sign = compose(
+        cases, repo_root, reverse_vertical_speed_feedback=True)
+    unlimited_guidance = compose(
+        cases, repo_root, bypass_guidance_limit=True)
+    dropped_control = compose(
+        cases, repo_root, drop_control_moment=True)
+    reversed_control = compose(
+        cases, repo_root, reverse_control_moment_sign=True)
     results = [
         {
             "id": "MUTATION-YYZ-MISSION-COMPOSITION-EARLY-MASS-VISIBILITY",
@@ -1042,6 +1275,126 @@ def mutation_results(cases: dict, repo_root: Path,
             "observed_terminal_observation_sealed":
                 order["mission_result"]["terminal_observation_sealed"],
             "max_abs_result_difference": Decimal(1),
+        },
+        {
+            "id":
+                "MUTATION-YYZ-MISSION-COMPOSITION-STALE-GUIDANCE-OBSERVATION",
+            "status": "rejected",
+            "expected_observation_sample_tick":
+                accepted["interval_executions"][1]["guidance_control"]
+                    ["source_observation"]["sample_tick"],
+            "observed_observation_sample_tick":
+                stale_guidance["interval_executions"][1]["guidance_control"]
+                    ["source_observation"]["sample_tick"],
+            "expected_pitch_command_rad":
+                accepted["interval_executions"][1]["guidance_control"]
+                    ["guidance"]["pitch_command_rad"],
+            "observed_pitch_command_rad":
+                stale_guidance["interval_executions"][1]["guidance_control"]
+                    ["guidance"]["pitch_command_rad"],
+            "expected_moment_command_Nm":
+                accepted["interval_executions"][1]["guidance_control"]
+                    ["controller"]["moment_command_Nm"],
+            "observed_moment_command_Nm":
+                stale_guidance["interval_executions"][1]["guidance_control"]
+                    ["controller"]["moment_command_Nm"],
+            "max_abs_result_difference": state_max_difference(
+                accepted["committed_samples"][2],
+                stale_guidance["committed_samples"][2]),
+        },
+        {
+            "id": "MUTATION-YYZ-MISSION-COMPOSITION-VERTICAL-RATE-SIGN",
+            "status": "rejected",
+            "expected_vertical_speed_feedback_rad":
+                accepted["interval_executions"][1]["guidance_control"]
+                    ["guidance"]["vertical_speed_feedback_rad"],
+            "observed_vertical_speed_feedback_rad":
+                wrong_vertical_sign["interval_executions"][1]
+                    ["guidance_control"]["guidance"]
+                    ["vertical_speed_feedback_rad"],
+            "expected_pitch_command_rad":
+                accepted["interval_executions"][1]["guidance_control"]
+                    ["guidance"]["pitch_command_rad"],
+            "observed_pitch_command_rad":
+                wrong_vertical_sign["interval_executions"][1]
+                    ["guidance_control"]["guidance"]["pitch_command_rad"],
+            "expected_moment_command_Nm":
+                accepted["interval_executions"][1]["guidance_control"]
+                    ["controller"]["moment_command_Nm"],
+            "observed_moment_command_Nm":
+                wrong_vertical_sign["interval_executions"][1]
+                    ["guidance_control"]["controller"]["moment_command_Nm"],
+            "max_abs_result_difference": state_max_difference(
+                accepted["committed_samples"][2],
+                wrong_vertical_sign["committed_samples"][2]),
+        },
+        {
+            "id":
+                "MUTATION-YYZ-MISSION-COMPOSITION-BYPASS-GUIDANCE-LIMIT",
+            "status": "rejected",
+            "expected_guidance_saturated":
+                accepted["interval_executions"][1]["guidance_control"]
+                    ["guidance"]["saturated"],
+            "observed_guidance_saturated":
+                unlimited_guidance["interval_executions"][1]
+                    ["guidance_control"]["guidance"]["saturated"],
+            "expected_pitch_command_rad":
+                accepted["interval_executions"][1]["guidance_control"]
+                    ["guidance"]["pitch_command_rad"],
+            "observed_pitch_command_rad":
+                unlimited_guidance["interval_executions"][1]
+                    ["guidance_control"]["guidance"]["pitch_command_rad"],
+            "expected_moment_command_Nm":
+                accepted["interval_executions"][1]["guidance_control"]
+                    ["controller"]["moment_command_Nm"],
+            "observed_moment_command_Nm":
+                unlimited_guidance["interval_executions"][1]
+                    ["guidance_control"]["controller"]["moment_command_Nm"],
+            "max_abs_result_difference": state_max_difference(
+                accepted["committed_samples"][2],
+                unlimited_guidance["committed_samples"][2]),
+        },
+        {
+            "id": "MUTATION-YYZ-MISSION-COMPOSITION-DROP-CONTROL-MOMENT",
+            "status": "rejected",
+            "expected_moment_command_Nm":
+                accepted["interval_executions"][1]["guidance_control"]
+                    ["controller"]["moment_command_Nm"],
+            "observed_moment_command_Nm":
+                dropped_control["interval_executions"][1]["guidance_control"]
+                    ["controller"]["moment_command_Nm"],
+            "expected_realized_moment_B_y_Nm":
+                accepted["interval_executions"][1]["guidance_control"]
+                    ["ideal_moment_actuation"]
+                    ["moment_contribution_about_CoM_B_Nm"][1],
+            "observed_realized_moment_B_y_Nm":
+                dropped_control["interval_executions"][1]
+                    ["guidance_control"]["ideal_moment_actuation"]
+                    ["moment_contribution_about_CoM_B_Nm"][1],
+            "max_abs_result_difference": state_max_difference(
+                accepted["committed_samples"][2],
+                dropped_control["committed_samples"][2]),
+        },
+        {
+            "id":
+                "MUTATION-YYZ-MISSION-COMPOSITION-CONTROL-MOMENT-SIGN",
+            "status": "rejected",
+            "expected_realized_moment_B_y_Nm":
+                accepted["interval_executions"][1]["guidance_control"]
+                    ["ideal_moment_actuation"]
+                    ["moment_contribution_about_CoM_B_Nm"][1],
+            "observed_realized_moment_B_y_Nm":
+                reversed_control["interval_executions"][1]
+                    ["guidance_control"]["ideal_moment_actuation"]
+                    ["moment_contribution_about_CoM_B_Nm"][1],
+            "expected_terminal_pitch_rate_B_y_radps":
+                accepted["committed_samples"][2]["omega_BI_B_radps"][1],
+            "observed_terminal_pitch_rate_B_y_radps":
+                reversed_control["committed_samples"][2]
+                    ["omega_BI_B_radps"][1],
+            "max_abs_result_difference": state_max_difference(
+                accepted["committed_samples"][2],
+                reversed_control["committed_samples"][2]),
         },
     ]
     require([entry["id"] for entry in results] ==
@@ -1283,6 +1636,24 @@ def build_reference(cases: dict, repo_root: Path,
                     cases_path: Path) -> dict:
     validate_cases_identity(cases)
     accepted = compose(cases, repo_root)
+    opening_control = accepted["interval_executions"][0]["guidance_control"]
+    second_interval = accepted["interval_executions"][1]
+    control = second_interval["guidance_control"]
+    require(opening_control["guidance"]["pitch_command_rad"] == 0 and
+            opening_control["controller"]["moment_command_Nm"] == 0 and
+            control["source_observation"]["sample_tick"] == 1 and
+            control["guidance"]["raw_pitch_command_rad"] >
+                control["guidance"]["upper_limit_rad"] and
+            control["guidance"]["pitch_command_rad"] == Decimal("0.04") and
+            control["guidance"]["saturated"] and
+            control["controller"]["moment_command_Nm"] == Decimal(20) and
+            control["ideal_moment_actuation"]
+                ["moment_contribution_about_CoM_B_Nm"][1] == Decimal(20) and
+            decimal(second_interval["closure"]
+                    ["moment_total_about_CoM_B_Nm"][1]) -
+                decimal(second_interval["closure_without_control"]
+                        ["moment_total_about_CoM_B_Nm"][1]) == Decimal(20),
+            "accepted guidance/control causal chain differs")
     reversed_cases = copy.deepcopy(cases)
     reversed_cases["component_bindings"].reverse()
     reordered = compose(reversed_cases, repo_root)
@@ -1304,7 +1675,7 @@ def build_reference(cases: dict, repo_root: Path,
         "model_id": MODEL_ID,
         "precision": {
             "implementation":
-                "Python Decimal composition over executable component formula references with boundary recomputation, full-state RK4 and fixture-local structured failure projection",
+                "Python Decimal composition over executable component formula references with committed-observation altitude guidance, bounded pitch-moment control, ideal moment realization, boundary recomputation, full-state RK4 and fixture-local structured failure projection",
             "decimal_digits": getcontext().prec,
         },
         "source_identity": {
@@ -1440,6 +1811,14 @@ def verify_reference(cases: dict, repo_root: Path, cases_path: Path,
         "closing_mass_kg":
             accepted["committed_samples"][2]["committed_mass_kg"],
         "intervals_executed": len(accepted["interval_executions"]),
+        "tick1_pitch_command_rad":
+            accepted["interval_executions"][1]["guidance_control"]
+                ["guidance"]["pitch_command_rad"],
+        "tick1_moment_command_Nm":
+            accepted["interval_executions"][1]["guidance_control"]
+                ["controller"]["moment_command_Nm"],
+        "terminal_pitch_rate_B_y_radps":
+            accepted["committed_samples"][2]["omega_BI_B_radps"][1],
         "minimum_convergence_error_reduction_ratio": min(
             decimal(value) for value in
             accepted["second_interval_convergence"]

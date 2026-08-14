@@ -1,27 +1,29 @@
 {
-  "schema_version": "gnczmkn.yyz-mission-composition-cases/3",
+  "schema_version": "gnczmkn.yyz-mission-composition-cases/4",
   "fixture_id": "REF-YYZ-MISSION-COMPOSITION-001",
   "oracle_id": "ORACLE-YYZ-MISSION-COMPOSITION-001",
   "model_choice": {
     "status": "accepted",
     "owner_role": "scientific_authority",
-    "accepted_scope": "Fixture-local executable composition from resolved YYZ scientific components through two consecutive lookup-composed FrozenIntervals, two atomic rigid-and-mass commits, committed-boundary evaluation, a sealed terminal observation, a frozen mission result and structured diagnostics for three pre-commit failures.",
+    "accepted_scope": "Fixture-local executable composition from resolved YYZ scientific components through two consecutive lookup-composed FrozenIntervals, a committed-observation altitude guidance law, a pitch-moment controller, ideal zero-delay moment realization, two atomic rigid-and-mass commits, committed-boundary evaluation, a sealed terminal observation, a frozen mission result and structured diagnostics for three pre-commit failures.",
     "source_policy": "The source is a fixture input with explicit stable identities and component bindings. It does not define the product MissionSource schema or invoke a product Compiler, Plan, Session or Artifact runtime.",
     "numeric_policy": "REF-YYZ-FROZEN-INTERVAL-001 supplies the accepted interval formulas. Tick 1 recomputes air-data, aero lookup, dimensionalization, propulsion, mass projection and Closure from the newly committed rigid state and mass. Each interval uses one classical RK4 base step; 1/2/4/8 substep results expose fourth-order self-convergence.",
+    "tolerance_policy": "Formula and state comparisons retain 2e-12 absolute/relative tolerances. The derived convergence-ratio comparison uses 5e-4 absolute tolerance because it divides successive O(dt^5) differences; every independently computed ratio must still exceed the 12-fold fourth-order qualification threshold.",
     "reuse_policy": "REF-YYZ-TWO-INTERVAL-MASS-COMMIT-001 contributes the accepted atomic commit time relation. Its independent supplied-force trajectory is not substituted for the lookup-composed trajectory.",
     "termination_policy": "Metrics read committed samples only. Inclusive AtGrid any-of predicates use higher integer priority and ascending predicate_id tie-breaking. The terminal observation seals before the mission result freezes.",
+    "guidance_control_policy": "At each committed boundary, +I-z position and velocity feed a fixture-local altitude PD law. Its bounded pitch command and the committed pure-pitch attitude/rate feed a bounded pitch-moment PD controller. A fixture-local ideal zero-delay transform realizes the current-cycle command as a +B-y moment contribution held in the following FrozenInterval. This two-interval qualification establishes formula, sign, saturation and causal timing only; it makes no stability or overshoot claim.",
     "diagnostic_policy": "The fixture emits immutable diagnostic facts, a separate qualification decision and a failed step outcome for stale Closure timing, a split rigid/mass candidate set and an aero model-domain violation. Codes are stable inside this fixture and do not allocate entries in a production DiagnosticCode registry.",
     "excluded": [
       "canonical YYZ mission, qualification thresholds, assets and production tolerances",
-      "guidance, controller, allocator, actuator dynamics and closed-loop altitude-hold claims",
+      "canonical guidance/controller tuning, allocator, control-surface mapping, actuator dynamics and closed-loop stability or overshoot claims",
       "product MissionSource, Compiler, PlanProofRecord, Session, DiagnosticRecord, DiagnosticCode registry, ObservationBatch, RunOutcome and Artifact contracts",
       "continuous event location, partial-time commit, persistence, evidence durability and R1-R8 runtime capability"
     ]
   },
   "model": {
-    "model_id": "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-003",
-    "mission_source_id": "mission.fixture.yyz.lookup-open-loop@1",
-    "execution_id": "execution.fixture.yyz.lookup-open-loop.0001",
+    "model_id": "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-004",
+    "mission_source_id": "mission.fixture.yyz.lookup-altitude-hold@1",
+    "execution_id": "execution.fixture.yyz.lookup-altitude-hold.0001",
     "subject": "vehicle.fixture.yyz@1",
     "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
     "body_frame_id": "frame.fixture.yyz.body@1",
@@ -42,6 +44,8 @@
       "the shared frame, clock, mass-state, configuration revision, tick interval and base_dt identities agree",
       "the selected FrozenInterval case supplies the interval formulas and a finite tick-1 rigid/mass commit",
       "tick 1 committed rigid and mass state are the only inputs to the recomputed second interval",
+      "guidance and controller read only the current committed rigid sample, apply their declared symmetric limits and expose raw plus bounded values",
+      "the ideal moment realization is current-cycle, zero-delay, unit-gain, valid only over the following interval and adds no force",
       "each interval's rigid and mass candidates share one closing commit identity and become visible together",
       "the second interval one-step RK4 trajectory is accompanied by positive 1/2/4/8 substep error reduction",
       "each diagnostic case resolves one component identity, emits the declared stable fixture code and preserves its base commit after pre-commit failure",
@@ -155,6 +159,24 @@
       "intermediate_commit_id": "commit.fixture.yyz.mission.1",
       "closing_commit_id": "commit.fixture.yyz.mission.2",
       "termination_plan_id": "termination-plan.fixture.yyz.mission-complete@1",
+      "guidance_control": {
+        "guidance_law_id": "guidance.fixture.yyz.altitude-pd@1",
+        "controller_law_id": "controller.fixture.yyz.pitch-moment-pd@1",
+        "actuation_model_id": "actuation.fixture.yyz.ideal-body-moment@1",
+        "observation_source": "current-committed-rigid-sample",
+        "altitude_axis": "+I-z",
+        "attitude_projection": "pure-pitch-q_I_B",
+        "target_altitude_m": 1000.0,
+        "altitude_error_gain_rad_per_m": 0.02,
+        "vertical_speed_gain_rad_s_per_m": 0.05,
+        "pitch_command_limit_rad": 0.04,
+        "pitch_error_gain_Nm_per_rad": 500.0,
+        "pitch_rate_gain_Nm_s_per_rad": 80.0,
+        "moment_command_limit_Nm": 25.0,
+        "realization_gain": 1.0,
+        "realized_axis": "+B-y",
+        "command_timing": "current-cycle-held-over-[t_k,t_k+1)"
+      },
       "predicates": [
         {
           "predicate_id": "remaining-mass-floor",
@@ -249,7 +271,7 @@
   "tolerances": {
     "formula_absolute": 2e-12,
     "formula_relative": 2e-12,
-    "convergence_ratio_absolute": 5e-5,
+    "convergence_ratio_absolute": 5e-4,
     "stored_decimal_absolute": "1e-68"
   },
   "equivalence_cases": [
@@ -309,6 +331,26 @@
       "id": "INVALID-YYZ-MISSION-COMPOSITION-NO-TERMINAL",
       "mutation": "raise all completion thresholds beyond the committed trajectory",
       "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ-MISSION-COMPOSITION-GUIDANCE-GAIN",
+      "mutation": "make the altitude-error gain negative",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ-MISSION-COMPOSITION-PITCH-LIMIT",
+      "mutation": "make the symmetric pitch-command limit zero",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ-MISSION-COMPOSITION-MOMENT-LIMIT",
+      "mutation": "make the symmetric moment-command limit zero",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ-MISSION-COMPOSITION-ACTUATION-GAIN",
+      "mutation": "change the fixture-local ideal realization gain away from unity",
+      "expected_status": "input-domain-error"
     }
   ],
   "mutation_cases": [
@@ -335,6 +377,31 @@
     {
       "id": "MUTATION-YYZ-MISSION-COMPOSITION-RESULT-BEFORE-OBSERVATION",
       "mutation": "freeze the mission result before sealing the terminal observation",
+      "expected_status": "oracle-mismatch"
+    },
+    {
+      "id": "MUTATION-YYZ-MISSION-COMPOSITION-STALE-GUIDANCE-OBSERVATION",
+      "mutation": "reuse the tick-0 committed rigid sample for tick-1 guidance and control",
+      "expected_status": "oracle-mismatch"
+    },
+    {
+      "id": "MUTATION-YYZ-MISSION-COMPOSITION-VERTICAL-RATE-SIGN",
+      "mutation": "add descending vertical speed feedback instead of opposing it",
+      "expected_status": "oracle-mismatch"
+    },
+    {
+      "id": "MUTATION-YYZ-MISSION-COMPOSITION-BYPASS-GUIDANCE-LIMIT",
+      "mutation": "feed the raw altitude-law output to the controller without pitch-command limiting",
+      "expected_status": "oracle-mismatch"
+    },
+    {
+      "id": "MUTATION-YYZ-MISSION-COMPOSITION-DROP-CONTROL-MOMENT",
+      "mutation": "publish the moment command while omitting its ideal realization from Closure",
+      "expected_status": "oracle-mismatch"
+    },
+    {
+      "id": "MUTATION-YYZ-MISSION-COMPOSITION-CONTROL-MOMENT-SIGN",
+      "mutation": "realize the bounded pitch moment on the negative body-y axis",
       "expected_status": "oracle-mismatch"
     }
   ]

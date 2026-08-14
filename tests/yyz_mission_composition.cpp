@@ -16,11 +16,11 @@ namespace {
 constexpr const char* kOracleId =
     "ORACLE-YYZ-MISSION-COMPOSITION-001";
 constexpr const char* kModelId =
-    "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-003";
+    "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-004";
 constexpr const char* kMissionSourceId =
-    "mission.fixture.yyz.lookup-open-loop@1";
+    "mission.fixture.yyz.lookup-altitude-hold@1";
 constexpr const char* kExecutionId =
-    "execution.fixture.yyz.lookup-open-loop.0001";
+    "execution.fixture.yyz.lookup-altitude-hold.0001";
 constexpr const char* kSubject = "vehicle.fixture.yyz@1";
 constexpr const char* kInertialFrameId =
     "frame.fixture.yyz.inertial-cartesian@1";
@@ -87,6 +87,25 @@ struct Predicate {
     std::int64_t priority = 0;
 };
 
+struct GuidanceControlDefinition {
+    std::string guidance_law_id;
+    std::string controller_law_id;
+    std::string actuation_model_id;
+    std::string observation_source;
+    std::string altitude_axis;
+    std::string attitude_projection;
+    double target_altitude_m = 0.0;
+    double altitude_error_gain_rad_per_m = 0.0;
+    double vertical_speed_gain_rad_s_per_m = 0.0;
+    double pitch_command_limit_rad = 0.0;
+    double pitch_error_gain_nm_per_rad = 0.0;
+    double pitch_rate_gain_nm_s_per_rad = 0.0;
+    double moment_command_limit_nm = 0.0;
+    double realization_gain = 0.0;
+    std::string realized_axis;
+    std::string command_timing;
+};
+
 struct Input {
     std::string mission_source_id;
     std::string execution_id;
@@ -104,6 +123,7 @@ struct Input {
     std::string integration_strategy;
     std::string commit_policy;
     std::string evaluation_mode;
+    GuidanceControlDefinition guidance_control;
     std::vector<Binding> bindings;
     std::vector<Predicate> predicates;
 };
@@ -140,6 +160,62 @@ struct Closure {
     Vec3 moment_total_about_com_b_nm;
 };
 
+struct ControlSourceObservation {
+    std::int64_t sample_tick = 0;
+    std::string commit_id;
+    std::string quality;
+    double altitude_i_z_m = 0.0;
+    double vertical_speed_i_z_mps = 0.0;
+    double pitch_rad = 0.0;
+    double pitch_rate_b_y_radps = 0.0;
+};
+
+struct GuidanceResult {
+    std::string law_id;
+    std::int64_t evaluation_tick = 0;
+    double target_altitude_m = 0.0;
+    double altitude_error_m = 0.0;
+    double altitude_feedback_rad = 0.0;
+    double vertical_speed_feedback_rad = 0.0;
+    double raw_pitch_command_rad = 0.0;
+    double lower_limit_rad = 0.0;
+    double upper_limit_rad = 0.0;
+    double pitch_command_rad = 0.0;
+    bool saturated = false;
+};
+
+struct ControllerResult {
+    std::string law_id;
+    std::int64_t evaluation_tick = 0;
+    double pitch_error_rad = 0.0;
+    double proportional_moment_nm = 0.0;
+    double rate_damping_moment_nm = 0.0;
+    double raw_moment_command_nm = 0.0;
+    double lower_limit_nm = 0.0;
+    double upper_limit_nm = 0.0;
+    double moment_command_nm = 0.0;
+    bool saturated = false;
+};
+
+struct IdealMomentActuation {
+    std::string model_id;
+    std::int64_t basis_configuration_revision = 0;
+    std::int64_t sample_tick = 0;
+    std::int64_t valid_from_tick = 0;
+    std::int64_t valid_until_tick = 0;
+    bool zero_delay = false;
+    double realization_gain = 0.0;
+    Vec3 force_contribution_b_n;
+    Vec3 moment_contribution_about_com_b_nm;
+};
+
+struct GuidanceControlResult {
+    ControlSourceObservation source_observation;
+    GuidanceResult guidance;
+    ControllerResult controller;
+    IdealMomentActuation ideal_moment_actuation;
+};
+
 struct RigidDerivative {
     Vec3 force_total_i_n;
     Vec3 acceleration_i_mps2;
@@ -171,6 +247,8 @@ struct IntervalExecution {
     Environment environment;
     AirData air_data;
     AeroLookup aero_lookup;
+    GuidanceControlResult guidance_control;
+    Closure closure_without_control;
     Closure closure;
     RigidDerivative rigid_derivative;
     MassTransition mass_transition;
@@ -296,6 +374,11 @@ struct Options {
     bool stale_boundary_closure = false;
     bool low_priority_wins = false;
     bool result_before_observation = false;
+    bool stale_guidance_observation = false;
+    bool reverse_vertical_speed_feedback = false;
+    bool bypass_guidance_limit = false;
+    bool drop_control_moment = false;
+    bool reverse_control_moment_sign = false;
 };
 
 enum class DiagnosticKind {
@@ -356,6 +439,11 @@ struct ProbeResult {
     Composition stale_boundary_closure;
     Composition low_priority;
     Composition result_before_observation;
+    Composition stale_guidance_observation;
+    Composition reverse_vertical_speed_feedback;
+    Composition bypass_guidance_limit;
+    Composition drop_control_moment;
+    Composition reverse_control_moment_sign;
     std::vector<DiagnosticResult> diagnostic_results;
 };
 
@@ -555,10 +643,12 @@ std::vector<std::string> eventOrder() {
         "resolve-components",
         "publish-opening-commit",
         "evaluate-opening-boundary",
+        "evaluate-guidance-control-0",
         "evaluate-interval-0",
         "stage-commit-1",
         "commit-rigid-and-mass-1",
         "evaluate-intermediate-boundary",
+        "evaluate-guidance-control-1",
         "evaluate-interval-1",
         "stage-commit-2",
         "commit-rigid-and-mass-2",
@@ -634,6 +724,39 @@ void validateInput(const Input& input) {
                       input.commit_policy == "atomic-rigid-and-mass" &&
                       input.evaluation_mode == "AtGrid",
                   "mission execution policy differs");
+    const GuidanceControlDefinition& control = input.guidance_control;
+    requireDomain(
+        control.guidance_law_id ==
+                "guidance.fixture.yyz.altitude-pd@1" &&
+            control.controller_law_id ==
+                "controller.fixture.yyz.pitch-moment-pd@1" &&
+            control.actuation_model_id ==
+                "actuation.fixture.yyz.ideal-body-moment@1" &&
+            control.observation_source ==
+                "current-committed-rigid-sample" &&
+            control.altitude_axis == "+I-z" &&
+            control.attitude_projection == "pure-pitch-q_I_B" &&
+            control.realized_axis == "+B-y" &&
+            control.command_timing ==
+                "current-cycle-held-over-[t_k,t_k+1)",
+        "guidance/control identity or timing differs");
+    requireDomain(
+        finite(control.target_altitude_m) &&
+            finite(control.altitude_error_gain_rad_per_m) &&
+            control.altitude_error_gain_rad_per_m > 0.0 &&
+            finite(control.vertical_speed_gain_rad_s_per_m) &&
+            control.vertical_speed_gain_rad_s_per_m > 0.0 &&
+            finite(control.pitch_command_limit_rad) &&
+            control.pitch_command_limit_rad > 0.0 &&
+            finite(control.pitch_error_gain_nm_per_rad) &&
+            control.pitch_error_gain_nm_per_rad > 0.0 &&
+            finite(control.pitch_rate_gain_nm_s_per_rad) &&
+            control.pitch_rate_gain_nm_s_per_rad > 0.0 &&
+            finite(control.moment_command_limit_nm) &&
+            control.moment_command_limit_nm > 0.0 &&
+            finite(control.realization_gain) &&
+            control.realization_gain == 1.0,
+        "guidance/control gains, limits or realization differ");
 
     const std::vector<Binding> expected = expectedBindings();
     std::set<std::string> roles;
@@ -698,6 +821,24 @@ Input acceptedInput() {
     input.integration_strategy = "FrozenInterval";
     input.commit_policy = "atomic-rigid-and-mass";
     input.evaluation_mode = "AtGrid";
+    input.guidance_control = {
+        "guidance.fixture.yyz.altitude-pd@1",
+        "controller.fixture.yyz.pitch-moment-pd@1",
+        "actuation.fixture.yyz.ideal-body-moment@1",
+        "current-committed-rigid-sample",
+        "+I-z",
+        "pure-pitch-q_I_B",
+        1000.0,
+        0.02,
+        0.05,
+        0.04,
+        500.0,
+        80.0,
+        25.0,
+        1.0,
+        "+B-y",
+        "current-cycle-held-over-[t_k,t_k+1)",
+    };
     input.bindings = expectedBindings();
     input.predicates = {
         {"remaining-mass-floor", "remaining_mass_kg", "<=", 99.85,
@@ -959,9 +1100,103 @@ Vec3 formulaZero(const Vec3& value) {
             formulaZero(value.z)};
 }
 
+GuidanceControlResult evaluateGuidanceControl(
+    const GuidanceControlDefinition& definition,
+    std::int64_t evaluation_tick,
+    const CommittedSample& observation,
+    const Options& options) {
+    const Quaternion attitude = normalize(observation.state.q_i_b);
+    requireDomain(attitude.x == 0.0 && attitude.z == 0.0 &&
+                      attitude.w > 0.0,
+                  "fixture pitch projection requires a nonsingular "
+                  "pure-y q_I_B");
+    const double pitch_rad = -2.0 * std::atan2(attitude.y, attitude.w);
+    const double altitude_error = definition.target_altitude_m -
+        observation.state.position_i_m.z;
+    const double altitude_feedback =
+        definition.altitude_error_gain_rad_per_m * altitude_error;
+    double vertical_speed_feedback =
+        definition.vertical_speed_gain_rad_s_per_m *
+        observation.state.velocity_i_mps.z;
+    if (!options.reverse_vertical_speed_feedback) {
+        vertical_speed_feedback = -vertical_speed_feedback;
+    }
+    const double raw_pitch_command =
+        altitude_feedback + vertical_speed_feedback;
+    const double limited_pitch_command = std::clamp(
+        raw_pitch_command, -definition.pitch_command_limit_rad,
+        definition.pitch_command_limit_rad);
+    const bool guidance_saturated =
+        limited_pitch_command != raw_pitch_command;
+    const double pitch_command = options.bypass_guidance_limit
+        ? raw_pitch_command : limited_pitch_command;
+
+    const double pitch_error = pitch_command - pitch_rad;
+    const double proportional_moment =
+        definition.pitch_error_gain_nm_per_rad * pitch_error;
+    const double rate_damping_moment =
+        -definition.pitch_rate_gain_nm_s_per_rad *
+        observation.state.omega_bi_b_radps.y;
+    const double raw_moment_command =
+        proportional_moment + rate_damping_moment;
+    const double moment_command = std::clamp(
+        raw_moment_command, -definition.moment_command_limit_nm,
+        definition.moment_command_limit_nm);
+    const bool controller_saturated =
+        moment_command != raw_moment_command;
+    double realized_moment = definition.realization_gain * moment_command;
+    if (options.drop_control_moment) {
+        realized_moment = 0.0;
+    }
+    if (options.reverse_control_moment_sign) {
+        realized_moment = -realized_moment;
+    }
+
+    return {
+        {observation.sample_tick,
+         observation.commit_id,
+         observation.quality,
+         observation.state.position_i_m.z,
+         observation.state.velocity_i_mps.z,
+         pitch_rad,
+         observation.state.omega_bi_b_radps.y},
+        {definition.guidance_law_id,
+         evaluation_tick,
+         definition.target_altitude_m,
+         altitude_error,
+         altitude_feedback,
+         vertical_speed_feedback,
+         raw_pitch_command,
+         -definition.pitch_command_limit_rad,
+         definition.pitch_command_limit_rad,
+         pitch_command,
+         guidance_saturated && !options.bypass_guidance_limit},
+        {definition.controller_law_id,
+         evaluation_tick,
+         pitch_error,
+         proportional_moment,
+         rate_damping_moment,
+         raw_moment_command,
+         -definition.moment_command_limit_nm,
+         definition.moment_command_limit_nm,
+         moment_command,
+         controller_saturated},
+        {definition.actuation_model_id,
+         kConfigurationRevision,
+         evaluation_tick,
+         evaluation_tick,
+         evaluation_tick + 1,
+         true,
+         definition.realization_gain,
+         {0.0, 0.0, 0.0},
+         {0.0, realized_moment, 0.0}},
+    };
+}
+
 IntervalExecution executeInterval(
     std::int64_t sample_tick, const State& opening_state,
     double opening_mass_kg, double closing_mass_kg,
+    const GuidanceControlResult& guidance_control,
     const IntervalExecution* stale_source = nullptr) {
     const Environment environment{
         {0.0, 0.0, -9.80665},
@@ -1012,14 +1247,21 @@ IntervalExecution executeInterval(
     const Vec3 propulsion_lever{0.0, 0.2, 0.0};
     const Vec3 propulsion_moment = add(
         {0.0, 0.0, 20.0}, cross(propulsion_lever, propulsion_force));
-    Closure closure{
+    Closure closure_without_control{
         formulaZero(add(aero_force, propulsion_force)),
         formulaZero(add(aero_moment, propulsion_moment)),
     };
+    Closure closure = closure_without_control;
     if (stale_source != nullptr) {
         air_data = stale_source->air_data;
         lookup = stale_source->aero_lookup;
+        closure_without_control = stale_source->closure_without_control;
         closure = stale_source->closure;
+    } else {
+        closure.moment_total_about_com_b_nm = formulaZero(add(
+            closure.moment_total_about_com_b_nm,
+            guidance_control.ideal_moment_actuation
+                .moment_contribution_about_com_b_nm));
     }
     const RigidDerivative derivative = evaluateRigidDerivative(
         opening_state, opening_mass_kg, closure, environment);
@@ -1046,6 +1288,8 @@ IntervalExecution executeInterval(
         environment,
         air_data,
         lookup,
+        guidance_control,
+        closure_without_control,
         closure,
         derivative,
         mass,
@@ -1204,8 +1448,10 @@ Composition compose(const Input& input, const Options& options = {}) {
     const double intermediate_mass = options.nonatomic_mass_commit
         ? 100.0 : 99.95;
     const CommittedSample opening = openingSample(opening_mass);
+    const GuidanceControlResult first_control = evaluateGuidanceControl(
+        input.guidance_control, 0, opening, options);
     const IntervalExecution first_interval = executeInterval(
-        0, opening.state, 100.0, intermediate_mass);
+        0, opening.state, 100.0, intermediate_mass, first_control);
     const State intermediate_state = integrateSubsteps(
         opening.state, 100.0, first_interval.closure,
         first_interval.environment, 1).terminal_state;
@@ -1213,8 +1459,13 @@ Composition compose(const Input& input, const Options& options = {}) {
         1, "commit.fixture.yyz.mission.1", intermediate_state,
         intermediate_mass);
     const double closing_mass = intermediate_mass - 0.05;
+    const CommittedSample& guidance_observation =
+        options.stale_guidance_observation ? opening : intermediate;
+    const GuidanceControlResult second_control = evaluateGuidanceControl(
+        input.guidance_control, 1, guidance_observation, options);
     const IntervalExecution second_interval = executeInterval(
         1, intermediate.state, intermediate_mass, closing_mass,
+        second_control,
         options.stale_boundary_closure ? &first_interval : nullptr);
     const ConvergenceEvidence convergence = convergenceEvidence(
         intermediate.state, intermediate_mass, second_interval,
@@ -1510,17 +1761,29 @@ ProbeResult runProbe() {
                 near(result.accepted.interval_executions[0].aero_lookup
                           .coefficients[0], 27.0 / 850.0) &&
                 near(result.accepted.interval_executions[0].closure
-                         .force_total_b_n.x, -3215.0 / 34.0) &&
+                          .force_total_b_n.x, -3215.0 / 34.0) &&
+                near(result.accepted.interval_executions[1]
+                         .closure_without_control
+                         .moment_total_about_com_b_nm.y,
+                      16.766216427351054) &&
+                result.accepted.interval_executions[1].guidance_control
+                        .source_observation.sample_tick == 1 &&
+                result.accepted.interval_executions[1].guidance_control
+                        .guidance.saturated &&
+                near(result.accepted.interval_executions[1].guidance_control
+                         .guidance.pitch_command_rad, 0.04) &&
+                near(result.accepted.interval_executions[1].guidance_control
+                         .controller.moment_command_nm, 20.0) &&
                 near(result.accepted.interval_executions[1].closure
                          .moment_total_about_com_b_nm.y,
-                     16.766216427351054) &&
+                     36.766216427351054) &&
                 std::all_of(
                     result.accepted.second_interval_convergence
                         .error_reduction_ratios.begin(),
                     result.accepted.second_interval_convergence
                         .error_reduction_ratios.end(),
                     [](double value) { return value >= 12.0; }),
-            "lookup-composed interval facts differ");
+            "lookup-composed guidance/control interval facts differ");
 
     Input reversed = input;
     std::reverse(reversed.bindings.begin(), reversed.bindings.end());
@@ -1592,6 +1855,30 @@ ProbeResult runProbe() {
                 predicate.threshold = 10.0;
             }
         });
+    expectDomainRejection(
+        result.invalid_input_rejections,
+        "INVALID-YYZ-MISSION-COMPOSITION-GUIDANCE-GAIN", input,
+        [](Input& value) {
+            value.guidance_control.altitude_error_gain_rad_per_m = -0.01;
+        });
+    expectDomainRejection(
+        result.invalid_input_rejections,
+        "INVALID-YYZ-MISSION-COMPOSITION-PITCH-LIMIT", input,
+        [](Input& value) {
+            value.guidance_control.pitch_command_limit_rad = 0.0;
+        });
+    expectDomainRejection(
+        result.invalid_input_rejections,
+        "INVALID-YYZ-MISSION-COMPOSITION-MOMENT-LIMIT", input,
+        [](Input& value) {
+            value.guidance_control.moment_command_limit_nm = 0.0;
+        });
+    expectDomainRejection(
+        result.invalid_input_rejections,
+        "INVALID-YYZ-MISSION-COMPOSITION-ACTUATION-GAIN", input,
+        [](Input& value) {
+            value.guidance_control.realization_gain = 1.1;
+        });
 
     Options early;
     early.early_mass_visibility = true;
@@ -1608,6 +1895,22 @@ ProbeResult runProbe() {
     Options wrong_order;
     wrong_order.result_before_observation = true;
     result.result_before_observation = compose(input, wrong_order);
+    Options stale_guidance;
+    stale_guidance.stale_guidance_observation = true;
+    result.stale_guidance_observation = compose(input, stale_guidance);
+    Options wrong_vertical_sign;
+    wrong_vertical_sign.reverse_vertical_speed_feedback = true;
+    result.reverse_vertical_speed_feedback = compose(
+        input, wrong_vertical_sign);
+    Options unlimited_guidance;
+    unlimited_guidance.bypass_guidance_limit = true;
+    result.bypass_guidance_limit = compose(input, unlimited_guidance);
+    Options dropped_control;
+    dropped_control.drop_control_moment = true;
+    result.drop_control_moment = compose(input, dropped_control);
+    Options reversed_control;
+    reversed_control.reverse_control_moment_sign = true;
+    result.reverse_control_moment_sign = compose(input, reversed_control);
     require(near(result.early_mass.committed_samples[0]
                      .committed_mass_kg, 99.95) &&
                 near(result.nonatomic_mass.committed_samples[1]
@@ -1620,7 +1923,19 @@ ProbeResult runProbe() {
                         .state) > 0.08 &&
                 result.low_priority.mission_result.termination.reason_code ==
                     "duration-complete" &&
-                !result.result_before_observation.terminal_observation.sealed,
+                !result.result_before_observation.terminal_observation.sealed &&
+                result.stale_guidance_observation.interval_executions[1]
+                        .guidance_control.source_observation.sample_tick == 0 &&
+                result.reverse_vertical_speed_feedback.interval_executions[1]
+                        .guidance_control.guidance.pitch_command_rad < 0.0 &&
+                result.bypass_guidance_limit.interval_executions[1]
+                        .guidance_control.guidance.pitch_command_rad > 0.05 &&
+                near(result.drop_control_moment.interval_executions[1]
+                         .guidance_control.ideal_moment_actuation
+                         .moment_contribution_about_com_b_nm.y, 0.0) &&
+                result.reverse_control_moment_sign.interval_executions[1]
+                        .guidance_control.ideal_moment_actuation
+                        .moment_contribution_about_com_b_nm.y < 0.0,
             "a mission-composition mutation matched the accepted result");
     result.diagnostic_results = buildDiagnosticResults(
         result.accepted, result.nonatomic_mass,
@@ -1716,6 +2031,10 @@ void writeExecutionTrace(const Composition& value) {
         value.evaluation_trace[1].decision.action;
     const std::string& terminal_action =
         value.evaluation_trace.back().decision.action;
+    const GuidanceControlResult& first_control =
+        value.interval_executions[0].guidance_control;
+    const GuidanceControlResult& second_control =
+        value.interval_executions[1].guidance_control;
     std::cout << "[{\"order\":0,\"event\":\"resolve-components\","
                  "\"sample_tick\":0,\"component_count\":"
               << value.resolved_components.size()
@@ -1725,36 +2044,52 @@ void writeExecutionTrace(const Composition& value) {
               << "\"},{\"order\":2,\"event\":\""
                  "evaluate-opening-boundary\",\"sample_tick\":0,"
                  "\"action\":\""
-              << opening_action
+               << opening_action
               << "\"},{\"order\":3,\"event\":\""
-                 "evaluate-interval-0\",\"sample_tick\":0,"
-                 "\"valid_until_tick\":1},{\"order\":4,\"event\":\""
-                 "stage-commit-1\",\"sample_tick\":0,"
-                 "\"candidate_tick\":1},{\"order\":5,\"event\":\""
+                 "evaluate-guidance-control-0\",\"sample_tick\":0,"
+                 "\"observation_sample_tick\":"
+              << first_control.source_observation.sample_tick
+              << ",\"pitch_command_rad\":";
+    writeNumber(first_control.guidance.pitch_command_rad);
+    std::cout << ",\"moment_command_Nm\":";
+    writeNumber(first_control.controller.moment_command_nm);
+    std::cout << "},{\"order\":4,\"event\":\"evaluate-interval-0\","
+                 "\"sample_tick\":0,\"valid_until_tick\":1},"
+                 "{\"order\":5,\"event\":\"stage-commit-1\","
+                 "\"sample_tick\":0,\"candidate_tick\":1},"
+                 "{\"order\":6,\"event\":\""
                  "commit-rigid-and-mass-1\",\"sample_tick\":1,"
                  "\"commit_id\":\""
               << intermediate_id
-              << "\"},{\"order\":6,\"event\":\""
+              << "\"},{\"order\":7,\"event\":\""
                  "evaluate-intermediate-boundary\",\"sample_tick\":1,"
                  "\"action\":\""
               << intermediate_action
-              << "\"},{\"order\":7,\"event\":\""
-                 "evaluate-interval-1\",\"sample_tick\":1,"
-                 "\"valid_until_tick\":2},{\"order\":8,\"event\":\""
-                 "stage-commit-2\",\"sample_tick\":1,"
-                 "\"candidate_tick\":2},{\"order\":9,\"event\":\""
+              << "\"},{\"order\":8,\"event\":\""
+                 "evaluate-guidance-control-1\",\"sample_tick\":1,"
+                 "\"observation_sample_tick\":"
+              << second_control.source_observation.sample_tick
+              << ",\"pitch_command_rad\":";
+    writeNumber(second_control.guidance.pitch_command_rad);
+    std::cout << ",\"moment_command_Nm\":";
+    writeNumber(second_control.controller.moment_command_nm);
+    std::cout << "},{\"order\":9,\"event\":\"evaluate-interval-1\","
+                 "\"sample_tick\":1,\"valid_until_tick\":2},"
+                 "{\"order\":10,\"event\":\"stage-commit-2\","
+                 "\"sample_tick\":1,\"candidate_tick\":2},"
+                 "{\"order\":11,\"event\":\""
                  "commit-rigid-and-mass-2\",\"sample_tick\":2,"
                  "\"commit_id\":\""
               << closing_id
-              << "\"},{\"order\":10,\"event\":\""
+              << "\"},{\"order\":12,\"event\":\""
                  "evaluate-terminal-boundary\",\"sample_tick\":2,"
                  "\"action\":\""
               << terminal_action
-              << "\"},{\"order\":11,\"event\":\""
+              << "\"},{\"order\":13,\"event\":\""
                  "seal-terminal-observation\",\"sample_tick\":2,"
                  "\"commit_id\":\""
               << closing_id
-              << "\"},{\"order\":12,\"event\":\""
+              << "\"},{\"order\":14,\"event\":\""
                  "freeze-mission-result\",\"sample_tick\":2,"
                  "\"status\":\""
               << value.mission_result.final_status << "\"}]";
@@ -1847,6 +2182,89 @@ void writeAeroLookup(const AeroLookup& value) {
     std::cout << "]}";
 }
 
+void writeClosure(const Closure& value) {
+    std::cout << "{\"force_total_B_N\":";
+    writeVec3(value.force_total_b_n);
+    std::cout << ",\"moment_total_about_CoM_B_Nm\":";
+    writeVec3(value.moment_total_about_com_b_nm);
+    std::cout << '}';
+}
+
+void writeGuidanceControl(const GuidanceControlResult& value) {
+    const ControlSourceObservation& source = value.source_observation;
+    std::cout << "{\"source_observation\":{\"sample_tick\":"
+              << source.sample_tick << ",\"commit_id\":\""
+              << source.commit_id << "\",\"quality\":\"" << source.quality
+              << "\",\"altitude_I_z_m\":";
+    writeNumber(source.altitude_i_z_m);
+    std::cout << ",\"vertical_speed_I_z_mps\":";
+    writeNumber(source.vertical_speed_i_z_mps);
+    std::cout << ",\"pitch_rad\":";
+    writeNumber(source.pitch_rad);
+    std::cout << ",\"pitch_rate_B_y_radps\":";
+    writeNumber(source.pitch_rate_b_y_radps);
+
+    const GuidanceResult& guidance = value.guidance;
+    std::cout << "},\"guidance\":{\"law_id\":\"" << guidance.law_id
+              << "\",\"evaluation_tick\":" << guidance.evaluation_tick
+              << ",\"target_altitude_m\":";
+    writeNumber(guidance.target_altitude_m);
+    std::cout << ",\"altitude_error_m\":";
+    writeNumber(guidance.altitude_error_m);
+    std::cout << ",\"altitude_feedback_rad\":";
+    writeNumber(guidance.altitude_feedback_rad);
+    std::cout << ",\"vertical_speed_feedback_rad\":";
+    writeNumber(guidance.vertical_speed_feedback_rad);
+    std::cout << ",\"raw_pitch_command_rad\":";
+    writeNumber(guidance.raw_pitch_command_rad);
+    std::cout << ",\"lower_limit_rad\":";
+    writeNumber(guidance.lower_limit_rad);
+    std::cout << ",\"upper_limit_rad\":";
+    writeNumber(guidance.upper_limit_rad);
+    std::cout << ",\"pitch_command_rad\":";
+    writeNumber(guidance.pitch_command_rad);
+    std::cout << ",\"saturated\":";
+    writeBoolean(guidance.saturated);
+
+    const ControllerResult& controller = value.controller;
+    std::cout << "},\"controller\":{\"law_id\":\"" << controller.law_id
+              << "\",\"evaluation_tick\":" << controller.evaluation_tick
+              << ",\"pitch_error_rad\":";
+    writeNumber(controller.pitch_error_rad);
+    std::cout << ",\"proportional_moment_Nm\":";
+    writeNumber(controller.proportional_moment_nm);
+    std::cout << ",\"rate_damping_moment_Nm\":";
+    writeNumber(controller.rate_damping_moment_nm);
+    std::cout << ",\"raw_moment_command_Nm\":";
+    writeNumber(controller.raw_moment_command_nm);
+    std::cout << ",\"lower_limit_Nm\":";
+    writeNumber(controller.lower_limit_nm);
+    std::cout << ",\"upper_limit_Nm\":";
+    writeNumber(controller.upper_limit_nm);
+    std::cout << ",\"moment_command_Nm\":";
+    writeNumber(controller.moment_command_nm);
+    std::cout << ",\"saturated\":";
+    writeBoolean(controller.saturated);
+
+    const IdealMomentActuation& actuation = value.ideal_moment_actuation;
+    std::cout << "},\"ideal_moment_actuation\":{\"model_id\":\""
+              << actuation.model_id
+              << "\",\"basis_configuration_revision\":"
+              << actuation.basis_configuration_revision
+              << ",\"sample_tick\":" << actuation.sample_tick
+              << ",\"valid_from_tick\":" << actuation.valid_from_tick
+              << ",\"valid_until_tick\":" << actuation.valid_until_tick
+              << ",\"zero_delay\":";
+    writeBoolean(actuation.zero_delay);
+    std::cout << ",\"realization_gain\":";
+    writeNumber(actuation.realization_gain);
+    std::cout << ",\"force_contribution_B_N\":";
+    writeVec3(actuation.force_contribution_b_n);
+    std::cout << ",\"moment_contribution_about_CoM_B_Nm\":";
+    writeVec3(actuation.moment_contribution_about_com_b_nm);
+    std::cout << "}}";
+}
+
 void writeRigidDerivative(const RigidDerivative& value) {
     std::cout << "{\"force_total_I_N\":";
     writeVec3(value.force_total_i_n);
@@ -1881,11 +2299,13 @@ void writeInterval(const IntervalExecution& value) {
     writeAirData(value.air_data);
     std::cout << ",\"aero_lookup\":";
     writeAeroLookup(value.aero_lookup);
-    std::cout << ",\"closure\":{\"force_total_B_N\":";
-    writeVec3(value.closure.force_total_b_n);
-    std::cout << ",\"moment_total_about_CoM_B_Nm\":";
-    writeVec3(value.closure.moment_total_about_com_b_nm);
-    std::cout << "},\"rigid_derivative_at_opening\":";
+    std::cout << ",\"guidance_control\":";
+    writeGuidanceControl(value.guidance_control);
+    std::cout << ",\"closure_without_control\":";
+    writeClosure(value.closure_without_control);
+    std::cout << ",\"closure\":";
+    writeClosure(value.closure);
+    std::cout << ",\"rigid_derivative_at_opening\":";
     writeRigidDerivative(value.rigid_derivative);
     const MassTransition& mass = value.mass_transition;
     std::cout << ",\"mass_transition\":{\"mass_state_id\":\""
@@ -2205,7 +2625,125 @@ void writeMutations(const ProbeResult& value) {
     std::cout << ",\"observed_terminal_observation_sealed\":";
     writeBoolean(value.result_before_observation.mission_result
                      .terminal_observation_sealed);
-    std::cout << ",\"max_abs_result_difference\":1}]";
+    std::cout << ",\"max_abs_result_difference\":1},{\"id\":\""
+                 "MUTATION-YYZ-MISSION-COMPOSITION-"
+                 "STALE-GUIDANCE-OBSERVATION\",\"status\":\"rejected\","
+                 "\"expected_observation_sample_tick\":"
+              << value.accepted.interval_executions[1].guidance_control
+                     .source_observation.sample_tick
+              << ",\"observed_observation_sample_tick\":"
+              << value.stale_guidance_observation.interval_executions[1]
+                     .guidance_control.source_observation.sample_tick
+              << ",\"expected_pitch_command_rad\":";
+    writeNumber(value.accepted.interval_executions[1].guidance_control
+                    .guidance.pitch_command_rad);
+    std::cout << ",\"observed_pitch_command_rad\":";
+    writeNumber(value.stale_guidance_observation.interval_executions[1]
+                    .guidance_control.guidance.pitch_command_rad);
+    std::cout << ",\"expected_moment_command_Nm\":";
+    writeNumber(value.accepted.interval_executions[1].guidance_control
+                    .controller.moment_command_nm);
+    std::cout << ",\"observed_moment_command_Nm\":";
+    writeNumber(value.stale_guidance_observation.interval_executions[1]
+                    .guidance_control.controller.moment_command_nm);
+    std::cout << ",\"max_abs_result_difference\":";
+    writeNumber(stateMaxDifference(
+        value.accepted.committed_samples[2].state,
+        value.stale_guidance_observation.committed_samples[2].state));
+
+    std::cout << "},{\"id\":\"MUTATION-YYZ-MISSION-COMPOSITION-"
+                 "VERTICAL-RATE-SIGN\",\"status\":\"rejected\","
+                 "\"expected_vertical_speed_feedback_rad\":";
+    writeNumber(value.accepted.interval_executions[1].guidance_control
+                    .guidance.vertical_speed_feedback_rad);
+    std::cout << ",\"observed_vertical_speed_feedback_rad\":";
+    writeNumber(value.reverse_vertical_speed_feedback.interval_executions[1]
+                    .guidance_control.guidance
+                    .vertical_speed_feedback_rad);
+    std::cout << ",\"expected_pitch_command_rad\":";
+    writeNumber(value.accepted.interval_executions[1].guidance_control
+                    .guidance.pitch_command_rad);
+    std::cout << ",\"observed_pitch_command_rad\":";
+    writeNumber(value.reverse_vertical_speed_feedback.interval_executions[1]
+                    .guidance_control.guidance.pitch_command_rad);
+    std::cout << ",\"expected_moment_command_Nm\":";
+    writeNumber(value.accepted.interval_executions[1].guidance_control
+                    .controller.moment_command_nm);
+    std::cout << ",\"observed_moment_command_Nm\":";
+    writeNumber(value.reverse_vertical_speed_feedback.interval_executions[1]
+                    .guidance_control.controller.moment_command_nm);
+    std::cout << ",\"max_abs_result_difference\":";
+    writeNumber(stateMaxDifference(
+        value.accepted.committed_samples[2].state,
+        value.reverse_vertical_speed_feedback.committed_samples[2].state));
+
+    std::cout << "},{\"id\":\"MUTATION-YYZ-MISSION-COMPOSITION-"
+                 "BYPASS-GUIDANCE-LIMIT\",\"status\":\"rejected\","
+                 "\"expected_guidance_saturated\":";
+    writeBoolean(value.accepted.interval_executions[1].guidance_control
+                     .guidance.saturated);
+    std::cout << ",\"observed_guidance_saturated\":";
+    writeBoolean(value.bypass_guidance_limit.interval_executions[1]
+                     .guidance_control.guidance.saturated);
+    std::cout << ",\"expected_pitch_command_rad\":";
+    writeNumber(value.accepted.interval_executions[1].guidance_control
+                    .guidance.pitch_command_rad);
+    std::cout << ",\"observed_pitch_command_rad\":";
+    writeNumber(value.bypass_guidance_limit.interval_executions[1]
+                    .guidance_control.guidance.pitch_command_rad);
+    std::cout << ",\"expected_moment_command_Nm\":";
+    writeNumber(value.accepted.interval_executions[1].guidance_control
+                    .controller.moment_command_nm);
+    std::cout << ",\"observed_moment_command_Nm\":";
+    writeNumber(value.bypass_guidance_limit.interval_executions[1]
+                    .guidance_control.controller.moment_command_nm);
+    std::cout << ",\"max_abs_result_difference\":";
+    writeNumber(stateMaxDifference(
+        value.accepted.committed_samples[2].state,
+        value.bypass_guidance_limit.committed_samples[2].state));
+
+    std::cout << "},{\"id\":\"MUTATION-YYZ-MISSION-COMPOSITION-"
+                 "DROP-CONTROL-MOMENT\",\"status\":\"rejected\","
+                 "\"expected_moment_command_Nm\":";
+    writeNumber(value.accepted.interval_executions[1].guidance_control
+                    .controller.moment_command_nm);
+    std::cout << ",\"observed_moment_command_Nm\":";
+    writeNumber(value.drop_control_moment.interval_executions[1]
+                    .guidance_control.controller.moment_command_nm);
+    std::cout << ",\"expected_realized_moment_B_y_Nm\":";
+    writeNumber(value.accepted.interval_executions[1].guidance_control
+                    .ideal_moment_actuation
+                    .moment_contribution_about_com_b_nm.y);
+    std::cout << ",\"observed_realized_moment_B_y_Nm\":";
+    writeNumber(value.drop_control_moment.interval_executions[1]
+                    .guidance_control.ideal_moment_actuation
+                    .moment_contribution_about_com_b_nm.y);
+    std::cout << ",\"max_abs_result_difference\":";
+    writeNumber(stateMaxDifference(
+        value.accepted.committed_samples[2].state,
+        value.drop_control_moment.committed_samples[2].state));
+
+    std::cout << "},{\"id\":\"MUTATION-YYZ-MISSION-COMPOSITION-"
+                 "CONTROL-MOMENT-SIGN\",\"status\":\"rejected\","
+                 "\"expected_realized_moment_B_y_Nm\":";
+    writeNumber(value.accepted.interval_executions[1].guidance_control
+                    .ideal_moment_actuation
+                    .moment_contribution_about_com_b_nm.y);
+    std::cout << ",\"observed_realized_moment_B_y_Nm\":";
+    writeNumber(value.reverse_control_moment_sign.interval_executions[1]
+                    .guidance_control.ideal_moment_actuation
+                    .moment_contribution_about_com_b_nm.y);
+    std::cout << ",\"expected_terminal_pitch_rate_B_y_radps\":";
+    writeNumber(value.accepted.committed_samples[2]
+                    .state.omega_bi_b_radps.y);
+    std::cout << ",\"observed_terminal_pitch_rate_B_y_radps\":";
+    writeNumber(value.reverse_control_moment_sign.committed_samples[2]
+                    .state.omega_bi_b_radps.y);
+    std::cout << ",\"max_abs_result_difference\":";
+    writeNumber(stateMaxDifference(
+        value.accepted.committed_samples[2].state,
+        value.reverse_control_moment_sign.committed_samples[2].state));
+    std::cout << "}]";
 }
 
 void writeDiagnosticParameters(const DiagnosticResult& value) {
