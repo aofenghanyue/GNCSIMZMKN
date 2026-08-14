@@ -79,7 +79,6 @@
     "The accepted disposition preserves each row's t_k boundary and published-state projection while retiring Legacy column order, concatenated headers, numeric text format, session filename and output directory"
   ],
   "open_tasks": [
-    "R0-LEG-002",
     "R0-SCI-003"
   ]
 }

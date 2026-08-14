@@ -58,8 +58,5 @@
     "Independent Decimal and C++17 implementations agree on mass=8, position=10 and the position=8 early-commit control",
     "Rejects a journal containing any commit before both candidates complete",
     "The accepted disposition preserves the candidate barrier and committed-t_k reads while retiring Legacy container, loop-order and interface structure"
-  ],
-  "open_tasks": [
-    "R0-LEG-002"
   ]
 }

@@ -76,8 +76,5 @@
     "Rejects split snapshot closure, an unregistered member and duplicate scope ownership",
     "Accepts member declaration and packed storage reordering after stable identity binding",
     "The accepted disposition preserves shared candidates, one scope commit and unique identity-bound membership while retiring the Legacy group surface and manual vector packing"
-  ],
-  "open_tasks": [
-    "R0-LEG-002"
   ]
 }

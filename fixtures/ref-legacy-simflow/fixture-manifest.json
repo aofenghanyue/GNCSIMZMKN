@@ -1,7 +1,7 @@
 {
   "schema_version": "gnczmkn.fixture-manifest/1",
   "fixture_id": "REF-LEGACY-SIMFLOW-001",
-  "status": "capturing",
+  "status": "executable",
   "purpose": "Make Legacy pre-run case materialization and ordinary single-mission replay executable without preserving Legacy case numbering, directory names or runtime APIs.",
   "authority": "validation_lead",
   "provenance": {
@@ -95,9 +95,6 @@
     "Missing injected input, hidden SimFlow replay context, reused batch root, case-local replay input and replay-result mismatch are rejected",
     "Legacy case index/directory changes and target case-manifest presence are accepted after semantic normalization; manifest content and identity remain pending",
     "Legacy CLI entrypoint/mode spelling changes are accepted after materialization and effective-mission input roles are resolved",
-    "Preserve and Retire recommendations remain pending until the repository owner accepts the disposition choice"
-  ],
-  "open_tasks": [
-    "R0-LEG-002"
+    "The accepted disposition preserves pre-run self-contained mission materialization and ordinary compile/run replay while retiring Legacy case numbering, directory/manifest absence, API, CLI spelling and old Mission JSON shape"
   ]
 }

@@ -58,8 +58,5 @@
     "Independent Decimal and C++17 implementations agree on both publish boundaries and the analytic t1 state",
     "Rejects a publish operation that changes committed altitude",
     "Repository owner accepted the Preserve and Retire disposition split"
-  ],
-  "open_tasks": [
-    "R0-LEG-002"
   ]
 }

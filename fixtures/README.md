@@ -23,6 +23,6 @@ Fixture 是可复制、可校验、带 provenance 的规范实例。每个目录
 
 `ref-legacy-stop` 已达到 `executable`，包含两份真实 t0 dataset、两份 record/termination trace、独立 Python/Decimal reference 与 C++17 timeline probe；终止判定会在返回 `true` 前读回已 flush 的停止状态，两项 record-field event 与 dataset 列按稳定 identity/header 映射后允许换序，并分别拒绝提前终止、评估时行不可见、缺失终止行、终态时间推进和停止后额外观测。已接受的处置保留停止状态 terminal `Observation` 先于对应 `RunOutcome` 的时间语义，退出 Legacy reason 文本、顺序规则与 runtime/CSV surface。
 
-`ref-legacy-simflow` 处于 `capturing`，包含固定 base mission、两行 variation matrix、两次真实 `--simflow` 捕获和两次普通 `--config` 重放；普通重放使用 case 目录外的任务副本并从独立全新目录启动，四份 dataset 与两份 effective mission 分别保持 byte-identical，独立 Python/C++17 reference 验证输入注入、effective-mission JSON 重编码、requested-input、case-source 与 dataset 列重排、普通任务重放、目录、case-manifest absence 与 CLI spelling 身份无关性和五条直接失败路径。
+`ref-legacy-simflow` 已达到 `executable`，包含固定 base mission、两行 variation matrix、两次真实 `--simflow` 捕获和两次普通 `--config` 重放；普通重放使用 case 目录外的任务副本并从独立全新目录启动，四份 dataset 与两份 effective mission 分别保持 byte-identical，独立 Python/C++17 reference 验证输入注入、effective-mission JSON 重编码、requested-input、case-source 与 dataset 列重排、普通任务重放、目录、case-manifest absence 与 CLI spelling 身份无关性和五条直接失败路径。已接受的处置保留预运行自包含任务物化与 ordinary compile/run replay，退出 Legacy case identity 和 runtime surface。
 
 禁止把蓝图中的演示数值直接升级为 golden。Scientific Authority 需要确认来源、公式和容差。

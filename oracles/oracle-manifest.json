@@ -1,7 +1,7 @@
 {
   "schema_version": "gnczmkn.oracle-manifest/1",
   "oracle_set_id": "ORACLE-GNCZMKN-R0-001",
-  "status": "capturing",
+  "status": "executable",
   "provenance": {
     "source_refs": [
       "reference/legacy/source-manifest.json",
@@ -142,7 +142,7 @@
     {
       "id": "ORACLE-SIMFLOW-07",
       "level": "workflow",
-      "status": "capturing",
+      "status": "executable",
       "claim": "Case materialization remains outside single-mission runtime semantics.",
       "expected_facts": [
         "The selected hot matrix row injects engine.temp_level=2 and aero.drag_bias=-0.03 into a self-contained effective mission before runtime execution; JSON member order/whitespace, requested-input declaration order and case-source column order do not change that mission.",

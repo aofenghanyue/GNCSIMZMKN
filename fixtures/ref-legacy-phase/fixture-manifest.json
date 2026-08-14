@@ -64,8 +64,5 @@
     "Independent C++17 scheduling and Python trace validation agree with all seven Legacy events",
     "Rejects a process/output swap and a duplicate input phase",
     "Repository owner accepted the Preserve and Retire disposition split"
-  ],
-  "open_tasks": [
-    "R0-LEG-002"
   ]
 }

@@ -147,30 +147,30 @@
     }
   ],
   "disposition_decision": {
-    "status": "needs_owner_decision",
+    "status": "accepted",
     "owner_role": "validation_lead",
     "facts": [
       {
         "fact_id": "FACT-SIMFLOW-MATERIALIZATION-BOUNDARY",
-        "recommended_disposition": "Preserve",
+        "disposition": "Preserve",
         "difference_reason": "DeclaredModelChoice",
         "target_mapping": "Workflow materializes a self-contained effective mission before single-case runtime execution"
       },
       {
         "fact_id": "FACT-SIMFLOW-ORDINARY-REPLAY",
-        "recommended_disposition": "Preserve",
+        "disposition": "Preserve",
         "difference_reason": "DeclaredModelChoice",
         "target_mapping": "Each materialized case uses the ordinary compile/run path without hidden SimFlow runtime state"
       },
       {
         "fact_id": "FACT-SIMFLOW-LEGACY-IDENTITY",
-        "recommended_disposition": "Retire",
+        "disposition": "Retire",
         "difference_reason": "AccidentalStructure",
         "target_mapping": "case_000001, numeric index, directory pattern and absence of a case manifest"
       },
       {
         "fact_id": "FACT-SIMFLOW-LEGACY-SURFACE",
-        "recommended_disposition": "Retire",
+        "disposition": "Retire",
         "difference_reason": "AccidentalStructure",
         "target_mapping": "SimFlowRunner, numeric materializer class, CLI spelling and old Mission JSON shape"
       }
