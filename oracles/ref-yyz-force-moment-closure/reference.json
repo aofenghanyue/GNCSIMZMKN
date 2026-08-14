@@ -5,8 +5,8 @@
   "model_id": "MODEL-YYZ-FORCE-MOMENT-CLOSURE-001",
   "input_identity": {
     "path": "fixtures/ref-yyz-force-moment-closure/cases.json",
-    "bytes": 6451,
-    "sha256": "b229f8145ea274dc315eafe0442d9c87e7de3c60733f2fcadb19d5e3c2afe35b"
+    "bytes": 6705,
+    "sha256": "29102f67b744caa24fbdfc0af7fd6e686b4994467d5221795484f4a07e38d975"
   },
   "reference_method": {
     "implementation": "CPython standard-library decimal",
@@ -360,6 +360,11 @@
     {
       "id": "MUTATION-YYZ-CLOSURE-REVERSED-APPLICATION-VECTOR",
       "mutation": "use r_application_to_CoM_B in the cross product",
+      "expected_status": "oracle-mismatch"
+    },
+    {
+      "id": "MUTATION-YYZ-CLOSURE-PRETRANSPORTED-APPLICATION-MOMENT",
+      "mutation": "add the propulsion r_CoM_to_application_B x force_B term to moment_at_application_B before closure transports the same force again",
       "expected_status": "oracle-mismatch"
     },
     {

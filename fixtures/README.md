@@ -13,7 +13,7 @@ Fixture 是可复制、可校验、带 provenance 的规范实例。每个目录
 
 `ref-yyz-6dof-core` 已达到 `executable`，包含已接受的 fixture-local 惯性笛卡尔刚体方程、公式 intermediates、独立 Decimal/C++17 实现、解析平移与主轴自旋轨迹、非主轴无外力矩高精度轨迹、姿态与角速度四阶收敛、转动能和角动量模守恒检查、ExactGrid 终止、阶段失败及输入域拒绝。canonical mission、环境、气动、推进、制导控制、终止指标与生产容差仍在 `R0-SCI-003` 后续范围内。
 
-`ref-yyz-force-moment-closure` 已达到 `executable`，包含已接受的 fixture-local `FrozenInterval` 体轴力/矩闭合、质心到作用点的力矩搬移、按 source identity 的规范化结果、独立 Decimal/C++17 实现、闭合到刚体核心的解析短轨迹、贡献顺序等价、五条输入域拒绝和两条物理 mutation。重力保持独立惯性加速度；canonical 子系统模型、可变质量属性和 candidate/algebraic closure 仍在后续范围内。
+`ref-yyz-force-moment-closure` 已达到 `executable`，包含已接受的 fixture-local `FrozenInterval` 体轴力/矩闭合、质心到作用点的力矩搬移、按 source identity 的规范化结果、独立 Decimal/C++17 实现、闭合到刚体核心的解析短轨迹、贡献顺序等价、五条输入域拒绝和三条物理 mutation。重力保持独立惯性加速度；canonical 子系统模型、可变质量属性和 candidate/algebraic closure 仍在后续范围内。
 
 `ref-yyz-air-data-kinematics` 已达到 `executable`，包含已接受的 fixture-local 右手 `x-forward/y-right/z-down` 体轴、风速相减、被动 Hamilton 惯性系到体轴旋转、无 clamp 的 alpha/beta、动压与 Mach 公式。80 位 Decimal 与独立 C++17 实现交叉检查五个公式 case、两条等价性、九条输入域失败和四条 sign/direction/clamp mutation；canonical 环境、传感器、气动适用域和产品 contract 仍在后续范围内。
 

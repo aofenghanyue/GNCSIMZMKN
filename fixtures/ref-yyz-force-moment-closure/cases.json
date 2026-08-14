@@ -143,6 +143,7 @@
   ],
   "mutation_cases": [
     {"id": "MUTATION-YYZ-CLOSURE-REVERSED-APPLICATION-VECTOR", "mutation": "use r_application_to_CoM_B in the cross product", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-CLOSURE-PRETRANSPORTED-APPLICATION-MOMENT", "mutation": "add the propulsion r_CoM_to_application_B x force_B term to moment_at_application_B before closure transports the same force again", "expected_status": "oracle-mismatch"},
     {"id": "MUTATION-YYZ-CLOSURE-GRAVITY-DOUBLE-COUNT", "mutation": "add mass times gravity to body-force closure before rigid-core evaluation", "expected_status": "oracle-mismatch"}
   ]
 }

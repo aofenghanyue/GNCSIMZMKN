@@ -38,7 +38,7 @@
     },
     {
       "id": "FACT-YYZ-CLOSURE-FAILURE",
-      "claim": "Contribution order is semantically irrelevant, incompatible identity/time inputs are rejected, and reversed application-vector or gravity-double-count implementations fail the oracle.",
+      "claim": "Contribution order is semantically irrelevant, incompatible identity/time inputs are rejected, and reversed application-vector, pre-transported application moment or gravity-double-count implementations fail the oracle.",
       "tolerance_policy": "Equivalence, rejection identities and mutation dispositions are exact.",
       "evidence_refs": [
         "fixtures/ref-yyz-force-moment-closure/cases.json",

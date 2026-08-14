@@ -22,7 +22,8 @@ The bundle contains:
 - explicit separation of body-force closure from inertial gravity;
 - direct rejection of duplicate source, frame mismatch, configuration
   revision mismatch, interval mismatch and non-finite force;
-- reversed application-vector and gravity-double-count mutations.
+- reversed application-vector, pre-transported application moment and
+  gravity-double-count mutations.
 
 The Python implementation uses only standard-library `decimal`. The C++17
 probe independently implements closure, minimal rigid-body RK4 and all failure

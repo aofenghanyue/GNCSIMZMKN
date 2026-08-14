@@ -285,6 +285,22 @@ def independent_mutation_rejections(cases: dict) -> set[str]:
     expected_formula = closure_reference(formula_case)
     reversed_application = closure_reference(
         formula_case, reverse_application_vector=True)
+    pretransported_case = copy.deepcopy(formula_case)
+    propulsion = next(
+        contribution for contribution in pretransported_case["contributions"]
+        if contribution["source_id"] == "propulsion.main")
+    propulsion["moment_at_application_B_Nm"] = add(
+        vector(propulsion["moment_at_application_B_Nm"],
+               "propulsion.main.moment_at_application_B"),
+        cross(vector(propulsion["r_CoM_to_application_B_m"],
+                     "propulsion.main.r_CoM_to_application_B"),
+              vector(propulsion["force_B_N"],
+                     "propulsion.main.force_B")))
+    pretransported_application = closure_reference(pretransported_case)
+    require(pretransported_application[
+                "total_moment_about_CoM_B_Nm"] == [
+                    Decimal("-44"), Decimal("-78"), Decimal("-32")],
+            "pre-transported application-moment mutation shape differs")
     expected_trajectory = analytic_trajectory(trajectory_case)
     doubled_gravity = analytic_trajectory(
         trajectory_case, gravity_double_count=True)
@@ -292,6 +308,10 @@ def independent_mutation_rejections(cases: dict) -> set[str]:
     if reversed_application["total_moment_about_CoM_B_Nm"] != \
             expected_formula["total_moment_about_CoM_B_Nm"]:
         rejected.add("MUTATION-YYZ-CLOSURE-REVERSED-APPLICATION-VECTOR")
+    if pretransported_application["total_moment_about_CoM_B_Nm"] != \
+            expected_formula["total_moment_about_CoM_B_Nm"]:
+        rejected.add(
+            "MUTATION-YYZ-CLOSURE-PRETRANSPORTED-APPLICATION-MOMENT")
     if doubled_gravity["trajectory"][-1] != \
             expected_trajectory["trajectory"][-1]:
         rejected.add("MUTATION-YYZ-CLOSURE-GRAVITY-DOUBLE-COUNT")

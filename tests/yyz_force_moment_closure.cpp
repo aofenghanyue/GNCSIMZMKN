@@ -787,6 +787,29 @@ ProbeResult runProbe() {
             "MUTATION-YYZ-CLOSURE-REVERSED-APPLICATION-VECTOR");
     }
 
+    std::vector<Contribution> pretransported = formula_contributions;
+    const auto propulsion = std::find_if(
+        pretransported.begin(), pretransported.end(),
+        [](const Contribution& contribution) {
+            return contribution.source_id == "propulsion.main";
+        });
+    require(propulsion != pretransported.end(),
+            "propulsion contribution is missing from the closure fixture");
+    propulsion->moment_at_application_b_nm = add(
+        propulsion->moment_at_application_b_nm,
+        cross(propulsion->r_com_to_application_b_m,
+              propulsion->force_b_n));
+    const ClosureResult pretransported_application = closeContributions(
+        formula_context, pretransported);
+    require(near(pretransported_application.total_moment_about_com_b_nm,
+                 {-44.0, -78.0, -32.0}),
+            "pre-transported application-moment mutation shape differs");
+    if (!near(pretransported_application.total_moment_about_com_b_nm,
+              result.formula_closure.total_moment_about_com_b_nm)) {
+        result.mutation_rejections.push_back(
+            "MUTATION-YYZ-CLOSURE-PRETRANSPORTED-APPLICATION-MOMENT");
+    }
+
     ClosureResult gravity_double_count = trajectory_closure;
     gravity_double_count.total_force_b_n = add(
         gravity_double_count.total_force_b_n,
@@ -799,7 +822,7 @@ ProbeResult runProbe() {
         result.mutation_rejections.push_back(
             "MUTATION-YYZ-CLOSURE-GRAVITY-DOUBLE-COUNT");
     }
-    require(result.mutation_rejections.size() == 2,
+    require(result.mutation_rejections.size() == 3,
             "a closure physical mutation matched the accepted result");
     return result;
 }
