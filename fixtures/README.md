@@ -33,6 +33,8 @@ Fixture 是可复制、可校验、带 provenance 的规范实例。每个目录
 
 `ref-yyz-two-interval-mass-commit` 已达到 `executable`，把 constant-geometry scalar burn 与两个连续 `FrozenInterval` 组合为 candidate → atomic commit → next consumer 轨迹。区间 0 使用 `120 kg` 并在 tick 1 提交 `119.95 kg` 与刚体候选，区间 1 读取两项新 committed state 并在 tick 2 提交 `119.90 kg`。80 位 Decimal 分段闭式轨迹与独立 C++17 RK4 完成 451 项交叉检查、一步/两子步等价、十三条输入拒绝和三条时间 mutation。query 重算、fuel geometry、depletion event、canonical assets 与产品 contract 仍在后续范围内。
 
+`ref-yyz-run-evaluation` 已达到 `executable`，把上述三份 committed boundary sample 投影为 duration、downrange、remaining/consumed mass、terminal/peak speed 及极值指标，并在 AtGrid 边界执行 inclusive any-of 终止。complete 路径在 tick 2 同时满足 duration 与 downrange，按优先级选定 downrange；abort 路径在 tick 1 命中 remaining-mass floor。80 位 Decimal 与独立 C++17 实现完成 599 项交叉检查、predicate 顺序等价、十二条输入拒绝和五条 candidate visibility、阈值、优先级、终端封存顺序及终止后读取 mutation。两条路径均先封存 terminal observation，再冻结 fixture-local result；canonical thresholds、连续事件定位、产品 evaluator/Observation/RunOutcome contract 与 evidence durability 仍在后续范围内。
+
 `ref-legacy-sync-commit` 已达到 `executable`，将 `ORACLE-YYZ-SYNC-03` 的冻结来源、独立 Decimal 结果、C++17 candidate/commit journal 和 early-commit 失败用例连成切片；已接受的处置保留 candidate barrier 与 committed-`t_k` 读取，并退出 Legacy 实现形状。
 
 `ref-legacy-publish` 已达到 `executable`，交叉验证 publish 前后状态恒等、truth 边界时间、解析轨迹与 publish-time mutation 失败；已接受的处置保留只读发布与 `t_k` 边界刷新，并退出 Legacy 发布接口和存储形状。

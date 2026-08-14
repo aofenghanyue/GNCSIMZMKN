@@ -1,0 +1,67 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-YYZ-RUN-EVALUATION-001",
+  "status": "executable",
+  "purpose": "Provide executable committed-sample metrics, AtGrid termination, terminal observation and compact result semantics for the current YYZ trajectory.",
+  "authority": "scientific_authority",
+  "provenance": {
+    "source_refs": [
+      "design-notes/gnczmkn-architecture-roadmap/06-simulation-kernel-time-and-lifecycle.md#11-终止模型",
+      "design-notes/gnczmkn-architecture-roadmap/06-simulation-kernel-time-and-lifecycle.md#19-runoutcome",
+      "design-notes/gnczmkn-architecture-roadmap/14-cycle-dataflow-state-transaction-and-continuous-closure.md#75-termination-branch",
+      "design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md#4-reference-a-的周期执行表",
+      "fixtures/ref-yyz-two-interval-mass-commit/cases.json",
+      "fixtures/ref-legacy-stop/input.json"
+    ],
+    "notes": "The repository owner accepted the recommended fixture-local inclusive AtGrid, priority and terminal-observation choices. This bundle is read-only and does not introduce product runtime contracts."
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-YYZ-RUN-EVALUATION-METRICS",
+      "claim": "Independent Decimal and C++17 implementations derive duration, downrange, mass and speed metrics exclusively from contiguous committed samples.",
+      "tolerance_policy": "Identity, tick and sample visibility are exact; derived numeric values use the declared absolute-plus-relative tolerance.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-run-evaluation/cases.json",
+        "oracles/ref-yyz-run-evaluation/reference.json",
+        "tests/yyz_run_evaluation.cpp",
+        "tools/yyz_run_evaluation_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-YYZ-RUN-EVALUATION-TERMINATION",
+      "claim": "Inclusive AtGrid any-of predicates select higher priority at simultaneous triggers, map Complete and Abort to distinct final statuses, and stop at the first terminal committed boundary.",
+      "tolerance_policy": "Predicate, priority, action, status and boundary identities are exact.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-run-evaluation/cases.json",
+        "oracles/ref-yyz-run-evaluation/reference.json",
+        "tests/yyz_run_evaluation.cpp",
+        "tools/yyz_run_evaluation_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-YYZ-RUN-EVALUATION-TERMINAL-RESULT",
+      "claim": "The terminal committed sample and structured decision are sealed before the result freezes, and no post-terminal sample contributes to metrics or decisions.",
+      "tolerance_policy": "Terminal event order, seal state and post-terminal count are exact.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-run-evaluation/cases.json",
+        "oracles/ref-yyz-run-evaluation/reference.json",
+        "tests/yyz_run_evaluation.cpp",
+        "tools/yyz_run_evaluation_reference.py"
+      ]
+    }
+  ],
+  "required_artifacts": [
+    "fixtures/ref-yyz-run-evaluation/README.md",
+    "fixtures/ref-yyz-run-evaluation/cases.json",
+    "oracles/ref-yyz-run-evaluation/reference.json",
+    "tests/yyz_run_evaluation.cpp",
+    "tools/yyz_run_evaluation_reference.py",
+    "CMakeLists.txt"
+  ],
+  "acceptance": [
+    "The bundle evaluates both complete and abort paths from committed samples and preserves the first terminal boundary",
+    "The Decimal reference and C++17 probe share no implementation and neither imports product or Legacy code",
+    "Canonical thresholds, continuous location, lifecycle, durability and public contracts remain outside this slice"
+  ],
+  "open_tasks": ["R0-SCI-003"]
+}

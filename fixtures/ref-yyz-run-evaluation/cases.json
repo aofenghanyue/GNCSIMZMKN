@@ -1,0 +1,126 @@
+{
+  "schema_version": "gnczmkn.yyz-run-evaluation-cases/1",
+  "fixture_id": "REF-YYZ-RUN-EVALUATION-001",
+  "oracle_id": "ORACLE-YYZ-RUN-EVALUATION-001",
+  "model_choice": {
+    "status": "accepted",
+    "owner_role": "scientific_authority",
+    "accepted_scope": "Fixture-local read-only evaluation of committed YYZ trajectory samples into duration, downrange, remaining-mass, consumed-mass and speed metrics, AtGrid termination decisions, a sealed terminal observation and a compact RunOutcome-shaped result.",
+    "sampling_policy": "Metrics and predicates read only committed boundary samples. Relations are inclusive. Evaluation stops at the first terminal boundary and retains that boundary in the terminal observation.",
+    "composition_policy": "TerminationPlan uses any-of composition. Higher integer priority wins simultaneous triggers; equal priority uses ascending stable predicate_id. Abort maps to Terminated and Complete maps to Completed.",
+    "observation_policy": "The terminal boundary order is publish committed sample, evaluate metrics, evaluate termination, seal terminal observation, then freeze result. No later sample is evaluated after a terminal decision.",
+    "excluded": [
+      "canonical mission thresholds and qualification limits",
+      "stateful window metrics, continuous event location and partial-time commit",
+      "product Observation, TerminationDecision or RunOutcome contracts",
+      "session lifecycle, evidence durability, adapters and R1-R8 runtime capability"
+    ]
+  },
+  "model": {
+    "model_id": "MODEL-YYZ-RUN-EVALUATION-001",
+    "trajectory_source_fixture_id": "REF-YYZ-TWO-INTERVAL-MASS-COMMIT-001",
+    "subject": "vehicle.fixture.yyz@1",
+    "clock_domain": "clock.fixture.yyz.simulation@1",
+    "evaluation_mode": "AtGrid",
+    "composition": "any",
+    "priority_policy": "higher-integer-then-ascending-predicate-id",
+    "evidence_validity": "Valid",
+    "validity_domain": [
+      "base_dt_s is positive and committed samples are finite",
+      "sample ticks are contiguous from zero and time_s equals tick * base_dt_s",
+      "commit ids are nonempty and unique, quality is Valid and mass is positive nonincreasing",
+      "position and velocity use the declared inertial frame",
+      "predicate ids are unique, priorities are nonnegative and relations are >= or <=",
+      "predicate metrics are duration_s, downrange_m or remaining_mass_kg",
+      "every fixture case reaches one AtGrid terminal decision"
+    ]
+  },
+  "tolerances": {
+    "formula_absolute": 2e-12,
+    "formula_relative": 2e-12,
+    "stored_decimal_absolute": "1e-68"
+  },
+  "trajectory": {
+    "base_dt_s": 0.1,
+    "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+    "samples": [
+      {
+        "sample_tick": 0,
+        "time_s": 0.0,
+        "commit_id": "commit.fixture.yyz.0",
+        "quality": "Valid",
+        "position_I_m": [0.0, 0.0, 0.0],
+        "velocity_I_mps": [10.0, 0.0, 0.0],
+        "committed_mass_kg": 120.0
+      },
+      {
+        "sample_tick": 1,
+        "time_s": 0.1,
+        "commit_id": "commit.fixture.yyz.1",
+        "quality": "Valid",
+        "position_I_m": [1.01, 0.0, 0.0],
+        "velocity_I_mps": [10.2, 0.0, 0.0],
+        "committed_mass_kg": 119.95
+      },
+      {
+        "sample_tick": 2,
+        "time_s": 0.2,
+        "commit_id": "commit.fixture.yyz.2",
+        "quality": "Valid",
+        "position_I_m": [2.040004168403501458941225510629428928720300125052105043768236765318882867861609, 0.0, 0.0],
+        "velocity_I_mps": [10.40008336807002917882451021258857857440600250104210087536473530637765735723218, 0.0, 0.0],
+        "committed_mass_kg": 119.9
+      }
+    ]
+  },
+  "cases": [
+    {
+      "id": "CASE-YYZ-RUN-EVALUATION-COMPLETE",
+      "plan_id": "termination-plan.fixture.yyz.complete@1",
+      "requested_duration_s": 0.2,
+      "predicates": [
+        {"predicate_id": "remaining-mass-floor", "metric_id": "remaining_mass_kg", "relation": "<=", "threshold": 119.8, "action": "Abort", "reason_code": "remaining-mass-floor", "priority": 300},
+        {"predicate_id": "duration-limit", "metric_id": "duration_s", "relation": ">=", "threshold": 0.2, "action": "Complete", "reason_code": "duration-complete", "priority": 100},
+        {"predicate_id": "downrange-goal", "metric_id": "downrange_m", "relation": ">=", "threshold": 2.040004168403501458941225510629428928720300125052105043768236765318882867861609, "action": "Complete", "reason_code": "downrange-goal", "priority": 200}
+      ]
+    },
+    {
+      "id": "CASE-YYZ-RUN-EVALUATION-MASS-ABORT",
+      "plan_id": "termination-plan.fixture.yyz.mass-abort@1",
+      "requested_duration_s": 1.0,
+      "predicates": [
+        {"predicate_id": "downrange-goal", "metric_id": "downrange_m", "relation": ">=", "threshold": 20.0, "action": "Complete", "reason_code": "downrange-goal", "priority": 200},
+        {"predicate_id": "remaining-mass-floor", "metric_id": "remaining_mass_kg", "relation": "<=", "threshold": 119.95, "action": "Abort", "reason_code": "remaining-mass-floor", "priority": 300},
+        {"predicate_id": "duration-limit", "metric_id": "duration_s", "relation": ">=", "threshold": 1.0, "action": "Complete", "reason_code": "duration-complete", "priority": 100}
+      ]
+    }
+  ],
+  "equivalence_cases": [
+    {
+      "id": "EQUIV-YYZ-RUN-EVALUATION-PREDICATE-ORDER",
+      "operation": "reverse the predicate declaration order for both cases",
+      "expected": "decision traces, metric summaries, terminal observations and result summaries remain equal"
+    }
+  ],
+  "invalid_input_cases": [
+    {"id": "INVALID-YYZ-RUN-EVALUATION-NONPOSITIVE-DT", "mutation": "set base_dt_s to zero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-RUN-EVALUATION-TICK-GAP", "mutation": "change the terminal sample tick to three", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-RUN-EVALUATION-TIME-MISMATCH", "mutation": "change the tick-one time", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-RUN-EVALUATION-DUPLICATE-COMMIT", "mutation": "reuse the tick-zero commit id at tick one", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-RUN-EVALUATION-QUALITY", "mutation": "mark one committed sample Invalid", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-RUN-EVALUATION-MASS-INCREASE", "mutation": "increase committed mass at tick one", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-RUN-EVALUATION-NONFINITE-STATE", "mutation": "set one velocity component to NaN", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-RUN-EVALUATION-DUPLICATE-PREDICATE", "mutation": "duplicate one predicate id", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-RUN-EVALUATION-RELATION", "mutation": "use an unsupported strict relation", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-RUN-EVALUATION-NEGATIVE-PRIORITY", "mutation": "set one priority negative", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-RUN-EVALUATION-METRIC-ID", "mutation": "use an unsupported predicate metric", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-RUN-EVALUATION-NO-TERMINAL", "mutation": "raise every completion threshold beyond the supplied trajectory", "expected_status": "input-domain-error"}
+  ],
+  "mutation_cases": [
+    {"id": "MUTATION-YYZ-RUN-EVALUATION-EARLY-MASS-CANDIDATE", "mutation": "read each next mass candidate at the current boundary", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-RUN-EVALUATION-STRICT-THRESHOLDS", "mutation": "replace inclusive threshold relations with strict comparisons", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-RUN-EVALUATION-LOW-PRIORITY-WINS", "mutation": "select the lowest-priority simultaneous trigger", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-RUN-EVALUATION-OUTCOME-BEFORE-OBSERVATION", "mutation": "freeze the result before sealing the terminal observation", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-RUN-EVALUATION-POST-TERMINAL-SAMPLE", "mutation": "continue evaluating samples after the first terminal boundary", "expected_status": "oracle-mismatch"}
+  ]
+}

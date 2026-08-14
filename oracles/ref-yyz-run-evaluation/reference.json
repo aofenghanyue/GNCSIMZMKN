@@ -1,0 +1,605 @@
+{
+  "schema_version": "gnczmkn.yyz-run-evaluation-reference/1",
+  "fixture_id": "REF-YYZ-RUN-EVALUATION-001",
+  "oracle_id": "ORACLE-YYZ-RUN-EVALUATION-001",
+  "model_id": "MODEL-YYZ-RUN-EVALUATION-001",
+  "precision": {
+    "implementation": "Python standard-library Decimal committed-sample evaluator",
+    "decimal_digits": 80
+  },
+  "input_identity": {
+    "path": "fixtures/ref-yyz-run-evaluation/cases.json",
+    "bytes": 8238,
+    "sha256": "bfe5cbf306537271495db9fc3b1d5d59705259743c2ff8f06131cc3f9b9a1f3a"
+  },
+  "cases": {
+    "CASE-YYZ-RUN-EVALUATION-COMPLETE": {
+      "id": "CASE-YYZ-RUN-EVALUATION-COMPLETE",
+      "plan_id": "termination-plan.fixture.yyz.complete@1",
+      "model_id": "MODEL-YYZ-RUN-EVALUATION-001",
+      "evaluated_boundaries": [
+        {
+          "sample_tick": 0,
+          "time_s": "0",
+          "commit_id": "commit.fixture.yyz.0",
+          "metrics": {
+            "duration_s": "0",
+            "downrange_m": "0",
+            "remaining_mass_kg": "120",
+            "consumed_mass_kg": "0",
+            "speed_mps": "10"
+          },
+          "predicate_results": [
+            {
+              "predicate_id": "downrange-goal",
+              "metric_id": "downrange_m",
+              "relation": ">=",
+              "threshold": "2.040004168403501458941225510629428928720300125052105043768236765318882867861609",
+              "observed": "0",
+              "met": false,
+              "action": "Complete",
+              "reason_code": "downrange-goal",
+              "priority": 200
+            },
+            {
+              "predicate_id": "duration-limit",
+              "metric_id": "duration_s",
+              "relation": ">=",
+              "threshold": "0.2",
+              "observed": "0",
+              "met": false,
+              "action": "Complete",
+              "reason_code": "duration-complete",
+              "priority": 100
+            },
+            {
+              "predicate_id": "remaining-mass-floor",
+              "metric_id": "remaining_mass_kg",
+              "relation": "<=",
+              "threshold": "119.8",
+              "observed": "120",
+              "met": false,
+              "action": "Abort",
+              "reason_code": "remaining-mass-floor",
+              "priority": 300
+            }
+          ],
+          "decision": {
+            "action": "Continue",
+            "reason_code": "none",
+            "trigger_time_s": "0",
+            "subject": "vehicle.fixture.yyz@1",
+            "priority": 0,
+            "metrics": {
+              "duration_s": "0",
+              "downrange_m": "0",
+              "remaining_mass_kg": "120"
+            },
+            "message_key": "yyz.termination.continue",
+            "params": {}
+          }
+        },
+        {
+          "sample_tick": 1,
+          "time_s": "0.1",
+          "commit_id": "commit.fixture.yyz.1",
+          "metrics": {
+            "duration_s": "0.1",
+            "downrange_m": "1.01",
+            "remaining_mass_kg": "119.95",
+            "consumed_mass_kg": "0.05",
+            "speed_mps": "10.2"
+          },
+          "predicate_results": [
+            {
+              "predicate_id": "downrange-goal",
+              "metric_id": "downrange_m",
+              "relation": ">=",
+              "threshold": "2.040004168403501458941225510629428928720300125052105043768236765318882867861609",
+              "observed": "1.01",
+              "met": false,
+              "action": "Complete",
+              "reason_code": "downrange-goal",
+              "priority": 200
+            },
+            {
+              "predicate_id": "duration-limit",
+              "metric_id": "duration_s",
+              "relation": ">=",
+              "threshold": "0.2",
+              "observed": "0.1",
+              "met": false,
+              "action": "Complete",
+              "reason_code": "duration-complete",
+              "priority": 100
+            },
+            {
+              "predicate_id": "remaining-mass-floor",
+              "metric_id": "remaining_mass_kg",
+              "relation": "<=",
+              "threshold": "119.8",
+              "observed": "119.95",
+              "met": false,
+              "action": "Abort",
+              "reason_code": "remaining-mass-floor",
+              "priority": 300
+            }
+          ],
+          "decision": {
+            "action": "Continue",
+            "reason_code": "none",
+            "trigger_time_s": "0.1",
+            "subject": "vehicle.fixture.yyz@1",
+            "priority": 0,
+            "metrics": {
+              "duration_s": "0.1",
+              "downrange_m": "1.01",
+              "remaining_mass_kg": "119.95"
+            },
+            "message_key": "yyz.termination.continue",
+            "params": {}
+          }
+        },
+        {
+          "sample_tick": 2,
+          "time_s": "0.2",
+          "commit_id": "commit.fixture.yyz.2",
+          "metrics": {
+            "duration_s": "0.2",
+            "downrange_m": "2.040004168403501458941225510629428928720300125052105043768236765318882867861609",
+            "remaining_mass_kg": "119.9",
+            "consumed_mass_kg": "0.1",
+            "speed_mps": "10.40008336807002917882451021258857857440600250104210087536473530637765735723218"
+          },
+          "predicate_results": [
+            {
+              "predicate_id": "downrange-goal",
+              "metric_id": "downrange_m",
+              "relation": ">=",
+              "threshold": "2.040004168403501458941225510629428928720300125052105043768236765318882867861609",
+              "observed": "2.040004168403501458941225510629428928720300125052105043768236765318882867861609",
+              "met": true,
+              "action": "Complete",
+              "reason_code": "downrange-goal",
+              "priority": 200
+            },
+            {
+              "predicate_id": "duration-limit",
+              "metric_id": "duration_s",
+              "relation": ">=",
+              "threshold": "0.2",
+              "observed": "0.2",
+              "met": true,
+              "action": "Complete",
+              "reason_code": "duration-complete",
+              "priority": 100
+            },
+            {
+              "predicate_id": "remaining-mass-floor",
+              "metric_id": "remaining_mass_kg",
+              "relation": "<=",
+              "threshold": "119.8",
+              "observed": "119.9",
+              "met": false,
+              "action": "Abort",
+              "reason_code": "remaining-mass-floor",
+              "priority": 300
+            }
+          ],
+          "decision": {
+            "action": "Complete",
+            "reason_code": "downrange-goal",
+            "trigger_time_s": "0.2",
+            "subject": "vehicle.fixture.yyz@1",
+            "priority": 200,
+            "metrics": {
+              "duration_s": "0.2",
+              "downrange_m": "2.040004168403501458941225510629428928720300125052105043768236765318882867861609",
+              "remaining_mass_kg": "119.9"
+            },
+            "message_key": "yyz.termination.downrange-goal",
+            "params": {}
+          }
+        }
+      ],
+      "metric_summary": {
+        "evaluated_sample_count": 3,
+        "duration_s": "0.2",
+        "downrange_m": "2.040004168403501458941225510629428928720300125052105043768236765318882867861609",
+        "remaining_mass_kg": "119.9",
+        "consumed_mass_kg": "0.1",
+        "terminal_speed_mps": "10.40008336807002917882451021258857857440600250104210087536473530637765735723218",
+        "peak_speed_mps": "10.40008336807002917882451021258857857440600250104210087536473530637765735723218",
+        "peak_speed_tick": 2,
+        "maximum_downrange_m": "2.040004168403501458941225510629428928720300125052105043768236765318882867861609",
+        "maximum_downrange_tick": 2,
+        "minimum_remaining_mass_kg": "119.9",
+        "minimum_remaining_mass_tick": 2
+      },
+      "terminal_observation": {
+        "sample_tick": 2,
+        "time_s": "0.2",
+        "commit_id": "commit.fixture.yyz.2",
+        "metrics": {
+          "duration_s": "0.2",
+          "downrange_m": "2.040004168403501458941225510629428928720300125052105043768236765318882867861609",
+          "remaining_mass_kg": "119.9",
+          "consumed_mass_kg": "0.1",
+          "speed_mps": "10.40008336807002917882451021258857857440600250104210087536473530637765735723218"
+        },
+        "decision": {
+          "action": "Complete",
+          "reason_code": "downrange-goal",
+          "trigger_time_s": "0.2",
+          "subject": "vehicle.fixture.yyz@1",
+          "priority": 200,
+          "metrics": {
+            "duration_s": "0.2",
+            "downrange_m": "2.040004168403501458941225510629428928720300125052105043768236765318882867861609",
+            "remaining_mass_kg": "119.9"
+          },
+          "message_key": "yyz.termination.downrange-goal",
+          "params": {}
+        },
+        "event_order": [
+          "publish-committed-sample",
+          "evaluate-metrics",
+          "evaluate-termination",
+          "seal-terminal-observation",
+          "freeze-run-outcome"
+        ],
+        "sealed": true,
+        "post_terminal_sample_count": 0
+      },
+      "run_outcome": {
+        "final_status": "Completed",
+        "evidence_validity": "Valid",
+        "initial_tick": 0,
+        "final_tick": 2,
+        "requested_duration_s": "0.2",
+        "final_time_s": "0.2",
+        "termination": {
+          "action": "Complete",
+          "reason_code": "downrange-goal",
+          "trigger_time_s": "0.2",
+          "subject": "vehicle.fixture.yyz@1",
+          "priority": 200,
+          "metrics": {
+            "duration_s": "0.2",
+            "downrange_m": "2.040004168403501458941225510629428928720300125052105043768236765318882867861609",
+            "remaining_mass_kg": "119.9"
+          },
+          "message_key": "yyz.termination.downrange-goal",
+          "params": {}
+        },
+        "metrics": {
+          "evaluated_sample_count": 3,
+          "duration_s": "0.2",
+          "downrange_m": "2.040004168403501458941225510629428928720300125052105043768236765318882867861609",
+          "remaining_mass_kg": "119.9",
+          "consumed_mass_kg": "0.1",
+          "terminal_speed_mps": "10.40008336807002917882451021258857857440600250104210087536473530637765735723218",
+          "peak_speed_mps": "10.40008336807002917882451021258857857440600250104210087536473530637765735723218",
+          "peak_speed_tick": 2,
+          "maximum_downrange_m": "2.040004168403501458941225510629428928720300125052105043768236765318882867861609",
+          "maximum_downrange_tick": 2,
+          "minimum_remaining_mass_kg": "119.9",
+          "minimum_remaining_mass_tick": 2
+        },
+        "terminal_observation_sealed": true,
+        "frozen": true
+      }
+    },
+    "CASE-YYZ-RUN-EVALUATION-MASS-ABORT": {
+      "id": "CASE-YYZ-RUN-EVALUATION-MASS-ABORT",
+      "plan_id": "termination-plan.fixture.yyz.mass-abort@1",
+      "model_id": "MODEL-YYZ-RUN-EVALUATION-001",
+      "evaluated_boundaries": [
+        {
+          "sample_tick": 0,
+          "time_s": "0",
+          "commit_id": "commit.fixture.yyz.0",
+          "metrics": {
+            "duration_s": "0",
+            "downrange_m": "0",
+            "remaining_mass_kg": "120",
+            "consumed_mass_kg": "0",
+            "speed_mps": "10"
+          },
+          "predicate_results": [
+            {
+              "predicate_id": "downrange-goal",
+              "metric_id": "downrange_m",
+              "relation": ">=",
+              "threshold": "20",
+              "observed": "0",
+              "met": false,
+              "action": "Complete",
+              "reason_code": "downrange-goal",
+              "priority": 200
+            },
+            {
+              "predicate_id": "duration-limit",
+              "metric_id": "duration_s",
+              "relation": ">=",
+              "threshold": "1",
+              "observed": "0",
+              "met": false,
+              "action": "Complete",
+              "reason_code": "duration-complete",
+              "priority": 100
+            },
+            {
+              "predicate_id": "remaining-mass-floor",
+              "metric_id": "remaining_mass_kg",
+              "relation": "<=",
+              "threshold": "119.95",
+              "observed": "120",
+              "met": false,
+              "action": "Abort",
+              "reason_code": "remaining-mass-floor",
+              "priority": 300
+            }
+          ],
+          "decision": {
+            "action": "Continue",
+            "reason_code": "none",
+            "trigger_time_s": "0",
+            "subject": "vehicle.fixture.yyz@1",
+            "priority": 0,
+            "metrics": {
+              "duration_s": "0",
+              "downrange_m": "0",
+              "remaining_mass_kg": "120"
+            },
+            "message_key": "yyz.termination.continue",
+            "params": {}
+          }
+        },
+        {
+          "sample_tick": 1,
+          "time_s": "0.1",
+          "commit_id": "commit.fixture.yyz.1",
+          "metrics": {
+            "duration_s": "0.1",
+            "downrange_m": "1.01",
+            "remaining_mass_kg": "119.95",
+            "consumed_mass_kg": "0.05",
+            "speed_mps": "10.2"
+          },
+          "predicate_results": [
+            {
+              "predicate_id": "downrange-goal",
+              "metric_id": "downrange_m",
+              "relation": ">=",
+              "threshold": "20",
+              "observed": "1.01",
+              "met": false,
+              "action": "Complete",
+              "reason_code": "downrange-goal",
+              "priority": 200
+            },
+            {
+              "predicate_id": "duration-limit",
+              "metric_id": "duration_s",
+              "relation": ">=",
+              "threshold": "1",
+              "observed": "0.1",
+              "met": false,
+              "action": "Complete",
+              "reason_code": "duration-complete",
+              "priority": 100
+            },
+            {
+              "predicate_id": "remaining-mass-floor",
+              "metric_id": "remaining_mass_kg",
+              "relation": "<=",
+              "threshold": "119.95",
+              "observed": "119.95",
+              "met": true,
+              "action": "Abort",
+              "reason_code": "remaining-mass-floor",
+              "priority": 300
+            }
+          ],
+          "decision": {
+            "action": "Abort",
+            "reason_code": "remaining-mass-floor",
+            "trigger_time_s": "0.1",
+            "subject": "vehicle.fixture.yyz@1",
+            "priority": 300,
+            "metrics": {
+              "duration_s": "0.1",
+              "downrange_m": "1.01",
+              "remaining_mass_kg": "119.95"
+            },
+            "message_key": "yyz.termination.remaining-mass-floor",
+            "params": {}
+          }
+        }
+      ],
+      "metric_summary": {
+        "evaluated_sample_count": 2,
+        "duration_s": "0.1",
+        "downrange_m": "1.01",
+        "remaining_mass_kg": "119.95",
+        "consumed_mass_kg": "0.05",
+        "terminal_speed_mps": "10.2",
+        "peak_speed_mps": "10.2",
+        "peak_speed_tick": 1,
+        "maximum_downrange_m": "1.01",
+        "maximum_downrange_tick": 1,
+        "minimum_remaining_mass_kg": "119.95",
+        "minimum_remaining_mass_tick": 1
+      },
+      "terminal_observation": {
+        "sample_tick": 1,
+        "time_s": "0.1",
+        "commit_id": "commit.fixture.yyz.1",
+        "metrics": {
+          "duration_s": "0.1",
+          "downrange_m": "1.01",
+          "remaining_mass_kg": "119.95",
+          "consumed_mass_kg": "0.05",
+          "speed_mps": "10.2"
+        },
+        "decision": {
+          "action": "Abort",
+          "reason_code": "remaining-mass-floor",
+          "trigger_time_s": "0.1",
+          "subject": "vehicle.fixture.yyz@1",
+          "priority": 300,
+          "metrics": {
+            "duration_s": "0.1",
+            "downrange_m": "1.01",
+            "remaining_mass_kg": "119.95"
+          },
+          "message_key": "yyz.termination.remaining-mass-floor",
+          "params": {}
+        },
+        "event_order": [
+          "publish-committed-sample",
+          "evaluate-metrics",
+          "evaluate-termination",
+          "seal-terminal-observation",
+          "freeze-run-outcome"
+        ],
+        "sealed": true,
+        "post_terminal_sample_count": 0
+      },
+      "run_outcome": {
+        "final_status": "Terminated",
+        "evidence_validity": "Valid",
+        "initial_tick": 0,
+        "final_tick": 1,
+        "requested_duration_s": "1",
+        "final_time_s": "0.1",
+        "termination": {
+          "action": "Abort",
+          "reason_code": "remaining-mass-floor",
+          "trigger_time_s": "0.1",
+          "subject": "vehicle.fixture.yyz@1",
+          "priority": 300,
+          "metrics": {
+            "duration_s": "0.1",
+            "downrange_m": "1.01",
+            "remaining_mass_kg": "119.95"
+          },
+          "message_key": "yyz.termination.remaining-mass-floor",
+          "params": {}
+        },
+        "metrics": {
+          "evaluated_sample_count": 2,
+          "duration_s": "0.1",
+          "downrange_m": "1.01",
+          "remaining_mass_kg": "119.95",
+          "consumed_mass_kg": "0.05",
+          "terminal_speed_mps": "10.2",
+          "peak_speed_mps": "10.2",
+          "peak_speed_tick": 1,
+          "maximum_downrange_m": "1.01",
+          "maximum_downrange_tick": 1,
+          "minimum_remaining_mass_kg": "119.95",
+          "minimum_remaining_mass_tick": 1
+        },
+        "terminal_observation_sealed": true,
+        "frozen": true
+      }
+    }
+  },
+  "equivalence_results": [
+    {
+      "id": "EQUIV-YYZ-RUN-EVALUATION-PREDICATE-ORDER",
+      "status": "passed",
+      "case_ids": [
+        "CASE-YYZ-RUN-EVALUATION-COMPLETE",
+        "CASE-YYZ-RUN-EVALUATION-MASS-ABORT"
+      ],
+      "terminal_ticks": [
+        2,
+        1
+      ],
+      "reason_codes": [
+        "downrange-goal",
+        "remaining-mass-floor"
+      ],
+      "max_abs_metric_difference": "0"
+    }
+  ],
+  "invalid_input_rejections": [
+    "INVALID-YYZ-RUN-EVALUATION-NONPOSITIVE-DT",
+    "INVALID-YYZ-RUN-EVALUATION-TICK-GAP",
+    "INVALID-YYZ-RUN-EVALUATION-TIME-MISMATCH",
+    "INVALID-YYZ-RUN-EVALUATION-DUPLICATE-COMMIT",
+    "INVALID-YYZ-RUN-EVALUATION-QUALITY",
+    "INVALID-YYZ-RUN-EVALUATION-MASS-INCREASE",
+    "INVALID-YYZ-RUN-EVALUATION-NONFINITE-STATE",
+    "INVALID-YYZ-RUN-EVALUATION-DUPLICATE-PREDICATE",
+    "INVALID-YYZ-RUN-EVALUATION-RELATION",
+    "INVALID-YYZ-RUN-EVALUATION-NEGATIVE-PRIORITY",
+    "INVALID-YYZ-RUN-EVALUATION-METRIC-ID",
+    "INVALID-YYZ-RUN-EVALUATION-NO-TERMINAL"
+  ],
+  "mutation_results": [
+    {
+      "id": "MUTATION-YYZ-RUN-EVALUATION-EARLY-MASS-CANDIDATE",
+      "status": "rejected",
+      "expected_terminal_tick": 1,
+      "observed_terminal_tick": 0,
+      "observed_remaining_mass_kg": "119.95",
+      "max_abs_result_difference": "1"
+    },
+    {
+      "id": "MUTATION-YYZ-RUN-EVALUATION-STRICT-THRESHOLDS",
+      "status": "rejected",
+      "expected_terminal_tick": 2,
+      "observed_terminal_tick": 3,
+      "observed_final_action": "Continue",
+      "max_abs_result_difference": "1"
+    },
+    {
+      "id": "MUTATION-YYZ-RUN-EVALUATION-LOW-PRIORITY-WINS",
+      "status": "rejected",
+      "expected_reason_code": "downrange-goal",
+      "observed_reason_code": "duration-complete",
+      "expected_priority": 200,
+      "observed_priority": 100,
+      "max_abs_result_difference": "100"
+    },
+    {
+      "id": "MUTATION-YYZ-RUN-EVALUATION-OUTCOME-BEFORE-OBSERVATION",
+      "status": "rejected",
+      "expected_event_order": [
+        "publish-committed-sample",
+        "evaluate-metrics",
+        "evaluate-termination",
+        "seal-terminal-observation",
+        "freeze-run-outcome"
+      ],
+      "observed_event_order": [
+        "publish-committed-sample",
+        "evaluate-metrics",
+        "evaluate-termination",
+        "freeze-run-outcome",
+        "seal-terminal-observation"
+      ],
+      "observed_terminal_observation_sealed": false,
+      "max_abs_result_difference": "1"
+    },
+    {
+      "id": "MUTATION-YYZ-RUN-EVALUATION-POST-TERMINAL-SAMPLE",
+      "status": "rejected",
+      "expected_evaluated_ticks": [
+        0,
+        1
+      ],
+      "observed_evaluated_ticks": [
+        0,
+        1,
+        2
+      ],
+      "observed_post_terminal_sample_count": 1,
+      "max_abs_result_difference": "1"
+    }
+  ]
+}

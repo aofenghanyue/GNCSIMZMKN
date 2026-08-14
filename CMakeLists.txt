@@ -164,6 +164,14 @@ if(GNC_BUILD_TESTS)
         gnc_yyz_two_interval_mass_commit_probe PRIVATE cxx_std_17)
     gnc_enable_warnings(gnc_yyz_two_interval_mass_commit_probe)
 
+    # R0 YYZ scientific oracle: committed metrics and AtGrid result.
+    add_executable(
+        gnc_yyz_run_evaluation_probe
+        tests/yyz_run_evaluation.cpp)
+    target_compile_features(
+        gnc_yyz_run_evaluation_probe PRIVATE cxx_std_17)
+    gnc_enable_warnings(gnc_yyz_run_evaluation_probe)
+
     # R0 Legacy behavior oracle: independent journal, no Legacy linkage.
     add_executable(
         gnc_legacy_sync_commit_probe
@@ -255,6 +263,9 @@ if(GNC_BUILD_TESTS)
     add_test(
         NAME r0.yyz-two-interval-mass-commit.probe
         COMMAND gnc_yyz_two_interval_mass_commit_probe --self-check)
+    add_test(
+        NAME r0.yyz-run-evaluation.probe
+        COMMAND gnc_yyz_run_evaluation_probe --self-check)
     add_test(
         NAME r0.legacy-sync-commit.probe
         COMMAND gnc_legacy_sync_commit_probe --self-check)
@@ -483,6 +494,19 @@ if(GNC_BUILD_TESTS)
             ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-two-interval-mass-commit/reference.json
             --probe
             $<TARGET_FILE:gnc_yyz_two_interval_mass_commit_probe>)
+    add_test(
+        NAME r0.yyz-run-evaluation.oracle
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/yyz_run_evaluation_reference.py
+            --cases
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-yyz-run-evaluation/cases.json
+            --oracle
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-run-evaluation/reference.json
+            --probe
+            $<TARGET_FILE:gnc_yyz_run_evaluation_probe>)
     add_test(
         NAME r0.legacy-sync-commit.oracle
         COMMAND
