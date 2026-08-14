@@ -104,11 +104,11 @@
     },
     "harness": {
       "path": "fixtures/ref-legacy-simflow/legacy_capture.py",
-      "bytes": 7794,
-      "sha256": "0161b8ba17938699180dd73ccf3b904183c945ae417212a4cf70e469f5cd3168"
+      "bytes": 8205,
+      "sha256": "ea190181d7b9dbbecb58e09684201802f5917de2e2d9eac01db1ca443b9a0943"
     },
-    "run_root_policy": "Each SimFlow invocation starts in a distinct fresh working directory while retaining the same configured relative output string.",
-    "ordinary_replay_output_policy": "The SimFlow dataset is moved away before plain --config replay, which must recreate the dataset path.",
+    "run_root_policy": "Each SimFlow invocation and its ordinary replay use distinct fresh working directories while retaining the same configured relative output string.",
+    "ordinary_replay_output_policy": "The effective mission is copied outside the Legacy case directory; plain --config starts in a distinct fresh root and must create its dataset path there.",
     "storage_normalization": "Captured dataset CRLF is stored as LF under repository text policy; reconstructing LF as CRLF must recover each raw capture identity.",
     "effective_missions": [
       {
@@ -179,13 +179,13 @@
     "traces": [
       {
         "path": "fixtures/ref-legacy-simflow/legacy-trace-run-1.json",
-        "bytes": 776,
-        "sha256": "d88e56baa0fa86d45d2d6a2317df42041fe3b4145c41fdbb8e37e12bcb9047ae"
+        "bytes": 874,
+        "sha256": "8563ce22abb48d92a778fc1988d03342a355e43fd41a36db29917712883b7a77"
       },
       {
         "path": "fixtures/ref-legacy-simflow/legacy-trace-run-2.json",
-        "bytes": 776,
-        "sha256": "b1acdf968b49df4ebedd4ef140e2a8e74a20c9cd3c4cc42b203ccca4ef8ecfa9"
+        "bytes": 874,
+        "sha256": "4d32af692a88079d5572020926356d07d3fdf31470409a4315db068f03dfdc2a"
       }
     ]
   }

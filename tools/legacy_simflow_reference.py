@@ -266,7 +266,7 @@ def validate_rows(actual: list[dict], expected: list[dict],
 
 
 def validate_trace(trace: dict, expected_commands: list[dict],
-                   label: str) -> int:
+                   expected_isolation: dict, label: str) -> int:
     require(trace["schema_version"] == TRACE_SCHEMA and
             trace["oracle_id"] == ORACLE_ID,
             f"{label} identity differs")
@@ -286,10 +286,19 @@ def validate_trace(trace: dict, expected_commands: list[dict],
             materialization["case_manifest_present"] is False,
             f"{label} materialization result differs")
     lineage = trace["lineage_checks"]
-    require(lineage["simflow_output_root_started_absent"] is True and
-            lineage["ordinary_replay_dataset_path_started_absent"] is True,
-            f"{label} fresh-output lineage differs")
-    return 10
+    require(lineage["simflow_output_root_started_absent"] is True,
+            f"{label} SimFlow output root was reused")
+    observed_isolation = {
+        "working_root_started_absent":
+            lineage["ordinary_replay_root_started_absent"],
+        "effective_mission_copied_outside_case_directory":
+            lineage["effective_mission_copied_outside_case_directory"],
+        "dataset_path_started_absent":
+            lineage["ordinary_replay_dataset_path_started_absent"],
+    }
+    require(observed_isolation == expected_isolation,
+            f"{label} ordinary replay isolation differs")
+    return 12
 
 
 def rejected(function) -> bool:
@@ -384,15 +393,19 @@ def main() -> int:
     checks += 2
 
     expected_commands = oracle["expected"]["command_sequence"]
+    expected_isolation = oracle["expected"]["ordinary_replay_isolation"]
     for index, trace in enumerate(traces, start=1):
         checks += validate_trace(
-            trace, expected_commands, f"Legacy SimFlow trace {index}")
+            trace, expected_commands, expected_isolation,
+            f"Legacy SimFlow trace {index}")
 
     failure_by_id = {entry["id"]: entry
                      for entry in oracle["failure_cases"]}
     require(set(failure_by_id) == {
         "FAIL-SIMFLOW-MISSING-INJECTED-INPUT",
         "FAIL-SIMFLOW-HIDDEN-REPLAY-CONTEXT",
+        "FAIL-SIMFLOW-REPLAY-REUSES-BATCH-ROOT",
+        "FAIL-SIMFLOW-CASE-LOCAL-REPLAY-INPUT",
         "FAIL-SIMFLOW-REPLAY-RESULT-MISMATCH",
     } and all(entry["expected_status"] == "rejected"
               for entry in failure_by_id.values()),
@@ -403,19 +416,32 @@ def main() -> int:
         "aero.drag_bias")
     hidden_context = copy.deepcopy(traces[0])
     hidden_context["commands"][1]["mode"] = "--simflow"
+    reused_batch_root = copy.deepcopy(traces[0])
+    reused_batch_root["lineage_checks"][
+        "ordinary_replay_root_started_absent"] = False
+    case_local_replay_input = copy.deepcopy(traces[0])
+    case_local_replay_input["lineage_checks"][
+        "effective_mission_copied_outside_case_directory"] = False
     mismatched_rows = copy.deepcopy(datasets[1])
     mismatched_rows[0]["altitude_m"] = Decimal("999")
     require(rejected(lambda: validate_mission(
                 missing_input, expected_mission,
                 "Missing-input mutation")) and
             rejected(lambda: validate_trace(
-                hidden_context, expected_commands,
+                hidden_context, expected_commands, expected_isolation,
                 "Hidden-context mutation")) and
+            rejected(lambda: validate_trace(
+                reused_batch_root, expected_commands, expected_isolation,
+                "Reused-batch-root mutation")) and
+            rejected(lambda: validate_trace(
+                case_local_replay_input, expected_commands,
+                expected_isolation,
+                "Case-local-replay-input mutation")) and
             rejected(lambda: validate_rows(
                 mismatched_rows, expected_rows, tolerance,
                 "Replay-result mutation")),
             "A SimFlow semantic failure mutation was accepted")
-    checks += 4
+    checks += 6
 
     equivalence = oracle["equivalence_cases"]
     require(len(equivalence) == 1 and
@@ -428,7 +454,7 @@ def main() -> int:
     renamed_trace["materialization"]["legacy_case_directory_name"] = "renamed"
     renamed_mission = copy.deepcopy(effective_missions[0])
     renamed_mission["outputs"]["directory"] = "renamed-output"
-    validate_trace(renamed_trace, expected_commands,
+    validate_trace(renamed_trace, expected_commands, expected_isolation,
                    "Legacy identity equivalence")
     validate_mission(renamed_mission, expected_mission,
                      "Output-directory equivalence")
@@ -454,11 +480,13 @@ def main() -> int:
     for flag in (
             "missing_injected_input_rejected",
             "hidden_replay_context_rejected",
+            "reused_batch_root_rejected",
+            "case_local_replay_input_rejected",
             "replay_result_mismatch_rejected",
             "legacy_case_directory_change_accepted"):
         require(probe[flag] is True,
                 f"C++ SimFlow probe did not enforce {flag}")
-    checks += 10
+    checks += 12
 
     decision = oracle["disposition_decision"]
     require(decision["status"] in {"needs_owner_decision", "accepted"},
@@ -482,6 +510,8 @@ def main() -> int:
         "legacy_reruns_byte_identical": True,
         "ordinary_replay_dataset_equal": True,
         "ordinary_replay_mode": "--config",
+        "ordinary_replay_fresh_root": True,
+        "effective_mission_standalone": True,
         "deterministic_target_case_id": "pending",
         "disposition_status": decision["status"],
     }, separators=(",", ":")))

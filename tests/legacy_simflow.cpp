@@ -40,6 +40,8 @@ struct Replay {
     Mission mission;
     Command command;
     std::vector<SemanticRow> dataset;
+    bool working_root_started_absent = false;
+    bool effective_mission_standalone = false;
 };
 
 struct ProbeResult {
@@ -48,6 +50,8 @@ struct ProbeResult {
     Replay replay;
     bool missing_injected_input_rejected = false;
     bool hidden_replay_context_rejected = false;
+    bool reused_batch_root_rejected = false;
+    bool case_local_replay_input_rejected = false;
     bool replay_result_mismatch_rejected = false;
     bool legacy_case_directory_change_accepted = false;
 };
@@ -116,6 +120,8 @@ bool validOrdinaryReplay(const Mission& expected_mission,
     return replay.command.mode == "--config" &&
         replay.command.input_role == "effective-mission" &&
         replay.command.exit_code == 0 &&
+        replay.working_root_started_absent &&
+        replay.effective_mission_standalone &&
         sameSemanticMission(expected_mission, replay.mission) &&
         sameRows(expected_rows, replay.dataset);
 }
@@ -141,6 +147,8 @@ ProbeResult runProbe() {
         result.effective_mission,
         {"--config", "effective-mission", 0},
         expected_rows,
+        true,
+        true,
     };
 
     Mission missing_input = result.effective_mission;
@@ -152,6 +160,16 @@ ProbeResult runProbe() {
     hidden_context.command.mode = "--simflow";
     result.hidden_replay_context_rejected = !validOrdinaryReplay(
         result.effective_mission, expected_rows, hidden_context);
+
+    Replay reused_batch_root = result.replay;
+    reused_batch_root.working_root_started_absent = false;
+    result.reused_batch_root_rejected = !validOrdinaryReplay(
+        result.effective_mission, expected_rows, reused_batch_root);
+
+    Replay case_local_input = result.replay;
+    case_local_input.effective_mission_standalone = false;
+    result.case_local_replay_input_rejected = !validOrdinaryReplay(
+        result.effective_mission, expected_rows, case_local_input);
 
     Replay mismatched_result = result.replay;
     mismatched_result.dataset.front().altitude_m = 999.0;
@@ -188,6 +206,10 @@ void writeJson(const ProbeResult& result) {
               << (result.missing_injected_input_rejected ? "true" : "false")
               << ",\"hidden_replay_context_rejected\":"
               << (result.hidden_replay_context_rejected ? "true" : "false")
+              << ",\"reused_batch_root_rejected\":"
+              << (result.reused_batch_root_rejected ? "true" : "false")
+              << ",\"case_local_replay_input_rejected\":"
+              << (result.case_local_replay_input_rejected ? "true" : "false")
               << ",\"replay_result_mismatch_rejected\":"
               << (result.replay_result_mismatch_rejected ? "true" : "false")
               << ",\"legacy_case_directory_change_accepted\":"
@@ -221,6 +243,10 @@ int main(int argc, char** argv) {
                 "missing injected input was accepted");
         require(result.hidden_replay_context_rejected,
                 "SimFlow-only replay context was accepted");
+        require(result.reused_batch_root_rejected,
+                "ordinary replay reused the batch working root");
+        require(result.case_local_replay_input_rejected,
+                "ordinary replay input remained case-directory local");
         require(result.replay_result_mismatch_rejected,
                 "ordinary replay result mismatch was accepted");
         require(result.legacy_case_directory_change_accepted,

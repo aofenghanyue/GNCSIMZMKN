@@ -100,7 +100,7 @@ canonical Legacy 捕获候选应优先复用 `R0-LEG-001` 已成功验证的 Win
 - group：外部 harness 在干净 Legacy 解压目录中记录每个 RK stage 的共享 candidate/derivative、一次 group commit 和 membership failures；主构建读取冻结 trace，并运行 Decimal 与独立 C++17 reference；
 - CSV：事后解析输出并映射 semantic field，不改变 logger 或列顺序；
 - stop：termination evaluator、recorded dataset 与 simulator ordering 共同证明 Legacy half；
-- SimFlow：捕获实际 CLI 命令，并用 materialized effective mission 调普通 runner。
+- SimFlow：捕获实际 CLI 命令，把 materialized effective mission 复制到 case 目录外，并从独立全新工作目录调用普通 runner。
 
 禁止修改 frozen ZIP、tracked extracted tree 或生产 tree。若公开测试扩展面无法观察所需事实，先记录 instrumentation gap；任何临时 source overlay 必须在 ADR/owner 批准后才可使用，且记录 overlay diff/hash，不能冒充未修改 Legacy 的 canonical trace。
 
@@ -130,7 +130,7 @@ raw trace 至少使用以下稳定概念字段；具体 schema 名称待第 3.1 
 
 ## 9. 当前直接失败检查
 
-`ORACLE-YYZ-SYNC-03` 的直接失败用例会在 position candidate 完成前提交 mass；Python evaluator 和 C++ probe 都拒绝该 journal，并证明错误路径得到 `position=8`。`ORACLE-YYZ-PUBLISH-01` 的直接失败用例在 publish 内把 committed altitude 增加 `1 m`，C++ probe 拒绝该状态变化，Python comparator 同时核对失败事实。`ORACLE-YYZ-PHASE-02` 拒绝 process/output 交换和重复 input phase。`ORACLE-YYZ-GROUP-04` 拒绝得到 `position=10` 的 split snapshot closure、未注册 member 和重复 scope ownership。`ORACLE-YYZ-CSV-05` 接受列置换、有限等值数值文本和未映射列变化后的语义等价 dataset，并拒绝缺失 t0、缺失必要列、错位 `t_k`、陈旧发布态、非有限必要字段值和重复必要表头。`ORACLE-YYZ-STOP-06` 分别拒绝提前终止、评估时终止行不可见、缺失终止行、终态时间推进和停止后额外观测。`ORACLE-SIMFLOW-07` 拒绝缺失注入输入、用第二次 `--simflow` 隐藏普通重放上下文，以及普通重放结果漂移；Legacy case 目录与 numeric index 变化不影响语义等价。重复 id、跨平台聚合 hash、通用 classification completeness 等检查留到出现当前 consumer 或直接回归后再增加。
+`ORACLE-YYZ-SYNC-03` 的直接失败用例会在 position candidate 完成前提交 mass；Python evaluator 和 C++ probe 都拒绝该 journal，并证明错误路径得到 `position=8`。`ORACLE-YYZ-PUBLISH-01` 的直接失败用例在 publish 内把 committed altitude 增加 `1 m`，C++ probe 拒绝该状态变化，Python comparator 同时核对失败事实。`ORACLE-YYZ-PHASE-02` 拒绝 process/output 交换和重复 input phase。`ORACLE-YYZ-GROUP-04` 拒绝得到 `position=10` 的 split snapshot closure、未注册 member 和重复 scope ownership。`ORACLE-YYZ-CSV-05` 接受列置换、有限等值数值文本和未映射列变化后的语义等价 dataset，并拒绝缺失 t0、缺失必要列、错位 `t_k`、陈旧发布态、非有限必要字段值和重复必要表头。`ORACLE-YYZ-STOP-06` 分别拒绝提前终止、评估时终止行不可见、缺失终止行、终态时间推进和停止后额外观测。`ORACLE-SIMFLOW-07` 拒绝缺失注入输入、用第二次 `--simflow` 隐藏普通重放上下文、复用批处理工作目录、把普通重放输入留在 case 目录内，以及普通重放结果漂移；Legacy case 目录与 numeric index 变化不影响语义等价。重复 id、跨平台聚合 hash、通用 classification completeness 等检查留到出现当前 consumer 或直接回归后再增加。
 
 ## 10. 退出检查
 

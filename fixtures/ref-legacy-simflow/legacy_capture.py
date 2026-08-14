@@ -142,17 +142,24 @@ def main() -> int:
     shutil.copyfile(simflow_dataset, simflow_capture)
     shutil.copyfile(summary, summary_capture)
 
-    pre_replay_dataset = work_root / "simflow-dataset-before-replay.csv"
-    require(not pre_replay_dataset.exists(),
-            "pre-replay holding path must be fresh")
-    simflow_dataset.replace(pre_replay_dataset)
-    require(not simflow_dataset.exists(),
+    replay_input = work_root / "effective-mission-replay.json"
+    require(not replay_input.exists(),
+            "ordinary replay input path must be fresh")
+    shutil.copyfile(effective_mission, replay_input)
+    replay_root = work_root / "ordinary-replay-root"
+    require(not replay_root.exists(),
+            "ordinary replay root must start absent")
+    replay_dataset = (
+        replay_root / configured_output / case_directory.name /
+        simflow_dataset.name)
+    require(not replay_dataset.exists(),
             "ordinary replay dataset path must start absent")
+    replay_root.mkdir(parents=True)
     replay_exit = run_legacy(
-        executable, "--config", effective_mission, run_root)
-    require(simflow_dataset.is_file(),
+        executable, "--config", replay_input, replay_root)
+    require(replay_dataset.is_file(),
             "Ordinary replay did not produce its normal dataset")
-    shutil.copyfile(simflow_dataset, replay_capture)
+    shutil.copyfile(replay_dataset, replay_capture)
     require(simflow_capture.read_bytes() == replay_capture.read_bytes(),
             "SimFlow and ordinary replay datasets differ")
 
@@ -184,6 +191,8 @@ def main() -> int:
         },
         "lineage_checks": {
             "simflow_output_root_started_absent": True,
+            "ordinary_replay_root_started_absent": True,
+            "effective_mission_copied_outside_case_directory": True,
             "ordinary_replay_dataset_path_started_absent": True,
         },
         "artifacts": {

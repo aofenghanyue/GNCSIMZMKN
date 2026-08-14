@@ -9,7 +9,7 @@ gnc_sim --simflow generated-simflow.json
 gnc_sim --config effective_mission.json
 ```
 
-Both entrypoints succeeded. Each SimFlow run used a distinct fresh working root while retaining the same configured relative output string. Before each plain replay, the harness moved the SimFlow dataset away so `--config` had to recreate the dataset path. The four recorded datasets—two SimFlow results and two plain replays—are byte-identical in their raw capture form. Semantic comparison maps required fields by header and verifies the single row `(t=0, altitude=1000 m, vz=0 m/s, mass=100 kg)`.
+Both entrypoints succeeded. Each SimFlow invocation and its plain replay used distinct fresh working roots while retaining the same configured relative output string. The harness copied the effective mission outside the Legacy case directory before invoking plain `--config`; the replay had to create its own dataset path with no batch working tree available. The four recorded datasets—two SimFlow results and two plain replays—are byte-identical in their raw capture form. Semantic comparison maps required fields by header and verifies the single row `(t=0, altitude=1000 m, vz=0 m/s, mass=100 kg)`.
 
 The bundle separates its evidence layers:
 
@@ -25,4 +25,4 @@ Run the executable checks through CTest:
 ctest --preset dev -R "r0.legacy-simflow" --output-on-failure
 ```
 
-The comparison rejects a missing injected input, another SimFlow invocation in place of ordinary replay, and a mismatched replay result. Legacy numeric index and case-directory names are ignored. A deterministic target `CaseId`, target case manifest and target MissionSource representation remain pending future contracts. The bundle stays `capturing` until the repository owner accepts the recommended Preserve/Retire split.
+The comparison rejects a missing injected input, another SimFlow invocation in place of ordinary replay, a reused batch working root, a case-local replay input, and a mismatched replay result. Legacy numeric index and case-directory names are ignored. A deterministic target `CaseId`, target case manifest and target MissionSource representation remain pending future contracts. The bundle stays `capturing` until the repository owner accepts the recommended Preserve/Retire split.

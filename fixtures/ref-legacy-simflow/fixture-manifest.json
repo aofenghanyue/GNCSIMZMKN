@@ -11,7 +11,7 @@
       "reference/legacy/source-manifest.json",
       "reference/legacy/reproduction/r0-leg-001-20260810-07/evidence-index.json"
     ],
-    "notes": "The frozen gnc_sim from the clean R0-LEG-001 build ran --simflow and then plain --config twice. The main build consumes only pinned missions, datasets, summaries and traces plus independent Python/C++ references; it has no Legacy include, link or runtime dependency."
+    "notes": "The frozen gnc_sim from the clean R0-LEG-001 build ran --simflow and then plain --config twice. Each ordinary replay used a standalone effective-mission copy and a distinct fresh working root. The main build consumes only pinned missions, datasets, summaries and traces plus independent Python/C++ references; it has no Legacy include, link or runtime dependency."
   },
   "expected_facts": [
     {
@@ -30,8 +30,8 @@
     },
     {
       "id": "FACT-SIMFLOW-ORDINARY-REPLAY",
-      "claim": "The materialized hot mission succeeds through plain gnc_sim --config and produces the same semantic dataset as its SimFlow execution.",
-      "tolerance_policy": "Command mode/order and exit code are exact; dataset row identity is exact and frozen scalar values use absolute tolerance 1e-12 after header mapping.",
+      "claim": "The materialized hot mission succeeds through plain gnc_sim --config from a distinct fresh working root and produces the same semantic dataset as its SimFlow execution.",
+      "tolerance_policy": "Command mode/order, exit code, fresh replay root, standalone effective-mission input and absent output path are exact; dataset row identity is exact and frozen scalar values use absolute tolerance 1e-12 after header mapping.",
       "evidence_refs": [
         "fixtures/ref-legacy-simflow/legacy-simflow-run-1.csv",
         "fixtures/ref-legacy-simflow/legacy-replay-run-1.csv",
@@ -88,11 +88,11 @@
   ],
   "acceptance": [
     "Verifies frozen source, environment, harness, runtime-test and raw capture identities",
-    "Each SimFlow run starts from a fresh output root and plain replay recreates an absent dataset path",
+    "Each SimFlow invocation and plain replay starts from a distinct fresh working root; replay uses a standalone effective-mission copy and creates an absent dataset path",
     "Two effective missions, two summaries and all four SimFlow/replay datasets are byte-identical",
     "Independent Python materialization and C++17 typed mission probes agree on the hot inputs",
     "Plain --config replay succeeds twice and matches SimFlow output by semantic dataset fields",
-    "Missing injected input, hidden SimFlow replay context and replay-result mismatch are rejected",
+    "Missing injected input, hidden SimFlow replay context, reused batch root, case-local replay input and replay-result mismatch are rejected",
     "Legacy case index/directory changes are accepted after semantic normalization",
     "Preserve and Retire recommendations remain pending until the repository owner accepts the disposition choice"
   ],
