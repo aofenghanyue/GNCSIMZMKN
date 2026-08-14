@@ -273,12 +273,14 @@ R0-SCI-001 提供的 SI、frame、binary64、integer tick、ExactGrid 和 quater
 | Propulsion | command/config/state → force/moment/mass-flow interval | throttle/enable scale、application-point cross product、flow integral | engine dynamics、phase/config、fuel exhaustion |
 | Mass | committed mass/fuel + flow interval → MassProperties/candidate | consumed mass、dry clamp decision、CG/inertia | conservation model、scale semantics、domain failure |
 | Aero | state/air/actuator/config + assets → AeroResponse | operating point、lookup bracket/weights、coefficients、dimensional force/moment | axes/sign、coefficient meaning、interpolation/extrapolation |
-| Closure | aero + prop + gravity/other responses → FormInput | each contribution by source/frame, total force/moment, configuration revision | frozen/candidate/algebraic strategy、application points |
+| Closure | body-frame aero + prop + other force/moment responses → FormInput；`g^I` 保持独立惯性加速度 | each contribution by source/frame、application point、transported moment、total force/moment、configuration revision、validity interval | canonical response sources/application points、candidate/algebraic strategy |
 | Integration | committed state + frozen/approved interval model → candidate | every RK stage input/derivative/state/status | solver, stage guard, normalization/projection policy |
 | Termination | committed/published semantic facts → typed decision | each predicate, priority, tick/time/state ref | exact predicates、StopBefore/After、terminal observation |
 | Metrics | committed Observation sequence → metric artifact | selected signal/window/baseline/target/extremum/denominator | pitch overshoot definition、threshold、invalid cases |
 
 表中的 equation 是审计起点，不是对未决模型的批准。若实际模型包含 rotating frame、variable inertia、Earth curvature、aero unsteadiness、engine dynamics 或 algebraic closure，必须由 owner 以明确方程替换/扩展，并增加 independent cases。
+
+`REF-YYZ-FORCE-MOMENT-CLOSURE-001` 已执行 fixture-local `FrozenInterval` 子集：每个贡献携带唯一 source identity、同一 body frame、configuration revision 与半开 validity interval，按 `M_CoM^B = M_application^B + r_CoM_to_application^B × F^B` 搬移并在 RK stages 内保持总量。Decimal 解析 reference 与独立 C++17 closure→rigid-core 路径交叉验证。Canonical aero、propulsion、mass、configuration 和 gravity model 仍待后续确定；variable mass/CoM/inertia、CandidateState 与 AlgebraicSolve 不在此切片范围内。
 
 ### 7.3 Legacy 公式不可原样继承的地方
 

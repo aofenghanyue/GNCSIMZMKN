@@ -1,0 +1,371 @@
+{
+  "schema_version": "gnczmkn.yyz-force-moment-closure-reference/1",
+  "fixture_id": "REF-YYZ-FORCE-MOMENT-CLOSURE-001",
+  "oracle_id": "ORACLE-YYZ-FORCE-MOMENT-CLOSURE-001",
+  "model_id": "MODEL-YYZ-FORCE-MOMENT-CLOSURE-001",
+  "input_identity": {
+    "path": "fixtures/ref-yyz-force-moment-closure/cases.json",
+    "bytes": 6451,
+    "sha256": "b229f8145ea274dc315eafe0442d9c87e7de3c60733f2fcadb19d5e3c2afe35b"
+  },
+  "reference_method": {
+    "implementation": "CPython standard-library decimal",
+    "precision_digits": 60,
+    "solution": "direct wrench transport and closed-form constant-acceleration trajectory"
+  },
+  "model_choice_status": "accepted",
+  "cases": {
+    "CASE-YYZ-CLOSURE-3D-WRENCH": {
+      "closure": {
+        "strategy": "FrozenInterval",
+        "context": {
+          "body_frame_id": "frame.fixture.yyz.body@1",
+          "configuration_revision": 7,
+          "valid_from_tick": 10,
+          "valid_until_tick": 11
+        },
+        "contributions": [
+          {
+            "source_id": "aero.body",
+            "force_B_N": [
+              "10",
+              "-20",
+              "30"
+            ],
+            "r_CoM_to_application_B_m": [
+              "2",
+              "-1",
+              "0.5"
+            ],
+            "moment_at_application_B_Nm": [
+              "1",
+              "2",
+              "3"
+            ],
+            "lever_arm_moment_B_Nm": [
+              "-20",
+              "-55",
+              "-30"
+            ],
+            "moment_about_CoM_B_Nm": [
+              "-19",
+              "-53",
+              "-27"
+            ]
+          },
+          {
+            "source_id": "propulsion.main",
+            "force_B_N": [
+              "-5",
+              "4",
+              "2"
+            ],
+            "r_CoM_to_application_B_m": [
+              "-1",
+              "0.25",
+              "3"
+            ],
+            "moment_at_application_B_Nm": [
+              "-2",
+              "1",
+              "0.5"
+            ],
+            "lever_arm_moment_B_Nm": [
+              "-11.5",
+              "-13",
+              "-2.75"
+            ],
+            "moment_about_CoM_B_Nm": [
+              "-13.5",
+              "-12",
+              "-2.25"
+            ]
+          }
+        ],
+        "total_force_B_N": [
+          "5",
+          "-16",
+          "32"
+        ],
+        "total_moment_about_CoM_B_Nm": [
+          "-32.5",
+          "-65",
+          "-29.25"
+        ]
+      }
+    },
+    "CASE-YYZ-CLOSURE-RIGID-CORE-TRAJECTORY": {
+      "strategy": "FrozenInterval",
+      "held_closure": {
+        "strategy": "FrozenInterval",
+        "context": {
+          "body_frame_id": "frame.fixture.yyz.body@1",
+          "configuration_revision": 3,
+          "valid_from_tick": 0,
+          "valid_until_tick": 4
+        },
+        "contributions": [
+          {
+            "source_id": "aero.body",
+            "force_B_N": [
+              "-30",
+              "0",
+              "0"
+            ],
+            "r_CoM_to_application_B_m": [
+              "0",
+              "-1",
+              "0"
+            ],
+            "moment_at_application_B_Nm": [
+              "0",
+              "0",
+              "90"
+            ],
+            "lever_arm_moment_B_Nm": [
+              "0",
+              "0",
+              "-30"
+            ],
+            "moment_about_CoM_B_Nm": [
+              "0",
+              "0",
+              "60"
+            ]
+          },
+          {
+            "source_id": "propulsion.main",
+            "force_B_N": [
+              "150",
+              "0",
+              "0"
+            ],
+            "r_CoM_to_application_B_m": [
+              "0",
+              "0.4",
+              "0"
+            ],
+            "moment_at_application_B_Nm": [
+              "0",
+              "0",
+              "0"
+            ],
+            "lever_arm_moment_B_Nm": [
+              "0",
+              "0",
+              "-60"
+            ],
+            "moment_about_CoM_B_Nm": [
+              "0",
+              "0",
+              "-60"
+            ]
+          }
+        ],
+        "total_force_B_N": [
+          "120",
+          "0",
+          "0"
+        ],
+        "total_moment_about_CoM_B_Nm": [
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      "gravity_I_mps2": [
+        "0",
+        "0",
+        "-9.80665"
+      ],
+      "body_force_acceleration_I_mps2": [
+        "2",
+        "0",
+        "0"
+      ],
+      "total_acceleration_I_mps2": [
+        "2",
+        "0",
+        "-9.80665"
+      ],
+      "trajectory": [
+        {
+          "tick": 0,
+          "time_s": "0",
+          "position_I_m": [
+            "100",
+            "-20",
+            "1000"
+          ],
+          "velocity_I_mps": [
+            "50",
+            "5",
+            "0"
+          ],
+          "q_I_B_wxyz": [
+            "1",
+            "0",
+            "0",
+            "0"
+          ],
+          "omega_BI_B_radps": [
+            "0",
+            "0",
+            "0"
+          ]
+        },
+        {
+          "tick": 1,
+          "time_s": "0.25",
+          "position_I_m": [
+            "112.5625",
+            "-18.75",
+            "999.6935421875"
+          ],
+          "velocity_I_mps": [
+            "50.5",
+            "5",
+            "-2.4516625"
+          ],
+          "q_I_B_wxyz": [
+            "1",
+            "0",
+            "0",
+            "0"
+          ],
+          "omega_BI_B_radps": [
+            "0",
+            "0",
+            "0"
+          ]
+        },
+        {
+          "tick": 2,
+          "time_s": "0.5",
+          "position_I_m": [
+            "125.25",
+            "-17.5",
+            "998.77416875"
+          ],
+          "velocity_I_mps": [
+            "51",
+            "5",
+            "-4.903325"
+          ],
+          "q_I_B_wxyz": [
+            "1",
+            "0",
+            "0",
+            "0"
+          ],
+          "omega_BI_B_radps": [
+            "0",
+            "0",
+            "0"
+          ]
+        },
+        {
+          "tick": 3,
+          "time_s": "0.75",
+          "position_I_m": [
+            "138.0625",
+            "-16.25",
+            "997.2418796875"
+          ],
+          "velocity_I_mps": [
+            "51.5",
+            "5",
+            "-7.3549875"
+          ],
+          "q_I_B_wxyz": [
+            "1",
+            "0",
+            "0",
+            "0"
+          ],
+          "omega_BI_B_radps": [
+            "0",
+            "0",
+            "0"
+          ]
+        },
+        {
+          "tick": 4,
+          "time_s": "1",
+          "position_I_m": [
+            "151",
+            "-15",
+            "995.096675"
+          ],
+          "velocity_I_mps": [
+            "52",
+            "5",
+            "-9.80665"
+          ],
+          "q_I_B_wxyz": [
+            "1",
+            "0",
+            "0",
+            "0"
+          ],
+          "omega_BI_B_radps": [
+            "0",
+            "0",
+            "0"
+          ]
+        }
+      ],
+      "terminal": {
+        "kind": "duration_exact_grid",
+        "tick": 4,
+        "time_s": "1"
+      }
+    }
+  },
+  "equivalence_cases": [
+    {
+      "id": "EQUIV-YYZ-CLOSURE-CONTRIBUTION-ORDER",
+      "operation": "reverse the distinct contribution order",
+      "expected": "canonical per-source intermediates and totals remain equal"
+    }
+  ],
+  "invalid_input_cases": [
+    {
+      "id": "INVALID-YYZ-CLOSURE-DUPLICATE-SOURCE",
+      "mutation": "duplicate one source_id",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ-CLOSURE-FRAME-MISMATCH",
+      "mutation": "change one contribution body_frame_id",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ-CLOSURE-REVISION-MISMATCH",
+      "mutation": "change one contribution configuration_revision",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ-CLOSURE-INTERVAL-MISMATCH",
+      "mutation": "change one contribution valid_until_tick",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ-CLOSURE-NONFINITE-FORCE",
+      "mutation": "set one force component to positive infinity",
+      "expected_status": "input-domain-error"
+    }
+  ],
+  "mutation_cases": [
+    {
+      "id": "MUTATION-YYZ-CLOSURE-REVERSED-APPLICATION-VECTOR",
+      "mutation": "use r_application_to_CoM_B in the cross product",
+      "expected_status": "oracle-mismatch"
+    },
+    {
+      "id": "MUTATION-YYZ-CLOSURE-GRAVITY-DOUBLE-COUNT",
+      "mutation": "add mass times gravity to body-force closure before rigid-core evaluation",
+      "expected_status": "oracle-mismatch"
+    }
+  ]
+}

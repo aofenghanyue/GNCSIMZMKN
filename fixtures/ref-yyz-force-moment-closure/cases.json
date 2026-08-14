@@ -1,0 +1,148 @@
+{
+  "schema_version": "gnczmkn.yyz-force-moment-closure-cases/1",
+  "fixture_id": "REF-YYZ-FORCE-MOMENT-CLOSURE-001",
+  "oracle_id": "ORACLE-YYZ-FORCE-MOMENT-CLOSURE-001",
+  "model_choice": {
+    "status": "accepted",
+    "owner_role": "scientific_authority",
+    "accepted_scope": "Fixture-local pure body-frame FrozenInterval closure with unique contribution source identity, one configuration revision, one validity interval, force summation, and moment transport from each application point to the center of mass.",
+    "equations": [
+      "force_total_B = sum(force_B_i)",
+      "moment_total_about_CoM_B = sum(moment_at_application_B_i + r_CoM_to_application_B_i x force_B_i)"
+    ],
+    "gravity_policy": "gravity_I remains an independent inertial acceleration input to the rigid-body form and is excluded from body-force closure",
+    "temporal_policy": "all accepted contributions are frozen over the declared half-open tick interval and the resulting total is held through every RK stage",
+    "excluded": [
+      "canonical aero, propulsion, mass, configuration or gravity models",
+      "CandidateState or AlgebraicSolve closure",
+      "variable center of mass, variable inertia and mass flow",
+      "R1-R8 product contracts or runtime capability"
+    ]
+  },
+  "model": {
+    "model_id": "MODEL-YYZ-FORCE-MOMENT-CLOSURE-001",
+    "body_frame_id": "frame.fixture.yyz.body@1",
+    "application_vector_identity": "r_CoM_to_application_B",
+    "application_vector_direction": "point vector from center of mass to force application point",
+    "moment_output_identity": "moment_total_about_CoM_B",
+    "strategy": "FrozenInterval",
+    "validity_domain": [
+      "all scalar inputs and derived values are finite",
+      "source_id is nonempty and unique within one closure input",
+      "every contribution uses the declared body frame",
+      "every contribution uses the declared configuration revision",
+      "every contribution uses the declared half-open validity interval",
+      "gravity is not a force contribution"
+    ]
+  },
+  "tolerances": {
+    "formula_absolute": 2e-12,
+    "formula_relative": 2e-12,
+    "position_absolute_m": 2e-12,
+    "position_relative": 2e-12,
+    "velocity_absolute_mps": 2e-12,
+    "velocity_relative": 2e-12,
+    "orientation_error_max_rad": 2e-12,
+    "angular_rate_absolute_radps": 2e-12,
+    "time_absolute_s": 1e-14,
+    "stored_decimal_absolute": "1e-48"
+  },
+  "cases": [
+    {
+      "id": "CASE-YYZ-CLOSURE-3D-WRENCH",
+      "kind": "formula",
+      "context": {
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "configuration_revision": 7,
+        "valid_from_tick": 10,
+        "valid_until_tick": 11
+      },
+      "contributions": [
+        {
+          "source_id": "aero.body",
+          "body_frame_id": "frame.fixture.yyz.body@1",
+          "configuration_revision": 7,
+          "valid_from_tick": 10,
+          "valid_until_tick": 11,
+          "force_B_N": [10.0, -20.0, 30.0],
+          "r_CoM_to_application_B_m": [2.0, -1.0, 0.5],
+          "moment_at_application_B_Nm": [1.0, 2.0, 3.0]
+        },
+        {
+          "source_id": "propulsion.main",
+          "body_frame_id": "frame.fixture.yyz.body@1",
+          "configuration_revision": 7,
+          "valid_from_tick": 10,
+          "valid_until_tick": 11,
+          "force_B_N": [-5.0, 4.0, 2.0],
+          "r_CoM_to_application_B_m": [-1.0, 0.25, 3.0],
+          "moment_at_application_B_Nm": [-2.0, 1.0, 0.5]
+        }
+      ]
+    },
+    {
+      "id": "CASE-YYZ-CLOSURE-RIGID-CORE-TRAJECTORY",
+      "kind": "analytic_trajectory",
+      "context": {
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "configuration_revision": 3,
+        "valid_from_tick": 0,
+        "valid_until_tick": 4
+      },
+      "contributions": [
+        {
+          "source_id": "propulsion.main",
+          "body_frame_id": "frame.fixture.yyz.body@1",
+          "configuration_revision": 3,
+          "valid_from_tick": 0,
+          "valid_until_tick": 4,
+          "force_B_N": [150.0, 0.0, 0.0],
+          "r_CoM_to_application_B_m": [0.0, 0.4, 0.0],
+          "moment_at_application_B_Nm": [0.0, 0.0, 0.0]
+        },
+        {
+          "source_id": "aero.body",
+          "body_frame_id": "frame.fixture.yyz.body@1",
+          "configuration_revision": 3,
+          "valid_from_tick": 0,
+          "valid_until_tick": 4,
+          "force_B_N": [-30.0, 0.0, 0.0],
+          "r_CoM_to_application_B_m": [0.0, -1.0, 0.0],
+          "moment_at_application_B_Nm": [0.0, 0.0, 90.0]
+        }
+      ],
+      "rigid_core": {
+        "mass_kg": 60.0,
+        "inertia_B_kgm2_row_major": [40.0, 0.0, 0.0, 0.0, 50.0, 0.0, 0.0, 0.0, 60.0],
+        "gravity_I_mps2": [0.0, 0.0, -9.80665],
+        "initial_state": {
+          "position_I_m": [100.0, -20.0, 1000.0],
+          "velocity_I_mps": [50.0, 5.0, 0.0],
+          "q_I_B_wxyz": [1.0, 0.0, 0.0, 0.0],
+          "omega_BI_B_radps": [0.0, 0.0, 0.0]
+        },
+        "dt_s": 0.25,
+        "duration_s": 1.0,
+        "terminal": {"kind": "duration_exact_grid", "expected_tick": 4}
+      }
+    }
+  ],
+  "equivalence_cases": [
+    {
+      "id": "EQUIV-YYZ-CLOSURE-CONTRIBUTION-ORDER",
+      "operation": "reverse the distinct contribution order",
+      "expected": "canonical per-source intermediates and totals remain equal"
+    }
+  ],
+  "invalid_input_cases": [
+    {"id": "INVALID-YYZ-CLOSURE-DUPLICATE-SOURCE", "mutation": "duplicate one source_id", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-CLOSURE-FRAME-MISMATCH", "mutation": "change one contribution body_frame_id", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-CLOSURE-REVISION-MISMATCH", "mutation": "change one contribution configuration_revision", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-CLOSURE-INTERVAL-MISMATCH", "mutation": "change one contribution valid_until_tick", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-CLOSURE-NONFINITE-FORCE", "mutation": "set one force component to positive infinity", "expected_status": "input-domain-error"}
+  ],
+  "mutation_cases": [
+    {"id": "MUTATION-YYZ-CLOSURE-REVERSED-APPLICATION-VECTOR", "mutation": "use r_application_to_CoM_B in the cross product", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-CLOSURE-GRAVITY-DOUBLE-COUNT", "mutation": "add mass times gravity to body-force closure before rigid-core evaluation", "expected_status": "oracle-mismatch"}
+  ]
+}
