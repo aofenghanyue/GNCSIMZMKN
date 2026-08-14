@@ -150,6 +150,8 @@ def load_semantic_fields(case: dict, repo_root: Path) -> tuple[int, dict]:
     require(policy["column_order"] == "ignored after semantic mapping" and
             policy["unmapped_columns"] ==
             "allowed and excluded from semantic comparison" and
+            policy["numeric_text_format"] ==
+            "finite Decimal-equivalent forms accepted after parsing" and
             policy["duplicate_headers"] == "rejected",
             "CSV encoding policy differs")
     return 12, by_id
@@ -273,6 +275,40 @@ def permute_dataset(raw: bytes) -> bytes:
     return output.getvalue().encode("utf-8")
 
 
+def reformat_required_numeric_text(raw: bytes,
+                                   required_columns: set[str]) -> bytes:
+    header, rows = parse_csv_rows(raw)
+    required_indices = [index for index, name in enumerate(header)
+                        if name in required_columns]
+    output = io.StringIO(newline="")
+    writer = csv.writer(output, lineterminator="\n")
+    writer.writerow(header)
+    for row in rows:
+        transformed = list(row)
+        for index in required_indices:
+            transformed[index] = format(decimal(transformed[index]), "E")
+        writer.writerow(transformed)
+    return output.getvalue().encode("utf-8")
+
+
+def change_unmapped_column_values(raw: bytes,
+                                  required_columns: set[str]) -> bytes:
+    header, rows = parse_csv_rows(raw)
+    unmapped_indices = [index for index, name in enumerate(header)
+                        if name not in required_columns]
+    require(unmapped_indices, "CSV mutation requires an unmapped column")
+    output = io.StringIO(newline="")
+    writer = csv.writer(output, lineterminator="\n")
+    writer.writerow(header)
+    for row_index, row in enumerate(rows):
+        transformed = list(row)
+        for column_index in unmapped_indices:
+            transformed[column_index] = (
+                f"ignored-{row_index}-{column_index}")
+        writer.writerow(transformed)
+    return output.getvalue().encode("utf-8")
+
+
 def duplicate_required_header(raw: bytes, required_column: str) -> bytes:
     header, rows = parse_csv_rows(raw)
     replacement_index = next(index for index, name in enumerate(header)
@@ -370,10 +406,33 @@ def main() -> int:
             "Normalized Legacy CSV reruns differ")
     checks += 1
 
+    equivalence_by_id = {entry["id"]: entry
+                         for entry in oracle["equivalence_cases"]}
+    require(set(equivalence_by_id) == {
+        "PASS-CSV-COLUMN-PERMUTED",
+        "PASS-CSV-NUMERIC-TEXT-REFORMATTED",
+        "PASS-CSV-UNMAPPED-COLUMNS-CHANGED",
+    } and all(entry["expected_status"] == "accepted"
+              for entry in equivalence_by_id.values()),
+            "CSV equivalence-case definitions differ")
+    required_columns = {
+        fields_by_id[field_id]["legacy_column"]
+        for field_id in expected_field_ids
+    }
     permuted = normalize_dataset(permute_dataset(datasets[0]), fields_by_id)
     require(permuted == normalized[0],
             "CSV column permutation changed semantic data")
-    checks += 2
+    reformatted = normalize_dataset(
+        reformat_required_numeric_text(datasets[0], required_columns),
+        fields_by_id)
+    require(reformatted == normalized[0],
+            "Equivalent CSV numeric text changed semantic data")
+    unmapped_changed = normalize_dataset(
+        change_unmapped_column_values(datasets[0], required_columns),
+        fields_by_id)
+    require(unmapped_changed == normalized[0],
+            "Unmapped CSV column data changed semantic data")
+    checks += 7
 
     failure_by_id = {entry["id"]: entry
                      for entry in oracle["failure_cases"]}
@@ -422,11 +481,12 @@ def main() -> int:
     checks += validate_semantic_rows(
         probe_rows, analytic, time_tolerance, state_tolerance, "C++ probe")
     for flag in (
-            "column_permutation_accepted", "missing_t0_rejected",
+            "column_permutation_accepted", "numeric_text_format_accepted",
+            "unmapped_column_change_accepted", "missing_t0_rejected",
             "shifted_tk_rejected", "stale_published_state_rejected",
             "duplicate_required_header_rejected"):
         require(probe[flag] is True, f"C++ CSV probe did not enforce {flag}")
-    checks += 8
+    checks += 10
 
     decision = oracle["disposition_decision"]
     require(decision["status"] in {"needs_owner_decision", "accepted"},
@@ -445,6 +505,8 @@ def main() -> int:
         "input_sha256": sha256_bytes(input_bytes),
         "legacy_reruns_byte_identical": True,
         "semantic_column_permutation_equivalent": True,
+        "semantic_numeric_text_equivalent": True,
+        "semantic_unmapped_column_change_equivalent": True,
         "row_count": len(analytic),
         "final_altitude_m": str(analytic[-1]["altitude_m"]),
         "final_vertical_velocity_mps": str(

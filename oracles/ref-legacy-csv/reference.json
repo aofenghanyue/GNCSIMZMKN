@@ -6,7 +6,7 @@
   "input_identity": {
     "path": "fixtures/ref-legacy-csv/input.json",
     "bytes": 4247,
-    "sha256": "937ee681c80fcbc7ce507606beb8b54840065b6470c5307c490650ce77d854a6"
+    "sha256": "3cff3ab7ed7f9bb5e2557af25ddc6c9b3e83b4c98b071281b83da181586206d4"
   },
   "reference_method": {
     "implementation": "CPython standard library csv and Decimal at 50 digits plus an independent C++17 header-mapped semantic probe",
@@ -50,6 +50,7 @@
     "encoding_equivalence": {
       "column_permutation": "accepted",
       "unmapped_columns": "ignored after required semantic fields are mapped",
+      "numeric_text_format": "finite Decimal-equivalent forms accepted after parsing",
       "duplicate_required_header": "rejected"
     }
   },
@@ -60,6 +61,23 @@
     "legacy_seed_state_absolute": "1e-9",
     "target_field_tolerances": "pending R0-SCI-003"
   },
+  "equivalence_cases": [
+    {
+      "id": "PASS-CSV-COLUMN-PERMUTED",
+      "mutation": "Reverse all encoded CSV columns while retaining their headers and values",
+      "expected_status": "accepted"
+    },
+    {
+      "id": "PASS-CSV-NUMERIC-TEXT-REFORMATTED",
+      "mutation": "Re-encode required finite numeric values with Decimal-equivalent exponent notation",
+      "expected_status": "accepted"
+    },
+    {
+      "id": "PASS-CSV-UNMAPPED-COLUMNS-CHANGED",
+      "mutation": "Replace every unmapped column value with unrelated opaque text",
+      "expected_status": "accepted"
+    }
+  ],
   "failure_cases": [
     {
       "id": "FAIL-CSV-MISSING-T0",

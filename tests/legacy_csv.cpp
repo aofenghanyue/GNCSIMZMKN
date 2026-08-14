@@ -27,11 +27,13 @@ struct SemanticRow {
     double vertical_velocity_mps = 0.0;
 };
 
-using EncodedRows = std::vector<std::vector<double>>;
+using EncodedRows = std::vector<std::vector<std::string>>;
 
 struct ProbeResult {
     std::vector<SemanticRow> rows;
     bool column_permutation_accepted = false;
+    bool numeric_text_format_accepted = false;
+    bool unmapped_column_change_accepted = false;
     bool missing_t0_rejected = false;
     bool shifted_tk_rejected = false;
     bool stale_published_state_rejected = false;
@@ -46,6 +48,14 @@ void require(bool condition, const std::string& message) {
 
 bool nearlyEqual(double lhs, double rhs, double tolerance) {
     return std::abs(lhs - rhs) <= tolerance;
+}
+
+double parseFiniteNumber(const std::string& encoded) {
+    std::size_t consumed = 0;
+    const double value = std::stod(encoded, &consumed);
+    require(consumed == encoded.size() && std::isfinite(value),
+            "encoded dataset contains an invalid numeric token");
+    return value;
 }
 
 std::vector<SemanticRow> analyticRows() {
@@ -93,9 +103,9 @@ std::vector<SemanticRow> decodeByHeader(
                 "encoded row width differs from its header");
         result.push_back({
             row_index,
-            encoded[index_by_name.at(kTimeColumn)],
-            encoded[index_by_name.at(kAltitudeColumn)],
-            encoded[index_by_name.at(kVelocityColumn)],
+            parseFiniteNumber(encoded[index_by_name.at(kTimeColumn)]),
+            parseFiniteNumber(encoded[index_by_name.at(kAltitudeColumn)]),
+            parseFiniteNumber(encoded[index_by_name.at(kVelocityColumn)]),
         });
     }
     return result;
@@ -141,9 +151,9 @@ ProbeResult runProbe() {
     const std::vector<std::string> canonical_header{
         kTimeColumn, kAltitudeColumn, kVelocityColumn, "unused.encoding"};
     const EncodedRows canonical_encoded{
-        {0.0, 1000.0, 10.0, 101.0},
-        {0.5, 1004.75, 9.0, 102.0},
-        {1.0, 1009.0, 8.0, 103.0},
+        {"0", "1000", "10", "101"},
+        {"0.5", "1004.75", "9", "102"},
+        {"1", "1009", "8", "103"},
     };
 
     ProbeResult result;
@@ -152,12 +162,28 @@ ProbeResult runProbe() {
     const std::vector<std::string> permuted_header{
         "unused.encoding", kVelocityColumn, kTimeColumn, kAltitudeColumn};
     const EncodedRows permuted_encoded{
-        {101.0, 10.0, 0.0, 1000.0},
-        {102.0, 9.0, 0.5, 1004.75},
-        {103.0, 8.0, 1.0, 1009.0},
+        {"101", "10", "0", "1000"},
+        {"102", "9", "0.5", "1004.75"},
+        {"103", "8", "1", "1009"},
     };
     result.column_permutation_accepted = sameRows(
         result.rows, decodeByHeader(permuted_header, permuted_encoded));
+
+    const EncodedRows reformatted_numeric{
+        {"+0.000e+0", "1.000000E+3", "1.0e1", "101"},
+        {"5e-1", "1004.7500", "9.000", "102"},
+        {"1.000", "1.009e3", "8e0", "103"},
+    };
+    result.numeric_text_format_accepted = sameRows(
+        result.rows, decodeByHeader(canonical_header, reformatted_numeric));
+
+    const EncodedRows changed_unmapped{
+        {"0", "1000", "10", "ignored-a"},
+        {"0.5", "1004.75", "9", "ignored-b"},
+        {"1", "1009", "8", "ignored-c"},
+    };
+    result.unmapped_column_change_accepted = sameRows(
+        result.rows, decodeByHeader(canonical_header, changed_unmapped));
 
     auto missing_t0 = result.rows;
     missing_t0.erase(missing_t0.begin());
@@ -197,6 +223,10 @@ void writeJson(const ProbeResult& result) {
     std::cout << "]"
               << ",\"column_permutation_accepted\":"
               << (result.column_permutation_accepted ? "true" : "false")
+              << ",\"numeric_text_format_accepted\":"
+              << (result.numeric_text_format_accepted ? "true" : "false")
+              << ",\"unmapped_column_change_accepted\":"
+              << (result.unmapped_column_change_accepted ? "true" : "false")
               << ",\"missing_t0_rejected\":"
               << (result.missing_t0_rejected ? "true" : "false")
               << ",\"shifted_tk_rejected\":"
@@ -222,6 +252,10 @@ int main(int argc, char** argv) {
                 "analytic CSV semantic rows differ");
         require(result.column_permutation_accepted,
                 "column permutation changed semantic rows");
+        require(result.numeric_text_format_accepted,
+                "equivalent numeric text changed semantic rows");
+        require(result.unmapped_column_change_accepted,
+                "unmapped column data changed semantic rows");
         require(result.missing_t0_rejected,
                 "missing initial sample was accepted");
         require(result.shifted_tk_rejected,

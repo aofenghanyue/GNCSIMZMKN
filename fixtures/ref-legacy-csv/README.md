@@ -24,4 +24,4 @@ Run both executable checks through CTest:
 ctest --preset dev -R "r0.legacy-csv" --output-on-failure
 ```
 
-Column order, unmapped columns, numeric text formatting, session filename, and output directory do not participate in the semantic comparison. The bundle remains `capturing` until the repository owner accepts the Preserve/Retire split and `R0-SCI-003` freezes target YYZ field tolerances.
+Column order, unmapped columns, numeric text formatting, session filename, and output directory do not participate in the semantic comparison. Positive equivalence checks now re-encode required values with finite Decimal-equivalent exponent notation and replace every unmapped value with opaque text. The bundle remains `capturing` until the repository owner accepts the Preserve/Retire split and `R0-SCI-003` freezes target YYZ field tolerances.
