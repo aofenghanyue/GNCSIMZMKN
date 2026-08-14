@@ -32,13 +32,24 @@
     {
       "id": "ORACLE-YYZ-PHASE-02",
       "level": "mission",
-      "status": "planned",
+      "status": "capturing",
       "claim": "The preserved fixed-step phase order is explicit and observable.",
-      "expected_facts": ["Invocation order is environment, perturbation, input, process, output, interaction, evaluation."],
-      "reference_kind": "legacy invocation trace",
-      "tolerance_policy": "exact ordered sequence",
-      "source_refs": ["reference/legacy/source-manifest.json"],
-      "artifact_refs": []
+      "expected_facts": [
+        "A due probe in each macro phase runs exactly once in environment, perturbation, input, process, output, interaction and evaluation order.",
+        "Scrambled cross-phase registration and priority values cannot change the macro phase sequence."
+      ],
+      "reference_kind": "raw Legacy invocation trace plus independent scheduler trace",
+      "tolerance_policy": "exact event identity, order, multiplicity, step and time",
+      "source_refs": ["reference/legacy/source-manifest.json", "design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md#10-旧行为-oracle-怎样保护迁移"],
+      "artifact_refs": [
+        "fixtures/ref-legacy-phase/input.json",
+        "fixtures/ref-legacy-phase/legacy_capture.cpp",
+        "fixtures/ref-legacy-phase/legacy-run-1.json",
+        "fixtures/ref-legacy-phase/legacy-run-2.json",
+        "oracles/ref-legacy-phase/reference.json",
+        "tests/legacy_phase.cpp",
+        "tools/legacy_phase_reference.py"
+      ]
     },
     {
       "id": "ORACLE-YYZ-SYNC-03",

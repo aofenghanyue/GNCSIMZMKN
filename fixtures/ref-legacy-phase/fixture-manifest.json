@@ -1,0 +1,71 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-LEGACY-PHASE-001",
+  "status": "capturing",
+  "purpose": "Make the frozen Legacy seven-phase invocation order executable while keeping priority, registration and callback implementation details outside the preserved fact.",
+  "authority": "validation_lead",
+  "provenance": {
+    "source_refs": [
+      "docs/adr/0001-greenfield-and-legacy-reference.md",
+      "design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md#10-旧行为-oracle-怎样保护迁移",
+      "reference/legacy/source-manifest.json",
+      "reference/legacy/reproduction/r0-leg-001-20260810-07/evidence-index.json"
+    ],
+    "notes": "An external C++17 harness was compiled against a clean extraction of the frozen archive with w64devkit GCC 16.2.0 and run twice. The main build only consumes the pinned traces and an independent probe; it has no Legacy include or link dependency."
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-PHASE-MACRO-ORDER",
+      "claim": "A due probe in each phase runs once at t0 in environment, perturbation, input, process, output, interaction and evaluation order.",
+      "tolerance_policy": "Phase, event, sequence, probe, step, time and multiplicity fields are exact.",
+      "evidence_refs": [
+        "fixtures/ref-legacy-phase/legacy-run-1.json",
+        "fixtures/ref-legacy-phase/legacy-run-2.json",
+        "oracles/ref-legacy-phase/reference.json",
+        "tests/legacy_phase.cpp",
+        "tools/legacy_phase_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-PHASE-DISCRIMINATOR",
+      "claim": "Scrambled registration and cross-phase priority order both differ from the observed macro phase order.",
+      "tolerance_policy": "Registration, priority and observed phase sequences are compared exactly.",
+      "evidence_refs": [
+        "fixtures/ref-legacy-phase/input.json",
+        "oracles/ref-legacy-phase/reference.json",
+        "tests/legacy_phase.cpp"
+      ]
+    },
+    {
+      "id": "FACT-PHASE-PROVENANCE",
+      "claim": "The trace is tied to the frozen Legacy archive, phase metadata, simulator implementation, passing runtime test, capture harness and canonical environment evidence.",
+      "tolerance_policy": "Paths, byte counts and SHA-256 values are exact.",
+      "evidence_refs": [
+        "fixtures/ref-legacy-phase/input.json",
+        "fixtures/ref-legacy-phase/legacy_capture.cpp",
+        "reference/legacy/reproduction/r0-leg-001-20260810-07/logs/legacy-ctest-all.log"
+      ]
+    }
+  ],
+  "required_artifacts": [
+    "fixtures/ref-legacy-phase/README.md",
+    "fixtures/ref-legacy-phase/input.json",
+    "fixtures/ref-legacy-phase/legacy_capture.cpp",
+    "fixtures/ref-legacy-phase/legacy-run-1.json",
+    "fixtures/ref-legacy-phase/legacy-run-2.json",
+    "oracles/ref-legacy-phase/reference.json",
+    "tests/legacy_phase.cpp",
+    "tools/legacy_phase_reference.py",
+    "CMakeLists.txt"
+  ],
+  "acceptance": [
+    "Verifies frozen source, environment, harness and runtime-test identities before comparing behavior",
+    "Two raw Legacy captures normalize to one byte-independent semantic trace after excluding only rerun_index",
+    "Independent C++17 scheduling and Python trace validation agree with all seven Legacy events",
+    "Rejects a process/output swap and a duplicate input phase",
+    "Preserve and Retire recommendations remain visibly pending until the repository owner accepts the disposition choice"
+  ],
+  "open_tasks": [
+    "R0-LEG-002"
+  ]
+}

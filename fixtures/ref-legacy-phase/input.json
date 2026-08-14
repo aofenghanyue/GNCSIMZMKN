@@ -1,0 +1,119 @@
+{
+  "schema_version": "gnczmkn.legacy-phase-input/1",
+  "fixture_id": "REF-LEGACY-PHASE-001",
+  "oracle_id": "ORACLE-YYZ-PHASE-02",
+  "case_id": "CASE-LEGACY-SEVEN-PHASE-TRACE",
+  "run": {
+    "dt_s": "1",
+    "duration_s": "0",
+    "observed_step": 0,
+    "observed_time_s": "0"
+  },
+  "registrations": [
+    {
+      "phase": "evaluation",
+      "probe_id": "probe:evaluation",
+      "priority": -100,
+      "registration_order": 0
+    },
+    {
+      "phase": "output",
+      "probe_id": "probe:output",
+      "priority": 50,
+      "registration_order": 1
+    },
+    {
+      "phase": "environment",
+      "probe_id": "probe:environment",
+      "priority": 100,
+      "registration_order": 2
+    },
+    {
+      "phase": "interaction",
+      "probe_id": "probe:interaction",
+      "priority": -20,
+      "registration_order": 3
+    },
+    {
+      "phase": "input",
+      "probe_id": "probe:input",
+      "priority": 0,
+      "registration_order": 4
+    },
+    {
+      "phase": "perturbation",
+      "probe_id": "probe:perturbation",
+      "priority": 30,
+      "registration_order": 5
+    },
+    {
+      "phase": "process",
+      "probe_id": "probe:process",
+      "priority": -40,
+      "registration_order": 6
+    }
+  ],
+  "legacy_source": {
+    "archive": {
+      "path": "reference/legacy/legacy-source.zip",
+      "prefix": "GNCZMKN-legacy-a63621c/",
+      "bytes": 990450,
+      "sha256": "2159a324fd897e4bd508c140a36c9165d744e4e4e61861c5b568201707f988e5"
+    },
+    "entries": [
+      {
+        "path": "framework/include/gnc/core/execution_metadata.hpp",
+        "bytes": 526,
+        "sha256": "c732866f886b8650e87c0316ee87e5aa76da2a76083fccc5b145c8087d9bffda"
+      },
+      {
+        "path": "framework/include/gnc/core/simulator.hpp",
+        "bytes": 21226,
+        "sha256": "455b22e68fdd4511a85f9a1c20547d022261cdf3397aabfd5f85115764edae78"
+      },
+      {
+        "path": "tests/test_publish_semantics.cpp",
+        "bytes": 27073,
+        "sha256": "48c5b86ea7a88a3c7702d5abdf89bcebaf8e8dfa331289317453a698f3802e08"
+      }
+    ],
+    "runtime_test": {
+      "id": "test_publish_semantics",
+      "evidence_path": "reference/legacy/reproduction/r0-leg-001-20260810-07/logs/legacy-ctest-all.log",
+      "evidence_bytes": 4131,
+      "evidence_sha256": "c9b4140b5c6dfe0917036f12ce0dca07005c6913b68751f2649d728d33899c2d"
+    }
+  },
+  "legacy_capture": {
+    "compiler": "w64devkit GCC 16.2.0",
+    "language_standard": "C++17",
+    "compile_command": "<w64devkit-g++> -std=c++17 -O2 -Wall -Wextra -pedantic legacy_capture.cpp -I<legacy-root> -I<generated-config> -I<legacy-root>/framework/include -isystem <eigen-3.4.0> -o legacy_phase_capture.exe",
+    "run_commands": [
+      "legacy_phase_capture.exe --output legacy-run-1.json --rerun-index 1",
+      "legacy_phase_capture.exe --output legacy-run-2.json --rerun-index 2"
+    ],
+    "working_directory_policy": "Repository root with all source, generated-config, dependency and output paths resolved explicitly",
+    "environment_evidence": {
+      "path": "reference/legacy/reproduction/r0-leg-001-20260810-07/environment-manifest.json",
+      "bytes": 5549,
+      "sha256": "be340b26caa99033cf63cb1c993690aec18e9750faaff6658be4dba8b6eb3041"
+    },
+    "harness": {
+      "path": "fixtures/ref-legacy-phase/legacy_capture.cpp",
+      "bytes": 5113,
+      "sha256": "6cffb253398754236b290bd7e105ce3c022b69d7ec849a2a2a4a3b7703247e00"
+    },
+    "traces": [
+      {
+        "path": "fixtures/ref-legacy-phase/legacy-run-1.json",
+        "bytes": 893,
+        "sha256": "b6fc888a3d44feee94d6f5a3c01f23277b1151596b19eec601b7d913fd0e9712"
+      },
+      {
+        "path": "fixtures/ref-legacy-phase/legacy-run-2.json",
+        "bytes": 893,
+        "sha256": "f1f1986fe99aa4ad4b369ac995d80bb2378fdfdefc33713f26b85e96cfbbce7f"
+      }
+    ]
+  }
+}

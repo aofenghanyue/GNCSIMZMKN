@@ -1,0 +1,129 @@
+{
+  "schema_version": "gnczmkn.legacy-phase-reference/1",
+  "fixture_id": "REF-LEGACY-PHASE-001",
+  "oracle_id": "ORACLE-YYZ-PHASE-02",
+  "case_id": "CASE-LEGACY-SEVEN-PHASE-TRACE",
+  "input_identity": {
+    "path": "fixtures/ref-legacy-phase/input.json",
+    "bytes": 3808,
+    "sha256": "3c9c910b8141c5b67893d8b7e83d19af3d433d068362f61cb14582631810a78f"
+  },
+  "reference_method": {
+    "implementation": "CPython standard library trace normalization and an independent C++17 scheduler probe",
+    "derivation": "Compare two raw Legacy harness runs after excluding only rerun_index, then require the target blueprint macro phase sequence and exact event fields."
+  },
+  "legacy_observation": {
+    "capture_status": "passed_twice",
+    "compiler": "w64devkit GCC 16.2.0",
+    "registration_order": [
+      "evaluation",
+      "output",
+      "environment",
+      "interaction",
+      "input",
+      "perturbation",
+      "process"
+    ],
+    "priority_order": [
+      "evaluation",
+      "process",
+      "interaction",
+      "input",
+      "perturbation",
+      "output",
+      "environment"
+    ],
+    "observed_order": [
+      "environment",
+      "perturbation",
+      "input",
+      "process",
+      "output",
+      "interaction",
+      "evaluation"
+    ],
+    "implementation_fact": "Simulator iterates a fixed seven-phase array before applying priority and registration ordering within each phase."
+  },
+  "expected": {
+    "phases": [
+      "environment",
+      "perturbation",
+      "input",
+      "process",
+      "output",
+      "interaction",
+      "evaluation"
+    ],
+    "event_count": 7,
+    "event_kind": "phase-invoke",
+    "sequence": "zero-based contiguous",
+    "probe_id_template": "probe:{phase}",
+    "step": 0,
+    "time_s": "0",
+    "normalization": {
+      "excluded_top_level_fields": [
+        "rerun_index"
+      ],
+      "excluded_event_fields": []
+    }
+  },
+  "tolerances": {
+    "phase_identity": "exact",
+    "event_identity": "exact",
+    "event_order": "exact",
+    "event_multiplicity": "exact",
+    "step_and_time": "exact"
+  },
+  "failure_cases": [
+    {
+      "id": "FAIL-PHASE-SWAP-PROCESS-OUTPUT",
+      "mutated_phases": [
+        "environment",
+        "perturbation",
+        "input",
+        "output",
+        "process",
+        "interaction",
+        "evaluation"
+      ],
+      "expected_status": "rejected"
+    },
+    {
+      "id": "FAIL-PHASE-DUPLICATE-INPUT",
+      "mutated_phases": [
+        "environment",
+        "perturbation",
+        "input",
+        "input",
+        "output",
+        "interaction",
+        "evaluation"
+      ],
+      "expected_status": "rejected"
+    }
+  ],
+  "disposition_decision": {
+    "status": "needs_owner_decision",
+    "owner_role": "validation_lead",
+    "facts": [
+      {
+        "fact_id": "FACT-PHASE-MACRO-ORDER",
+        "recommended_disposition": "Preserve",
+        "difference_reason": "DeclaredModelChoice",
+        "target_mapping": "compiled boundary DAG ordering constraints"
+      },
+      {
+        "fact_id": "FACT-PHASE-INTRA-PHASE-ORDER",
+        "recommended_disposition": "Retire",
+        "difference_reason": "AccidentalStructure",
+        "target_mapping": "Legacy priority values and registration/config tie-break rules"
+      },
+      {
+        "fact_id": "FACT-PHASE-LEGACY-SURFACE",
+        "recommended_disposition": "Retire",
+        "difference_reason": "AccidentalStructure",
+        "target_mapping": "DiscretePhase enum, IDiscreteTask and update callback surface"
+      }
+    ]
+  }
+}

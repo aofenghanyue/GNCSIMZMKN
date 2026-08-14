@@ -15,4 +15,6 @@ Fixture 是可复制、可校验、带 provenance 的规范实例。每个目录
 
 `ref-legacy-publish` 处于 `capturing`，交叉验证 publish 前后状态恒等、truth 边界时间、解析轨迹与 publish-time mutation 失败；Preserve/Retire 处置等待仓库所有者确认。
 
+`ref-legacy-phase` 处于 `capturing`，包含冻结 Legacy 外部 harness 的两份原始七阶段 trace、无 Legacy 依赖的独立 C++17 调度 probe，以及 phase swap 和 duplicate 失败用例；宏 phase 顺序的处置等待仓库所有者确认。
+
 禁止把蓝图中的演示数值直接升级为 golden。Scientific Authority 需要确认来源、公式和容差。

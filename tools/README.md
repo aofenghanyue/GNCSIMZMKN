@@ -11,6 +11,7 @@
 - `minimal_3dof_reference.py`：以 CPython `decimal` 闭式解生成 minimal 3DoF oracle，并按语义字段验证独立 C++17 RK4 probe 的轨迹、收敛、终止和失败结果。
 - `legacy_sync_commit_reference.py`：核对冻结 Legacy 来源与已通过测试证据，以 `decimal` 推导同步候选结果，并交叉验证独立 C++17 candidate/commit journal 和 early-commit 失败用例。
 - `legacy_publish_reference.py`：核对冻结 Legacy 来源与已通过测试证据，以 `decimal` 推导 publish 边界轨迹，并交叉验证独立 C++17 状态投影、双跑确定性和 committed-state mutation 失败用例。
+- `legacy_phase_reference.py`：核对冻结 Legacy 来源、环境、capture harness 和两份原始 trace，交叉验证独立 C++17 七阶段调度、双跑确定性、phase swap 与 duplicate 失败用例。
 - `validate-license-provenance.ps1`：校验 Proposed 许可证策略、provenance inventory、Legacy archive 扫描、外部工具身份、故障注入与审计报告。
 - `validate-team-toolchain.ps1`：校验角色双人复核、科学/架构独立性、候选工具链矩阵、preset/CI 固定配置、治理阻塞与故障注入。
 - `extract-legacy-reference.ps1`：校验并解包只读 legacy archive 到忽略目录。
