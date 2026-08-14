@@ -1,0 +1,109 @@
+{
+  "schema_version": "gnczmkn.legacy-csv-reference/1",
+  "fixture_id": "REF-LEGACY-CSV-001",
+  "oracle_id": "ORACLE-YYZ-CSV-05",
+  "case_id": "CASE-LEGACY-CSV-TK-BOUNDARY",
+  "input_identity": {
+    "path": "fixtures/ref-legacy-csv/input.json",
+    "bytes": 4247,
+    "sha256": "937ee681c80fcbc7ce507606beb8b54840065b6470c5307c490650ce77d854a6"
+  },
+  "reference_method": {
+    "implementation": "CPython standard library csv and Decimal at 50 digits plus an independent C++17 header-mapped semantic probe",
+    "derivation": "Solve constant vertical acceleration analytically at each declared t_k, map Legacy columns to fixture-local semantic field ids, and compare two captured datasets without relying on column position."
+  },
+  "legacy_observation": {
+    "capture_status": "passed_twice",
+    "runtime_test": "test_publish_semantics",
+    "runtime_test_status": "passed",
+    "source_assertion": "The frozen test requires header plus t0, t1 and t2 rows and checks altitude and vertical velocity by header name.",
+    "implementation_fact": "Simulator publishes each t_k before discrete work and recording; AutoDataLogger records t0 when record_initial_state is enabled and CsvRecordSink encodes the selected fields."
+  },
+  "expected": {
+    "field_ids": [
+      "fixture:legacy-csv.sample_time_s",
+      "vehicle:fixture.truth.altitude_m",
+      "vehicle:fixture.truth.vertical_velocity_mps"
+    ],
+    "rows": [
+      {
+        "sample_index": 0,
+        "sample_time_s": "0",
+        "altitude_m": "1000",
+        "vertical_velocity_mps": "10"
+      },
+      {
+        "sample_index": 1,
+        "sample_time_s": "0.5",
+        "altitude_m": "1004.75",
+        "vertical_velocity_mps": "9"
+      },
+      {
+        "sample_index": 2,
+        "sample_time_s": "1",
+        "altitude_m": "1009",
+        "vertical_velocity_mps": "8"
+      }
+    ],
+    "row_count": 3,
+    "record_initial_state": true,
+    "encoding_equivalence": {
+      "column_permutation": "accepted",
+      "unmapped_columns": "ignored after required semantic fields are mapped",
+      "duplicate_required_header": "rejected"
+    }
+  },
+  "tolerances": {
+    "field_identity": "exact",
+    "row_count_and_order": "exact",
+    "legacy_seed_sample_time_absolute": "1e-12",
+    "legacy_seed_state_absolute": "1e-9",
+    "target_field_tolerances": "pending R0-SCI-003"
+  },
+  "failure_cases": [
+    {
+      "id": "FAIL-CSV-MISSING-T0",
+      "mutation": "Remove the initial sample while record_initial_state is true",
+      "expected_status": "rejected"
+    },
+    {
+      "id": "FAIL-CSV-SHIFTED-TK",
+      "mutation": "Change the second row time from 0.5 to 0.75",
+      "expected_status": "rejected"
+    },
+    {
+      "id": "FAIL-CSV-STALE-PUBLISHED-STATE",
+      "mutation": "Keep t1 altitude at the t0 published value 1000",
+      "expected_status": "rejected"
+    },
+    {
+      "id": "FAIL-CSV-DUPLICATE-REQUIRED-HEADER",
+      "mutation": "Encode the required altitude column twice",
+      "expected_status": "rejected"
+    }
+  ],
+  "disposition_decision": {
+    "status": "needs_owner_decision",
+    "owner_role": "validation_lead",
+    "facts": [
+      {
+        "fact_id": "FACT-CSV-TK-TIMESTAMP",
+        "recommended_disposition": "Preserve",
+        "difference_reason": "ScientificInvariant",
+        "target_mapping": "Each semantic observation row identifies its declared t_k sample boundary"
+      },
+      {
+        "fact_id": "FACT-CSV-PUBLISHED-BOUNDARY",
+        "recommended_disposition": "Preserve",
+        "difference_reason": "ScientificInvariant",
+        "target_mapping": "Truth fields are projected from the state published at the row's t_k boundary"
+      },
+      {
+        "fact_id": "FACT-CSV-LEGACY-ENCODING",
+        "recommended_disposition": "Retire",
+        "difference_reason": "AccidentalStructure",
+        "target_mapping": "Legacy column order, concatenated header names, numeric text format, session filename and output directory"
+      }
+    ]
+  }
+}

@@ -1,0 +1,37 @@
+{
+  "schema_version": "gnczmkn.legacy-csv-semantic-fields/1",
+  "oracle_id": "ORACLE-YYZ-CSV-05",
+  "case_id": "CASE-LEGACY-CSV-TK-BOUNDARY",
+  "fields": [
+    {
+      "field_id": "fixture:legacy-csv.sample_time_s",
+      "legacy_column": "time",
+      "quantity": "time",
+      "unit": "s",
+      "frame": "none",
+      "value_boundary": "recorded boundary t_k"
+    },
+    {
+      "field_id": "vehicle:fixture.truth.altitude_m",
+      "legacy_column": "vehicle.dynamics.position.z",
+      "quantity": "altitude",
+      "unit": "m",
+      "frame": "legacy Cartesian world z",
+      "value_boundary": "state published at t_k"
+    },
+    {
+      "field_id": "vehicle:fixture.truth.vertical_velocity_mps",
+      "legacy_column": "vehicle.dynamics.velocity.z",
+      "quantity": "vertical velocity",
+      "unit": "m/s",
+      "frame": "legacy Cartesian world z",
+      "value_boundary": "state published at t_k"
+    }
+  ],
+  "encoding_policy": {
+    "header_lookup": "exact legacy column identity",
+    "column_order": "ignored after semantic mapping",
+    "unmapped_columns": "allowed and excluded from semantic comparison",
+    "duplicate_headers": "rejected"
+  }
+}

@@ -95,13 +95,25 @@
     {
       "id": "ORACLE-YYZ-CSV-05",
       "level": "mission",
-      "status": "planned",
+      "status": "capturing",
       "claim": "Each recorded time identifies t_k and fields follow declared publish/update boundaries.",
-      "expected_facts": ["Recorded time equals t_k and each semantic FieldId follows its declared projection boundary."],
-      "reference_kind": "semantic dataset comparison",
-      "tolerance_policy": "exact time/identity metadata; field-specific numeric tolerance",
-      "source_refs": ["reference/legacy/source-manifest.json"],
-      "artifact_refs": []
+      "expected_facts": [
+        "The three rows identify t0=0, t1=0.5 s and t2=1 s and contain the state published at each boundary.",
+        "Header-based semantic mapping accepts column permutation while rejecting missing, shifted, stale or duplicate required data."
+      ],
+      "reference_kind": "raw Legacy CSV captures plus semantic field map and independent Decimal/C++17 references",
+      "tolerance_policy": "exact semantic field identity and row order; Legacy seed time absolute tolerance 1e-12 and state absolute tolerance 1e-9; target YYZ field tolerances remain pending R0-SCI-003",
+      "source_refs": ["reference/legacy/source-manifest.json", "design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md#10-旧行为-oracle-怎样保护迁移"],
+      "artifact_refs": [
+        "fixtures/ref-legacy-csv/input.json",
+        "fixtures/ref-legacy-csv/semantic-fields.json",
+        "fixtures/ref-legacy-csv/legacy_capture.cpp",
+        "fixtures/ref-legacy-csv/legacy-run-1.csv",
+        "fixtures/ref-legacy-csv/legacy-run-2.csv",
+        "oracles/ref-legacy-csv/reference.json",
+        "tests/legacy_csv.cpp",
+        "tools/legacy_csv_reference.py"
+      ]
     },
     {
       "id": "ORACLE-YYZ-STOP-06",

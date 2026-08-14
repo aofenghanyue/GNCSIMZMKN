@@ -19,4 +19,6 @@ Fixture 是可复制、可校验、带 provenance 的规范实例。每个目录
 
 `ref-legacy-continuous-group` 处于 `capturing`，包含真实 Legacy 四阶段 joint-candidate trace、50 位 Decimal 与独立 C++17 RK4 reference，以及 split closure、未注册 member 和重复 scope ownership 失败用例；共享 closure 的处置等待仓库所有者确认。
 
+`ref-legacy-csv` 处于 `capturing`，包含两份真实 Legacy CSV capture、fixture-local 语义字段映射、50 位 Decimal 与独立 C++17 reference；按表头映射后允许列置换，并拒绝缺失 t0、错位 `t_k`、陈旧发布态和重复必要表头。
+
 禁止把蓝图中的演示数值直接升级为 golden。Scientific Authority 需要确认来源、公式和容差。
