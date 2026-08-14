@@ -63,7 +63,7 @@ Raw hash 只证明审计读取的 bytes；Markdown 中的候选 budget 或本机
 
 [CI workflow](../../.github/workflows/ci.yml)配置 Ubuntu 24.04/GCC 13 和 Windows 2025/VS 2026 的 Release correctness jobs，并记录 runner/tool/compiler identity；当前仍没有 benchmark job。[toolchain matrix](../governance/toolchain-support-matrix.json)记录受支持的构建 profile。
 
-`R0-SCI-002` 仍为 `planned`，[`REF-MINIMAL-3DOF-001`](../../fixtures/ref-minimal-3dof/fixture-manifest.json)为 `specification_only`。在 correctness producer/candidate/tolerance 未关闭前，benchmark 不得以错误或空计算换取速度。
+`R0-SCI-002` 已完成，[`REF-MINIMAL-3DOF-001`](../../fixtures/ref-minimal-3dof/fixture-manifest.json)已达到 `executable`。后续 benchmark 可以复用该 correctness baseline，并继续拒绝以错误或空计算换取速度。
 
 ## 3. Measurement vocabulary 与独立结论
 

@@ -8,7 +8,7 @@
 
 结论：R0-SCI-001 可以先冻结科学语义和 oracle；产品类型仍属于 R1 及后续纵向 slice。
 
-本阶段新增的 `Duration`、`SimulationTime`、`SampleTime`、`ValidTime`、`WallTime`、四元数输入 policy 与单位转换器都只存在于隔离 C++/Python oracle 中，用于证明边界性质；它们不是产品 header、runtime consumer 或已选定的 storage/API 设计。半开 validity 行为同样只是 Proposed ADR 下的 fixture 候选，等待 Scientific Authority 决策。
+本阶段新增的 `Duration`、`SimulationTime`、`SampleTime`、`ValidTime`、`WallTime`、四元数输入 policy 与单位转换器都只存在于隔离 C++/Python oracle 中，用于证明边界性质；它们不是产品 header、runtime consumer 或已选定的 storage/API 设计。半开 validity 行为已经随 ADR-0006 接受为 fixture-level 科学基线。
 
 ## 冻结 Legacy 表示
 
@@ -32,4 +32,4 @@
 
 ## 当前判定
 
-本阶段没有可晋升的产品数学实现。可晋升对象只有 Proposed ADR、executable fixture、隔离 property test、独立 Python reference 与 cross-tool evidence。当前 oracle 已覆盖四元数有限/非单位输入、单位 domain failure、clock-domain 算术与 validity 边界，但这些测试类型不能被复制为产品 API。Scientific Authority 接受 ADR 后，后续 R1/N2/N3 才能选择 storage backend 和公共类型。
+本阶段没有可晋升的产品数学实现。当前交付包含 Accepted ADR、executable fixture、隔离 property test、独立 Python reference 与 cross-tool evidence。oracle 已覆盖四元数有限/非单位输入、单位 domain failure、clock-domain 算术与 validity 边界；后续 R1/N2/N3 仍需独立选择 storage backend 和公共类型。

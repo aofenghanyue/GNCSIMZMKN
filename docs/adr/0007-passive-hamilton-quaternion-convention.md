@@ -1,6 +1,6 @@
 # ADR-0007: Passive Hamilton quaternion convention
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-08-10
 - Owners: Scientific Authority
 - Related tasks: R0-SCI-001

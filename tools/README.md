@@ -7,7 +7,7 @@
 - `reproduce-legacy.ps1`：从冻结 ZIP 和固定哈希的离线依赖归档创建隔离工作区，构建并运行 Legacy 全部测试与五条代表任务。
 - `validate-legacy-reproduction.ps1`：校验受控 Legacy 证据索引、环境、测试、任务基线和 MSVC 兼容性缺口，不重新执行耗时构建。
 - `scientific_conventions_reference.py`：只使用 CPython 标准库计算 R0 单位、frame、时间与被动 Hamilton 四元数参考结果。
-- `validate-scientific-conventions.ps1`：校验 scientific convention fixture，运行 C++/Python 交叉验证、故障注入并检查证据 hash。
+- `validate-scientific-conventions.ps1`：校验 scientific convention fixture，运行 C++/Python 交叉验证、失败路径检查并核对科学结果。
 - `minimal_3dof_reference.py`：以 CPython `decimal` 闭式解生成 minimal 3DoF oracle，并按语义字段验证独立 C++17 RK4 probe 的轨迹、收敛、终止和失败结果。
 - `validate-license-provenance.ps1`：校验 Proposed 许可证策略、provenance inventory、Legacy archive 扫描、外部工具身份、故障注入与审计报告。
 - `validate-team-toolchain.ps1`：校验角色双人复核、科学/架构独立性、候选工具链矩阵、preset/CI 固定配置、治理阻塞与故障注入。

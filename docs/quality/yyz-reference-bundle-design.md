@@ -244,7 +244,7 @@ Observation truth 是带 FieldId、unit、frame、sample time、commit ref、val
 
 ### 7.1 Convention 前提
 
-R0-SCI-001 提供的 SI、frame、binary64、integer tick、ExactGrid 和 quaternion profile 仍受 Proposed ADR 与 owner review 约束。YYZ reference 必须显式携带：
+R0-SCI-001 提供的 SI、frame、binary64、integer tick、ExactGrid 和 quaternion profile 已由 owner 接受。YYZ reference 必须显式携带：
 
 - quantity semantic id、unit 与 geometry kind；
 - expressed/reference frame、origin 与 axis convention；
@@ -261,7 +261,7 @@ R0-SCI-001 提供的 SI、frame、binary64、integer tick、ExactGrid 和 quater
 | --- | --- | --- | --- |
 | Translation | `r_dot^I = v^I`；`v_dot^I = R_B^I(q) F^B / m + g^I` | transformed force、mass reciprocal、gravity、acceleration | frame/origin、gravity、force point、closure strategy |
 | Rotation | `omega_dot^B = I_B^-1 (M^B - omega^B × (I_B omega^B))`（仅在批准假设下） | angular momentum、gyroscopic term、net moment、condition/domain | inertia tensor/time variation、solver、singular policy |
-| Attitude | Proposed passive Hamilton candidate `q_dot_I_B = -0.5 * pure(omega^B_IB) ⊗ q_I_B` | quaternion norm、product terms、candidate norm | authoritative convention、normalization timing、adapter |
+| Attitude | Accepted passive Hamilton convention `q_dot_I_B = -0.5 * pure(omega^B_IB) ⊗ q_I_B` | quaternion norm、product terms、candidate norm | normalization timing、adapter |
 | Air data | relative wind → body velocity；`V=norm(v_rel)`、`qbar=0.5 rho V^2`、`Mach=V/a` | wind subtraction、rotation、V/rho/a、alpha/beta inputs | alpha/beta definitions、low-speed/singularity policy |
 | Environment | atmosphere/gravity/wind query | geoposition/time conversion、rho/a/g/wind | model/version/constants/domain |
 | Guidance | approved estimate/target/phase → typed GuidanceCommand | LOS/reference/errors、mode/mechanism state、limits | law、rate、held/max-age、feedback semantics |

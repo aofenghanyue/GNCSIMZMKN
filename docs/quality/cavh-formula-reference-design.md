@@ -27,7 +27,7 @@
 
 - [15 参考纵向设计](../../design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md) §10 要求把 CAVH 拆成 definition/binding、prepared glide envelope、environment derivative query、Eq17/Eq18 kernel、TDCT、command、telemetry 与逐层验证；
 - [09 科学复现与工程适配](../../design-notes/gnczmkn-architecture-roadmap/09-research-workflows-and-tool-adapters.md) §16 要求 citation、claim、normalized equation、symbol、assumption、scenario、reference data、algorithm、discrepancy、verification、engineering wrapper 与 maturity 可追溯，并把 faithful reproduction、independent verification、engineering adaptation 分成不同 artifact；
-- [`R0-SCI-001`](../tasks/backlog.json) 准备了 SI、角度、binary64、整数 tick、domain 与数值失败的候选约定，owner 接受前仍属于候选 science policy；
+- [`R0-SCI-001`](../tasks/backlog.json) 已完成，SI、角度、binary64、整数 tick、domain 与数值失败约定已经由 owner 接受；
 - [`R0-LEG-001`](../tasks/backlog.json) 和[复现证据索引](../../reference/legacy/reproduction/r0-leg-001-20260810-07/evidence-index.json)只提供冻结行为证据；
 - [`REF-CAVH-FORMULA-001` manifest](../../fixtures/ref-cavh-formula/fixture-manifest.json)要求 citation/version、assumption、Eq17、Eq18、derivative、glide envelope、TDCT 和 closed-loop artifacts。
 

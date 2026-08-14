@@ -68,6 +68,5 @@
     "Contains explicit initial conditions, independent analytic trajectories, convergence, committed-tick termination and numerical failure checks",
     "Addresses results by semantic case and quantity identity without Legacy node names or CSV column order",
     "C++ and Python implementations remain isolated from product and Legacy code"
-  ],
-  "open_tasks": ["R0-SCI-002"]
+  ]
 }

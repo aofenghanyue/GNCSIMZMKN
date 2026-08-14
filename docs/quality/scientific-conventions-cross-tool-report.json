@@ -3,7 +3,7 @@
     "task_id":  "R0-SCI-001",
     "convention_id":  "SCI-CONVENTIONS-001",
     "status":  "pass",
-    "generated_at":  "2026-08-14T03:23:35.0309206Z",
+    "generated_at":  "2026-08-14T03:49:48.7410895Z",
     "environment":  {
                         "os":  "Microsoft Windows NT 10.0.26100.0",
                         "architecture":  "X64",
@@ -11,40 +11,6 @@
                         "cpp_runtime":  "GCC 15.1.0",
                         "python_runtime":  "CPython 3.12.7"
                     },
-    "inputs":  [
-                   {
-                       "path":  "docs/adr/0006-si-frame-and-simulation-time-conventions.md",
-                       "sha256_normalized_utf8_lf":  "fcfc7bb337a7f692a388cdfaed6132833526731b8e1d0e2607d35e9339537a00"
-                   },
-                   {
-                       "path":  "docs/adr/0007-passive-hamilton-quaternion-convention.md",
-                       "sha256_normalized_utf8_lf":  "dcd80cdf7a20324a8755a3f0c91ece88546ed99da82b916e7e09a09d92f74263"
-                   },
-                   {
-                       "path":  "fixtures/ref-scientific-conventions/fixture-manifest.json",
-                       "sha256_normalized_utf8_lf":  "a9ea1e8fd5c7ee9a3f03b5ebe07aac2c7d28083fdf4c042d7a08316be8c7cb93"
-                   },
-                   {
-                       "path":  "fixtures/ref-scientific-conventions/conventions.json",
-                       "sha256_normalized_utf8_lf":  "e8001ce8e170878eb40601c63340f899afee5d33e67f3e05722743e805a97e32"
-                   },
-                   {
-                       "path":  "fixtures/ref-scientific-conventions/cases.json",
-                       "sha256_normalized_utf8_lf":  "0893140ea825a4886188a14689d2a7488bef88b13dfeaba54114cd983e9ba743"
-                   },
-                   {
-                       "path":  "tests/scientific_conventions.cpp",
-                       "sha256_normalized_utf8_lf":  "34bcfef144c2ab8c28e8c764244c782e9f1ef528da18c3f8590ed27bfebac950"
-                   },
-                   {
-                       "path":  "tools/scientific_conventions_reference.py",
-                       "sha256_normalized_utf8_lf":  "9c6069a22b8c04beb3f047ffcf2205871171af597b956bf0fcfa234af7481dd3"
-                   },
-                   {
-                       "path":  "tools/validate-scientific-conventions.ps1",
-                       "sha256_normalized_utf8_lf":  "34be2c593ee3b53ad4a8c8b9a217e6606f6fe61858a0206577df1c4e3bf59597"
-                   }
-               ],
     "execution":  {
                       "cpp":  {
                                   "implementation_id":  "cpp17-isolated-property-spike",

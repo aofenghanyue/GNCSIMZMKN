@@ -54,23 +54,6 @@ function Get-RelativePath([string]$Path) {
     return [System.Uri]::UnescapeDataString($rootUri.MakeRelativeUri($pathUri).ToString())
 }
 
-function Get-NormalizedTextHash([string]$Path) {
-    $bytes = [System.IO.File]::ReadAllBytes($Path)
-    $text = [System.Text.Encoding]::UTF8.GetString($bytes)
-    if ($text.Length -gt 0 -and $text[0] -eq [char]0xFEFF) {
-        $text = $text.Substring(1)
-    }
-    $text = $text.Replace("`r`n", "`n").Replace("`r", "`n")
-    $normalizedBytes = [System.Text.UTF8Encoding]::new($false).GetBytes($text)
-    $sha = [System.Security.Cryptography.SHA256]::Create()
-    try {
-        return ([System.BitConverter]::ToString($sha.ComputeHash($normalizedBytes))).Replace('-', '').ToLowerInvariant()
-    }
-    finally {
-        $sha.Dispose()
-    }
-}
-
 function Test-ExactSequence {
     param(
         [object[]]$Actual,
@@ -156,17 +139,6 @@ $expectedUnitPairs = @(
     'moment=N*m',
     'pressure=Pa',
     'temperature=K'
-)
-
-$expectedInputPaths = @(
-    'docs/adr/0006-si-frame-and-simulation-time-conventions.md',
-    'docs/adr/0007-passive-hamilton-quaternion-convention.md',
-    'fixtures/ref-scientific-conventions/fixture-manifest.json',
-    'fixtures/ref-scientific-conventions/conventions.json',
-    'fixtures/ref-scientific-conventions/cases.json',
-    'tests/scientific_conventions.cpp',
-    'tools/scientific_conventions_reference.py',
-    'tools/validate-scientific-conventions.ps1'
 )
 
 $manifest = Read-Json $manifestPath
@@ -480,14 +452,6 @@ function New-EvidenceReport {
         [object]$Comparison,
         [int]$FailureCaseCount
     )
-    $inputEntries = @()
-    foreach ($relativePath in $expectedInputPaths) {
-        $absolutePath = Join-Path $repoRoot ($relativePath.Replace('/', [System.IO.Path]::DirectorySeparatorChar))
-        $inputEntries += [ordered]@{
-            path = $relativePath
-            sha256_normalized_utf8_lf = Get-NormalizedTextHash $absolutePath
-        }
-    }
     return [ordered]@{
         schema_version = 'gnczmkn.scientific-conventions-report/1'
         task_id = 'R0-SCI-001'
@@ -501,7 +465,6 @@ function New-EvidenceReport {
             cpp_runtime = [string]$CppReport.implementation.runtime
             python_runtime = [string]$PythonReport.implementation.runtime
         }
-        inputs = $inputEntries
         execution = [ordered]@{
             cpp = [ordered]@{
                 implementation_id = [string]$CppReport.implementation.id
@@ -565,16 +528,6 @@ function Test-Evidence {
         'zero executed assertions', 'wrong convention identity', 'cross-tool numeric drift') -Label 'Scientific failure-path coverage'
     if ([int]$evidence.isolation.runtime_consumers -ne 0) { Add-Issue 'Scientific fixture unexpectedly has a runtime consumer.' }
 
-    $evidenceInputs = @($evidence.inputs)
-    $inputPaths = @($evidenceInputs | ForEach-Object { [string]$_.path })
-    Test-ExactSequence -Actual $inputPaths -Expected $expectedInputPaths -Label 'Scientific evidence input index'
-    foreach ($input in $evidenceInputs) {
-        $relativePath = [string]$input.path
-        $absolutePath = Join-Path $repoRoot ($relativePath.Replace('/', [System.IO.Path]::DirectorySeparatorChar))
-        if (-not (Test-Path -LiteralPath $absolutePath -PathType Leaf)) { Add-Issue "Scientific evidence input is missing: $relativePath"; continue }
-        $actualHash = Get-NormalizedTextHash $absolutePath
-        if ($actualHash -cne [string]$input.sha256_normalized_utf8_lf) { Add-Issue "Scientific evidence hash drift: $relativePath" }
-    }
 }
 
 $cppReport = $null

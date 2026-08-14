@@ -1,6 +1,6 @@
 # ADR-0006: SI, frame and simulation-time conventions
 
-- Status: Proposed
+- Status: Accepted
 - Date: 2026-08-10
 - Owners: Scientific Authority, Architecture Lead
 - Related tasks: R0-SCI-001
@@ -22,7 +22,7 @@ R0 允许隔离 validation spike，禁止提前建设产品级 Session、Compile
 
 公共时间 identity 固定为 `SimulationTime`、`Duration`、`SampleTime`、`ValidTime` 与 `WallTime`。固定步长以非负整数 tick 为权威，通过 `t_k = time_origin + tick * base_dt` 计算逻辑时间，禁止重复浮点加法累积。v1 duration 对齐支持 `ExactGrid`、`StopBefore` 与 `StopAfter`，默认 `ExactGrid`；`FinalPartialStep` 在事务/time-point mapping 决策完成前保持 unsupported。
 
-时间秒值必须有限；`SimulationTime`、`SampleTime` 与 `ValidTime` 必须携带非空 clock domain，同类时间点的算术只允许在相同 domain 内进行，跨 domain 操作产生 `DomainError`。R0 fixture 以半开区间 `[valid_from, valid_until)` 验证 validity 边界并拒绝反向、跨 domain 与非有限区间；该区间规则仍随本 ADR 保持 `Proposed`，在 Scientific Authority 接受前不是已批准的产品 API 契约。
+时间秒值必须有限；`SimulationTime`、`SampleTime` 与 `ValidTime` 必须携带非空 clock domain，同类时间点的算术只允许在相同 domain 内进行，跨 domain 操作产生 `DomainError`。R0 fixture 以半开区间 `[valid_from, valid_until)` 验证 validity 边界并拒绝反向、跨 domain 与非有限区间；该区间规则已随本 ADR 接受为科学基线，未来产品 API 仍需在对应实现切片中定义。
 
 `fixtures/ref-scientific-conventions/conventions.json` 是本 ADR 决策的 executable profile，`cases.json` 固定方向、单位、point/free-vector 与 tick 示例。两个文件保持 Fixture maturity，不进入 runtime，也不构成语言绑定 ABI。
 
@@ -51,7 +51,7 @@ R0 允许隔离 validation spike，禁止提前建设产品级 Session、Compile
 - 大 tick 时间由一次乘加表达，duration 非整网格案例分别验证 StopBefore/StopAfter，ExactGrid 拒绝非整数倍；
 - 五类时间 identity 以隔离类型验证；clock-domain 算术拒绝空 domain、跨 domain 与非有限值，validity 验证半开端点及非法区间；
 - C++17 property spike 与独立 CPython 标准库参考在逐量容差内一致；
-- CTest 和 repository verification 检查 profile、证据 hash 与交叉工具报告。
+- CTest 和 repository verification 检查 profile 与交叉工具执行结果。
 
 ## Supersession rule
 

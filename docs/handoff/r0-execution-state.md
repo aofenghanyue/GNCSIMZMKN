@@ -36,15 +36,15 @@
 - Bootstrap 四项任务保持 `done`。
 - `R0-GOV-001`、`R0-ARCH-001`、`R0-SPEC-001` 保留为技术基线完成项。
 - `R0-GOV-002` 回到 `planned`，等待真实权利与分发输入。
-- `R0-LEG-001`、`R0-SCI-001` 保持 `review`，当前无活动 assignee。
-- `R0-SCI-002` 保持 `planned`，已有可执行候选 bundle；`R0-SCI-001` 科学约定接受后才能进入活动状态并闭合验证。
+- `R0-LEG-001` 保持 `review`，当前无活动 assignee。
+- `R0-SCI-001` 已由仓库所有者接受并完成。
+- `R0-SCI-002` 已完成，executable bundle 通过独立解析、RK4 收敛、终止与失败检查。
 - 其余 R0 任务保持 `planned`。
 
 ## 下一条开发主线
 
-1. 由仓库所有者决定是否接受 ADR-0006 与 ADR-0007 的当前科学约定。
-2. 接受后闭合 `R0-SCI-001`，复验并完成 `R0-SCI-002` minimal 3DoF bundle。
-3. 完成该切片后再选择下一项，避免同时展开 gate、性能、YYZ、CAVH 和架构治理。
+1. 根据已闭合依赖与可执行交付价值选择下一项 R0 任务。
+2. 继续避免同时展开 gate、性能、YYZ、CAVH 和架构治理。
 
 ## 保留与恢复
 

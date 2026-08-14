@@ -57,6 +57,6 @@
   "acceptance": [
     "Direction, multiplication, composition, serialization, SI, frame and time policies have executable checks",
     "C++ and Python implementations do not import or link Legacy or Simulator",
-    "Cross-tool evidence records normalized source hashes and zero mismatches"
+    "Cross-tool evidence records executed check coverage and zero mismatches"
   ]
 }

@@ -61,4 +61,4 @@ ctest --preset dev -R "^r0.minimal-3dof" --output-on-failure
 ```
 
 当前 bundle 是 R0 validation spike，不定义 R1～R3 产品 API。ADR-0006 的
-科学约定仍等待仓库所有者接受；该依赖关闭前，`R0-SCI-002` 保持活动状态。
+科学约定已由仓库所有者接受，`R0-SCI-002` 的最终验证已经通过。
