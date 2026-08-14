@@ -49,7 +49,7 @@
       "rerun_index": "excluded",
       "dataset_filename": "excluded",
       "termination_reason_text": "ignored as Legacy display text",
-      "record_field_order": "ignored after field_id mapping"
+      "record_field_order": "ignored after trace field_id and dataset header mapping"
     },
     "target_mapping": {
       "terminal_observation": "pending target implementation; must reference the stopping state when implemented",
@@ -57,7 +57,7 @@
     }
   },
   "tolerances": {
-    "event_identity_and_order": "exact publish-record-termination-completion partial order; record-field relative order ignored after field_id mapping",
+    "event_identity_and_order": "exact publish-record-termination-completion partial order; record-field event and dataset column order ignored after identity/header mapping",
     "event_multiplicity": "exact",
     "step_and_row_count": "exact",
     "legacy_seed_time_absolute": "1e-12",
@@ -99,7 +99,7 @@
     },
     {
       "id": "PASS-STOP-RECORD-FIELD-ORDER-CHANGED",
-      "mutation": "Swap altitude and vertical-velocity record events while retaining both field identities and temporal boundaries",
+      "mutation": "Swap altitude and vertical-velocity record events and dataset columns while retaining both stable identities and temporal boundaries",
       "expected_status": "accepted"
     }
   ],

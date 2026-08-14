@@ -139,17 +139,37 @@ def parse_dataset(raw: bytes) -> list[dict]:
     reader = csv.reader(io.StringIO(raw.decode("utf-8"), newline=""))
     encoded = list(reader)
     require(len(encoded) >= 1, "Legacy STOP dataset is empty")
-    require(encoded[0] == EXPECTED_HEADERS,
-            "Legacy STOP dataset header differs")
+    header = encoded[0]
+    require(len(header) == len(EXPECTED_HEADERS) and
+            set(header) == set(EXPECTED_HEADERS),
+            "Legacy STOP dataset semantic headers differ")
+    index_by_header = {name: index for index, name in enumerate(header)}
     result = []
     for row in encoded[1:]:
-        require(len(row) == 3, "Legacy STOP dataset row width differs")
+        require(len(row) == len(header),
+                "Legacy STOP dataset row width differs")
         result.append({
-            "sample_time_s": decimal(row[0]),
-            "altitude_m": decimal(row[1]),
-            "vertical_velocity_mps": decimal(row[2]),
+            "sample_time_s": decimal(row[index_by_header["time"]]),
+            "altitude_m": decimal(row[index_by_header[
+                "vehicle.state.altitude_m"]]),
+            "vertical_velocity_mps": decimal(row[index_by_header[
+                "vehicle.state.vertical_velocity_mps"]]),
         })
     return result
+
+
+def swap_record_field_columns(raw: bytes) -> bytes:
+    reader = csv.reader(io.StringIO(raw.decode("utf-8"), newline=""))
+    encoded = list(reader)
+    require(len(encoded) >= 1 and
+            all(len(row) == len(encoded[0]) for row in encoded),
+            "Legacy STOP dataset cannot be column-permuted")
+    order = [0, 2, 1]
+    output = io.StringIO(newline="")
+    writer = csv.writer(output, lineterminator="\n")
+    for row in encoded:
+        writer.writerow([row[index] for index in order])
+    return output.getvalue().encode("utf-8")
 
 
 def normalized_trace(trace: dict, normalization: dict) -> dict:
@@ -194,7 +214,7 @@ def expected_values(case: dict, oracle: dict) -> dict:
             expected["record_field_ids"] ==
             ["altitude_m", "vertical_velocity_mps"] and
             expected["normalization"]["record_field_order"] ==
-            "ignored after field_id mapping" and
+            "ignored after trace field_id and dataset header mapping" and
             expected_row["row_count"] == 1 and
             decimal(expected_row["sample_time_s"]) ==
             result["sample_time_s"] and
@@ -437,9 +457,13 @@ def main() -> int:
     events[1], events[2] = events[2], events[1]
     for sequence, event in enumerate(events):
         event["sequence"] = sequence
-    validate_semantics(changed_record_order, rows[0], values,
+    reordered_dataset = parse_dataset(
+        swap_record_field_columns(dataset_bytes[0]))
+    validate_semantics(changed_record_order, reordered_dataset, values,
                        time_tolerance, state_tolerance,
                        "Record-field-order equivalence")
+    require(reordered_dataset == rows[0],
+            "STOP dataset column order changed semantic rows")
     checks += 4
 
     first_stdout, probe = run_probe(arguments.probe)
@@ -499,6 +523,7 @@ def main() -> int:
         "final_time_s": str(values["final_time_s"]),
         "reason_text_ignored": True,
         "record_field_order_change_accepted": True,
+        "dataset_column_order_change_accepted": True,
         "disposition_status": decision["status"],
     }, separators=(",", ":")))
     return 0
