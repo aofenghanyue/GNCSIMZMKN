@@ -94,7 +94,7 @@
     "executable_role": "gnc_sim from the clean R0-LEG-001 build-main reproduction",
     "commands": [
       "gnc_sim.exe --simflow <generated-simflow.json>",
-      "gnc_sim.exe --config <case-directory>/effective_mission.json"
+      "gnc_sim.exe --config <work-root>/effective-mission-replay.json"
     ],
     "configured_output": "build/legacy-simflow-capture-v2/runtime-output",
     "environment_evidence": {

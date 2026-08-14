@@ -92,7 +92,7 @@ def verify_capture(case: dict, repo_root: Path) -> tuple[
             "Legacy SimFlow executable provenance differs")
     require(capture["commands"] == [
         "gnc_sim.exe --simflow <generated-simflow.json>",
-        "gnc_sim.exe --config <case-directory>/effective_mission.json",
+        "gnc_sim.exe --config <work-root>/effective-mission-replay.json",
     ], "Legacy SimFlow capture commands differ")
     checks = 3
 

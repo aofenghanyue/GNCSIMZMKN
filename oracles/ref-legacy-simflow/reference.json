@@ -5,8 +5,8 @@
   "case_id": "CASE-LEGACY-SIMFLOW-HOT-REPLAY",
   "input_identity": {
     "path": "fixtures/ref-legacy-simflow/input.json",
-    "bytes": 7397,
-    "sha256": "9f3b3b194087de994b485f4e83185f2570541eabb9ebeacb0e15df0c0ff103d3"
+    "bytes": 7399,
+    "sha256": "acc33696e6839f7ce62415cc141fbdc609f7e4e4e9afb61731655a4a97ea8468"
   },
   "reference_method": {
     "implementation": "CPython standard library JSON, CSV and Decimal semantic materializer plus an independent C++17 typed mission/replay probe",

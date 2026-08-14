@@ -6,7 +6,7 @@ The frozen CLI was invoked in this order for each of two runs:
 
 ```text
 gnc_sim --simflow generated-simflow.json
-gnc_sim --config effective_mission.json
+gnc_sim --config standalone-effective-mission-copy.json
 ```
 
 Both entrypoints succeeded. Each SimFlow invocation and its plain replay used distinct fresh working roots while retaining the same configured relative output string. The harness copied the effective mission outside the Legacy case directory before invoking plain `--config`; the replay had to create its own dataset path with no batch working tree available. The four recorded datasets—two SimFlow results and two plain replays—are byte-identical in their raw capture form. Semantic comparison maps required fields by header, accepts full encoded-column reversal, and verifies the single row `(t=0, altitude=1000 m, vz=0 m/s, mass=100 kg)`.
