@@ -66,6 +66,7 @@
       "requested_input_declaration_order": "ignored after distinct field identities are resolved",
       "case_source_column_order": "ignored after unique matrix field identities are resolved",
       "legacy_case_index_and_directory": "ignored",
+      "case_manifest_presence": "ignored; target manifest content and identity remain pending",
       "simflow_and_ordinary_replay": "same semantic mission and dataset"
     },
     "target_mapping": {
@@ -131,6 +132,11 @@
     {
       "id": "PASS-SIMFLOW-EFFECTIVE-MISSION-JSON-REFORMATTED",
       "mutation": "Re-encode the effective mission with sorted object members and different whitespace",
+      "expected_status": "accepted"
+    },
+    {
+      "id": "PASS-SIMFLOW-CASE-MANIFEST-PRESENT",
+      "mutation": "Mark a case manifest present while preserving effective-mission and ordinary-replay semantics; manifest content and identity remain pending",
       "expected_status": "accepted"
     }
   ],

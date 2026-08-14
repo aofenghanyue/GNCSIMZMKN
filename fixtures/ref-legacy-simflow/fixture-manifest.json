@@ -45,7 +45,7 @@
     {
       "id": "FACT-SIMFLOW-IDENTITY-INDEPENDENCE",
       "claim": "Legacy case index and directory name do not participate in effective-mission or replay semantic equality.",
-      "tolerance_policy": "Source case and mission/dataset semantics remain exact; Legacy directory, numeric index and JSON/CSV encoding order are excluded.",
+      "tolerance_policy": "Source case and mission/dataset semantics remain exact; Legacy directory, numeric index, case-manifest absence and JSON/CSV encoding order are excluded.",
       "evidence_refs": [
         "oracles/ref-legacy-simflow/reference.json",
         "tests/legacy_simflow.cpp",
@@ -93,7 +93,7 @@
     "Independent Python materialization and C++17 typed mission probes agree on the hot inputs after JSON re-encoding, requested-input reordering and case-source column reordering",
     "Plain --config replay succeeds twice and matches SimFlow output by semantic dataset fields after full dataset-column reversal",
     "Missing injected input, hidden SimFlow replay context, reused batch root, case-local replay input and replay-result mismatch are rejected",
-    "Legacy case index/directory changes are accepted after semantic normalization",
+    "Legacy case index/directory changes and target case-manifest presence are accepted after semantic normalization; manifest content and identity remain pending",
     "Preserve and Retire recommendations remain pending until the repository owner accepts the disposition choice"
   ],
   "open_tasks": [

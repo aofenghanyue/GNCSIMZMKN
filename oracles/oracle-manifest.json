@@ -147,10 +147,10 @@
       "expected_facts": [
         "The selected hot matrix row injects engine.temp_level=2 and aero.drag_bias=-0.03 into a self-contained effective mission before runtime execution; JSON member order/whitespace, requested-input declaration order and case-source column order do not change that mission.",
         "The effective mission succeeds through plain gnc_sim --config twice from distinct fresh working roots, using standalone mission copies, and produces the same semantic dataset as both SimFlow executions after header-based column mapping.",
-        "Legacy numeric case index and directory name do not participate in effective-mission or replay semantic equality."
+        "Legacy numeric case index, directory name and case-manifest absence do not participate in effective-mission or replay semantic equality."
       ],
       "reference_kind": "raw Legacy CLI capture plus independent semantic materializer and C++17 typed replay probe",
-      "tolerance_policy": "exact source row, field identity, command mode/order, exit, ordinary replay isolation and row identity; effective-mission JSON member order/whitespace, requested-input declaration order, case-source column order and encoded dataset column order excluded; frozen scalar absolute tolerance 1e-12 after semantic header mapping; target deterministic CaseId remains pending",
+      "tolerance_policy": "exact source row, field identity, command mode/order, exit, ordinary replay isolation and row identity; effective-mission JSON member order/whitespace, requested-input declaration order, case-source column order, encoded dataset column order and Legacy case-manifest absence excluded; frozen scalar absolute tolerance 1e-12 after semantic header mapping; target deterministic CaseId and manifest content/identity remain pending",
       "source_refs": [
         "reference/legacy/source-manifest.json",
         "reference/legacy/reproduction/r0-leg-001-20260810-07/evidence-index.json",

@@ -151,7 +151,8 @@ def verify_capture(case: dict, repo_root: Path) -> tuple[
         raw = verify_file_identity(
             record, repo_root, f"Legacy SimFlow trace {index}")
         trace = json.loads(raw.decode("utf-8"))
-        require(trace["rerun_index"] == index,
+        require(trace["rerun_index"] == index and
+                trace["materialization"]["case_manifest_present"] is False,
                 f"Legacy SimFlow trace {index} rerun identity differs")
         traces.append(trace)
         checks += 4
@@ -302,8 +303,7 @@ def validate_trace(trace: dict, expected_commands: list[dict],
                 actual["exit_code"] == expected["exit_code"],
                 f"{label} command {sequence} differs")
     materialization = trace["materialization"]
-    require(materialization["source_case_id"] == "hot" and
-            materialization["case_manifest_present"] is False,
+    require(materialization["source_case_id"] == "hot",
             f"{label} materialization result differs")
     lineage = trace["lineage_checks"]
     require(lineage["simflow_output_root_started_absent"] is True,
@@ -475,6 +475,7 @@ def main() -> int:
         "PASS-SIMFLOW-CASE-SOURCE-COLUMNS-REORDERED",
         "PASS-SIMFLOW-DATASET-COLUMNS-REORDERED",
         "PASS-SIMFLOW-EFFECTIVE-MISSION-JSON-REFORMATTED",
+        "PASS-SIMFLOW-CASE-MANIFEST-PRESENT",
     } and all(entry["expected_status"] == "accepted"
               for entry in equivalence_by_id.values()),
             "SimFlow equivalence-case definition differs")
@@ -508,7 +509,12 @@ def main() -> int:
                    "Legacy identity equivalence")
     validate_mission(renamed_mission, expected_mission,
                      "Output-directory equivalence")
-    checks += 12
+    manifest_present_trace = copy.deepcopy(traces[0])
+    manifest_present_trace["materialization"][
+        "case_manifest_present"] = True
+    validate_trace(manifest_present_trace, expected_commands,
+                   expected_isolation, "Case-manifest equivalence")
+    checks += 13
 
     first_stdout, probe = run_probe(arguments.probe)
     second_stdout, second_probe = run_probe(arguments.probe)
@@ -569,6 +575,7 @@ def main() -> int:
         "case_source_column_order_equivalent": True,
         "dataset_column_order_equivalent": True,
         "effective_mission_json_format_equivalent": True,
+        "case_manifest_presence_equivalent": True,
         "deterministic_target_case_id": "pending",
         "disposition_status": decision["status"],
     }, separators=(",", ":")))
