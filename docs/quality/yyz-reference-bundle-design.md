@@ -264,7 +264,7 @@ R0-SCI-001 提供的 SI、frame、binary64、integer tick、ExactGrid 和 quater
 | Translation | `r_dot^I = v^I`；`v_dot^I = R_B^I(q) F^B / m + g^I` | transformed force、mass reciprocal、gravity、acceleration | frame/origin、gravity、force point、closure strategy |
 | Rotation | `omega_dot^B = I_B^-1 (M^B - omega^B × (I_B omega^B))`（仅在批准假设下） | angular momentum、gyroscopic term、net moment、condition/domain | inertia tensor/time variation、solver、singular policy |
 | Attitude | Accepted passive Hamilton convention `q_dot_I_B = -0.5 * pure(omega^B_IB) ⊗ q_I_B` | quaternion norm、product terms、candidate norm | normalization timing、adapter |
-| Air data | relative wind → body velocity；`V=norm(v_rel)`、`qbar=0.5 rho V^2`、`Mach=V/a` | wind subtraction、rotation、V/rho/a、alpha/beta inputs | alpha/beta definitions、low-speed/singularity policy |
+| Air data | `v_rel^I=v_vehicle^I-v_airmass^I`；`pure(v_rel^B)=q_I_B pure(v_rel^I) inverse(q_I_B)`；`V=norm(v_rel^B)`；`alpha=atan2(w,u)`；`beta=atan2(v,sqrt(u^2+w^2))`；`qbar=0.5 rho V^2`；`Mach=V/a` | sample/frame identity、wind subtraction、quaternion products、u/v/w、horizontal speed、V/rho/a | canonical atmosphere/wind source、sensor validity、aero applicability |
 | Environment | atmosphere/gravity/wind query | geoposition/time conversion、rho/a/g/wind | model/version/constants/domain |
 | Guidance | approved estimate/target/phase → typed GuidanceCommand | LOS/reference/errors、mode/mechanism state、limits | law、rate、held/max-age、feedback semantics |
 | Control | approved attitude/rate error → MomentCommand | reference/error terms、gain/feedforward、saturation | error representation、sequence/singularity、anti-windup |
@@ -281,6 +281,8 @@ R0-SCI-001 提供的 SI、frame、binary64、integer tick、ExactGrid 和 quater
 表中的 equation 是审计起点，不是对未决模型的批准。若实际模型包含 rotating frame、variable inertia、Earth curvature、aero unsteadiness、engine dynamics 或 algebraic closure，必须由 owner 以明确方程替换/扩展，并增加 independent cases。
 
 `REF-YYZ-FORCE-MOMENT-CLOSURE-001` 已执行 fixture-local `FrozenInterval` 子集：每个贡献携带唯一 source identity、同一 body frame、configuration revision 与半开 validity interval，按 `M_CoM^B = M_application^B + r_CoM_to_application^B × F^B` 搬移并在 RK stages 内保持总量。Decimal 解析 reference 与独立 C++17 closure→rigid-core 路径交叉验证。Canonical aero、propulsion、mass、configuration 和 gravity model 仍待后续确定；variable mass/CoM/inertia、CandidateState 与 AlgebraicSolve 不在此切片范围内。
+
+`REF-YYZ-AIR-DATA-KINEMATICS-001` 已执行 fixture-local supplied air-data 子集：同一边界的 Truth、WindQuery 与 AtmosphereQuery 携带显式 frame、clock 和 tick identity；右手体轴采用 `x-forward/y-right/z-down`；`q_I_B` 按被动 Hamilton 方向把惯性系相对风速转到体轴。`V>0` 且 `sqrt(u^2+w^2)>0`，zero-relative 与 pure-lateral 输入直接产生 domain error。Rearward flow 保持可计算，角度和声速分母均无 epsilon/floor。80 位 Decimal reference 与独立 C++17 probe 覆盖五个公式 case、两条等价性、九条失败和四条 Legacy 风格 mutation。Canonical atmosphere、wind、sensor、aero applicability 与产品 contract 仍待后续确定。
 
 ### 7.3 Legacy 公式不可原样继承的地方
 

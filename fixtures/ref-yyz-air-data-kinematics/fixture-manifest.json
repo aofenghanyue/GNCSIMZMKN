@@ -1,0 +1,65 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-YYZ-AIR-DATA-KINEMATICS-001",
+  "status": "executable",
+  "purpose": "Provide executable fixture-local supplied air-data kinematics with explicit frames, sample identity, domains and unclamped angular definitions.",
+  "authority": "scientific_authority",
+  "provenance": {
+    "source_refs": [
+      "docs/adr/0006-si-frame-and-simulation-time-conventions.md",
+      "docs/adr/0007-passive-hamilton-quaternion-convention.md",
+      "design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md#63-airdata",
+      "docs/quality/yyz-reference-bundle-design.md#72-公式覆盖矩阵"
+    ],
+    "notes": "The Scientific Authority accepted the fixture-local relative-velocity identity, body axes, passive transform, alpha/beta definitions, strict singular domains and absence of Legacy clamps. The bundle has no product or Legacy dependency."
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-YYZ-AIR-DATA-KINEMATICS",
+      "claim": "Independent 80-digit Decimal and C++17 implementations agree on wind subtraction, passive inertial-to-body rotation, speed, alpha, beta, dynamic pressure and Mach number.",
+      "tolerance_policy": "Frame, body-axis, clock and sample identities are exact; finite formula values use the fixture-local absolute-plus-relative tolerance.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-air-data-kinematics/cases.json",
+        "oracles/ref-yyz-air-data-kinematics/reference.json",
+        "tests/yyz_air_data_kinematics.cpp",
+        "tools/yyz_air_data_kinematics_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-YYZ-AIR-DATA-EQUIVALENCE",
+      "claim": "Quaternion sign and a common inertial velocity offset leave every physical air-data result unchanged.",
+      "tolerance_policy": "Equivalence identities are exact; physical values use the fixture-local formula tolerance.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-air-data-kinematics/cases.json",
+        "oracles/ref-yyz-air-data-kinematics/reference.json",
+        "tests/yyz_air_data_kinematics.cpp",
+        "tools/yyz_air_data_kinematics_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-YYZ-AIR-DATA-DOMAIN",
+      "claim": "The executable rejects inconsistent identity, non-finite input, invalid quaternion, invalid atmosphere, zero speed and pure lateral singularity while detecting four sign, direction and clamp mutations.",
+      "tolerance_policy": "Rejection and mutation identities are exact; no tolerance repairs an out-of-domain input.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-air-data-kinematics/cases.json",
+        "oracles/ref-yyz-air-data-kinematics/reference.json",
+        "tests/yyz_air_data_kinematics.cpp",
+        "tools/yyz_air_data_kinematics_reference.py"
+      ]
+    }
+  ],
+  "required_artifacts": [
+    "fixtures/ref-yyz-air-data-kinematics/README.md",
+    "fixtures/ref-yyz-air-data-kinematics/cases.json",
+    "oracles/ref-yyz-air-data-kinematics/reference.json",
+    "tests/yyz_air_data_kinematics.cpp",
+    "tools/yyz_air_data_kinematics_reference.py",
+    "CMakeLists.txt"
+  ],
+  "acceptance": [
+    "The bundle records formula inputs, quaternion intermediates, physical outputs, exact sample identity, equivalence checks and direct domain failures",
+    "The Python reference and C++17 probe share no implementation and neither imports product or Legacy code",
+    "Canonical environment, sensor, aerodynamic validity and product contracts remain outside this fixture-local slice"
+  ],
+  "open_tasks": ["R0-SCI-003"]
+}

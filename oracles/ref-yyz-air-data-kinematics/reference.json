@@ -1,0 +1,383 @@
+{
+  "schema_version": "gnczmkn.yyz-air-data-kinematics-reference/1",
+  "fixture_id": "REF-YYZ-AIR-DATA-KINEMATICS-001",
+  "oracle_id": "ORACLE-YYZ-AIR-DATA-KINEMATICS-001",
+  "model_id": "MODEL-YYZ-AIR-DATA-KINEMATICS-001",
+  "status": "executable",
+  "precision": {
+    "decimal_digits": 80,
+    "angle_method": "Machin pi plus transformed alternating atan series"
+  },
+  "input_identity": {
+    "path": "fixtures/ref-yyz-air-data-kinematics/cases.json",
+    "bytes": 11671,
+    "sha256": "6b9e44c9705753c779987711c39fadffa26f4be3a21c0a6452ce46ff7a14aa85"
+  },
+  "cases": {
+    "CASE-YYZ-AIR-DATA-WIND-SUBTRACTION": {
+      "id": "CASE-YYZ-AIR-DATA-WIND-SUBTRACTION",
+      "context": {
+        "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "body_axes": "x-forward_y-right_z-down",
+        "sample_tick": 12,
+        "clock_domain": "clock.fixture.yyz.simulation@1"
+      },
+      "vehicle_velocity_I_mps": [
+        "210",
+        "30",
+        "-10"
+      ],
+      "airmass_velocity_I_mps": [
+        "10",
+        "-5",
+        "-10"
+      ],
+      "relative_velocity_I_mps": [
+        "200",
+        "35",
+        "0"
+      ],
+      "q_I_B_wxyz": [
+        "1",
+        "0",
+        "0",
+        "0"
+      ],
+      "quaternion_norm": "1",
+      "q_B_I_wxyz": [
+        "1",
+        "0",
+        "0",
+        "0"
+      ],
+      "q_times_relative_pure_wxyz": [
+        "0",
+        "200",
+        "35",
+        "0"
+      ],
+      "rotated_relative_pure_wxyz": [
+        "0",
+        "200",
+        "35",
+        "0"
+      ],
+      "relative_velocity_B_mps": [
+        "200",
+        "35",
+        "0"
+      ],
+      "u_mps": "200",
+      "v_mps": "35",
+      "w_mps": "0",
+      "speed_mps": "203.03940504246952703145564102131913410526420121487655874138356307633823219116351",
+      "horizontal_speed_uw_mps": "200",
+      "alpha_rad": "0",
+      "beta_rad": "0.17324566645236494701908934781572425143496785035336387113739205064120351281183637",
+      "dynamic_pressure_Pa": "25250.3125",
+      "mach": "0.59717472071314566773957541476858568854489470945551929041583400904805362409165738"
+    },
+    "CASE-YYZ-AIR-DATA-PASSIVE-ROTATION": {
+      "id": "CASE-YYZ-AIR-DATA-PASSIVE-ROTATION",
+      "context": {
+        "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "body_axes": "x-forward_y-right_z-down",
+        "sample_tick": 21,
+        "clock_domain": "clock.fixture.yyz.simulation@1"
+      },
+      "vehicle_velocity_I_mps": [
+        "25",
+        "-115",
+        "35"
+      ],
+      "airmass_velocity_I_mps": [
+        "5",
+        "5",
+        "5"
+      ],
+      "relative_velocity_I_mps": [
+        "20",
+        "-120",
+        "30"
+      ],
+      "q_I_B_wxyz": [
+        "0.707106781186547524400844362104849039284835937688474036588339868995366239",
+        "0",
+        "0",
+        "0.707106781186547524400844362104849039284835937688474036588339868995366239"
+      ],
+      "quaternion_norm": "0.99999999999999999999999999999999999999999999999999999999999999999999999967324098",
+      "q_B_I_wxyz": [
+        "0.70710678118654752440084436210484903928483593768847403658833986899536623946210704",
+        "0",
+        "0",
+        "-0.70710678118654752440084436210484903928483593768847403658833986899536623946210704"
+      ],
+      "q_times_relative_pure_wxyz": [
+        "-21.21320343559642573202533086314547117854507813065422109765019606986098717",
+        "98.99494936611665341611821069467886549987703127638636512236758165935127346",
+        "-70.7106781186547524400844362104849039284835937688474036588339868995366239",
+        "21.21320343559642573202533086314547117854507813065422109765019606986098717"
+      ],
+      "rotated_relative_pure_wxyz": [
+        "0",
+        "120",
+        "20",
+        "30"
+      ],
+      "relative_velocity_B_mps": [
+        "120",
+        "20",
+        "30"
+      ],
+      "u_mps": "120",
+      "v_mps": "20",
+      "w_mps": "30",
+      "speed_mps": "125.29964086141667788495364815752865861021636354310729664991332885588796159690465",
+      "horizontal_speed_uw_mps": "123.69316876852981649464229567922231075441597676120861303195900719284863039012865",
+      "alpha_rad": "0.24497866312686415417208248121127581091414409838118406712737591466735511958764215",
+      "beta_rad": "0.16030304835031665333276342797380893009307850042549094415537471765999386864913137",
+      "dynamic_pressure_Pa": "7849.9999999999999999999999999999999999999999999999999999999999999999999999999995",
+      "mach": "0.39156137769192711839048015049227705815692613607221030203097915267464987999032703"
+    },
+    "CASE-YYZ-AIR-DATA-REARWARD-FLOW": {
+      "id": "CASE-YYZ-AIR-DATA-REARWARD-FLOW",
+      "context": {
+        "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "body_axes": "x-forward_y-right_z-down",
+        "sample_tick": 34,
+        "clock_domain": "clock.fixture.yyz.simulation@1"
+      },
+      "vehicle_velocity_I_mps": [
+        "-100",
+        "20",
+        "10"
+      ],
+      "airmass_velocity_I_mps": [
+        "0",
+        "0",
+        "0"
+      ],
+      "relative_velocity_I_mps": [
+        "-100",
+        "20",
+        "10"
+      ],
+      "q_I_B_wxyz": [
+        "1",
+        "0",
+        "0",
+        "0"
+      ],
+      "quaternion_norm": "1",
+      "q_B_I_wxyz": [
+        "1",
+        "0",
+        "0",
+        "0"
+      ],
+      "q_times_relative_pure_wxyz": [
+        "0",
+        "-100",
+        "20",
+        "10"
+      ],
+      "rotated_relative_pure_wxyz": [
+        "0",
+        "-100",
+        "20",
+        "10"
+      ],
+      "relative_velocity_B_mps": [
+        "-100",
+        "20",
+        "10"
+      ],
+      "u_mps": "-100",
+      "v_mps": "20",
+      "w_mps": "10",
+      "speed_mps": "102.46950765959598383221038680521051990735032663454832929541978499890347985705354",
+      "horizontal_speed_uw_mps": "100.4987562112089027021926491275957618694502347002637729057282829732849123155197",
+      "alpha_rad": "3.0419240010986312110841972634014822939538910768707911729594358154977886588386585",
+      "beta_rad": "0.19644099143623993407650486380171961718065047798059899881270661936574032693047413",
+      "dynamic_pressure_Pa": "4724.9999999999999999999999999999999999999999999999999999999999999999999999999999",
+      "mach": "0.34156502553198661277403462268403506635783442211516109765139928332967826619017847"
+    },
+    "CASE-YYZ-AIR-DATA-TINY-POSITIVE-SPEED": {
+      "id": "CASE-YYZ-AIR-DATA-TINY-POSITIVE-SPEED",
+      "context": {
+        "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "body_axes": "x-forward_y-right_z-down",
+        "sample_tick": 55,
+        "clock_domain": "clock.fixture.yyz.simulation@1"
+      },
+      "vehicle_velocity_I_mps": [
+        "0.000000000001",
+        "0.000000000002",
+        "-0.000000000003"
+      ],
+      "airmass_velocity_I_mps": [
+        "0",
+        "0",
+        "0"
+      ],
+      "relative_velocity_I_mps": [
+        "0.000000000001",
+        "0.000000000002",
+        "-0.000000000003"
+      ],
+      "q_I_B_wxyz": [
+        "1",
+        "0",
+        "0",
+        "0"
+      ],
+      "quaternion_norm": "1",
+      "q_B_I_wxyz": [
+        "1",
+        "0",
+        "0",
+        "0"
+      ],
+      "q_times_relative_pure_wxyz": [
+        "0",
+        "0.000000000001",
+        "0.000000000002",
+        "-0.000000000003"
+      ],
+      "rotated_relative_pure_wxyz": [
+        "0",
+        "0.000000000001",
+        "0.000000000002",
+        "-0.000000000003"
+      ],
+      "relative_velocity_B_mps": [
+        "0.000000000001",
+        "0.000000000002",
+        "-0.000000000003"
+      ],
+      "u_mps": "0.000000000001",
+      "v_mps": "0.000000000002",
+      "w_mps": "-0.000000000003",
+      "speed_mps": "0.000000000003741657386773941385583748732316549301756019807778726946303745467320035156306939",
+      "horizontal_speed_uw_mps": "0.0000000000031622776601683793319988935444327185337195551393252168268575048527925944386392382",
+      "alpha_rad": "-1.249045772398254425829917077281090123077829404129896719054669236797151965737294",
+      "beta_rad": "0.56394264136062884269383117218374684785185953930425678375724266426692627965787416",
+      "dynamic_pressure_Pa": "0",
+      "mach": "0.000000000003741657386773941385583748732316549301756019807778726946303745467320035156306939"
+    },
+    "CASE-YYZ-AIR-DATA-SUB-ONE-SOUND-SPEED": {
+      "id": "CASE-YYZ-AIR-DATA-SUB-ONE-SOUND-SPEED",
+      "context": {
+        "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "body_axes": "x-forward_y-right_z-down",
+        "sample_tick": 89,
+        "clock_domain": "clock.fixture.yyz.simulation@1"
+      },
+      "vehicle_velocity_I_mps": [
+        "100",
+        "0",
+        "0"
+      ],
+      "airmass_velocity_I_mps": [
+        "0",
+        "0",
+        "0"
+      ],
+      "relative_velocity_I_mps": [
+        "100",
+        "0",
+        "0"
+      ],
+      "q_I_B_wxyz": [
+        "1",
+        "0",
+        "0",
+        "0"
+      ],
+      "quaternion_norm": "1",
+      "q_B_I_wxyz": [
+        "1",
+        "0",
+        "0",
+        "0"
+      ],
+      "q_times_relative_pure_wxyz": [
+        "0",
+        "100",
+        "0",
+        "0"
+      ],
+      "rotated_relative_pure_wxyz": [
+        "0",
+        "100",
+        "0",
+        "0"
+      ],
+      "relative_velocity_B_mps": [
+        "100",
+        "0",
+        "0"
+      ],
+      "u_mps": "100",
+      "v_mps": "0",
+      "w_mps": "0",
+      "speed_mps": "100",
+      "horizontal_speed_uw_mps": "100",
+      "alpha_rad": "0",
+      "beta_rad": "0",
+      "dynamic_pressure_Pa": "5000",
+      "mach": "200"
+    }
+  },
+  "equivalence_results": [
+    {
+      "id": "EQUIV-YYZ-AIR-DATA-QUATERNION-SIGN",
+      "status": "passed",
+      "max_abs_physical_difference": "0"
+    },
+    {
+      "id": "EQUIV-YYZ-AIR-DATA-COMMON-INERTIAL-VELOCITY",
+      "status": "passed",
+      "max_abs_physical_difference": "0"
+    }
+  ],
+  "invalid_input_rejections": [
+    "INVALID-YYZ-AIR-DATA-FRAME-MISMATCH",
+    "INVALID-YYZ-AIR-DATA-SAMPLE-TICK-MISMATCH",
+    "INVALID-YYZ-AIR-DATA-NONFINITE-VELOCITY",
+    "INVALID-YYZ-AIR-DATA-ZERO-QUATERNION",
+    "INVALID-YYZ-AIR-DATA-NONUNIT-QUATERNION",
+    "INVALID-YYZ-AIR-DATA-NEGATIVE-DENSITY",
+    "INVALID-YYZ-AIR-DATA-NONPOSITIVE-SOUND-SPEED",
+    "INVALID-YYZ-AIR-DATA-ZERO-RELATIVE-VELOCITY",
+    "INVALID-YYZ-AIR-DATA-PURE-LATERAL-VELOCITY"
+  ],
+  "mutation_results": [
+    {
+      "id": "MUTATION-YYZ-AIR-DATA-ADD-WIND",
+      "status": "rejected",
+      "max_abs_physical_difference": "5022.500000000000000000000000000000000000000000000000000000000000000000000000002"
+    },
+    {
+      "id": "MUTATION-YYZ-AIR-DATA-REVERSE-QUATERNION-DIRECTION",
+      "status": "rejected",
+      "max_abs_physical_difference": "240"
+    },
+    {
+      "id": "MUTATION-YYZ-AIR-DATA-LEGACY-ANGLE-CLAMPS",
+      "status": "rejected",
+      "max_abs_physical_difference": "1.4711276744037345918528755717613975185219730438499069291386301860105471080765063"
+    },
+    {
+      "id": "MUTATION-YYZ-AIR-DATA-SOUND-SPEED-FLOOR",
+      "status": "rejected",
+      "max_abs_physical_difference": "100"
+    }
+  ]
+}

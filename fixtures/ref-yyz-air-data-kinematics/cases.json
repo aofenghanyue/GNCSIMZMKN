@@ -1,0 +1,251 @@
+{
+  "schema_version": "gnczmkn.yyz-air-data-kinematics-cases/1",
+  "fixture_id": "REF-YYZ-AIR-DATA-KINEMATICS-001",
+  "oracle_id": "ORACLE-YYZ-AIR-DATA-KINEMATICS-001",
+  "model_choice": {
+    "status": "accepted",
+    "owner_role": "scientific_authority",
+    "accepted_scope": "Fixture-local supplied air-data kinematics with right-handed x-forward/y-right/z-down body axes, passive-Hamilton inertial-to-body rotation, explicit wind subtraction, unclamped angles, dynamic pressure and Mach number.",
+    "equations": [
+      "v_rel_I = v_vehicle_I - v_airmass_I",
+      "pure(v_rel_B) = q_I_B * pure(v_rel_I) * inverse(q_I_B)",
+      "V = sqrt(u^2 + v^2 + w^2)",
+      "alpha = atan2(w, u)",
+      "beta = atan2(v, sqrt(u^2 + w^2))",
+      "qbar = 0.5 * rho * V^2",
+      "Mach = V / a"
+    ],
+    "domain_policy": "All supplied and derived scalars are finite; q_I_B uses the Error normalization policy; rho >= 0; a > 0; V > 0; sqrt(u^2+w^2) > 0. No epsilon, angle-denominator or speed-of-sound clamp is permitted.",
+    "rearward_flow_policy": "Rearward flow remains mathematically computable in this slice; a later aerodynamic model may declare a narrower applicability domain.",
+    "excluded": [
+      "canonical atmosphere, wind, sensor, aerodynamic or product contracts",
+      "canonical aero validity ranges and coefficient lookup",
+      "R1-R8 product contracts or runtime capability"
+    ]
+  },
+  "model": {
+    "model_id": "MODEL-YYZ-AIR-DATA-KINEMATICS-001",
+    "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+    "body_frame_id": "frame.fixture.yyz.body@1",
+    "body_axes": "x-forward_y-right_z-down",
+    "clock_domain": "clock.fixture.yyz.simulation@1",
+    "relative_velocity_identity": "vehicle velocity relative to the air mass",
+    "quaternion_identity": "q_I_B",
+    "quaternion_wire_order": "wxyz",
+    "quaternion_normalization_policy": "Error",
+    "alpha_range": "(-pi,pi]",
+    "beta_range": "(-pi/2,pi/2)",
+    "validity_domain": [
+      "all scalar inputs and derived values are finite",
+      "truth, wind and atmosphere sample identities equal the declared context",
+      "q_I_B is unit within the fixture tolerance under Error policy",
+      "density_kgpm3 >= 0",
+      "speed_of_sound_mps > 0",
+      "speed_mps > 0",
+      "horizontal_speed_uw_mps > 0"
+    ]
+  },
+  "tolerances": {
+    "formula_absolute": 2e-12,
+    "formula_relative": 2e-12,
+    "quaternion_norm_absolute": 1e-12,
+    "quaternion_norm_relative": 1e-12,
+    "stored_decimal_absolute": "1e-68"
+  },
+  "cases": [
+    {
+      "id": "CASE-YYZ-AIR-DATA-WIND-SUBTRACTION",
+      "context": {
+        "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "body_axes": "x-forward_y-right_z-down",
+        "sample_tick": 12,
+        "clock_domain": "clock.fixture.yyz.simulation@1"
+      },
+      "truth": {
+        "velocity_I_mps": [210.0, 30.0, -10.0],
+        "velocity_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "velocity_sample_tick": 12,
+        "velocity_clock_domain": "clock.fixture.yyz.simulation@1",
+        "q_I_B_wxyz": [1.0, 0.0, 0.0, 0.0],
+        "attitude_to_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "attitude_from_frame_id": "frame.fixture.yyz.body@1",
+        "attitude_sample_tick": 12,
+        "attitude_clock_domain": "clock.fixture.yyz.simulation@1"
+      },
+      "wind": {
+        "velocity_airmass_I_mps": [10.0, -5.0, -10.0],
+        "velocity_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "sample_tick": 12,
+        "clock_domain": "clock.fixture.yyz.simulation@1"
+      },
+      "atmosphere": {
+        "density_kgpm3": 1.225,
+        "speed_of_sound_mps": 340.0,
+        "sample_tick": 12,
+        "clock_domain": "clock.fixture.yyz.simulation@1"
+      }
+    },
+    {
+      "id": "CASE-YYZ-AIR-DATA-PASSIVE-ROTATION",
+      "context": {
+        "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "body_axes": "x-forward_y-right_z-down",
+        "sample_tick": 21,
+        "clock_domain": "clock.fixture.yyz.simulation@1"
+      },
+      "truth": {
+        "velocity_I_mps": [25.0, -115.0, 35.0],
+        "velocity_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "velocity_sample_tick": 21,
+        "velocity_clock_domain": "clock.fixture.yyz.simulation@1",
+        "q_I_B_wxyz": [0.707106781186547524400844362104849039284835937688474036588339868995366239, 0.0, 0.0, 0.707106781186547524400844362104849039284835937688474036588339868995366239],
+        "attitude_to_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "attitude_from_frame_id": "frame.fixture.yyz.body@1",
+        "attitude_sample_tick": 21,
+        "attitude_clock_domain": "clock.fixture.yyz.simulation@1"
+      },
+      "wind": {
+        "velocity_airmass_I_mps": [5.0, 5.0, 5.0],
+        "velocity_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "sample_tick": 21,
+        "clock_domain": "clock.fixture.yyz.simulation@1"
+      },
+      "atmosphere": {
+        "density_kgpm3": 1.0,
+        "speed_of_sound_mps": 320.0,
+        "sample_tick": 21,
+        "clock_domain": "clock.fixture.yyz.simulation@1"
+      }
+    },
+    {
+      "id": "CASE-YYZ-AIR-DATA-REARWARD-FLOW",
+      "context": {
+        "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "body_axes": "x-forward_y-right_z-down",
+        "sample_tick": 34,
+        "clock_domain": "clock.fixture.yyz.simulation@1"
+      },
+      "truth": {
+        "velocity_I_mps": [-100.0, 20.0, 10.0],
+        "velocity_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "velocity_sample_tick": 34,
+        "velocity_clock_domain": "clock.fixture.yyz.simulation@1",
+        "q_I_B_wxyz": [1.0, 0.0, 0.0, 0.0],
+        "attitude_to_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "attitude_from_frame_id": "frame.fixture.yyz.body@1",
+        "attitude_sample_tick": 34,
+        "attitude_clock_domain": "clock.fixture.yyz.simulation@1"
+      },
+      "wind": {
+        "velocity_airmass_I_mps": [0.0, 0.0, 0.0],
+        "velocity_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "sample_tick": 34,
+        "clock_domain": "clock.fixture.yyz.simulation@1"
+      },
+      "atmosphere": {
+        "density_kgpm3": 0.9,
+        "speed_of_sound_mps": 300.0,
+        "sample_tick": 34,
+        "clock_domain": "clock.fixture.yyz.simulation@1"
+      }
+    },
+    {
+      "id": "CASE-YYZ-AIR-DATA-TINY-POSITIVE-SPEED",
+      "context": {
+        "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "body_axes": "x-forward_y-right_z-down",
+        "sample_tick": 55,
+        "clock_domain": "clock.fixture.yyz.simulation@1"
+      },
+      "truth": {
+        "velocity_I_mps": [1e-12, 2e-12, -3e-12],
+        "velocity_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "velocity_sample_tick": 55,
+        "velocity_clock_domain": "clock.fixture.yyz.simulation@1",
+        "q_I_B_wxyz": [1.0, 0.0, 0.0, 0.0],
+        "attitude_to_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "attitude_from_frame_id": "frame.fixture.yyz.body@1",
+        "attitude_sample_tick": 55,
+        "attitude_clock_domain": "clock.fixture.yyz.simulation@1"
+      },
+      "wind": {
+        "velocity_airmass_I_mps": [0.0, 0.0, 0.0],
+        "velocity_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "sample_tick": 55,
+        "clock_domain": "clock.fixture.yyz.simulation@1"
+      },
+      "atmosphere": {
+        "density_kgpm3": 0.0,
+        "speed_of_sound_mps": 1.0,
+        "sample_tick": 55,
+        "clock_domain": "clock.fixture.yyz.simulation@1"
+      }
+    },
+    {
+      "id": "CASE-YYZ-AIR-DATA-SUB-ONE-SOUND-SPEED",
+      "context": {
+        "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "body_axes": "x-forward_y-right_z-down",
+        "sample_tick": 89,
+        "clock_domain": "clock.fixture.yyz.simulation@1"
+      },
+      "truth": {
+        "velocity_I_mps": [100.0, 0.0, 0.0],
+        "velocity_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "velocity_sample_tick": 89,
+        "velocity_clock_domain": "clock.fixture.yyz.simulation@1",
+        "q_I_B_wxyz": [1.0, 0.0, 0.0, 0.0],
+        "attitude_to_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "attitude_from_frame_id": "frame.fixture.yyz.body@1",
+        "attitude_sample_tick": 89,
+        "attitude_clock_domain": "clock.fixture.yyz.simulation@1"
+      },
+      "wind": {
+        "velocity_airmass_I_mps": [0.0, 0.0, 0.0],
+        "velocity_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+        "sample_tick": 89,
+        "clock_domain": "clock.fixture.yyz.simulation@1"
+      },
+      "atmosphere": {
+        "density_kgpm3": 1.0,
+        "speed_of_sound_mps": 0.5,
+        "sample_tick": 89,
+        "clock_domain": "clock.fixture.yyz.simulation@1"
+      }
+    }
+  ],
+  "equivalence_cases": [
+    {
+      "id": "EQUIV-YYZ-AIR-DATA-QUATERNION-SIGN",
+      "operation": "negate every q_I_B coefficient in the passive-rotation case",
+      "expected": "all physical air-data outputs remain equal"
+    },
+    {
+      "id": "EQUIV-YYZ-AIR-DATA-COMMON-INERTIAL-VELOCITY",
+      "operation": "add [17,-23,5] m/s to vehicle and air-mass inertial velocities in the wind-subtraction case",
+      "expected": "relative inertial velocity and all downstream air-data outputs remain equal"
+    }
+  ],
+  "invalid_input_cases": [
+    {"id": "INVALID-YYZ-AIR-DATA-FRAME-MISMATCH", "mutation": "change the wind velocity frame", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AIR-DATA-SAMPLE-TICK-MISMATCH", "mutation": "change the atmosphere sample tick", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AIR-DATA-NONFINITE-VELOCITY", "mutation": "set one vehicle velocity component to positive infinity", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AIR-DATA-ZERO-QUATERNION", "mutation": "set q_I_B to [0,0,0,0]", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AIR-DATA-NONUNIT-QUATERNION", "mutation": "set q_I_B to [0.8,0,0,0] under Error policy", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AIR-DATA-NEGATIVE-DENSITY", "mutation": "set density to a negative finite value", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AIR-DATA-NONPOSITIVE-SOUND-SPEED", "mutation": "set speed of sound to zero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AIR-DATA-ZERO-RELATIVE-VELOCITY", "mutation": "make vehicle and air-mass velocities equal", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AIR-DATA-PURE-LATERAL-VELOCITY", "mutation": "set body relative velocity to [0,10,0]", "expected_status": "input-domain-error"}
+  ],
+  "mutation_cases": [
+    {"id": "MUTATION-YYZ-AIR-DATA-ADD-WIND", "mutation": "compute vehicle velocity plus air-mass velocity", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-AIR-DATA-REVERSE-QUATERNION-DIRECTION", "mutation": "compute inverse(q_I_B) * pure(v_rel_I) * q_I_B", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-AIR-DATA-LEGACY-ANGLE-CLAMPS", "mutation": "replace angle denominators with max(1e-9,u) and max(1e-9,abs(u))", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-AIR-DATA-SOUND-SPEED-FLOOR", "mutation": "divide speed by max(1,a)", "expected_status": "oracle-mismatch"}
+  ]
+}

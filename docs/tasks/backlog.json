@@ -197,7 +197,7 @@
       "depends_on": ["R0-SCI-001", "R0-LEG-002", "R0-SPEC-001"],
       "deliverables": ["Mission and assets", "formula intermediate values", "trajectory and termination references", "tolerance report"],
       "acceptance": ["00A source, step, observation and diagnostic examples become machine-valid fixtures"],
-      "evidence": ["REF-YYZ-6DOF-CORE-001 and REF-YYZ-FORCE-MOMENT-CLOSURE-001 executable formula/trajectory slices; REF-YYZ-001 bundle pending"],
+      "evidence": ["REF-YYZ-6DOF-CORE-001, REF-YYZ-FORCE-MOMENT-CLOSURE-001 and REF-YYZ-AIR-DATA-KINEMATICS-001 executable formula/trajectory slices; REF-YYZ-001 bundle pending"],
       "architecture_refs": ["00A", "15 §2–§9", "15 §20"]
     },
     {
