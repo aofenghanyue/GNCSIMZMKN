@@ -70,8 +70,13 @@
       "expected_status": "rejected"
     },
     {
+      "id": "FAIL-STOP-ROW-NOT-VISIBLE-AT-EVALUATION",
+      "mutation": "Keep the terminal dataset row but report it as not visible when termination evaluation returns",
+      "expected_status": "rejected"
+    },
+    {
       "id": "FAIL-STOP-MISSING-TERMINAL-ROW",
-      "mutation": "Remove the t0 dataset row and mark recorded_row_visible false",
+      "mutation": "Remove the t0 dataset row while the evaluation event still reports it as visible",
       "expected_status": "rejected"
     },
     {

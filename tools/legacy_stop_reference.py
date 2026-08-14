@@ -359,6 +359,7 @@ def main() -> int:
                      for entry in oracle["failure_cases"]}
     require(set(failure_by_id) == {
         "FAIL-STOP-TERMINATION-BEFORE-RECORD",
+        "FAIL-STOP-ROW-NOT-VISIBLE-AT-EVALUATION",
         "FAIL-STOP-MISSING-TERMINAL-ROW",
         "FAIL-STOP-POST-STOP-ADVANCE",
     } and all(entry["expected_status"] == "rejected"
@@ -373,8 +374,8 @@ def main() -> int:
     for sequence, event in enumerate(termination_before_record["events"]):
         event["sequence"] = sequence
 
-    missing_row = copy.deepcopy(traces[0])
-    missing_row["events"][3]["recorded_row_visible"] = False
+    row_not_visible = copy.deepcopy(traces[0])
+    row_not_visible["events"][3]["recorded_row_visible"] = False
 
     post_stop_advance = copy.deepcopy(traces[0])
     post_stop_advance["events"][4]["final_time_s"] = 1
@@ -388,14 +389,18 @@ def main() -> int:
                 time_tolerance, state_tolerance,
                 "Termination-before-record mutation")) and
             rejected(lambda: validate_semantics(
-                missing_row, [], values, time_tolerance, state_tolerance,
+                row_not_visible, rows[0], values,
+                time_tolerance, state_tolerance,
+                "Row-not-visible-at-evaluation mutation")) and
+            rejected(lambda: validate_semantics(
+                traces[0], [], values, time_tolerance, state_tolerance,
                 "Missing-terminal-row mutation")) and
             rejected(lambda: validate_semantics(
                 post_stop_advance, extra_rows, values,
                 time_tolerance, state_tolerance,
                 "Post-stop-advance mutation")),
             "A STOP semantic failure mutation was accepted")
-    checks += 4
+    checks += 5
 
     equivalence = oracle["equivalence_cases"]
     require(equivalence == [{
@@ -435,11 +440,12 @@ def main() -> int:
                     time_tolerance, "C++ final time")
     for flag in (
             "termination_before_record_rejected",
+            "row_not_visible_at_evaluation_rejected",
             "missing_terminal_row_rejected",
             "post_stop_advance_rejected",
             "reason_text_change_accepted"):
         require(probe[flag] is True, f"C++ STOP probe did not enforce {flag}")
-    checks += 12
+    checks += 13
 
     decision = oracle["disposition_decision"]
     require(decision["status"] in {"needs_owner_decision", "accepted"},

@@ -36,6 +36,7 @@ struct Timeline {
 struct ProbeResult {
     Timeline canonical;
     bool termination_before_record_rejected = false;
+    bool row_not_visible_at_evaluation_rejected = false;
     bool missing_terminal_row_rejected = false;
     bool post_stop_advance_rejected = false;
     bool reason_text_change_accepted = false;
@@ -113,9 +114,13 @@ ProbeResult runProbe() {
     result.termination_before_record_rejected =
         !validTimeline(termination_before_record);
 
+    Timeline row_not_visible = result.canonical;
+    row_not_visible.events[3].recorded_row_visible = false;
+    result.row_not_visible_at_evaluation_rejected =
+        !validTimeline(row_not_visible);
+
     Timeline missing_row = result.canonical;
     missing_row.rows.clear();
-    missing_row.events[3].recorded_row_visible = false;
     result.missing_terminal_row_rejected = !validTimeline(missing_row);
 
     Timeline post_stop_advance = result.canonical;
@@ -152,6 +157,9 @@ void writeJson(const ProbeResult& result) {
               << ",\"final_time_s\":" << timeline.final_time_s
               << ",\"termination_before_record_rejected\":"
               << (result.termination_before_record_rejected ? "true" : "false")
+              << ",\"row_not_visible_at_evaluation_rejected\":"
+              << (result.row_not_visible_at_evaluation_rejected
+                      ? "true" : "false")
               << ",\"missing_terminal_row_rejected\":"
               << (result.missing_terminal_row_rejected ? "true" : "false")
               << ",\"post_stop_advance_rejected\":"
@@ -175,6 +183,8 @@ int main(int argc, char** argv) {
                 "canonical stop timeline differs");
         require(result.termination_before_record_rejected,
                 "termination-before-record mutation was accepted");
+        require(result.row_not_visible_at_evaluation_rejected,
+                "row-not-visible-at-evaluation mutation was accepted");
         require(result.missing_terminal_row_rejected,
                 "missing terminal row mutation was accepted");
         require(result.post_stop_advance_rejected,

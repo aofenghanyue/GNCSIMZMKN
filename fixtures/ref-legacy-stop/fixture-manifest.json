@@ -67,7 +67,7 @@
     "Two Legacy datasets are byte-identical and two traces normalize to one semantic timeline",
     "The Legacy evaluator observes the flushed t0 row before returning true",
     "Independent Decimal/Python and C++17 checks agree on the stopping state, event order and final time",
-    "Termination-before-record, missing terminal row and post-stop advance are rejected",
+    "Termination-before-record, row-not-visible-at-evaluation, missing terminal row and post-stop advance are rejected independently",
     "Changing Legacy free-text reason leaves semantic comparison unchanged",
     "Preserve and Retire recommendations remain pending until the repository owner accepts the disposition choice"
   ],
