@@ -1,13 +1,13 @@
 {
-  "schema_version": "gnczmkn.yyz-mission-composition-cases/1",
+  "schema_version": "gnczmkn.yyz-mission-composition-cases/2",
   "fixture_id": "REF-YYZ-MISSION-COMPOSITION-001",
   "oracle_id": "ORACLE-YYZ-MISSION-COMPOSITION-001",
   "model_choice": {
     "status": "accepted",
     "owner_role": "scientific_authority",
-    "accepted_scope": "Fixture-local executable composition from resolved YYZ scientific components through one lookup-composed FrozenInterval, an atomic rigid-and-mass commit, committed-boundary evaluation, a sealed terminal observation and a frozen mission result.",
+    "accepted_scope": "Fixture-local executable composition from resolved YYZ scientific components through two consecutive lookup-composed FrozenIntervals, two atomic rigid-and-mass commits, committed-boundary evaluation, a sealed terminal observation and a frozen mission result.",
     "source_policy": "The source is a fixture input with explicit stable identities and component bindings. It does not define the product MissionSource schema or invoke a product Compiler, Plan, Session or Artifact runtime.",
-    "numeric_policy": "REF-YYZ-FROZEN-INTERVAL-001 supplies the causal environment-to-rigid candidate. The mass candidate and rigid candidate commit atomically at tick 1 before metrics and termination read them.",
+    "numeric_policy": "REF-YYZ-FROZEN-INTERVAL-001 supplies the accepted interval formulas. Tick 1 recomputes air-data, aero lookup, dimensionalization, propulsion, mass projection and Closure from the newly committed rigid state and mass. Each interval uses one classical RK4 base step; 1/2/4/8 substep results expose fourth-order self-convergence.",
     "reuse_policy": "REF-YYZ-TWO-INTERVAL-MASS-COMMIT-001 contributes the accepted atomic commit time relation. Its independent supplied-force trajectory is not substituted for the lookup-composed trajectory.",
     "termination_policy": "Metrics read committed samples only. Inclusive AtGrid any-of predicates use higher integer priority and ascending predicate_id tie-breaking. The terminal observation seals before the mission result freezes.",
     "excluded": [
@@ -18,7 +18,7 @@
     ]
   },
   "model": {
-    "model_id": "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-001",
+    "model_id": "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-002",
     "mission_source_id": "mission.fixture.yyz.lookup-open-loop@1",
     "execution_id": "execution.fixture.yyz.lookup-open-loop.0001",
     "subject": "vehicle.fixture.yyz@1",
@@ -30,7 +30,7 @@
     "configuration_revision": 11,
     "base_dt_s": 0.1,
     "initial_tick": 0,
-    "terminal_tick": 1,
+    "terminal_tick": 2,
     "integration_strategy": "FrozenInterval",
     "commit_policy": "atomic-rigid-and-mass",
     "evaluation_mode": "AtGrid",
@@ -39,8 +39,10 @@
       "all required component roles resolve exactly once to executable fixtures and matching oracle/model identities",
       "component paths are repository-relative JSON files beneath fixtures or oracles",
       "the shared frame, clock, mass-state, configuration revision, tick interval and base_dt identities agree",
-      "the selected FrozenInterval case supplies a finite tick-1 rigid candidate and positive pending mass candidate",
-      "the rigid and mass candidates share one closing commit identity and become visible together",
+      "the selected FrozenInterval case supplies the interval formulas and a finite tick-1 rigid/mass commit",
+      "tick 1 committed rigid and mass state are the only inputs to the recomputed second interval",
+      "each interval's rigid and mass candidates share one closing commit identity and become visible together",
+      "the second interval one-step RK4 trajectory is accompanied by positive 1/2/4/8 substep error reduction",
       "termination predicates use supported metrics, inclusive relations and nonnegative integer priorities",
       "the first terminal committed boundary is sealed into the terminal observation before result freeze"
     ]
@@ -148,14 +150,15 @@
       "id": "CASE-YYZ-MISSION-COMPOSITION-BASELINE",
       "frozen_interval_case_id": "CASE-YYZ-FROZEN-INTERVAL-COMPOSED-TRAJECTORY",
       "opening_commit_id": "commit.fixture.yyz.mission.0",
-      "closing_commit_id": "commit.fixture.yyz.mission.1",
+      "intermediate_commit_id": "commit.fixture.yyz.mission.1",
+      "closing_commit_id": "commit.fixture.yyz.mission.2",
       "termination_plan_id": "termination-plan.fixture.yyz.mission-complete@1",
       "predicates": [
         {
           "predicate_id": "remaining-mass-floor",
           "metric_id": "remaining_mass_kg",
           "relation": "<=",
-          "threshold": 99.9,
+          "threshold": 99.85,
           "action": "Abort",
           "reason_code": "remaining-mass-floor",
           "priority": 300
@@ -164,7 +167,7 @@
           "predicate_id": "duration-limit",
           "metric_id": "duration_s",
           "relation": ">=",
-          "threshold": 0.1,
+          "threshold": 0.2,
           "action": "Complete",
           "reason_code": "duration-complete",
           "priority": 100
@@ -173,7 +176,7 @@
           "predicate_id": "downrange-goal",
           "metric_id": "downrange_m",
           "relation": ">=",
-          "threshold": 10.995272058823529411764705882352941176470588235294117647058823529411764705882353,
+          "threshold": 20.0,
           "action": "Complete",
           "reason_code": "downrange-goal",
           "priority": 200
@@ -193,6 +196,7 @@
   "tolerances": {
     "formula_absolute": 2e-12,
     "formula_relative": 2e-12,
+    "convergence_ratio_absolute": 5e-5,
     "stored_decimal_absolute": "1e-68"
   },
   "equivalence_cases": [
@@ -262,7 +266,12 @@
     },
     {
       "id": "MUTATION-YYZ-MISSION-COMPOSITION-NONATOMIC-MASS-COMMIT",
-      "mutation": "commit the rigid candidate while retaining the opening committed mass",
+      "mutation": "commit the tick-1 rigid candidate while retaining the tick-0 committed mass and feed that stale mass into interval 1",
+      "expected_status": "oracle-mismatch"
+    },
+    {
+      "id": "MUTATION-YYZ-MISSION-COMPOSITION-STALE-BOUNDARY-CLOSURE",
+      "mutation": "reuse interval-0 air-data, aero lookup and Closure throughout interval 1",
       "expected_status": "oracle-mismatch"
     },
     {

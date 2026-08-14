@@ -2,7 +2,7 @@
   "schema_version": "gnczmkn.fixture-manifest/1",
   "fixture_id": "REF-YYZ-MISSION-COMPOSITION-001",
   "status": "executable",
-  "purpose": "Provide one executable fixture-local YYZ source-to-result composition over the current scientific component oracles.",
+  "purpose": "Provide an executable two-interval fixture-local YYZ source-to-result composition over the current scientific component oracles.",
   "authority": "scientific_authority",
   "provenance": {
     "source_refs": [
@@ -16,7 +16,7 @@
       "fixtures/ref-yyz-two-interval-mass-commit/cases.json",
       "fixtures/ref-yyz-run-evaluation/cases.json"
     ],
-    "notes": "The repository owner accepted fixture-local source composition, lookup-composed numerical production, atomic rigid/mass commit and terminal-observation-first result semantics. The supplied-force two-interval trajectory remains a separate temporal oracle."
+    "notes": "The repository owner accepted fixture-local source composition, boundary-by-boundary lookup recomputation, atomic rigid/mass commit, one-step RK4 with explicit substep convergence evidence and terminal-observation-first result semantics. The supplied-force two-interval trajectory remains a separate temporal oracle."
   },
   "expected_facts": [
     {
@@ -32,7 +32,7 @@
     },
     {
       "id": "FACT-YYZ-MISSION-ATOMIC-COMMIT",
-      "claim": "The lookup-composed rigid candidate and scalar-burn mass candidate remain pending through the interval and become visible together in the tick-1 committed sample.",
+      "claim": "Each lookup-composed rigid candidate and scalar-burn mass candidate remains pending through its interval and becomes visible together at tick 1 or tick 2; interval 1 reads only the tick-1 committed state.",
       "tolerance_policy": "Commit, tick, identity, visibility and mass handoff are exact; physical state values use the declared formula tolerance.",
       "evidence_refs": [
         "fixtures/ref-yyz-mission-composition/cases.json",
@@ -42,8 +42,19 @@
       ]
     },
     {
+      "id": "FACT-YYZ-MISSION-BOUNDARY-RECOMPUTE",
+      "claim": "The tick-1 committed rigid and mass state drives a fresh air-data, trilinear aero, dimensionalization, propulsion and Closure evaluation; the held second-interval closure advances the full rotating state with one RK4 step.",
+      "tolerance_policy": "Formula values use the declared absolute/relative tolerance; the 1/2/4/8 substep series must retain at least a 12-fold successive error reduction, with its separately declared ratio tolerance.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-mission-composition/cases.json",
+        "oracles/ref-yyz-mission-composition/reference.json",
+        "tools/yyz_mission_composition_reference.py",
+        "tests/yyz_mission_composition.cpp"
+      ]
+    },
+    {
       "id": "FACT-YYZ-MISSION-TERMINAL-RESULT",
-      "claim": "Committed-boundary metrics select the higher-priority simultaneous completion at tick 1, seal the terminal observation against that commit and then freeze the mission result.",
+      "claim": "Committed-boundary metrics select the higher-priority simultaneous completion at tick 2, seal the terminal observation against that commit and then freeze the mission result.",
       "tolerance_policy": "Decision, priority, event order, commit reference and seal state are exact; metrics use the declared formula tolerance.",
       "evidence_refs": [
         "fixtures/ref-yyz-mission-composition/cases.json",
@@ -62,8 +73,8 @@
     "CMakeLists.txt"
   ],
   "acceptance": [
-    "One command resolves the current scientific components and produces committed samples, interval facts, metrics, terminal observation and mission result",
-    "Independent Python and C++17 implementations reject identity, timing, visibility, commit and result-order regressions",
+    "One command resolves the current scientific components and produces three committed samples, two independently recomputed interval fact sets, metrics, terminal observation and mission result",
+    "Independent Python and C++17 implementations confirm second-interval fourth-order self-convergence and reject identity, timing, visibility, stale-Closure, commit and result-order regressions",
     "The bundle introduces no product Mission, Compiler, Session, Observation or Artifact capability"
   ],
   "open_tasks": ["R0-SCI-003"]

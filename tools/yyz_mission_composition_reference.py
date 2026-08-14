@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import copy
 from decimal import Decimal, InvalidOperation, getcontext
+import importlib.util
 import json
 from pathlib import Path
 import subprocess
@@ -14,9 +15,9 @@ import sys
 
 FIXTURE_ID = "REF-YYZ-MISSION-COMPOSITION-001"
 ORACLE_ID = "ORACLE-YYZ-MISSION-COMPOSITION-001"
-MODEL_ID = "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-001"
-CASES_SCHEMA = "gnczmkn.yyz-mission-composition-cases/1"
-REFERENCE_SCHEMA = "gnczmkn.yyz-mission-composition-reference/1"
+MODEL_ID = "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-002"
+CASES_SCHEMA = "gnczmkn.yyz-mission-composition-cases/2"
+REFERENCE_SCHEMA = "gnczmkn.yyz-mission-composition-reference/2"
 MISSION_SOURCE_ID = "mission.fixture.yyz.lookup-open-loop@1"
 EXECUTION_ID = "execution.fixture.yyz.lookup-open-loop.0001"
 SUBJECT = "vehicle.fixture.yyz@1"
@@ -47,9 +48,13 @@ EVENT_ORDER = [
     "resolve-components",
     "publish-opening-commit",
     "evaluate-opening-boundary",
-    "evaluate-frozen-interval",
-    "stage-rigid-and-mass-candidates",
-    "commit-rigid-and-mass",
+    "evaluate-interval-0",
+    "stage-commit-1",
+    "commit-rigid-and-mass-1",
+    "evaluate-intermediate-boundary",
+    "evaluate-interval-1",
+    "stage-commit-2",
+    "commit-rigid-and-mass-2",
     "evaluate-terminal-boundary",
     "seal-terminal-observation",
     "freeze-mission-result",
@@ -104,6 +109,18 @@ def load_json(path: Path) -> dict:
                       parse_float=Decimal)
 
 
+def load_reference_module(repo_root: Path, module_name: str,
+                          relative_path: str):
+    path = (repo_root / relative_path).resolve()
+    require(path.is_file(), f"reference module is missing: {relative_path}")
+    spec = importlib.util.spec_from_file_location(module_name, path)
+    require(spec is not None and spec.loader is not None,
+            f"reference module cannot be loaded: {relative_path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
 def validate_cases_identity(cases: dict) -> None:
     require(cases["schema_version"] == CASES_SCHEMA and
             cases["fixture_id"] == FIXTURE_ID and
@@ -123,7 +140,7 @@ def validate_cases_identity(cases: dict) -> None:
             model["configuration_revision"] == CONFIGURATION_REVISION and
             decimal(model["base_dt_s"]) > 0 and
             model["initial_tick"] == 0 and
-            model["terminal_tick"] == 1 and
+            model["terminal_tick"] == 2 and
             model["integration_strategy"] == "FrozenInterval" and
             model["commit_policy"] == "atomic-rigid-and-mass" and
             model["evaluation_mode"] == "AtGrid" and
@@ -138,9 +155,12 @@ def validate_case(case: dict) -> None:
     require(case["frozen_interval_case_id"] == FROZEN_CASE_ID and
             isinstance(case["opening_commit_id"], str) and
             bool(case["opening_commit_id"]) and
+            isinstance(case["intermediate_commit_id"], str) and
+            bool(case["intermediate_commit_id"]) and
             isinstance(case["closing_commit_id"], str) and
             bool(case["closing_commit_id"]) and
-            case["opening_commit_id"] != case["closing_commit_id"] and
+            len({case["opening_commit_id"], case["intermediate_commit_id"],
+                 case["closing_commit_id"]}) == 3 and
             isinstance(case["termination_plan_id"], str) and
             bool(case["termination_plan_id"]),
             "mission-composition case identity differs")
@@ -245,7 +265,7 @@ def validate_cross_component_context(cases: dict, documents: dict,
             "FrozenInterval shared context differs")
     require(context["sample_tick"] == model["initial_tick"] and
             context["valid_from_tick"] == model["initial_tick"] and
-            context["valid_until_tick"] == model["terminal_tick"] and
+            context["valid_until_tick"] == model["initial_tick"] + 1 and
             context["configuration_revision"] ==
                 model["configuration_revision"] and
             decimal(context["base_dt_s"]) == decimal(model["base_dt_s"]),
@@ -266,7 +286,7 @@ def validate_cross_component_context(cases: dict, documents: dict,
     require(frozen_result["context"]["sample_tick"] ==
                 model["initial_tick"] and
             frozen_result["context"]["valid_until_tick"] ==
-                model["terminal_tick"] and
+                model["initial_tick"] + 1 and
             decimal(frozen_result["context"]["base_dt_s"]) ==
                 decimal(model["base_dt_s"]),
             "FrozenInterval result context differs")
@@ -425,9 +445,171 @@ def metric_summary(trace: list[dict]) -> dict:
     }
 
 
+STATE_FIELDS = (
+    "position_I_m",
+    "velocity_I_mps",
+    "q_I_B_wxyz",
+    "omega_BI_B_radps",
+)
+
+
+def state_fields(state: dict) -> dict:
+    return {
+        "position_I_m": vector(state["position_I_m"], 3, "position"),
+        "velocity_I_mps": vector(state["velocity_I_mps"], 3, "velocity"),
+        "q_I_B_wxyz": vector(state["q_I_B_wxyz"], 4, "q_I_B"),
+        "omega_BI_B_radps": vector(
+            state["omega_BI_B_radps"], 3, "angular rate"),
+    }
+
+
+def interval_case(base: dict, tick: int, opening_state: dict,
+                  opening_mass: Decimal) -> dict:
+    value = copy.deepcopy(base)
+    value["id"] = f"CASE-YYZ-MISSION-COMPOSITION-INTERVAL-{tick}"
+    value["context"].update({
+        "sample_tick": tick,
+        "valid_from_tick": tick,
+        "valid_until_tick": tick + 1,
+    })
+    value["initial_state"] = state_fields(opening_state)
+    for section_name in ("environment_sample", "mass_properties_sample",
+                         "aero_lookup", "propulsion_response"):
+        section = value[section_name]
+        section["sample_tick"] = tick
+        if "valid_from_tick" in section:
+            section["valid_from_tick"] = tick
+            section["valid_until_tick"] = tick + 1
+    value["mass_properties_sample"]["mass_kg"] = opening_mass
+    value["aero_lookup"]["omega_BI_B_radps"] = vector(
+        opening_state["omega_BI_B_radps"], 3, "aero body rate")
+    value["terminal"]["expected_tick"] = tick + 1
+    return value
+
+
+def core_inputs(interval_input: dict, interval_result: dict,
+                opening_mass: Decimal) -> dict:
+    return {
+        "mass_kg": opening_mass,
+        "inertia_B_kgm2_row_major": interval_input["mass_properties_sample"]
+            ["inertia_about_CoM_B_kgm2_row_major"],
+        "force_B_N": interval_result["closure"]["force_total_B_N"],
+        "moment_B_Nm": interval_result["closure"]
+            ["moment_total_about_CoM_B_Nm"],
+        "gravity_I_mps2": interval_result["environment_sample"]
+            ["gravity_I_mps2"],
+    }
+
+
+def rigid_derivative(core_module, opening_state: dict,
+                     inputs: dict) -> dict:
+    formula = core_module.formula_reference({
+        "state": state_fields(opening_state),
+        "inputs": inputs,
+    })
+    return {
+        "force_total_I_N": formula["force_I_N"],
+        "acceleration_I_mps2": formula["velocity_derivative_I_mps2"],
+        "angular_momentum_B_kgm2ps":
+            formula["angular_momentum_B_kgm2ps"],
+        "gyroscopic_moment_B_Nm": formula["gyroscopic_moment_B_Nm"],
+        "net_moment_B_Nm": formula["net_moment_B_Nm"],
+        "angular_acceleration_B_radps2":
+            formula["omega_derivative_B_radps2"],
+        "q_derivative_I_B_per_s": formula["q_derivative_I_B_per_s"],
+    }
+
+
+def integrate_state(core_module, opening_state: dict, inputs: dict,
+                    duration_s: Decimal, substeps: int) -> tuple[dict, Decimal]:
+    require(valid_integer(substeps) and substeps > 0,
+            "RK4 substep count must be a positive integer")
+    state = state_fields(opening_state)
+    step_s = duration_s / Decimal(substeps)
+    maximum_residual = Decimal(0)
+    for _ in range(substeps):
+        state, residual = core_module.decimal_rk4_step(
+            state, inputs, step_s)
+        maximum_residual = max(maximum_residual, residual)
+    return state, maximum_residual
+
+
+def state_max_difference(lhs: dict, rhs: dict) -> Decimal:
+    return max(
+        abs(decimal(left) - decimal(right))
+        for field in STATE_FIELDS
+        for left, right in zip(lhs[field], rhs[field])
+    )
+
+
+def convergence_series(core_module, opening_state: dict, inputs: dict,
+                       duration_s: Decimal, *,
+                       require_fourth_order: bool = True) -> dict:
+    entries = []
+    for substeps in (1, 2, 4, 8):
+        state, residual = integrate_state(
+            core_module, opening_state, inputs, duration_s, substeps)
+        entries.append({
+            "substeps": substeps,
+            "terminal_state": state,
+            "maximum_pre_normalization_quaternion_norm_residual": residual,
+        })
+    differences = [
+        state_max_difference(entries[index]["terminal_state"],
+                             entries[index + 1]["terminal_state"])
+        for index in range(len(entries) - 1)
+    ]
+    require(all(value > 0 for value in differences),
+            "second-interval convergence differences must be positive")
+    ratios = [differences[index] / differences[index + 1]
+              for index in range(len(differences) - 1)]
+    minimum_ratio = Decimal(12)
+    require(not require_fourth_order or
+            all(value >= minimum_ratio for value in ratios),
+            f"second interval did not demonstrate fourth-order convergence: "
+            f"differences={differences}, ratios={ratios}")
+    return {
+        "substep_counts": [1, 2, 4, 8],
+        "terminal_states": entries,
+        "successive_max_abs_differences": differences,
+        "error_reduction_ratios": ratios,
+        "minimum_required_error_reduction_ratio": minimum_ratio,
+    }
+
+
+def interval_execution(result: dict, opening_mass: Decimal,
+                       closing_mass: Decimal) -> dict:
+    mass = result["mass_visibility"]
+    return {
+        "sample_tick": result["context"]["sample_tick"],
+        "valid_from_tick": result["context"]["valid_from_tick"],
+        "valid_until_tick": result["context"]["valid_until_tick"],
+        "configuration_revision": result["context"]["configuration_revision"],
+        "base_dt_s": decimal(result["context"]["base_dt_s"]),
+        "strategy": "FrozenInterval",
+        "integration_substeps": 1,
+        "environment_sample": result["environment_sample"],
+        "air_data": result["air_data"],
+        "aero_lookup": result["aero_lookup"],
+        "closure": result["closure"],
+        "rigid_derivative_at_opening": result["rigid_derivative_at_tick0"],
+        "mass_transition": {
+            "mass_state_id": MASS_STATE_ID,
+            "opening_committed_mass_kg": opening_mass,
+            "consumed_mass_kg": decimal(mass["consumed_mass_kg"]),
+            "pending_mass_candidate_kg":
+                decimal(mass["pending_mass_candidate_kg"]),
+            "pending_visibility_before_commit": "candidate-only",
+            "closing_committed_mass_kg": closing_mass,
+            "closing_commit_kind": "atomic-rigid-and-mass",
+        },
+    }
+
+
 def compose(cases: dict, repo_root: Path, *,
             early_mass_visibility: bool = False,
             nonatomic_mass_commit: bool = False,
+            stale_boundary_closure: bool = False,
             low_priority_wins: bool = False,
             result_before_observation: bool = False) -> dict:
     validate_cases_identity(cases)
@@ -445,41 +627,88 @@ def compose(cases: dict, repo_root: Path, *,
     validate_cross_component_context(
         cases, documents, frozen_input, frozen_result)
 
+    frozen_module = load_reference_module(
+        repo_root, "yyz_mission_frozen_interval_reference",
+        "tools/yyz_frozen_interval_reference.py")
+    core_module = load_reference_module(
+        repo_root, "yyz_mission_6dof_core_reference",
+        "tools/yyz_6dof_core_reference.py")
+    first_result = frozen_module.compose(frozen_input)
+    require(stringify(first_result) == frozen_result,
+            "FrozenInterval stored oracle differs from its formula reference")
+
     model = cases["model"]
     dt_s = decimal(model["base_dt_s"])
     opening_state = frozen_input["initial_state"]
     source_opening_mass = decimal(
         frozen_input["mass_properties_sample"]["mass_kg"])
     current_visible_mass = decimal(
-        frozen_result["mass_visibility"]["current_visible_mass_kg"])
+        first_result["mass_visibility"]["current_visible_mass_kg"])
     candidate_mass = decimal(
-        frozen_result["mass_visibility"]["pending_mass_candidate_kg"])
+        first_result["mass_visibility"]["pending_mass_candidate_kg"])
     consumed_mass = decimal(
-        frozen_result["mass_visibility"]["consumed_mass_kg"])
+        first_result["mass_visibility"]["consumed_mass_kg"])
     require(current_visible_mass == source_opening_mass and
             candidate_mass == source_opening_mass - consumed_mass and
-            decimal(frozen_result["mass_visibility"]["integration_mass_kg"]) ==
+            decimal(first_result["mass_visibility"]["integration_mass_kg"]) ==
                 source_opening_mass and
-            frozen_result["mass_visibility"]
+            first_result["mass_visibility"]
                 ["pending_visibility_before_commit"] == "candidate-only" and
-            frozen_result["mass_visibility"]["next_commit_tick"] ==
-                model["terminal_tick"],
+            first_result["mass_visibility"]["next_commit_tick"] ==
+                model["initial_tick"] + 1,
             "FrozenInterval mass handoff differs")
-    terminal_state = frozen_result["analytic_terminal"]
-    require(terminal_state["tick"] == model["terminal_tick"] and
-            decimal(terminal_state["time_s"]) ==
-                Decimal(model["terminal_tick"]) * dt_s,
-            "FrozenInterval terminal state identity differs")
+    intermediate_state = first_result["analytic_terminal"]
+    require(intermediate_state["tick"] == model["initial_tick"] + 1 and
+            decimal(intermediate_state["time_s"]) == dt_s,
+            "first FrozenInterval terminal state identity differs")
 
     opening_mass = candidate_mass if early_mass_visibility else source_opening_mass
-    closing_mass = source_opening_mass if nonatomic_mass_commit else candidate_mass
+    intermediate_mass = (source_opening_mass if nonatomic_mass_commit
+                         else candidate_mass)
+    second_input = interval_case(
+        frozen_input, 1, intermediate_state, intermediate_mass)
+    second_result = frozen_module.compose(
+        second_input, include_trajectory=False)
+    if stale_boundary_closure:
+        second_result = copy.deepcopy(second_result)
+        second_result["air_data"] = copy.deepcopy(first_result["air_data"])
+        second_result["aero_lookup"] = copy.deepcopy(
+            first_result["aero_lookup"])
+        second_result["closure"] = copy.deepcopy(first_result["closure"])
+        stale_inputs = core_inputs(
+            second_input, second_result, intermediate_mass)
+        second_result["rigid_derivative_at_tick0"] = rigid_derivative(
+            core_module, intermediate_state, stale_inputs)
+    second_mass = second_result["mass_visibility"]
+    second_candidate_mass = decimal(
+        second_mass["pending_mass_candidate_kg"])
+    require(decimal(second_mass["current_visible_mass_kg"]) ==
+                intermediate_mass and
+            decimal(second_mass["integration_mass_kg"]) ==
+                intermediate_mass and
+            second_candidate_mass == intermediate_mass - consumed_mass and
+            second_mass["pending_visibility_before_commit"] ==
+                "candidate-only" and
+            second_mass["next_commit_tick"] == model["terminal_tick"],
+            "second FrozenInterval mass handoff differs")
+    second_inputs = core_inputs(
+        second_input, second_result, intermediate_mass)
+    convergence = convergence_series(
+        core_module, intermediate_state, second_inputs, dt_s,
+        require_fourth_order=not stale_boundary_closure)
+    closing_state = convergence["terminal_states"][0]["terminal_state"]
+    closing_mass = second_candidate_mass
+
     opening = committed_sample(
         model["initial_tick"], Decimal(model["initial_tick"]) * dt_s,
         case["opening_commit_id"], opening_state, opening_mass)
+    intermediate = committed_sample(
+        1, dt_s, case["intermediate_commit_id"], intermediate_state,
+        intermediate_mass)
     closing = committed_sample(
         model["terminal_tick"], Decimal(model["terminal_tick"]) * dt_s,
-        case["closing_commit_id"], terminal_state, closing_mass)
-    committed_samples = [opening, closing]
+        case["closing_commit_id"], closing_state, closing_mass)
+    committed_samples = [opening, intermediate, closing]
 
     evaluation_trace = []
     terminal_boundary = None
@@ -540,30 +769,11 @@ def compose(cases: dict, repo_root: Path, *,
         "terminal_observation_sealed": terminal_observation["sealed"],
         "frozen": True,
     }
-    interval_execution = {
-        "sample_tick": frozen_result["context"]["sample_tick"],
-        "valid_from_tick": frozen_result["context"]["valid_from_tick"],
-        "valid_until_tick": frozen_result["context"]["valid_until_tick"],
-        "configuration_revision":
-            frozen_result["context"]["configuration_revision"],
-        "base_dt_s": decimal(frozen_result["context"]["base_dt_s"]),
-        "strategy": "FrozenInterval",
-        "environment_sample": frozen_result["environment_sample"],
-        "air_data": frozen_result["air_data"],
-        "aero_lookup": frozen_result["aero_lookup"],
-        "closure": frozen_result["closure"],
-        "rigid_derivative_at_opening":
-            frozen_result["rigid_derivative_at_tick0"],
-        "mass_transition": {
-            "mass_state_id": MASS_STATE_ID,
-            "opening_committed_mass_kg": source_opening_mass,
-            "consumed_mass_kg": consumed_mass,
-            "pending_mass_candidate_kg": candidate_mass,
-            "pending_visibility_before_commit": "candidate-only",
-            "closing_committed_mass_kg": closing_mass,
-            "closing_commit_kind": "atomic-rigid-and-mass",
-        },
-    }
+    interval_executions = [
+        interval_execution(first_result, source_opening_mass,
+                           intermediate_mass),
+        interval_execution(second_result, intermediate_mass, closing_mass),
+    ]
     execution_trace = [
         {"order": 0, "event": "resolve-components",
          "sample_tick": 0, "component_count": len(resolved)},
@@ -572,19 +782,28 @@ def compose(cases: dict, repo_root: Path, *,
         {"order": 2, "event": "evaluate-opening-boundary",
          "sample_tick": 0,
          "action": evaluation_trace[0]["decision"]["action"]},
-        {"order": 3, "event": "evaluate-frozen-interval",
+        {"order": 3, "event": "evaluate-interval-0",
          "sample_tick": 0, "valid_until_tick": 1},
-        {"order": 4, "event": "stage-rigid-and-mass-candidates",
+        {"order": 4, "event": "stage-commit-1",
          "sample_tick": 0, "candidate_tick": 1},
-        {"order": 5, "event": "commit-rigid-and-mass",
-         "sample_tick": 1, "commit_id": closing["commit_id"]},
-        {"order": 6, "event": "evaluate-terminal-boundary",
+        {"order": 5, "event": "commit-rigid-and-mass-1",
+         "sample_tick": 1, "commit_id": intermediate["commit_id"]},
+        {"order": 6, "event": "evaluate-intermediate-boundary",
          "sample_tick": 1,
+         "action": evaluation_trace[1]["decision"]["action"]},
+        {"order": 7, "event": "evaluate-interval-1",
+         "sample_tick": 1, "valid_until_tick": 2},
+        {"order": 8, "event": "stage-commit-2",
+         "sample_tick": 1, "candidate_tick": 2},
+        {"order": 9, "event": "commit-rigid-and-mass-2",
+         "sample_tick": 2, "commit_id": closing["commit_id"]},
+        {"order": 10, "event": "evaluate-terminal-boundary",
+         "sample_tick": 2,
          "action": terminal_boundary["decision"]["action"]},
-        {"order": 7, "event": "seal-terminal-observation",
-         "sample_tick": 1, "commit_id": closing["commit_id"]},
-        {"order": 8, "event": "freeze-mission-result",
-         "sample_tick": 1, "status": final_status},
+        {"order": 11, "event": "seal-terminal-observation",
+         "sample_tick": 2, "commit_id": closing["commit_id"]},
+        {"order": 12, "event": "freeze-mission-result",
+         "sample_tick": 2, "status": final_status},
     ]
     return {
         "id": case["id"],
@@ -594,7 +813,8 @@ def compose(cases: dict, repo_root: Path, *,
         "resolved_components": resolved,
         "execution_trace": execution_trace,
         "committed_samples": committed_samples,
-        "interval_execution": interval_execution,
+        "interval_executions": interval_executions,
+        "second_interval_convergence": convergence,
         "evaluation_trace": evaluation_trace,
         "metric_summary": summary,
         "terminal_observation": terminal_observation,
@@ -671,6 +891,7 @@ def mutation_results(cases: dict, repo_root: Path,
                      accepted: dict) -> list[dict]:
     early = compose(cases, repo_root, early_mass_visibility=True)
     nonatomic = compose(cases, repo_root, nonatomic_mass_commit=True)
+    stale = compose(cases, repo_root, stale_boundary_closure=True)
     low = compose(cases, repo_root, low_priority_wins=True)
     order = compose(cases, repo_root, result_before_observation=True)
     results = [
@@ -688,13 +909,34 @@ def mutation_results(cases: dict, repo_root: Path,
         {
             "id": "MUTATION-YYZ-MISSION-COMPOSITION-NONATOMIC-MASS-COMMIT",
             "status": "rejected",
-            "expected_closing_committed_mass_kg":
+            "expected_intermediate_committed_mass_kg":
                 accepted["committed_samples"][1]["committed_mass_kg"],
-            "observed_closing_committed_mass_kg":
+            "observed_intermediate_committed_mass_kg":
                 nonatomic["committed_samples"][1]["committed_mass_kg"],
+            "expected_closing_committed_mass_kg":
+                accepted["committed_samples"][2]["committed_mass_kg"],
+            "observed_closing_committed_mass_kg":
+                nonatomic["committed_samples"][2]["committed_mass_kg"],
             "observed_terminal_consumed_mass_kg":
                 nonatomic["metric_summary"]["consumed_mass_kg"],
             "max_abs_result_difference": Decimal("0.05"),
+        },
+        {
+            "id": "MUTATION-YYZ-MISSION-COMPOSITION-STALE-BOUNDARY-CLOSURE",
+            "status": "rejected",
+            "expected_force_total_B_N":
+                accepted["interval_executions"][1]["closure"]
+                    ["force_total_B_N"],
+            "observed_force_total_B_N":
+                stale["interval_executions"][1]["closure"]
+                    ["force_total_B_N"],
+            "expected_terminal_position_I_m":
+                accepted["committed_samples"][2]["position_I_m"],
+            "observed_terminal_position_I_m":
+                stale["committed_samples"][2]["position_I_m"],
+            "max_abs_result_difference": state_max_difference(
+                accepted["committed_samples"][2],
+                stale["committed_samples"][2]),
         },
         {
             "id": "MUTATION-YYZ-MISSION-COMPOSITION-LOW-PRIORITY-WINS",
@@ -768,7 +1010,7 @@ def build_reference(cases: dict, repo_root: Path,
         "model_id": MODEL_ID,
         "precision": {
             "implementation":
-                "Python Decimal semantic resolver over executable component oracles",
+                "Python Decimal composition over executable component formula references with boundary recomputation and full-state RK4",
             "decimal_digits": getcontext().prec,
         },
         "source_identity": {
@@ -803,13 +1045,15 @@ def numeric_string(value: object) -> bool:
 
 
 def compare_tree(checks: Checks, actual, expected,
-                 absolute: Decimal, relative: Decimal, label: str) -> None:
+                 absolute: Decimal, relative: Decimal, label: str,
+                 convergence_ratio_absolute: Decimal = Decimal(0)) -> None:
     if isinstance(expected, dict):
         checks.require(isinstance(actual, dict), f"{label} is not an object")
         checks.require(set(actual) == set(expected), f"{label} fields differ")
         for key, expected_value in expected.items():
             compare_tree(checks, actual[key], expected_value,
-                         absolute, relative, f"{label}.{key}")
+                         absolute, relative, f"{label}.{key}",
+                         convergence_ratio_absolute)
         return
     if isinstance(expected, list):
         checks.require(isinstance(actual, list) and
@@ -817,7 +1061,8 @@ def compare_tree(checks: Checks, actual, expected,
                        f"{label} list shape differs")
         for index, expected_value in enumerate(expected):
             compare_tree(checks, actual[index], expected_value,
-                         absolute, relative, f"{label}[{index}]")
+                         absolute, relative, f"{label}[{index}]",
+                         convergence_ratio_absolute)
         return
     if numeric_string(expected):
         actual_value = decimal(actual)
@@ -825,6 +1070,8 @@ def compare_tree(checks: Checks, actual, expected,
         difference = abs(actual_value - expected_value)
         bound = absolute + relative * max(
             abs(actual_value), abs(expected_value), Decimal(1))
+        if ".error_reduction_ratios[" in label:
+            bound = max(bound, convergence_ratio_absolute)
         checks.require(difference <= bound,
                        f"{label} differs: {actual_value} vs {expected_value}")
         return
@@ -866,18 +1113,22 @@ def verify_reference(cases: dict, repo_root: Path, cases_path: Path,
                    "C++ probe identity differs", 3)
     absolute = decimal(cases["tolerances"]["formula_absolute"])
     relative = decimal(cases["tolerances"]["formula_relative"])
+    convergence_ratio_absolute = decimal(
+        cases["tolerances"]["convergence_ratio_absolute"])
+    checks.require(convergence_ratio_absolute > 0,
+                   "convergence ratio tolerance must be positive")
     compare_tree(checks, probe["cases"], list(oracle["cases"].values()),
-                 absolute, relative, "cases")
+                 absolute, relative, "cases", convergence_ratio_absolute)
     compare_tree(checks, probe["equivalence_results"],
-                 oracle["equivalence_results"], absolute, relative,
-                 "equivalence_results")
+                  oracle["equivalence_results"], absolute, relative,
+                 "equivalence_results", convergence_ratio_absolute)
     checks.require(probe["invalid_input_rejections"] ==
                    oracle["invalid_input_rejections"],
                    "invalid-input identities differ",
                    len(oracle["invalid_input_rejections"]))
     compare_tree(checks, probe["mutation_results"],
-                 oracle["mutation_results"], absolute, relative,
-                 "mutation_results")
+                  oracle["mutation_results"], absolute, relative,
+                 "mutation_results", convergence_ratio_absolute)
 
     accepted = probe["cases"][0]
     return stringify({
@@ -888,7 +1139,12 @@ def verify_reference(cases: dict, repo_root: Path, cases_path: Path,
         "opening_mass_kg":
             accepted["committed_samples"][0]["committed_mass_kg"],
         "closing_mass_kg":
-            accepted["committed_samples"][1]["committed_mass_kg"],
+            accepted["committed_samples"][2]["committed_mass_kg"],
+        "intervals_executed": len(accepted["interval_executions"]),
+        "minimum_convergence_error_reduction_ratio": min(
+            decimal(value) for value in
+            accepted["second_interval_convergence"]
+                ["error_reduction_ratios"]),
         "terminal_tick": accepted["mission_result"]["final_tick"],
         "terminal_reason_code":
             accepted["mission_result"]["termination"]["reason_code"],

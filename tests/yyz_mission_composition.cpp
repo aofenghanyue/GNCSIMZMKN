@@ -16,7 +16,7 @@ namespace {
 constexpr const char* kOracleId =
     "ORACLE-YYZ-MISSION-COMPOSITION-001";
 constexpr const char* kModelId =
-    "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-001";
+    "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-002";
 constexpr const char* kMissionSourceId =
     "mission.fixture.yyz.lookup-open-loop@1";
 constexpr const char* kExecutionId =
@@ -47,11 +47,27 @@ struct Quaternion {
     double z = 0.0;
 };
 
+struct Matrix3 {
+    std::array<std::array<double, 3>, 3> values{};
+};
+
 struct State {
     Vec3 position_i_m;
     Vec3 velocity_i_mps;
     Quaternion q_i_b;
     Vec3 omega_bi_b_radps;
+};
+
+struct Derivative {
+    Vec3 position;
+    Vec3 velocity;
+    Quaternion attitude;
+    Vec3 angular_rate;
+};
+
+struct StepResult {
+    State state;
+    double pre_normalization_quaternion_norm_residual = 0.0;
 };
 
 struct Binding {
@@ -151,12 +167,27 @@ struct IntervalExecution {
     std::int64_t configuration_revision = 0;
     double dt_s = 0.0;
     std::string strategy;
+    std::int64_t integration_substeps = 1;
     Environment environment;
     AirData air_data;
     AeroLookup aero_lookup;
     Closure closure;
     RigidDerivative rigid_derivative;
     MassTransition mass_transition;
+};
+
+struct ConvergenceEntry {
+    std::int64_t substeps = 0;
+    State terminal_state;
+    double maximum_pre_normalization_quaternion_norm_residual = 0.0;
+};
+
+struct ConvergenceEvidence {
+    std::vector<std::int64_t> substep_counts;
+    std::vector<ConvergenceEntry> terminal_states;
+    std::vector<double> successive_max_abs_differences;
+    std::vector<double> error_reduction_ratios;
+    double minimum_required_error_reduction_ratio = 0.0;
 };
 
 struct CommittedSample {
@@ -251,7 +282,8 @@ struct Composition {
     std::string composition_model_id;
     std::vector<Binding> resolved_components;
     std::vector<CommittedSample> committed_samples;
-    IntervalExecution interval_execution;
+    std::vector<IntervalExecution> interval_executions;
+    ConvergenceEvidence second_interval_convergence;
     std::vector<EvaluationBoundary> evaluation_trace;
     MetricSummary metric_summary;
     TerminalObservation terminal_observation;
@@ -261,6 +293,7 @@ struct Composition {
 struct Options {
     bool early_mass_visibility = false;
     bool nonatomic_mass_commit = false;
+    bool stale_boundary_closure = false;
     bool low_priority_wins = false;
     bool result_before_observation = false;
 };
@@ -270,6 +303,7 @@ struct ProbeResult {
     std::vector<std::string> invalid_input_rejections;
     Composition early_mass;
     Composition nonatomic_mass;
+    Composition stale_boundary_closure;
     Composition low_priority;
     Composition result_before_observation;
 };
@@ -292,6 +326,19 @@ bool finite(double value) {
 
 bool finite(const Vec3& value) {
     return finite(value.x) && finite(value.y) && finite(value.z);
+}
+
+bool finite(const Quaternion& value) {
+    return finite(value.w) && finite(value.x) && finite(value.y) &&
+           finite(value.z);
+}
+
+bool finite(const Matrix3& value) {
+    return std::all_of(
+        value.values.begin(), value.values.end(), [](const auto& row) {
+            return std::all_of(row.begin(), row.end(),
+                               [](double item) { return finite(item); });
+        });
 }
 
 double canonicalZero(double value) {
@@ -328,6 +375,123 @@ Vec3 cross(const Vec3& lhs, const Vec3& rhs) {
     });
 }
 
+Quaternion add(const Quaternion& lhs, const Quaternion& rhs) {
+    return {canonicalZero(lhs.w + rhs.w), canonicalZero(lhs.x + rhs.x),
+            canonicalZero(lhs.y + rhs.y), canonicalZero(lhs.z + rhs.z)};
+}
+
+Quaternion scale(const Quaternion& value, double factor) {
+    return {canonicalZero(value.w * factor),
+            canonicalZero(value.x * factor),
+            canonicalZero(value.y * factor),
+            canonicalZero(value.z * factor)};
+}
+
+double dot(const Quaternion& lhs, const Quaternion& rhs) {
+    return lhs.w * rhs.w + lhs.x * rhs.x + lhs.y * rhs.y +
+           lhs.z * rhs.z;
+}
+
+double norm(const Quaternion& value) {
+    return std::sqrt(dot(value, value));
+}
+
+Quaternion hamilton(const Quaternion& lhs, const Quaternion& rhs) {
+    return {
+        lhs.w * rhs.w - lhs.x * rhs.x - lhs.y * rhs.y - lhs.z * rhs.z,
+        lhs.w * rhs.x + lhs.x * rhs.w + lhs.y * rhs.z - lhs.z * rhs.y,
+        lhs.w * rhs.y - lhs.x * rhs.z + lhs.y * rhs.w + lhs.z * rhs.x,
+        lhs.w * rhs.z + lhs.x * rhs.y - lhs.y * rhs.x + lhs.z * rhs.w,
+    };
+}
+
+Quaternion conjugate(const Quaternion& value) {
+    return {value.w, -value.x, -value.y, -value.z};
+}
+
+Quaternion normalize(const Quaternion& value) {
+    requireDomain(finite(value), "q_I_B contains a non-finite component");
+    const double magnitude = norm(value);
+    requireDomain(finite(magnitude) && magnitude > 0.0,
+                  "q_I_B must have nonzero finite norm");
+    return scale(value, 1.0 / magnitude);
+}
+
+Vec3 inertialToBody(const Quaternion& q_i_b, const Vec3& value_i) {
+    const Quaternion unit = normalize(q_i_b);
+    const Quaternion pure{0.0, value_i.x, value_i.y, value_i.z};
+    const Quaternion rotated = hamilton(hamilton(unit, pure), conjugate(unit));
+    return canonicalZero({rotated.x, rotated.y, rotated.z});
+}
+
+Vec3 bodyToInertial(const Quaternion& q_i_b, const Vec3& value_b) {
+    const Quaternion unit = normalize(q_i_b);
+    const Quaternion pure{0.0, value_b.x, value_b.y, value_b.z};
+    const Quaternion rotated = hamilton(hamilton(conjugate(unit), pure), unit);
+    return canonicalZero({rotated.x, rotated.y, rotated.z});
+}
+
+Vec3 multiply(const Matrix3& matrix, const Vec3& value) {
+    return {
+        matrix.values[0][0] * value.x + matrix.values[0][1] * value.y +
+            matrix.values[0][2] * value.z,
+        matrix.values[1][0] * value.x + matrix.values[1][1] * value.y +
+            matrix.values[1][2] * value.z,
+        matrix.values[2][0] * value.x + matrix.values[2][1] * value.y +
+            matrix.values[2][2] * value.z,
+    };
+}
+
+std::array<std::array<double, 3>, 3> cholesky(const Matrix3& inertia) {
+    requireDomain(finite(inertia), "inertia contains a non-finite value");
+    for (std::size_t row = 0; row < 3; ++row) {
+        for (std::size_t column = 0; column < 3; ++column) {
+            requireDomain(inertia.values[row][column] ==
+                              inertia.values[column][row],
+                          "inertia must be symmetric");
+        }
+    }
+    std::array<std::array<double, 3>, 3> lower{};
+    for (std::size_t row = 0; row < 3; ++row) {
+        for (std::size_t column = 0; column <= row; ++column) {
+            double residual = inertia.values[row][column];
+            for (std::size_t index = 0; index < column; ++index) {
+                residual -= lower[row][index] * lower[column][index];
+            }
+            if (row == column) {
+                requireDomain(finite(residual) && residual > 0.0,
+                              "inertia must be positive definite");
+                lower[row][column] = std::sqrt(residual);
+            } else {
+                lower[row][column] = residual / lower[column][column];
+            }
+        }
+    }
+    return lower;
+}
+
+Vec3 solveSpd(const Matrix3& inertia, const Vec3& rhs) {
+    const auto lower = cholesky(inertia);
+    const std::array<double, 3> source{rhs.x, rhs.y, rhs.z};
+    std::array<double, 3> forward{};
+    for (std::size_t row = 0; row < 3; ++row) {
+        double residual = source[row];
+        for (std::size_t column = 0; column < row; ++column) {
+            residual -= lower[row][column] * forward[column];
+        }
+        forward[row] = residual / lower[row][row];
+    }
+    std::array<double, 3> result{};
+    for (std::size_t row = 3; row-- > 0;) {
+        double residual = forward[row];
+        for (std::size_t column = row + 1; column < 3; ++column) {
+            residual -= lower[column][row] * result[column];
+        }
+        result[row] = residual / lower[row][row];
+    }
+    return canonicalZero({result[0], result[1], result[2]});
+}
+
 bool near(double actual, double expected) {
     const double difference = std::abs(actual - expected);
     const double bound = kAbsoluteTolerance + kRelativeTolerance *
@@ -340,9 +504,13 @@ std::vector<std::string> eventOrder() {
         "resolve-components",
         "publish-opening-commit",
         "evaluate-opening-boundary",
-        "evaluate-frozen-interval",
-        "stage-rigid-and-mass-candidates",
-        "commit-rigid-and-mass",
+        "evaluate-interval-0",
+        "stage-commit-1",
+        "commit-rigid-and-mass-1",
+        "evaluate-intermediate-boundary",
+        "evaluate-interval-1",
+        "stage-commit-2",
+        "commit-rigid-and-mass-2",
         "evaluate-terminal-boundary",
         "seal-terminal-observation",
         "freeze-mission-result",
@@ -409,7 +577,7 @@ void validateInput(const Input& input) {
                   "mission shared identity differs");
     requireDomain(input.configuration_revision == kConfigurationRevision &&
                       finite(input.dt_s) && near(input.dt_s, kDt) &&
-                      input.initial_tick == 0 && input.terminal_tick == 1,
+                      input.initial_tick == 0 && input.terminal_tick == 2,
                   "mission revision, tick or dt differs");
     requireDomain(input.integration_strategy == "FrozenInterval" &&
                       input.commit_policy == "atomic-rigid-and-mass" &&
@@ -475,18 +643,18 @@ Input acceptedInput() {
     input.configuration_revision = kConfigurationRevision;
     input.dt_s = kDt;
     input.initial_tick = 0;
-    input.terminal_tick = 1;
+    input.terminal_tick = 2;
     input.integration_strategy = "FrozenInterval";
     input.commit_policy = "atomic-rigid-and-mass";
     input.evaluation_mode = "AtGrid";
     input.bindings = expectedBindings();
     input.predicates = {
-        {"remaining-mass-floor", "remaining_mass_kg", "<=", 99.9,
+        {"remaining-mass-floor", "remaining_mass_kg", "<=", 99.85,
          "Abort", "remaining-mass-floor", 300},
-        {"duration-limit", "duration_s", ">=", 0.1,
+        {"duration-limit", "duration_s", ">=", 0.2,
          "Complete", "duration-complete", 100},
-        {"downrange-goal", "downrange_m", ">=",
-         10.995272058823529, "Complete", "downrange-goal", 200},
+        {"downrange-goal", "downrange_m", ">=", 20.0,
+         "Complete", "downrange-goal", 200},
     };
     return input;
 }
@@ -554,13 +722,196 @@ AeroLookup lookupAero(double mach, double alpha, double beta) {
     };
 }
 
-IntervalExecution executeInterval(double closing_mass_kg) {
-    const State opening_state{
-        {0.0, 0.0, 1000.0},
-        {110.0, 0.0, 0.0},
-        {1.0, 0.0, 0.0, 0.0},
-        {0.0, 0.0, 0.0},
+Matrix3 inertiaMatrix() {
+    Matrix3 result;
+    result.values = {{{10.0, 0.0, 0.0},
+                      {0.0, 20.0, 0.0},
+                      {0.0, 0.0, 30.0}}};
+    return result;
+}
+
+RigidDerivative evaluateRigidDerivative(
+    const State& state, double mass_kg, const Closure& closure,
+    const Environment& environment) {
+    requireDomain(finite(mass_kg) && mass_kg > 0.0,
+                  "integration mass must be positive and finite");
+    const Matrix3 inertia = inertiaMatrix();
+    const Quaternion attitude = normalize(state.q_i_b);
+    const Vec3 force_i = bodyToInertial(
+        attitude, closure.force_total_b_n);
+    const Vec3 acceleration = add(
+        scale(force_i, 1.0 / mass_kg), environment.gravity_i_mps2);
+    const Vec3 angular_momentum = multiply(
+        inertia, state.omega_bi_b_radps);
+    const Vec3 gyroscopic = cross(
+        state.omega_bi_b_radps, angular_momentum);
+    const Vec3 net_moment = subtract(
+        closure.moment_total_about_com_b_nm, gyroscopic);
+    const Vec3 angular_acceleration = solveSpd(inertia, net_moment);
+    const Quaternion pure_omega{
+        0.0, state.omega_bi_b_radps.x, state.omega_bi_b_radps.y,
+        state.omega_bi_b_radps.z};
+    const Quaternion q_derivative = scale(
+        hamilton(pure_omega, attitude), -0.5);
+    return {force_i, acceleration, angular_momentum, gyroscopic,
+            net_moment, angular_acceleration, q_derivative};
+}
+
+Derivative stateDerivative(const State& state, double mass_kg,
+                           const Closure& closure,
+                           const Environment& environment) {
+    const RigidDerivative rigid = evaluateRigidDerivative(
+        state, mass_kg, closure, environment);
+    return {state.velocity_i_mps, rigid.acceleration_i_mps2,
+            rigid.q_derivative_i_b_per_s,
+            rigid.angular_acceleration_b_radps2};
+}
+
+State addScaled(const State& state, const Derivative& change,
+                double factor) {
+    return {
+        add(state.position_i_m, scale(change.position, factor)),
+        add(state.velocity_i_mps, scale(change.velocity, factor)),
+        add(state.q_i_b, scale(change.attitude, factor)),
+        add(state.omega_bi_b_radps,
+            scale(change.angular_rate, factor)),
     };
+}
+
+Vec3 weighted(const Vec3& first, const Vec3& second,
+              const Vec3& third, const Vec3& fourth) {
+    return scale(add(add(first, scale(second, 2.0)),
+                     add(scale(third, 2.0), fourth)), 1.0 / 6.0);
+}
+
+Quaternion weighted(const Quaternion& first, const Quaternion& second,
+                    const Quaternion& third, const Quaternion& fourth) {
+    return scale(add(add(first, scale(second, 2.0)),
+                     add(scale(third, 2.0), fourth)), 1.0 / 6.0);
+}
+
+StepResult rk4Step(const State& committed, double dt_s, double mass_kg,
+                   const Closure& closure,
+                   const Environment& environment) {
+    requireDomain(finite(dt_s) && dt_s > 0.0,
+                  "RK4 dt must be positive and finite");
+    const Derivative k1 = stateDerivative(
+        committed, mass_kg, closure, environment);
+    const Derivative k2 = stateDerivative(
+        addScaled(committed, k1, 0.5 * dt_s), mass_kg, closure,
+        environment);
+    const Derivative k3 = stateDerivative(
+        addScaled(committed, k2, 0.5 * dt_s), mass_kg, closure,
+        environment);
+    const Derivative k4 = stateDerivative(
+        addScaled(committed, k3, dt_s), mass_kg, closure, environment);
+    const Derivative combined{
+        weighted(k1.position, k2.position, k3.position, k4.position),
+        weighted(k1.velocity, k2.velocity, k3.velocity, k4.velocity),
+        weighted(k1.attitude, k2.attitude, k3.attitude, k4.attitude),
+        weighted(k1.angular_rate, k2.angular_rate, k3.angular_rate,
+                 k4.angular_rate),
+    };
+    State candidate = addScaled(committed, combined, dt_s);
+    const double norm_residual = std::abs(norm(candidate.q_i_b) - 1.0);
+    candidate.q_i_b = normalize(candidate.q_i_b);
+    return {candidate, norm_residual};
+}
+
+ConvergenceEntry integrateSubsteps(
+    const State& opening, double mass_kg, const Closure& closure,
+    const Environment& environment, std::int64_t substeps) {
+    requireDomain(substeps > 0, "RK4 substep count must be positive");
+    State state = opening;
+    double maximum_residual = 0.0;
+    const double step_s = kDt / static_cast<double>(substeps);
+    for (std::int64_t index = 0; index < substeps; ++index) {
+        const StepResult step = rk4Step(
+            state, step_s, mass_kg, closure, environment);
+        state = step.state;
+        maximum_residual = std::max(
+            maximum_residual,
+            step.pre_normalization_quaternion_norm_residual);
+    }
+    return {substeps, state, maximum_residual};
+}
+
+double stateMaxDifference(const State& lhs, const State& rhs) {
+    return std::max({
+        std::abs(lhs.position_i_m.x - rhs.position_i_m.x),
+        std::abs(lhs.position_i_m.y - rhs.position_i_m.y),
+        std::abs(lhs.position_i_m.z - rhs.position_i_m.z),
+        std::abs(lhs.velocity_i_mps.x - rhs.velocity_i_mps.x),
+        std::abs(lhs.velocity_i_mps.y - rhs.velocity_i_mps.y),
+        std::abs(lhs.velocity_i_mps.z - rhs.velocity_i_mps.z),
+        std::abs(lhs.q_i_b.w - rhs.q_i_b.w),
+        std::abs(lhs.q_i_b.x - rhs.q_i_b.x),
+        std::abs(lhs.q_i_b.y - rhs.q_i_b.y),
+        std::abs(lhs.q_i_b.z - rhs.q_i_b.z),
+        std::abs(lhs.omega_bi_b_radps.x - rhs.omega_bi_b_radps.x),
+        std::abs(lhs.omega_bi_b_radps.y - rhs.omega_bi_b_radps.y),
+        std::abs(lhs.omega_bi_b_radps.z - rhs.omega_bi_b_radps.z),
+    });
+}
+
+ConvergenceEvidence convergenceEvidence(
+    const State& opening, double mass_kg, const IntervalExecution& interval,
+    bool require_fourth_order) {
+    ConvergenceEvidence result;
+    result.substep_counts = {1, 2, 4, 8};
+    for (std::int64_t substeps : result.substep_counts) {
+        result.terminal_states.push_back(integrateSubsteps(
+            opening, mass_kg, interval.closure, interval.environment,
+            substeps));
+    }
+    for (std::size_t index = 0;
+         index + 1 < result.terminal_states.size(); ++index) {
+        result.successive_max_abs_differences.push_back(
+            stateMaxDifference(result.terminal_states[index].terminal_state,
+                               result.terminal_states[index + 1]
+                                   .terminal_state));
+    }
+    for (std::size_t index = 0;
+         index + 1 < result.successive_max_abs_differences.size(); ++index) {
+        const double denominator =
+            result.successive_max_abs_differences[index + 1];
+        if (denominator > 0.0) {
+            result.error_reduction_ratios.push_back(
+                result.successive_max_abs_differences[index] / denominator);
+        } else {
+            requireDomain(!require_fourth_order,
+                          "convergence difference must be positive");
+            result.error_reduction_ratios.push_back(0.0);
+        }
+    }
+    result.minimum_required_error_reduction_ratio = 12.0;
+    if (require_fourth_order) {
+        requireDomain(std::all_of(
+                          result.error_reduction_ratios.begin(),
+                          result.error_reduction_ratios.end(),
+                          [&](double value) {
+                              return value >= result
+                                  .minimum_required_error_reduction_ratio;
+                          }),
+                      "second interval did not demonstrate fourth-order "
+                      "convergence");
+    }
+    return result;
+}
+
+double formulaZero(double value) {
+    return std::abs(value) <= kAbsoluteTolerance ? 0.0 : value;
+}
+
+Vec3 formulaZero(const Vec3& value) {
+    return {formulaZero(value.x), formulaZero(value.y),
+            formulaZero(value.z)};
+}
+
+IntervalExecution executeInterval(
+    std::int64_t sample_tick, const State& opening_state,
+    double opening_mass_kg, double closing_mass_kg,
+    const IntervalExecution* stale_source = nullptr) {
     const Environment environment{
         {0.0, 0.0, -9.80665},
         {10.0, 0.0, 0.0},
@@ -574,13 +925,14 @@ IntervalExecution executeInterval(double closing_mass_kg) {
                   "mission state or environment is non-finite");
     const Vec3 velocity_relative_i = subtract(
         opening_state.velocity_i_mps, environment.velocity_airmass_i_mps);
-    const Vec3 velocity_relative_b = velocity_relative_i;
+    const Vec3 velocity_relative_b = inertialToBody(
+        opening_state.q_i_b, velocity_relative_i);
     const double airspeed = std::sqrt(dot(velocity_relative_b,
                                           velocity_relative_b));
     const double horizontal = std::sqrt(
         velocity_relative_b.x * velocity_relative_b.x +
         velocity_relative_b.z * velocity_relative_b.z);
-    const AirData air_data{
+    AirData air_data{
         velocity_relative_i,
         velocity_relative_b,
         airspeed,
@@ -589,7 +941,7 @@ IntervalExecution executeInterval(double closing_mass_kg) {
         0.5 * environment.density_kgpm3 * airspeed * airspeed,
         airspeed / environment.speed_of_sound_mps,
     };
-    const AeroLookup lookup = lookupAero(
+    AeroLookup lookup = lookupAero(
         air_data.mach, air_data.alpha_rad, air_data.beta_rad);
     const double pressure_area = air_data.dynamic_pressure_pa;
     const Vec3 aero_force{
@@ -609,40 +961,37 @@ IntervalExecution executeInterval(double closing_mass_kg) {
     const Vec3 propulsion_lever{0.0, 0.2, 0.0};
     const Vec3 propulsion_moment = add(
         {0.0, 0.0, 20.0}, cross(propulsion_lever, propulsion_force));
-    const Closure closure{
-        add(aero_force, propulsion_force),
-        add(aero_moment, propulsion_moment),
+    Closure closure{
+        formulaZero(add(aero_force, propulsion_force)),
+        formulaZero(add(aero_moment, propulsion_moment)),
     };
-    const Vec3 acceleration = add(
-        scale(closure.force_total_b_n, 1.0 / 100.0),
-        environment.gravity_i_mps2);
-    const RigidDerivative derivative{
-        closure.force_total_b_n,
-        acceleration,
-        {0.0, 0.0, 0.0},
-        {0.0, 0.0, 0.0},
-        closure.moment_total_about_com_b_nm,
-        {closure.moment_total_about_com_b_nm.x / 10.0,
-         closure.moment_total_about_com_b_nm.y / 20.0,
-         closure.moment_total_about_com_b_nm.z / 30.0},
-        {0.0, 0.0, 0.0, 0.0},
-    };
+    if (stale_source != nullptr) {
+        air_data = stale_source->air_data;
+        lookup = stale_source->aero_lookup;
+        closure = stale_source->closure;
+    }
+    const RigidDerivative derivative = evaluateRigidDerivative(
+        opening_state, opening_mass_kg, closure, environment);
+    const double candidate_mass_kg = opening_mass_kg - 0.05;
+    requireDomain(candidate_mass_kg > 0.0,
+                  "pending mass candidate must be positive");
     const MassTransition mass{
         kMassStateId,
-        100.0,
+        opening_mass_kg,
         0.05,
-        99.95,
+        candidate_mass_kg,
         "candidate-only",
         closing_mass_kg,
         "atomic-rigid-and-mass",
     };
     return {
-        0,
-        0,
-        1,
+        sample_tick,
+        sample_tick,
+        sample_tick + 1,
         kConfigurationRevision,
         kDt,
         "FrozenInterval",
+        1,
         environment,
         air_data,
         lookup,
@@ -666,22 +1015,11 @@ CommittedSample openingSample(double mass_kg) {
     };
 }
 
-CommittedSample closingSample(const IntervalExecution& interval,
-                              double mass_kg) {
-    const State initial = openingSample(100.0).state;
-    const double half_dt_squared = 0.5 * kDt * kDt;
-    const State terminal{
-        add(add(initial.position_i_m,
-                scale(initial.velocity_i_mps, kDt)),
-            scale(interval.rigid_derivative.acceleration_i_mps2,
-                  half_dt_squared)),
-        add(initial.velocity_i_mps,
-            scale(interval.rigid_derivative.acceleration_i_mps2, kDt)),
-        initial.q_i_b,
-        initial.omega_bi_b_radps,
-    };
-    return {1, kDt, "commit.fixture.yyz.mission.1", "Valid",
-            terminal, mass_kg};
+CommittedSample committedSample(std::int64_t tick,
+                                const std::string& commit_id,
+                                const State& state, double mass_kg) {
+    return {tick, static_cast<double>(tick) * kDt, commit_id, "Valid",
+            state, mass_kg};
 }
 
 Metrics metricsFor(const CommittedSample& sample,
@@ -812,11 +1150,30 @@ Composition compose(const Input& input, const Options& options = {}) {
               });
     const double opening_mass = options.early_mass_visibility
         ? 99.95 : 100.0;
-    const double closing_mass = options.nonatomic_mass_commit
+    const double intermediate_mass = options.nonatomic_mass_commit
         ? 100.0 : 99.95;
-    IntervalExecution interval = executeInterval(closing_mass);
-    std::vector<CommittedSample> committed{
-        openingSample(opening_mass), closingSample(interval, closing_mass)};
+    const CommittedSample opening = openingSample(opening_mass);
+    const IntervalExecution first_interval = executeInterval(
+        0, opening.state, 100.0, intermediate_mass);
+    const State intermediate_state = integrateSubsteps(
+        opening.state, 100.0, first_interval.closure,
+        first_interval.environment, 1).terminal_state;
+    const CommittedSample intermediate = committedSample(
+        1, "commit.fixture.yyz.mission.1", intermediate_state,
+        intermediate_mass);
+    const double closing_mass = intermediate_mass - 0.05;
+    const IntervalExecution second_interval = executeInterval(
+        1, intermediate.state, intermediate_mass, closing_mass,
+        options.stale_boundary_closure ? &first_interval : nullptr);
+    const ConvergenceEvidence convergence = convergenceEvidence(
+        intermediate.state, intermediate_mass, second_interval,
+        !options.stale_boundary_closure);
+    const CommittedSample closing = committedSample(
+        2, "commit.fixture.yyz.mission.2",
+        convergence.terminal_states.front().terminal_state, closing_mass);
+    const std::vector<IntervalExecution> intervals{
+        first_interval, second_interval};
+    std::vector<CommittedSample> committed{opening, intermediate, closing};
     std::vector<EvaluationBoundary> trace;
     bool terminal_found = false;
     for (const CommittedSample& sample : committed) {
@@ -846,7 +1203,6 @@ Composition compose(const Input& input, const Options& options = {}) {
     if (options.result_before_observation) {
         std::swap(order[order.size() - 2], order.back());
     }
-    const CommittedSample& closing = committed.back();
     const EvaluationBoundary& terminal = trace.back();
     const TerminalObservation observation{
         closing.sample_tick,
@@ -881,7 +1237,8 @@ Composition compose(const Input& input, const Options& options = {}) {
         input.composition_model_id,
         resolved,
         committed,
-        interval,
+        intervals,
+        convergence,
         trace,
         summary,
         observation,
@@ -930,23 +1287,35 @@ ProbeResult runProbe() {
     ProbeResult result;
     result.accepted = compose(input);
     require(result.accepted.resolved_components.size() == 12 &&
-                result.accepted.committed_samples.size() == 2 &&
+                result.accepted.committed_samples.size() == 3 &&
+                result.accepted.interval_executions.size() == 2 &&
                 near(result.accepted.committed_samples[0]
-                         .committed_mass_kg, 100.0) &&
+                          .committed_mass_kg, 100.0) &&
                 near(result.accepted.committed_samples[1]
-                         .committed_mass_kg, 99.95) &&
-                result.accepted.mission_result.final_tick == 1 &&
+                          .committed_mass_kg, 99.95) &&
+                near(result.accepted.committed_samples[2]
+                         .committed_mass_kg, 99.9) &&
+                result.accepted.mission_result.final_tick == 2 &&
                 result.accepted.mission_result.final_status == "Completed" &&
                 result.accepted.mission_result.termination.reason_code ==
                     "downrange-goal" &&
                 result.accepted.terminal_observation.sealed,
             "accepted mission composition differs");
-    require(near(result.accepted.interval_execution.air_data.mach,
-                 100.0 / 340.0) &&
-                near(result.accepted.interval_execution.aero_lookup
-                         .coefficients[0], 27.0 / 850.0) &&
-                near(result.accepted.interval_execution.closure
-                         .force_total_b_n.x, -3215.0 / 34.0),
+    require(near(result.accepted.interval_executions[0].air_data.mach,
+                  100.0 / 340.0) &&
+                near(result.accepted.interval_executions[0].aero_lookup
+                          .coefficients[0], 27.0 / 850.0) &&
+                near(result.accepted.interval_executions[0].closure
+                         .force_total_b_n.x, -3215.0 / 34.0) &&
+                near(result.accepted.interval_executions[1].closure
+                         .moment_total_about_com_b_nm.y,
+                     16.766216427351054) &&
+                std::all_of(
+                    result.accepted.second_interval_convergence
+                        .error_reduction_ratios.begin(),
+                    result.accepted.second_interval_convergence
+                        .error_reduction_ratios.end(),
+                    [](double value) { return value >= 12.0; }),
             "lookup-composed interval facts differ");
 
     Input reversed = input;
@@ -1026,6 +1395,9 @@ ProbeResult runProbe() {
     Options nonatomic;
     nonatomic.nonatomic_mass_commit = true;
     result.nonatomic_mass = compose(input, nonatomic);
+    Options stale;
+    stale.stale_boundary_closure = true;
+    result.stale_boundary_closure = compose(input, stale);
     Options low;
     low.low_priority_wins = true;
     result.low_priority = compose(input, low);
@@ -1035,7 +1407,13 @@ ProbeResult runProbe() {
     require(near(result.early_mass.committed_samples[0]
                      .committed_mass_kg, 99.95) &&
                 near(result.nonatomic_mass.committed_samples[1]
-                     .committed_mass_kg, 100.0) &&
+                      .committed_mass_kg, 100.0) &&
+                near(result.nonatomic_mass.committed_samples[2]
+                         .committed_mass_kg, 99.95) &&
+                stateMaxDifference(
+                    result.accepted.committed_samples[2].state,
+                    result.stale_boundary_closure.committed_samples[2]
+                        .state) > 0.08 &&
                 result.low_priority.mission_result.termination.reason_code ==
                     "duration-complete" &&
                 !result.result_before_observation.terminal_observation.sealed,
@@ -1102,9 +1480,12 @@ void writeBindings(const std::vector<Binding>& values) {
 
 void writeExecutionTrace(const Composition& value) {
     const std::string& opening_id = value.committed_samples[0].commit_id;
-    const std::string& closing_id = value.committed_samples[1].commit_id;
+    const std::string& intermediate_id = value.committed_samples[1].commit_id;
+    const std::string& closing_id = value.committed_samples[2].commit_id;
     const std::string& opening_action =
         value.evaluation_trace[0].decision.action;
+    const std::string& intermediate_action =
+        value.evaluation_trace[1].decision.action;
     const std::string& terminal_action =
         value.evaluation_trace.back().decision.action;
     std::cout << "[{\"order\":0,\"event\":\"resolve-components\","
@@ -1118,23 +1499,35 @@ void writeExecutionTrace(const Composition& value) {
                  "\"action\":\""
               << opening_action
               << "\"},{\"order\":3,\"event\":\""
-                 "evaluate-frozen-interval\",\"sample_tick\":0,"
+                 "evaluate-interval-0\",\"sample_tick\":0,"
                  "\"valid_until_tick\":1},{\"order\":4,\"event\":\""
-                 "stage-rigid-and-mass-candidates\",\"sample_tick\":0,"
+                 "stage-commit-1\",\"sample_tick\":0,"
                  "\"candidate_tick\":1},{\"order\":5,\"event\":\""
-                 "commit-rigid-and-mass\",\"sample_tick\":1,"
+                 "commit-rigid-and-mass-1\",\"sample_tick\":1,"
+                 "\"commit_id\":\""
+              << intermediate_id
+              << "\"},{\"order\":6,\"event\":\""
+                 "evaluate-intermediate-boundary\",\"sample_tick\":1,"
+                 "\"action\":\""
+              << intermediate_action
+              << "\"},{\"order\":7,\"event\":\""
+                 "evaluate-interval-1\",\"sample_tick\":1,"
+                 "\"valid_until_tick\":2},{\"order\":8,\"event\":\""
+                 "stage-commit-2\",\"sample_tick\":1,"
+                 "\"candidate_tick\":2},{\"order\":9,\"event\":\""
+                 "commit-rigid-and-mass-2\",\"sample_tick\":2,"
                  "\"commit_id\":\""
               << closing_id
-              << "\"},{\"order\":6,\"event\":\""
-                 "evaluate-terminal-boundary\",\"sample_tick\":1,"
+              << "\"},{\"order\":10,\"event\":\""
+                 "evaluate-terminal-boundary\",\"sample_tick\":2,"
                  "\"action\":\""
               << terminal_action
-              << "\"},{\"order\":7,\"event\":\""
-                 "seal-terminal-observation\",\"sample_tick\":1,"
+              << "\"},{\"order\":11,\"event\":\""
+                 "seal-terminal-observation\",\"sample_tick\":2,"
                  "\"commit_id\":\""
               << closing_id
-              << "\"},{\"order\":8,\"event\":\""
-                 "freeze-mission-result\",\"sample_tick\":1,"
+              << "\"},{\"order\":12,\"event\":\""
+                 "freeze-mission-result\",\"sample_tick\":2,"
                  "\"status\":\""
               << value.mission_result.final_status << "\"}]";
 }
@@ -1155,6 +1548,18 @@ void writeCommittedSample(const CommittedSample& value) {
     writeVec3(value.state.omega_bi_b_radps);
     std::cout << ",\"committed_mass_kg\":";
     writeNumber(value.committed_mass_kg);
+    std::cout << '}';
+}
+
+void writeState(const State& value) {
+    std::cout << "{\"position_I_m\":";
+    writeVec3(value.position_i_m);
+    std::cout << ",\"velocity_I_mps\":";
+    writeVec3(value.velocity_i_mps);
+    std::cout << ",\"q_I_B_wxyz\":";
+    writeQuaternion(value.q_i_b);
+    std::cout << ",\"omega_BI_B_radps\":";
+    writeVec3(value.omega_bi_b_radps);
     std::cout << '}';
 }
 
@@ -1240,7 +1645,9 @@ void writeInterval(const IntervalExecution& value) {
               << value.configuration_revision << ",\"base_dt_s\":";
     writeNumber(value.dt_s);
     std::cout << ",\"strategy\":\"" << value.strategy
-              << "\",\"environment_sample\":";
+              << "\",\"integration_substeps\":"
+              << value.integration_substeps
+              << ",\"environment_sample\":";
     writeEnvironment(value.environment);
     std::cout << ",\"air_data\":";
     writeAirData(value.air_data);
@@ -1267,6 +1674,49 @@ void writeInterval(const IntervalExecution& value) {
     writeNumber(mass.closing_committed_mass_kg);
     std::cout << ",\"closing_commit_kind\":\""
               << mass.closing_commit_kind << "\"}}";
+}
+
+void writeConvergence(const ConvergenceEvidence& value) {
+    std::cout << "{\"substep_counts\":[";
+    for (std::size_t index = 0; index < value.substep_counts.size(); ++index) {
+        if (index != 0) {
+            std::cout << ',';
+        }
+        std::cout << value.substep_counts[index];
+    }
+    std::cout << "],\"terminal_states\":[";
+    for (std::size_t index = 0; index < value.terminal_states.size(); ++index) {
+        if (index != 0) {
+            std::cout << ',';
+        }
+        const ConvergenceEntry& entry = value.terminal_states[index];
+        std::cout << "{\"substeps\":" << entry.substeps
+                  << ",\"terminal_state\":";
+        writeState(entry.terminal_state);
+        std::cout << ",\"maximum_pre_normalization_quaternion_norm_residual\":";
+        writeNumber(
+            entry.maximum_pre_normalization_quaternion_norm_residual);
+        std::cout << '}';
+    }
+    std::cout << "],\"successive_max_abs_differences\":[";
+    for (std::size_t index = 0;
+         index < value.successive_max_abs_differences.size(); ++index) {
+        if (index != 0) {
+            std::cout << ',';
+        }
+        writeNumber(value.successive_max_abs_differences[index]);
+    }
+    std::cout << "],\"error_reduction_ratios\":[";
+    for (std::size_t index = 0;
+         index < value.error_reduction_ratios.size(); ++index) {
+        if (index != 0) {
+            std::cout << ',';
+        }
+        writeNumber(value.error_reduction_ratios[index]);
+    }
+    std::cout << "],\"minimum_required_error_reduction_ratio\":";
+    writeNumber(value.minimum_required_error_reduction_ratio);
+    std::cout << '}';
 }
 
 void writeMetrics(const Metrics& value) {
@@ -1436,8 +1886,16 @@ void writeComposition(const Composition& value) {
         }
         writeCommittedSample(value.committed_samples[index]);
     }
-    std::cout << "],\"interval_execution\":";
-    writeInterval(value.interval_execution);
+    std::cout << "],\"interval_executions\":[";
+    for (std::size_t index = 0; index < value.interval_executions.size();
+         ++index) {
+        if (index != 0) {
+            std::cout << ',';
+        }
+        writeInterval(value.interval_executions[index]);
+    }
+    std::cout << "],\"second_interval_convergence\":";
+    writeConvergence(value.second_interval_convergence);
     std::cout << ",\"evaluation_trace\":[";
     for (std::size_t index = 0; index < value.evaluation_trace.size();
          ++index) {
@@ -1468,15 +1926,37 @@ void writeMutations(const ProbeResult& value) {
     std::cout << ",\"max_abs_result_difference\":0.05},"
                  "{\"id\":\"MUTATION-YYZ-MISSION-COMPOSITION-"
                  "NONATOMIC-MASS-COMMIT\",\"status\":\"rejected\","
-                 "\"expected_closing_committed_mass_kg\":";
+                 "\"expected_intermediate_committed_mass_kg\":";
     writeNumber(value.accepted.committed_samples[1].committed_mass_kg);
-    std::cout << ",\"observed_closing_committed_mass_kg\":";
+    std::cout << ",\"observed_intermediate_committed_mass_kg\":";
     writeNumber(value.nonatomic_mass.committed_samples[1]
+                    .committed_mass_kg);
+    std::cout << ",\"expected_closing_committed_mass_kg\":";
+    writeNumber(value.accepted.committed_samples[2].committed_mass_kg);
+    std::cout << ",\"observed_closing_committed_mass_kg\":";
+    writeNumber(value.nonatomic_mass.committed_samples[2]
                     .committed_mass_kg);
     std::cout << ",\"observed_terminal_consumed_mass_kg\":";
     writeNumber(value.nonatomic_mass.metric_summary.consumed_mass_kg);
     std::cout << ",\"max_abs_result_difference\":0.05},"
                  "{\"id\":\"MUTATION-YYZ-MISSION-COMPOSITION-"
+                 "STALE-BOUNDARY-CLOSURE\",\"status\":\"rejected\","
+                 "\"expected_force_total_B_N\":";
+    writeVec3(value.accepted.interval_executions[1]
+                  .closure.force_total_b_n);
+    std::cout << ",\"observed_force_total_B_N\":";
+    writeVec3(value.stale_boundary_closure.interval_executions[1]
+                  .closure.force_total_b_n);
+    std::cout << ",\"expected_terminal_position_I_m\":";
+    writeVec3(value.accepted.committed_samples[2].state.position_i_m);
+    std::cout << ",\"observed_terminal_position_I_m\":";
+    writeVec3(value.stale_boundary_closure.committed_samples[2]
+                  .state.position_i_m);
+    std::cout << ",\"max_abs_result_difference\":";
+    writeNumber(stateMaxDifference(
+        value.accepted.committed_samples[2].state,
+        value.stale_boundary_closure.committed_samples[2].state));
+    std::cout << "},{\"id\":\"MUTATION-YYZ-MISSION-COMPOSITION-"
                  "LOW-PRIORITY-WINS\",\"status\":\"rejected\","
                  "\"expected_reason_code\":\""
               << value.accepted.mission_result.termination.reason_code

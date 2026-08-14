@@ -1,10 +1,10 @@
 {
-  "schema_version": "gnczmkn.yyz-mission-composition-reference/1",
+  "schema_version": "gnczmkn.yyz-mission-composition-reference/2",
   "fixture_id": "REF-YYZ-MISSION-COMPOSITION-001",
   "oracle_id": "ORACLE-YYZ-MISSION-COMPOSITION-001",
-  "model_id": "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-001",
+  "model_id": "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-002",
   "precision": {
-    "implementation": "Python Decimal semantic resolver over executable component oracles",
+    "implementation": "Python Decimal composition over executable component formula references with boundary recomputation and full-state RK4",
     "decimal_digits": 80
   },
   "source_identity": {
@@ -16,7 +16,7 @@
       "id": "CASE-YYZ-MISSION-COMPOSITION-BASELINE",
       "mission_source_id": "mission.fixture.yyz.lookup-open-loop@1",
       "execution_id": "execution.fixture.yyz.lookup-open-loop.0001",
-      "composition_model_id": "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-001",
+      "composition_model_id": "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-002",
       "resolved_components": [
         {
           "role": "aero_dimensionalization",
@@ -124,38 +124,62 @@
         },
         {
           "order": 3,
-          "event": "evaluate-frozen-interval",
+          "event": "evaluate-interval-0",
           "sample_tick": 0,
           "valid_until_tick": 1
         },
         {
           "order": 4,
-          "event": "stage-rigid-and-mass-candidates",
+          "event": "stage-commit-1",
           "sample_tick": 0,
           "candidate_tick": 1
         },
         {
           "order": 5,
-          "event": "commit-rigid-and-mass",
+          "event": "commit-rigid-and-mass-1",
           "sample_tick": 1,
           "commit_id": "commit.fixture.yyz.mission.1"
         },
         {
           "order": 6,
-          "event": "evaluate-terminal-boundary",
+          "event": "evaluate-intermediate-boundary",
           "sample_tick": 1,
-          "action": "Complete"
+          "action": "Continue"
         },
         {
           "order": 7,
-          "event": "seal-terminal-observation",
+          "event": "evaluate-interval-1",
           "sample_tick": 1,
-          "commit_id": "commit.fixture.yyz.mission.1"
+          "valid_until_tick": 2
         },
         {
           "order": 8,
-          "event": "freeze-mission-result",
+          "event": "stage-commit-2",
           "sample_tick": 1,
+          "candidate_tick": 2
+        },
+        {
+          "order": 9,
+          "event": "commit-rigid-and-mass-2",
+          "sample_tick": 2,
+          "commit_id": "commit.fixture.yyz.mission.2"
+        },
+        {
+          "order": 10,
+          "event": "evaluate-terminal-boundary",
+          "sample_tick": 2,
+          "action": "Complete"
+        },
+        {
+          "order": 11,
+          "event": "seal-terminal-observation",
+          "sample_tick": 2,
+          "commit_id": "commit.fixture.yyz.mission.2"
+        },
+        {
+          "order": 12,
+          "event": "freeze-mission-result",
+          "sample_tick": 2,
           "status": "Completed"
         }
       ],
@@ -215,129 +239,411 @@
             "0"
           ],
           "committed_mass_kg": "99.95"
+        },
+        {
+          "sample_tick": 2,
+          "time_s": "0.2",
+          "commit_id": "commit.fixture.yyz.mission.2",
+          "quality": "Valid",
+          "position_I_m": [
+            "21.981796889054956824602362523454320373966538587861990645597327976395271449702229",
+            "0",
+            "999.80627151964861791611700549886900380061522191803338218825475774608019097880453"
+          ],
+          "velocity_I_mps": [
+            "109.82508910216534302921803292233086224397666942472694039573204072454621315928158",
+            "0",
+            "-1.9131834971562069277008618543430860906354901586049554807095454234752336652294348"
+          ],
+          "q_I_B_wxyz": [
+            "0.99999780386087885873286245837537568981462579782555261792759417631525352223719382",
+            "0",
+            "-0.0020957751356611459875223969765601294843896402916906105009751705989036853148731583",
+            "0"
+          ],
+          "omega_BI_B_radps": [
+            "0",
+            "0.083831082136755270111940194258828513794466179672550801499897813171439025899833202",
+            "0"
+          ],
+          "committed_mass_kg": "99.9"
         }
       ],
-      "interval_execution": {
-        "sample_tick": 0,
-        "valid_from_tick": 0,
-        "valid_until_tick": 1,
-        "configuration_revision": 11,
-        "base_dt_s": "0.1",
-        "strategy": "FrozenInterval",
-        "environment_sample": {
-          "gravity_I_mps2": [
-            "0",
-            "0",
-            "-9.80665"
-          ],
-          "velocity_airmass_I_mps": [
-            "10",
-            "0",
-            "0"
-          ],
-          "density_kgpm3": "1.225",
-          "speed_of_sound_mps": "340"
+      "interval_executions": [
+        {
+          "sample_tick": 0,
+          "valid_from_tick": 0,
+          "valid_until_tick": 1,
+          "configuration_revision": 11,
+          "base_dt_s": "0.1",
+          "strategy": "FrozenInterval",
+          "integration_substeps": 1,
+          "environment_sample": {
+            "gravity_I_mps2": [
+              "0",
+              "0",
+              "-9.80665"
+            ],
+            "velocity_airmass_I_mps": [
+              "10",
+              "0",
+              "0"
+            ],
+            "density_kgpm3": "1.225",
+            "speed_of_sound_mps": "340"
+          },
+          "air_data": {
+            "velocity_relative_I_mps": [
+              "100",
+              "0",
+              "0"
+            ],
+            "velocity_relative_B_mps": [
+              "100",
+              "0",
+              "0"
+            ],
+            "airspeed_mps": "100",
+            "alpha_rad": "0",
+            "beta_rad": "0",
+            "dynamic_pressure_Pa": "6125",
+            "mach": "0.29411764705882352941176470588235294117647058823529411764705882352941176470588235"
+          },
+          "aero_lookup": {
+            "model_id": "MODEL-YYZ-AERO-TRILINEAR-LOOKUP-001",
+            "table_id": "aero-table.fixture.yyz.multiaffine@1",
+            "configuration_id": "configuration.fixture.yyz.clean@1",
+            "domain_status": "Interior",
+            "cell_indices_M_alpha_beta": [
+              0,
+              0,
+              0
+            ],
+            "weights_M_alpha_beta": [
+              "0.23529411764705882352941176470588235294117647058823529411764705882352941176470588",
+              "0.5",
+              "0.5"
+            ],
+            "coefficients_CA_CY_CN_Cl_Cm_Cn": [
+              "0.031764705882352941176470588235294117647058823529411764705882352941176470588235294",
+              "0",
+              "0",
+              "0",
+              "-0.044117647058823529411764705882352941176470588235294117647058823529411764705882353",
+              "0"
+            ]
+          },
+          "closure": {
+            "force_total_B_N": [
+              "-94.55882352941176470588235294117647058823529411764705882352941176470588235294118",
+              "0",
+              "0"
+            ],
+            "moment_total_about_CoM_B_Nm": [
+              "0",
+              "0.00000000000000000000000000000000000000000000000000000000000000000000000000001",
+              "0"
+            ]
+          },
+          "rigid_derivative_at_opening": {
+            "force_total_I_N": [
+              "-94.55882352941176470588235294117647058823529411764705882352941176470588235294118",
+              "0",
+              "0"
+            ],
+            "acceleration_I_mps2": [
+              "-0.9455882352941176470588235294117647058823529411764705882352941176470588235294118",
+              "0",
+              "-9.80665"
+            ],
+            "angular_momentum_B_kgm2ps": [
+              "0",
+              "0",
+              "0"
+            ],
+            "gyroscopic_moment_B_Nm": [
+              "0",
+              "0",
+              "0"
+            ],
+            "net_moment_B_Nm": [
+              "0",
+              "0.00000000000000000000000000000000000000000000000000000000000000000000000000001",
+              "0"
+            ],
+            "angular_acceleration_B_radps2": [
+              "0",
+              "0.0000000000000000000000000000000000000000000000000000000000000000000000000000005",
+              "0"
+            ],
+            "q_derivative_I_B_per_s": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ]
+          },
+          "mass_transition": {
+            "mass_state_id": "mass.fixture.yyz.vehicle@1",
+            "opening_committed_mass_kg": "100",
+            "consumed_mass_kg": "0.05",
+            "pending_mass_candidate_kg": "99.95",
+            "pending_visibility_before_commit": "candidate-only",
+            "closing_committed_mass_kg": "99.95",
+            "closing_commit_kind": "atomic-rigid-and-mass"
+          }
         },
-        "air_data": {
-          "velocity_relative_I_mps": [
-            "100",
-            "0",
-            "0"
-          ],
-          "velocity_relative_B_mps": [
-            "100",
-            "0",
-            "0"
-          ],
-          "airspeed_mps": "100",
-          "alpha_rad": "0",
-          "beta_rad": "0",
-          "dynamic_pressure_Pa": "6125",
-          "mach": "0.29411764705882352941176470588235294117647058823529411764705882352941176470588235"
-        },
-        "aero_lookup": {
-          "model_id": "MODEL-YYZ-AERO-TRILINEAR-LOOKUP-001",
-          "table_id": "aero-table.fixture.yyz.multiaffine@1",
-          "configuration_id": "configuration.fixture.yyz.clean@1",
-          "domain_status": "Interior",
-          "cell_indices_M_alpha_beta": [
-            0,
-            0,
-            0
-          ],
-          "weights_M_alpha_beta": [
-            "0.23529411764705882352941176470588235294117647058823529411764705882352941176470588",
-            "0.5",
-            "0.5"
-          ],
-          "coefficients_CA_CY_CN_Cl_Cm_Cn": [
-            "0.031764705882352941176470588235294117647058823529411764705882352941176470588235294",
-            "0",
-            "0",
-            "0",
-            "-0.044117647058823529411764705882352941176470588235294117647058823529411764705882353",
-            "0"
-          ]
-        },
-        "closure": {
-          "force_total_B_N": [
-            "-94.55882352941176470588235294117647058823529411764705882352941176470588235294118",
-            "0",
-            "0"
-          ],
-          "moment_total_about_CoM_B_Nm": [
-            "0",
-            "0.00000000000000000000000000000000000000000000000000000000000000000000000000001",
-            "0"
-          ]
-        },
-        "rigid_derivative_at_opening": {
-          "force_total_I_N": [
-            "-94.55882352941176470588235294117647058823529411764705882352941176470588235294118",
-            "0",
-            "0"
-          ],
-          "acceleration_I_mps2": [
-            "-0.9455882352941176470588235294117647058823529411764705882352941176470588235294118",
-            "0",
-            "-9.80665"
-          ],
-          "angular_momentum_B_kgm2ps": [
-            "0",
-            "0",
-            "0"
-          ],
-          "gyroscopic_moment_B_Nm": [
-            "0",
-            "0",
-            "0"
-          ],
-          "net_moment_B_Nm": [
-            "0",
-            "0.00000000000000000000000000000000000000000000000000000000000000000000000000001",
-            "0"
-          ],
-          "angular_acceleration_B_radps2": [
-            "0",
-            "0.0000000000000000000000000000000000000000000000000000000000000000000000000000005",
-            "0"
-          ],
-          "q_derivative_I_B_per_s": [
-            "0",
-            "0",
-            "0",
-            "0"
-          ]
-        },
-        "mass_transition": {
-          "mass_state_id": "mass.fixture.yyz.vehicle@1",
-          "opening_committed_mass_kg": "100",
-          "consumed_mass_kg": "0.05",
-          "pending_mass_candidate_kg": "99.95",
-          "pending_visibility_before_commit": "candidate-only",
-          "closing_committed_mass_kg": "99.95",
-          "closing_commit_kind": "atomic-rigid-and-mass"
+        {
+          "sample_tick": 1,
+          "valid_from_tick": 1,
+          "valid_until_tick": 2,
+          "configuration_revision": 11,
+          "base_dt_s": "0.1",
+          "strategy": "FrozenInterval",
+          "integration_substeps": 1,
+          "environment_sample": {
+            "gravity_I_mps2": [
+              "0",
+              "0",
+              "-9.80665"
+            ],
+            "velocity_airmass_I_mps": [
+              "10",
+              "0",
+              "0"
+            ],
+            "density_kgpm3": "1.225",
+            "speed_of_sound_mps": "340"
+          },
+          "air_data": {
+            "velocity_relative_I_mps": [
+              "99.90544117647058823529411764705882352941176470588235294117647058823529411764706",
+              "0",
+              "-0.980665"
+            ],
+            "velocity_relative_B_mps": [
+              "99.90544117647058823529411764705882352941176470588235294117647058823529411764706",
+              "0",
+              "-0.980665"
+            ],
+            "airspeed_mps": "99.910254130932175872316243985938434768356842940492389904463001562784443236423733",
+            "alpha_rad": "-0.00981561658463276051769477273198300666377483955254503151768550106558537914873983",
+            "beta_rad": "0",
+            "dynamic_pressure_Pa": "6114.0110643108130720155709342560553633217993079584775086505190311418685121107265",
+            "mach": "0.29385368862038875256563601172334833755399071453085997030724412224348365657771686"
+          },
+          "aero_lookup": {
+            "model_id": "MODEL-YYZ-AERO-TRILINEAR-LOOKUP-001",
+            "table_id": "aero-table.fixture.yyz.multiaffine@1",
+            "configuration_id": "configuration.fixture.yyz.clean@1",
+            "domain_status": "Interior",
+            "cell_indices_M_alpha_beta": [
+              0,
+              0,
+              0
+            ],
+            "weights_M_alpha_beta": [
+              "0.23463422155097188141409002930837084388497678632714992576811030560870914144429215",
+              "0.45092191707683619741152613634008496668112580223727484241157249467207310425630085",
+              "0.5"
+            ],
+            "coefficients_CA_CY_CN_Cl_Cm_Cn": [
+              "0.029502588713941218105851657410633351716274057242863746617696382450662319056451488",
+              "0",
+              "-0.0078524932677062084141558181855864053310198716420360252141484008524683033189918631",
+              "0",
+              "-0.038233556276812568638070416126343229250655281977855781683243816915779099379201767",
+              "0"
+            ]
+          },
+          "closure": {
+            "force_total_B_N": [
+              "-80.37915382284792877540613864749989811588114791684736832532905967915322471963848",
+              "0",
+              "48.010230721181929701155922293741276378031215568460118407971011551927894491088951"
+            ],
+            "moment_total_about_CoM_B_Nm": [
+              "0",
+              "16.76621642735105402238803885176570275889323593451016029997956263428780517996664",
+              "0"
+            ]
+          },
+          "rigid_derivative_at_opening": {
+            "force_total_I_N": [
+              "-80.37915382284792877540613864749989811588114791684736832532905967915322471963848",
+              "0",
+              "48.010230721181929701155922293741276378031215568460118407971011551927894491088951"
+            ],
+            "acceleration_I_mps2": [
+              "-0.80419363504600228889851064179589692962362329081388062356507313335821135287282121",
+              "0",
+              "-9.3263075215489551805787301421336540632513135010659317818111954822218319710746478"
+            ],
+            "angular_momentum_B_kgm2ps": [
+              "0",
+              "0",
+              "0"
+            ],
+            "gyroscopic_moment_B_Nm": [
+              "0",
+              "0",
+              "0"
+            ],
+            "net_moment_B_Nm": [
+              "0",
+              "16.76621642735105402238803885176570275889323593451016029997956263428780517996664",
+              "0"
+            ],
+            "angular_acceleration_B_radps2": [
+              "0",
+              "0.838310821367552701119401942588285137944661796725508014998978131714390258998332",
+              "0"
+            ],
+            "q_derivative_I_B_per_s": [
+              "0",
+              "0",
+              "0",
+              "0"
+            ]
+          },
+          "mass_transition": {
+            "mass_state_id": "mass.fixture.yyz.vehicle@1",
+            "opening_committed_mass_kg": "99.95",
+            "consumed_mass_kg": "0.05",
+            "pending_mass_candidate_kg": "99.9",
+            "pending_visibility_before_commit": "candidate-only",
+            "closing_committed_mass_kg": "99.9",
+            "closing_commit_kind": "atomic-rigid-and-mass"
+          }
         }
+      ],
+      "second_interval_convergence": {
+        "substep_counts": [
+          1,
+          2,
+          4,
+          8
+        ],
+        "terminal_states": [
+          {
+            "substeps": 1,
+            "terminal_state": {
+              "position_I_m": [
+                "21.981796889054956824602362523454320373966538587861990645597327976395271449702229",
+                "0",
+                "999.80627151964861791611700549886900380061522191803338218825475774608019097880453"
+              ],
+              "velocity_I_mps": [
+                "109.82508910216534302921803292233086224397666942472694039573204072454621315928158",
+                "0",
+                "-1.9131834971562069277008618543430860906354901586049554807095454234752336652294348"
+              ],
+              "q_I_B_wxyz": [
+                "0.99999780386087885873286245837537568981462579782555261792759417631525352223719382",
+                "0",
+                "-0.0020957751356611459875223969765601294843896402916906105009751705989036853148731583",
+                "0"
+              ],
+              "omega_BI_B_radps": [
+                "0",
+                "0.083831082136755270111940194258828513794466179672550801499897813171439025899833202",
+                "0"
+              ]
+            },
+            "maximum_pre_normalization_quaternion_norm_residual": "0.00000000000040191888317201743535034010671559208375324687872874170951156710438725"
+          },
+          {
+            "substeps": 2,
+            "terminal_state": {
+              "position_I_m": [
+                "21.981796888503880665034780522528898918141077447953422696859606133283703479714922",
+                "0",
+                "999.80627151997967037080601950183901881259577489159442666313571179644032432797464"
+              ],
+              "velocity_I_mps": [
+                "109.82508906909351954199517511969565561795198457607610911720751001611226747587107",
+                "0",
+                "-1.9131834773050741028340922788233447202317279893342805007602017774837317788589198"
+              ],
+              "q_I_B_wxyz": [
+                "0.99999780386012526024593701046996684076320696447365369618235713137717386790423039",
+                "0",
+                "-0.0020957754952401649607461210775067091132877883648981556311562430267429477458210445",
+                "0"
+              ],
+              "omega_BI_B_radps": [
+                "0",
+                "0.083831082136755270111940194258828513794466179672550801499897813171439025899833202",
+                "0"
+              ]
+            },
+            "maximum_pre_normalization_quaternion_norm_residual": "0.00000000000006122993488562758659564621023877127308990014601476677878374068290326"
+          },
+          {
+            "substeps": 4,
+            "terminal_state": {
+              "position_I_m": [
+                "21.981796888469345323991702396283474944526543043647977415899369066372413870790954",
+                "0",
+                "999.80627152000020601848402311900311005665722428357752862304296940490480072041492"
+              ],
+              "velocity_I_mps": [
+                "109.82508906702561274112062434131226982215188058282209016368868160514502365861613",
+                "0",
+                "-1.9131834760659041486237492045351579221313170918346939675385653287734837923727226"
+              ],
+              "q_I_B_wxyz": [
+                "0.99999780386007816033054422715054287926445866600383543067113000993292789414055105",
+                "0",
+                "-0.0020957755177138563505049863090473293389791792361311960575054182403643552615433869",
+                "0"
+              ],
+              "omega_BI_B_radps": [
+                "0",
+                "0.0838310821367552701119401942588285137944661796725508014998978131714390258998332",
+                "0"
+              ]
+            },
+            "maximum_pre_normalization_quaternion_norm_residual": "0.00000000000000364902044398139812548061539476042287156822268417485432881838239825"
+          },
+          {
+            "substeps": 8,
+            "terminal_state": {
+              "position_I_m": [
+                "21.98179688846718508840222069688417554196465536283087561026563160266709558542363",
+                "0",
+                "999.8062715200014865367392258115704720486919399156170842752668426927544938645862"
+              ],
+              "velocity_I_mps": [
+                "109.82508906689633674366377834216797157366691408181436797017584409986120265134959",
+                "0",
+                "-1.9131834759885090176560055626153273892429632313320350185455401602165662311822479"
+              ],
+              "q_I_B_wxyz": [
+                "0.99999780386007521658380953765361172267728713136305645449610618897507373338926711",
+                "0",
+                "-0.0020957755191184630194646664138124203338167093356895287371174361133288302606787368",
+                "0"
+              ],
+              "omega_BI_B_radps": [
+                "0",
+                "0.0838310821367552701119401942588285137944661796725508014998978131714390258998332",
+                "0"
+              ]
+            },
+            "maximum_pre_normalization_quaternion_norm_residual": "0.00000000000000015128388962922560781128608125833192992497261777010682788061613239"
+          }
+        ],
+        "successive_max_abs_differences": [
+          "0.00000003307182348722285780263520662602468484865083127852453070843394568341051",
+          "0.00000000206790680087455077838338579580010399325401895351882841096724381725494",
+          "0.00000000012927599745684599914429824848496650100772219351283750528382100726654"
+        ],
+        "error_reduction_ratios": [
+          "15.992898458110518330656005535381602676295493730982975384079956091285733857992371",
+          "15.996061461949615421843620352237134206031486525551869499813268470877403373038813"
+        ],
+        "minimum_required_error_reduction_ratio": "12"
       },
       "evaluation_trace": [
         {
@@ -357,7 +663,7 @@
               "predicate_id": "downrange-goal",
               "metric_id": "downrange_m",
               "relation": ">=",
-              "threshold": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
+              "threshold": "20",
               "observed": "0",
               "met": false,
               "action": "Complete",
@@ -368,7 +674,7 @@
               "predicate_id": "duration-limit",
               "metric_id": "duration_s",
               "relation": ">=",
-              "threshold": "0.1",
+              "threshold": "0.2",
               "observed": "0",
               "met": false,
               "action": "Complete",
@@ -379,7 +685,7 @@
               "predicate_id": "remaining-mass-floor",
               "metric_id": "remaining_mass_kg",
               "relation": "<=",
-              "threshold": "99.9",
+              "threshold": "99.85",
               "observed": "100",
               "met": false,
               "action": "Abort",
@@ -419,8 +725,70 @@
               "predicate_id": "downrange-goal",
               "metric_id": "downrange_m",
               "relation": ">=",
-              "threshold": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
+              "threshold": "20",
               "observed": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
+              "met": false,
+              "action": "Complete",
+              "reason_code": "downrange-goal",
+              "priority": 200
+            },
+            {
+              "predicate_id": "duration-limit",
+              "metric_id": "duration_s",
+              "relation": ">=",
+              "threshold": "0.2",
+              "observed": "0.1",
+              "met": false,
+              "action": "Complete",
+              "reason_code": "duration-complete",
+              "priority": 100
+            },
+            {
+              "predicate_id": "remaining-mass-floor",
+              "metric_id": "remaining_mass_kg",
+              "relation": "<=",
+              "threshold": "99.85",
+              "observed": "99.95",
+              "met": false,
+              "action": "Abort",
+              "reason_code": "remaining-mass-floor",
+              "priority": 300
+            }
+          ],
+          "decision": {
+            "action": "Continue",
+            "reason_code": "none",
+            "trigger_time_s": "0.1",
+            "subject": "vehicle.fixture.yyz@1",
+            "priority": 0,
+            "metrics": {
+              "duration_s": "0.1",
+              "downrange_m": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
+              "remaining_mass_kg": "99.95"
+            },
+            "message_key": "yyz.termination.continue",
+            "params": {}
+          }
+        },
+        {
+          "sample_tick": 2,
+          "time_s": "0.2",
+          "commit_id": "commit.fixture.yyz.mission.2",
+          "metrics": {
+            "duration_s": "0.2",
+            "downrange_m": "21.981796889054956824602362523454320373966538587861990645597327976395271449702229",
+            "vertical_displacement_m": "-0.19372848035138208388299450113099619938477808196661781174524225391980902119547",
+            "remaining_mass_kg": "99.9",
+            "consumed_mass_kg": "0.1",
+            "speed_mps": "109.84175193155081704083106724030091456591607745864354236376324913177422661809877"
+          },
+          "predicate_results": [
+            {
+              "predicate_id": "downrange-goal",
+              "metric_id": "downrange_m",
+              "relation": ">=",
+              "threshold": "20",
+              "observed": "21.981796889054956824602362523454320373966538587861990645597327976395271449702229",
               "met": true,
               "action": "Complete",
               "reason_code": "downrange-goal",
@@ -430,8 +798,8 @@
               "predicate_id": "duration-limit",
               "metric_id": "duration_s",
               "relation": ">=",
-              "threshold": "0.1",
-              "observed": "0.1",
+              "threshold": "0.2",
+              "observed": "0.2",
               "met": true,
               "action": "Complete",
               "reason_code": "duration-complete",
@@ -441,8 +809,8 @@
               "predicate_id": "remaining-mass-floor",
               "metric_id": "remaining_mass_kg",
               "relation": "<=",
-              "threshold": "99.9",
-              "observed": "99.95",
+              "threshold": "99.85",
+              "observed": "99.9",
               "met": false,
               "action": "Abort",
               "reason_code": "remaining-mass-floor",
@@ -452,13 +820,13 @@
           "decision": {
             "action": "Complete",
             "reason_code": "downrange-goal",
-            "trigger_time_s": "0.1",
+            "trigger_time_s": "0.2",
             "subject": "vehicle.fixture.yyz@1",
             "priority": 200,
             "metrics": {
-              "duration_s": "0.1",
-              "downrange_m": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
-              "remaining_mass_kg": "99.95"
+              "duration_s": "0.2",
+              "downrange_m": "21.981796889054956824602362523454320373966538587861990645597327976395271449702229",
+              "remaining_mass_kg": "99.9"
             },
             "message_key": "yyz.termination.downrange-goal",
             "params": {}
@@ -466,66 +834,66 @@
         }
       ],
       "metric_summary": {
-        "evaluated_sample_count": 2,
-        "duration_s": "0.1",
-        "downrange_m": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
-        "vertical_displacement_m": "-0.04903325",
-        "remaining_mass_kg": "99.95",
-        "consumed_mass_kg": "0.05",
-        "terminal_speed_mps": "109.90981623147616598966682202546269474992696001599703357691793928409462581010799",
+        "evaluated_sample_count": 3,
+        "duration_s": "0.2",
+        "downrange_m": "21.981796889054956824602362523454320373966538587861990645597327976395271449702229",
+        "vertical_displacement_m": "-0.19372848035138208388299450113099619938477808196661781174524225391980902119547",
+        "remaining_mass_kg": "99.9",
+        "consumed_mass_kg": "0.1",
+        "terminal_speed_mps": "109.84175193155081704083106724030091456591607745864354236376324913177422661809877",
         "peak_speed_mps": "110",
         "peak_speed_tick": 0,
-        "maximum_downrange_m": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
-        "maximum_downrange_tick": 1,
-        "minimum_remaining_mass_kg": "99.95",
-        "minimum_remaining_mass_tick": 1
+        "maximum_downrange_m": "21.981796889054956824602362523454320373966538587861990645597327976395271449702229",
+        "maximum_downrange_tick": 2,
+        "minimum_remaining_mass_kg": "99.9",
+        "minimum_remaining_mass_tick": 2
       },
       "terminal_observation": {
-        "sample_tick": 1,
-        "time_s": "0.1",
-        "commit_id": "commit.fixture.yyz.mission.1",
+        "sample_tick": 2,
+        "time_s": "0.2",
+        "commit_id": "commit.fixture.yyz.mission.2",
         "quality": "Valid",
         "fields": {
           "position_I_m": [
-            "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
+            "21.981796889054956824602362523454320373966538587861990645597327976395271449702229",
             "0",
-            "999.95096675"
+            "999.80627151964861791611700549886900380061522191803338218825475774608019097880453"
           ],
           "velocity_I_mps": [
-            "109.90544117647058823529411764705882352941176470588235294117647058823529411764706",
+            "109.82508910216534302921803292233086224397666942472694039573204072454621315928158",
             "0",
-            "-0.980665"
+            "-1.9131834971562069277008618543430860906354901586049554807095454234752336652294348"
           ],
           "q_I_B_wxyz": [
-            "1",
+            "0.99999780386087885873286245837537568981462579782555261792759417631525352223719382",
             "0",
-            "0",
+            "-0.0020957751356611459875223969765601294843896402916906105009751705989036853148731583",
             "0"
           ],
           "omega_BI_B_radps": [
             "0",
-            "0",
+            "0.083831082136755270111940194258828513794466179672550801499897813171439025899833202",
             "0"
           ],
-          "committed_mass_kg": "99.95",
+          "committed_mass_kg": "99.9",
           "metrics": {
-            "duration_s": "0.1",
-            "downrange_m": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
-            "vertical_displacement_m": "-0.04903325",
-            "remaining_mass_kg": "99.95",
-            "consumed_mass_kg": "0.05",
-            "speed_mps": "109.90981623147616598966682202546269474992696001599703357691793928409462581010799"
+            "duration_s": "0.2",
+            "downrange_m": "21.981796889054956824602362523454320373966538587861990645597327976395271449702229",
+            "vertical_displacement_m": "-0.19372848035138208388299450113099619938477808196661781174524225391980902119547",
+            "remaining_mass_kg": "99.9",
+            "consumed_mass_kg": "0.1",
+            "speed_mps": "109.84175193155081704083106724030091456591607745864354236376324913177422661809877"
           },
           "decision": {
             "action": "Complete",
             "reason_code": "downrange-goal",
-            "trigger_time_s": "0.1",
+            "trigger_time_s": "0.2",
             "subject": "vehicle.fixture.yyz@1",
             "priority": 200,
             "metrics": {
-              "duration_s": "0.1",
-              "downrange_m": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
-              "remaining_mass_kg": "99.95"
+              "duration_s": "0.2",
+              "downrange_m": "21.981796889054956824602362523454320373966538587861990645597327976395271449702229",
+              "remaining_mass_kg": "99.9"
             },
             "message_key": "yyz.termination.downrange-goal",
             "params": {}
@@ -535,9 +903,13 @@
           "resolve-components",
           "publish-opening-commit",
           "evaluate-opening-boundary",
-          "evaluate-frozen-interval",
-          "stage-rigid-and-mass-candidates",
-          "commit-rigid-and-mass",
+          "evaluate-interval-0",
+          "stage-commit-1",
+          "commit-rigid-and-mass-1",
+          "evaluate-intermediate-boundary",
+          "evaluate-interval-1",
+          "stage-commit-2",
+          "commit-rigid-and-mass-2",
           "evaluate-terminal-boundary",
           "seal-terminal-observation",
           "freeze-mission-result"
@@ -548,38 +920,38 @@
         "final_status": "Completed",
         "evidence_validity": "Valid",
         "initial_tick": 0,
-        "final_tick": 1,
-        "final_time_s": "0.1",
+        "final_tick": 2,
+        "final_time_s": "0.2",
         "termination": {
           "action": "Complete",
           "reason_code": "downrange-goal",
-          "trigger_time_s": "0.1",
+          "trigger_time_s": "0.2",
           "subject": "vehicle.fixture.yyz@1",
           "priority": 200,
           "metrics": {
-            "duration_s": "0.1",
-            "downrange_m": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
-            "remaining_mass_kg": "99.95"
+            "duration_s": "0.2",
+            "downrange_m": "21.981796889054956824602362523454320373966538587861990645597327976395271449702229",
+            "remaining_mass_kg": "99.9"
           },
           "message_key": "yyz.termination.downrange-goal",
           "params": {}
         },
         "metrics": {
-          "evaluated_sample_count": 2,
-          "duration_s": "0.1",
-          "downrange_m": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
-          "vertical_displacement_m": "-0.04903325",
-          "remaining_mass_kg": "99.95",
-          "consumed_mass_kg": "0.05",
-          "terminal_speed_mps": "109.90981623147616598966682202546269474992696001599703357691793928409462581010799",
+          "evaluated_sample_count": 3,
+          "duration_s": "0.2",
+          "downrange_m": "21.981796889054956824602362523454320373966538587861990645597327976395271449702229",
+          "vertical_displacement_m": "-0.19372848035138208388299450113099619938477808196661781174524225391980902119547",
+          "remaining_mass_kg": "99.9",
+          "consumed_mass_kg": "0.1",
+          "terminal_speed_mps": "109.84175193155081704083106724030091456591607745864354236376324913177422661809877",
           "peak_speed_mps": "110",
           "peak_speed_tick": 0,
-          "maximum_downrange_m": "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
-          "maximum_downrange_tick": 1,
-          "minimum_remaining_mass_kg": "99.95",
-          "minimum_remaining_mass_tick": 1
+          "maximum_downrange_m": "21.981796889054956824602362523454320373966538587861990645597327976395271449702229",
+          "maximum_downrange_tick": 2,
+          "minimum_remaining_mass_kg": "99.9",
+          "minimum_remaining_mass_tick": 2
         },
-        "terminal_observation_commit_id": "commit.fixture.yyz.mission.1",
+        "terminal_observation_commit_id": "commit.fixture.yyz.mission.2",
         "terminal_observation_sealed": true,
         "frozen": true
       }
@@ -590,7 +962,7 @@
       "id": "EQUIV-YYZ-MISSION-COMPOSITION-BINDING-ORDER",
       "status": "passed",
       "resolved_role_count": 12,
-      "terminal_tick": 1,
+      "terminal_tick": 2,
       "reason_code": "downrange-goal",
       "max_abs_result_difference": "0"
     }
@@ -619,10 +991,37 @@
     {
       "id": "MUTATION-YYZ-MISSION-COMPOSITION-NONATOMIC-MASS-COMMIT",
       "status": "rejected",
-      "expected_closing_committed_mass_kg": "99.95",
-      "observed_closing_committed_mass_kg": "100",
-      "observed_terminal_consumed_mass_kg": "0",
+      "expected_intermediate_committed_mass_kg": "99.95",
+      "observed_intermediate_committed_mass_kg": "100",
+      "expected_closing_committed_mass_kg": "99.9",
+      "observed_closing_committed_mass_kg": "99.95",
+      "observed_terminal_consumed_mass_kg": "0.05",
       "max_abs_result_difference": "0.05"
+    },
+    {
+      "id": "MUTATION-YYZ-MISSION-COMPOSITION-STALE-BOUNDARY-CLOSURE",
+      "status": "rejected",
+      "expected_force_total_B_N": [
+        "-80.37915382284792877540613864749989811588114791684736832532905967915322471963848",
+        "0",
+        "48.010230721181929701155922293741276378031215568460118407971011551927894491088951"
+      ],
+      "observed_force_total_B_N": [
+        "-94.55882352941176470588235294117647058823529411764705882352941176470588235294118",
+        "0",
+        "0"
+      ],
+      "expected_terminal_position_I_m": [
+        "21.981796889054956824602362523454320373966538587861990645597327976395271449702229",
+        "0",
+        "999.80627151964861791611700549886900380061522191803338218825475774608019097880453"
+      ],
+      "observed_terminal_position_I_m": [
+        "21.98108587014095282935585439778712885854692051908307094723832504487537886590354",
+        "0",
+        "999.803867"
+      ],
+      "max_abs_result_difference": "0.083831082136755270111940194258828513794466179672550801499897813171439025899833152"
     },
     {
       "id": "MUTATION-YYZ-MISSION-COMPOSITION-LOW-PRIORITY-WINS",
@@ -640,9 +1039,13 @@
         "resolve-components",
         "publish-opening-commit",
         "evaluate-opening-boundary",
-        "evaluate-frozen-interval",
-        "stage-rigid-and-mass-candidates",
-        "commit-rigid-and-mass",
+        "evaluate-interval-0",
+        "stage-commit-1",
+        "commit-rigid-and-mass-1",
+        "evaluate-intermediate-boundary",
+        "evaluate-interval-1",
+        "stage-commit-2",
+        "commit-rigid-and-mass-2",
         "evaluate-terminal-boundary",
         "seal-terminal-observation",
         "freeze-mission-result"
@@ -651,9 +1054,13 @@
         "resolve-components",
         "publish-opening-commit",
         "evaluate-opening-boundary",
-        "evaluate-frozen-interval",
-        "stage-rigid-and-mass-candidates",
-        "commit-rigid-and-mass",
+        "evaluate-interval-0",
+        "stage-commit-1",
+        "commit-rigid-and-mass-1",
+        "evaluate-intermediate-boundary",
+        "evaluate-interval-1",
+        "stage-commit-2",
+        "commit-rigid-and-mass-2",
         "evaluate-terminal-boundary",
         "freeze-mission-result",
         "seal-terminal-observation"
