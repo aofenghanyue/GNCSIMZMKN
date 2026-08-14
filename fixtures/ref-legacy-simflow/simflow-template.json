@@ -1,0 +1,25 @@
+{
+  "base_mission": "__BASE_MISSION__",
+  "materializer": {
+    "type": "simflow.materializer.numeric_perturbation",
+    "config": {
+      "case_source": {
+        "mode": "matrix",
+        "file": "__CASE_SOURCE__",
+        "rows": [0]
+      },
+      "vehicles": {
+        "vehicle": {
+          "inputs": [
+            "engine.temp_level",
+            "aero.drag_bias"
+          ]
+        }
+      }
+    }
+  },
+  "outputs": {
+    "directory": "__OUTPUT_DIRECTORY__",
+    "case_directory": "case_{case_index}"
+  }
+}

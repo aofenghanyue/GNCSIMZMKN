@@ -1,0 +1,192 @@
+{
+  "schema_version": "gnczmkn.legacy-simflow-input/1",
+  "fixture_id": "REF-LEGACY-SIMFLOW-001",
+  "oracle_id": "ORACLE-SIMFLOW-07",
+  "case_id": "CASE-LEGACY-SIMFLOW-HOT-REPLAY",
+  "inputs": {
+    "base_mission": {
+      "path": "fixtures/ref-legacy-simflow/base-mission.json",
+      "bytes": 1861,
+      "sha256": "e7a3395ae933e285b3b24b2de28e48fbfb281370d37bfcf6bc1173c647457d4b"
+    },
+    "case_source": {
+      "path": "fixtures/ref-legacy-simflow/cases.csv",
+      "bytes": 65,
+      "sha256": "f36e43e44708c8063902f234058b2b801e9fa372e1c38f4e2d4e984204493fb3"
+    },
+    "simflow_template": {
+      "path": "fixtures/ref-legacy-simflow/simflow-template.json",
+      "bytes": 516,
+      "sha256": "98bc96b6719c3e38e62d649b1c3580390fe066ea4ac8143a36025d9b752821c3"
+    },
+    "selected_case": {
+      "source_row": 0,
+      "source_case_id": "hot",
+      "vehicle_id": "vehicle",
+      "numeric_inputs": {
+        "engine.temp_level": "2",
+        "aero.drag_bias": "-0.03"
+      }
+    }
+  },
+  "legacy_source": {
+    "archive": {
+      "path": "reference/legacy/legacy-source.zip",
+      "prefix": "GNCZMKN-legacy-a63621c/",
+      "bytes": 990450,
+      "sha256": "2159a324fd897e4bd508c140a36c9165d744e4e4e61861c5b568201707f988e5"
+    },
+    "entries": [
+      {
+        "path": "src/runner.cpp",
+        "bytes": 16929,
+        "sha256": "1790db7fce527ba2b9ac65dc92839eb18db6aca0c354ce4ad1215a29517da8aa"
+      },
+      {
+        "path": "framework/include/gnc/simflow/simflow_runner.hpp",
+        "bytes": 14311,
+        "sha256": "4a58d4773fe48ca495eea28040f38270953e608ac0bee131a13b4912d8d69a67"
+      },
+      {
+        "path": "framework/include/gnc/simflow/materializers/numeric_perturbation_materializer.hpp",
+        "bytes": 12829,
+        "sha256": "906d80c7a1991325e92a238f1f68c7e247432bd7ed05b0684e1ad09331e2dc38"
+      },
+      {
+        "path": "framework/include/gnc/simflow/mission_patch.hpp",
+        "bytes": 3955,
+        "sha256": "ea7bd720871e6cb4a9fc217657d88b54b7343285ee4419b5ae2062cf3c9e8d2e"
+      },
+      {
+        "path": "framework/include/gnc/simflow/csv_case_source.hpp",
+        "bytes": 3815,
+        "sha256": "2f39354f2b45a8ed7d5448a8c770011a950d4cf8b172d6edcd96a4cb1c563e4a"
+      },
+      {
+        "path": "tests/test_simflow_materializer.cpp",
+        "bytes": 6504,
+        "sha256": "89ea1e58e91c4a3c7c1173b3ee768c7d88cf2987ef223ca9894a0d03377bedeb"
+      },
+      {
+        "path": "tests/test_simflow_runner.cpp",
+        "bytes": 8091,
+        "sha256": "9289f7710e68d0a1679a12b3adcb69ee8a8a05890e5bb1750f90c4e266354a6e"
+      }
+    ],
+    "runtime_tests": [
+      {
+        "id": "test_simflow_materializer",
+        "test_number": 17
+      },
+      {
+        "id": "test_simflow_runner",
+        "test_number": 18
+      }
+    ],
+    "runtime_test_evidence": {
+      "path": "reference/legacy/reproduction/r0-leg-001-20260810-07/logs/legacy-ctest-all.log",
+      "bytes": 4131,
+      "sha256": "c9b4140b5c6dfe0917036f12ce0dca07005c6913b68751f2649d728d33899c2d"
+    }
+  },
+  "legacy_capture": {
+    "compiler": "w64devkit GCC 16.2.0",
+    "executable_role": "gnc_sim from the clean R0-LEG-001 build-main reproduction",
+    "commands": [
+      "gnc_sim.exe --simflow <generated-simflow.json>",
+      "gnc_sim.exe --config <case-directory>/effective_mission.json"
+    ],
+    "configured_output": "build/legacy-simflow-capture-v2/runtime-output",
+    "environment_evidence": {
+      "path": "reference/legacy/reproduction/r0-leg-001-20260810-07/environment-manifest.json",
+      "bytes": 5549,
+      "sha256": "be340b26caa99033cf63cb1c993690aec18e9750faaff6658be4dba8b6eb3041"
+    },
+    "harness": {
+      "path": "fixtures/ref-legacy-simflow/legacy_capture.py",
+      "bytes": 7794,
+      "sha256": "0161b8ba17938699180dd73ccf3b904183c945ae417212a4cf70e469f5cd3168"
+    },
+    "run_root_policy": "Each SimFlow invocation starts in a distinct fresh working directory while retaining the same configured relative output string.",
+    "ordinary_replay_output_policy": "The SimFlow dataset is moved away before plain --config replay, which must recreate the dataset path.",
+    "storage_normalization": "Captured dataset CRLF is stored as LF under repository text policy; reconstructing LF as CRLF must recover each raw capture identity.",
+    "effective_missions": [
+      {
+        "path": "fixtures/ref-legacy-simflow/legacy-effective-run-1.json",
+        "bytes": 1754,
+        "sha256": "e00b2db475e1f4b2a09de00073f79e33ad4c75f0f60ee5e2c304fc3aeeb4d2a0"
+      },
+      {
+        "path": "fixtures/ref-legacy-simflow/legacy-effective-run-2.json",
+        "bytes": 1754,
+        "sha256": "e00b2db475e1f4b2a09de00073f79e33ad4c75f0f60ee5e2c304fc3aeeb4d2a0"
+      }
+    ],
+    "datasets": [
+      {
+        "role": "simflow-run-1",
+        "path": "fixtures/ref-legacy-simflow/legacy-simflow-run-1.csv",
+        "bytes": 1295,
+        "sha256": "0b46866349d4839c5140aae2597e41a4e7a71e1809a3d7525ff98df5019b802b",
+        "stored_line_endings": "LF",
+        "captured_bytes": 1297,
+        "captured_sha256": "896f808ccfacfdc7119b7ff4d3112d4c1bf0e567df83709ac800df5bb8fe782a",
+        "captured_line_endings": "CRLF"
+      },
+      {
+        "role": "ordinary-replay-1",
+        "path": "fixtures/ref-legacy-simflow/legacy-replay-run-1.csv",
+        "bytes": 1295,
+        "sha256": "0b46866349d4839c5140aae2597e41a4e7a71e1809a3d7525ff98df5019b802b",
+        "stored_line_endings": "LF",
+        "captured_bytes": 1297,
+        "captured_sha256": "896f808ccfacfdc7119b7ff4d3112d4c1bf0e567df83709ac800df5bb8fe782a",
+        "captured_line_endings": "CRLF"
+      },
+      {
+        "role": "simflow-run-2",
+        "path": "fixtures/ref-legacy-simflow/legacy-simflow-run-2.csv",
+        "bytes": 1295,
+        "sha256": "0b46866349d4839c5140aae2597e41a4e7a71e1809a3d7525ff98df5019b802b",
+        "stored_line_endings": "LF",
+        "captured_bytes": 1297,
+        "captured_sha256": "896f808ccfacfdc7119b7ff4d3112d4c1bf0e567df83709ac800df5bb8fe782a",
+        "captured_line_endings": "CRLF"
+      },
+      {
+        "role": "ordinary-replay-2",
+        "path": "fixtures/ref-legacy-simflow/legacy-replay-run-2.csv",
+        "bytes": 1295,
+        "sha256": "0b46866349d4839c5140aae2597e41a4e7a71e1809a3d7525ff98df5019b802b",
+        "stored_line_endings": "LF",
+        "captured_bytes": 1297,
+        "captured_sha256": "896f808ccfacfdc7119b7ff4d3112d4c1bf0e567df83709ac800df5bb8fe782a",
+        "captured_line_endings": "CRLF"
+      }
+    ],
+    "summaries": [
+      {
+        "path": "fixtures/ref-legacy-simflow/legacy-summary-run-1.csv",
+        "bytes": 137,
+        "sha256": "d60c67a7e17f2031a364dc99203cff6d46b963b3deb6e22cfc669e358785a9f1"
+      },
+      {
+        "path": "fixtures/ref-legacy-simflow/legacy-summary-run-2.csv",
+        "bytes": 137,
+        "sha256": "d60c67a7e17f2031a364dc99203cff6d46b963b3deb6e22cfc669e358785a9f1"
+      }
+    ],
+    "traces": [
+      {
+        "path": "fixtures/ref-legacy-simflow/legacy-trace-run-1.json",
+        "bytes": 776,
+        "sha256": "d88e56baa0fa86d45d2d6a2317df42041fe3b4145c41fdbb8e37e12bcb9047ae"
+      },
+      {
+        "path": "fixtures/ref-legacy-simflow/legacy-trace-run-2.json",
+        "bytes": 776,
+        "sha256": "b1acdf968b49df4ebedd4ef140e2a8e74a20c9cd3c4cc42b203ccca4ef8ecfa9"
+      }
+    ]
+  }
+}

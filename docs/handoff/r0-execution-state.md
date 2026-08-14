@@ -37,14 +37,14 @@
 - `R0-GOV-001`、`R0-ARCH-001`、`R0-SPEC-001` 保留为技术基线完成项。
 - `R0-GOV-002` 回到 `planned`，等待真实权利与分发输入。
 - `R0-LEG-001` 已完成；固定归档与工具链的干净复跑保持 27/27 测试、五条 CSV 基线和源码指纹一致。
-- `R0-LEG-002` 已完成可执行的 `ORACLE-YYZ-PUBLISH-01`、`ORACLE-YYZ-PHASE-02` 与 `ORACLE-YYZ-SYNC-03` 切片；仓库所有者已接受只读 publish、`t_k` truth 刷新、固定宏阶段顺序、candidate barrier、committed-`t_k` 读取及对应 Legacy 实现形状退出的逐事实处置。`ORACLE-YYZ-GROUP-04`、`ORACLE-YYZ-CSV-05` 与 `ORACLE-YYZ-STOP-06` 正在捕获：分别覆盖共享 RK candidate/组级提交、CSV `t_k`/published-field 边界，以及停止状态先记录、同边界终止；三条都包含直接失败用例，处置分类等待确认。
+- `R0-LEG-002` 的七条 oracle 均已有可执行证据 bundle。`ORACLE-YYZ-PUBLISH-01`、`ORACLE-YYZ-PHASE-02` 与 `ORACLE-YYZ-SYNC-03` 已达到 `executable`；仓库所有者已接受只读 publish、`t_k` truth 刷新、固定宏阶段顺序、candidate barrier、committed-`t_k` 读取及对应 Legacy 实现形状退出的逐事实处置。`ORACLE-YYZ-GROUP-04`、`ORACLE-YYZ-CSV-05`、`ORACLE-YYZ-STOP-06` 与 `ORACLE-SIMFLOW-07` 处于 `capturing`：分别覆盖共享 RK candidate/组级提交、CSV `t_k`/published-field 边界、停止状态先记录/同边界终止，以及预运行任务物化/普通任务重放；四条都包含直接失败用例，处置分类等待确认。
 - `R0-SCI-001` 已由仓库所有者接受并完成。
 - `R0-SCI-002` 已完成，executable bundle 通过独立解析、RK4 收敛、终止与失败检查。
 - 其余 R0 任务保持 `planned`。
 
 ## 下一条开发主线
 
-1. 收敛 `ORACLE-YYZ-GROUP-04` 的 Preserve/Retire 处置选择；CSV 与 STOP 的可执行 capture 已准备好进入后续处置。
+1. 收敛 `ORACLE-YYZ-GROUP-04` 的 Preserve/Retire 处置选择；CSV、STOP 与 SimFlow 的可执行 capture 已准备好进入后续处置。
 2. 继续避免同时展开 gate、性能、YYZ、CAVH 和架构治理。
 
 ## 保留与恢复

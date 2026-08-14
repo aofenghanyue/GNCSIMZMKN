@@ -23,4 +23,6 @@ Fixture 是可复制、可校验、带 provenance 的规范实例。每个目录
 
 `ref-legacy-stop` 处于 `capturing`，包含两份真实 t0 dataset、两份 record/termination trace、独立 Python/Decimal reference 与 C++17 timeline probe；终止判定会在返回 `true` 前读回已 flush 的停止状态，并直接拒绝提前终止、缺失终止行和停止后继续推进。
 
+`ref-legacy-simflow` 处于 `capturing`，包含固定 base mission、两行 variation matrix、两次真实 `--simflow` 捕获和两次普通 `--config` 重放；四份 dataset 与两份 effective mission 分别保持 byte-identical，独立 Python/C++17 reference 验证输入注入、普通任务重放、目录身份无关性和三条直接失败路径。
+
 禁止把蓝图中的演示数值直接升级为 golden。Scientific Authority 需要确认来源、公式和容差。

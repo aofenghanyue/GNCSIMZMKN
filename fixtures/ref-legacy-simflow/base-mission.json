@@ -1,0 +1,85 @@
+{
+  "simulation": {
+    "dt": 1,
+    "duration": 0
+  },
+  "environment": {},
+  "vehicles": [
+    {
+      "id": "vehicle",
+      "perturbation": {
+        "type": "perturbation.static",
+        "name": "perturbation",
+        "config": {
+          "inputs": {},
+          "enum_maps": {
+            "engine.temp_level": {
+              "0": "cold.txt",
+              "2": "hot.txt"
+            }
+          }
+        }
+      },
+      "form": {
+        "components": [
+          {
+            "type": "form.cartesian_3dof.point_mass",
+            "name": "dynamics",
+            "config": {
+              "initial_position": [0, 0, 1000],
+              "initial_velocity": [0, 0, 0]
+            }
+          }
+        ]
+      },
+      "common": [
+        {
+          "type": "vehicle.common.aero_assets_3dof.zero",
+          "name": "aero_assets",
+          "config": {}
+        }
+      ],
+      "input": [],
+      "process": [],
+      "output": [
+        {
+          "type": "vehicle.output.mass_3dof.constant",
+          "name": "mass",
+          "config": {
+            "mass_kg": 100
+          }
+        },
+        {
+          "type": "vehicle.output.propulsion_3dof.zero",
+          "name": "propulsion",
+          "config": {}
+        },
+        {
+          "type": "vehicle.output.actuator_3dof.ideal",
+          "name": "actuator",
+          "config": {}
+        },
+        {
+          "type": "vehicle.output.aerodynamics_3dof.zero",
+          "name": "aero",
+          "config": {}
+        }
+      ],
+      "interaction": {
+        "components": [
+          {
+            "type": "interaction.cartesian_3dof.standard",
+            "name": "interaction",
+            "config": {
+              "acceleration_mps2": [0, 0, 0]
+            }
+          }
+        ]
+      }
+    }
+  ],
+  "outputs": {
+    "enabled": true,
+    "session_name": "simflow_case"
+  }
+}

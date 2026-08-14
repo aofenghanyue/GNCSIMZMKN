@@ -2,7 +2,7 @@
 
 Oracles provide independent facts used to accept, reject or explain an implementation result. Legacy output can seed evidence capture; final scientific authority comes from analytic results, paper data, independent implementation, convergence or approved engineering reference.
 
-`oracle-manifest.json` starts with the seven preserved runtime claims listed by the target blueprint. Planned entries already declare expected facts and tolerance policy; they remain `planned` until R0 produces executable inputs, expected values and artifact hashes.
+`oracle-manifest.json` indexes the seven runtime claims listed by the target blueprint. Each entry advances independently as R0 adds executable inputs, expected values, artifact identities and owner-approved dispositions.
 
 `ref-minimal-3dof/reference.json` is the executable high-precision analytic oracle for `REF-MINIMAL-3DOF-001`. Its comparator addresses semantic case and state fields directly and remains independent of Legacy output layout.
 
@@ -17,3 +17,5 @@ Oracles provide independent facts used to accept, reject or explain an implement
 `ref-legacy-csv/reference.json` is a capturing Legacy behavior slice. It compares two byte-identical Legacy CSV captures with 50-digit Decimal and an independent C++17 semantic projection, maps required fields by header identity, accepts column permutation, and rejects missing or temporally inconsistent rows. Its `t_k`/published-boundary Preserve recommendation and Legacy encoding Retire recommendation remain pending; target YYZ field tolerances remain pending R0-SCI-003.
 
 `ref-legacy-stop/reference.json` is a capturing Legacy behavior slice. It verifies that a frozen t0 evaluator reads the flushed stopping-state row before returning true, compares two captures with an independent Python/Decimal reference and C++17 timeline probe, and rejects termination-before-record, a missing terminal row and post-stop advancement. Legacy reason text is excluded from semantic comparison; target `Observation` and `RunOutcome` artifacts remain pending.
+
+`ref-legacy-simflow/reference.json` is a capturing Legacy behavior slice. It verifies two real batch captures and two ordinary `--config` replays against an independent semantic materializer and C++17 typed probe. It rejects a missing injected input, hidden SimFlow replay context and a mismatched replay result while excluding Legacy case numbering and directory names from semantic identity. Deterministic target `CaseId`, target case manifest and target mission-source representation remain pending.

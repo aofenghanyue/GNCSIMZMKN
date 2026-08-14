@@ -1,0 +1,130 @@
+{
+  "schema_version": "gnczmkn.legacy-simflow-reference/1",
+  "fixture_id": "REF-LEGACY-SIMFLOW-001",
+  "oracle_id": "ORACLE-SIMFLOW-07",
+  "case_id": "CASE-LEGACY-SIMFLOW-HOT-REPLAY",
+  "input_identity": {
+    "path": "fixtures/ref-legacy-simflow/input.json",
+    "bytes": 7327,
+    "sha256": "b527ee838f0e1aa98a37da2198c2d052230a09f3c9552ace13b041769e302d2d"
+  },
+  "reference_method": {
+    "implementation": "CPython standard library JSON, CSV and Decimal semantic materializer plus an independent C++17 typed mission/replay probe",
+    "derivation": "Select the declared matrix row by source row, inject only the requested numeric inputs into a copy of the base mission, exclude the rewritten output location, and compare the materialized mission and ordinary replay dataset by semantic fields."
+  },
+  "legacy_observation": {
+    "capture_status": "passed_twice",
+    "runtime_tests": [
+      "test_simflow_materializer",
+      "test_simflow_runner"
+    ],
+    "runtime_test_status": "passed",
+    "implementation_fact": "The numeric materializer writes effective_mission.json before execution; both SimFlow and the plain --config entrypoint run that mission successfully and emit the same dataset."
+  },
+  "expected": {
+    "source_case_id": "hot",
+    "selected_source_row": 0,
+    "vehicle_id": "vehicle",
+    "injected_inputs": {
+      "engine.temp_level": "2",
+      "aero.drag_bias": "-0.03"
+    },
+    "command_sequence": [
+      {
+        "mode": "--simflow",
+        "input_role": "generated-simflow",
+        "exit_code": 0
+      },
+      {
+        "mode": "--config",
+        "input_role": "effective-mission",
+        "exit_code": 0
+      }
+    ],
+    "semantic_dataset_fields": [
+      "sample_time_s",
+      "altitude_m",
+      "vertical_velocity_mps",
+      "mass_kg"
+    ],
+    "semantic_dataset_rows": [
+      {
+        "sample_time_s": "0",
+        "altitude_m": "1000",
+        "vertical_velocity_mps": "0",
+        "mass_kg": "100"
+      }
+    ],
+    "equivalence": {
+      "effective_mission_json_format": "ignored after JSON parsing",
+      "dataset_column_order": "ignored after required semantic field mapping",
+      "legacy_case_index_and_directory": "ignored",
+      "simflow_and_ordinary_replay": "same semantic mission and dataset"
+    },
+    "target_mapping": {
+      "effective_mission": "future ordinary MissionSource/compile input; target representation remains pending",
+      "deterministic_case_id": "pending target contract and excluded from this Legacy identity",
+      "case_manifest": "pending target artifact; Legacy absence is not preserved"
+    }
+  },
+  "tolerances": {
+    "mission_structure_and_input_identity": "exact after output-location exclusion",
+    "command_mode_order_and_exit_code": "exact",
+    "dataset_row_count_and_order": "exact",
+    "legacy_seed_scalar_absolute": "1e-12"
+  },
+  "failure_cases": [
+    {
+      "id": "FAIL-SIMFLOW-MISSING-INJECTED-INPUT",
+      "mutation": "Remove aero.drag_bias from the effective mission",
+      "expected_status": "rejected"
+    },
+    {
+      "id": "FAIL-SIMFLOW-HIDDEN-REPLAY-CONTEXT",
+      "mutation": "Replace the ordinary --config replay with another --simflow invocation",
+      "expected_status": "rejected"
+    },
+    {
+      "id": "FAIL-SIMFLOW-REPLAY-RESULT-MISMATCH",
+      "mutation": "Change the ordinary replay altitude while leaving the SimFlow dataset unchanged",
+      "expected_status": "rejected"
+    }
+  ],
+  "equivalence_cases": [
+    {
+      "id": "PASS-SIMFLOW-LEGACY-CASE-DIRECTORY-RENAMED",
+      "mutation": "Change case_000001 and its numeric index while preserving source case, effective mission and replay result",
+      "expected_status": "accepted"
+    }
+  ],
+  "disposition_decision": {
+    "status": "needs_owner_decision",
+    "owner_role": "validation_lead",
+    "facts": [
+      {
+        "fact_id": "FACT-SIMFLOW-MATERIALIZATION-BOUNDARY",
+        "recommended_disposition": "Preserve",
+        "difference_reason": "DeclaredModelChoice",
+        "target_mapping": "Workflow materializes a self-contained effective mission before single-case runtime execution"
+      },
+      {
+        "fact_id": "FACT-SIMFLOW-ORDINARY-REPLAY",
+        "recommended_disposition": "Preserve",
+        "difference_reason": "DeclaredModelChoice",
+        "target_mapping": "Each materialized case uses the ordinary compile/run path without hidden SimFlow runtime state"
+      },
+      {
+        "fact_id": "FACT-SIMFLOW-LEGACY-IDENTITY",
+        "recommended_disposition": "Retire",
+        "difference_reason": "AccidentalStructure",
+        "target_mapping": "case_000001, numeric index, directory pattern and absence of a case manifest"
+      },
+      {
+        "fact_id": "FACT-SIMFLOW-LEGACY-SURFACE",
+        "recommended_disposition": "Retire",
+        "difference_reason": "AccidentalStructure",
+        "target_mapping": "SimFlowRunner, numeric materializer class, CLI spelling and old Mission JSON shape"
+      }
+    ]
+  }
+}

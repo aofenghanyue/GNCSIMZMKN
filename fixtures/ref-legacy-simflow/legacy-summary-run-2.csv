@@ -1,0 +1,2 @@
+case_index,case_id,case_directory,status,exit_code,message
+1,hot,build/legacy-simflow-capture-v2/runtime-output/case_000001,succeeded,0,

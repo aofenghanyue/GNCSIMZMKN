@@ -1,0 +1,102 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-LEGACY-SIMFLOW-001",
+  "status": "capturing",
+  "purpose": "Make Legacy pre-run case materialization and ordinary single-mission replay executable without preserving Legacy case numbering, directory names or runtime APIs.",
+  "authority": "validation_lead",
+  "provenance": {
+    "source_refs": [
+      "docs/adr/0001-greenfield-and-legacy-reference.md",
+      "design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md#10-旧行为-oracle-怎样保护迁移",
+      "reference/legacy/source-manifest.json",
+      "reference/legacy/reproduction/r0-leg-001-20260810-07/evidence-index.json"
+    ],
+    "notes": "The frozen gnc_sim from the clean R0-LEG-001 build ran --simflow and then plain --config twice. The main build consumes only pinned missions, datasets, summaries and traces plus independent Python/C++ references; it has no Legacy include, link or runtime dependency."
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-SIMFLOW-MATERIALIZATION-BOUNDARY",
+      "claim": "Matrix row hot injects engine.temp_level=2 and aero.drag_bias=-0.03 into a self-contained effective mission before runtime execution.",
+      "tolerance_policy": "Source row, case label, vehicle, field identities and numeric values are exact after JSON parsing and output-location exclusion.",
+      "evidence_refs": [
+        "fixtures/ref-legacy-simflow/base-mission.json",
+        "fixtures/ref-legacy-simflow/cases.csv",
+        "fixtures/ref-legacy-simflow/legacy-effective-run-1.json",
+        "fixtures/ref-legacy-simflow/legacy-effective-run-2.json",
+        "oracles/ref-legacy-simflow/reference.json",
+        "tests/legacy_simflow.cpp",
+        "tools/legacy_simflow_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-SIMFLOW-ORDINARY-REPLAY",
+      "claim": "The materialized hot mission succeeds through plain gnc_sim --config and produces the same semantic dataset as its SimFlow execution.",
+      "tolerance_policy": "Command mode/order and exit code are exact; dataset row identity is exact and frozen scalar values use absolute tolerance 1e-12 after header mapping.",
+      "evidence_refs": [
+        "fixtures/ref-legacy-simflow/legacy-simflow-run-1.csv",
+        "fixtures/ref-legacy-simflow/legacy-replay-run-1.csv",
+        "fixtures/ref-legacy-simflow/legacy-simflow-run-2.csv",
+        "fixtures/ref-legacy-simflow/legacy-replay-run-2.csv",
+        "fixtures/ref-legacy-simflow/legacy-trace-run-1.json",
+        "fixtures/ref-legacy-simflow/legacy-trace-run-2.json",
+        "tools/legacy_simflow_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-SIMFLOW-IDENTITY-INDEPENDENCE",
+      "claim": "Legacy case index and directory name do not participate in effective-mission or replay semantic equality.",
+      "tolerance_policy": "Source case and mission/dataset semantics remain exact; Legacy directory, numeric index and JSON/CSV encoding order are excluded.",
+      "evidence_refs": [
+        "oracles/ref-legacy-simflow/reference.json",
+        "tests/legacy_simflow.cpp",
+        "tools/legacy_simflow_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-SIMFLOW-PROVENANCE",
+      "claim": "The capture is tied to the frozen archive, CLI, SimFlow runner/materializer sources, passing runtime tests, environment, harness and raw artifact identities.",
+      "tolerance_policy": "Paths, byte counts, line-ending reconstruction and SHA-256 values are exact.",
+      "evidence_refs": [
+        "fixtures/ref-legacy-simflow/input.json",
+        "fixtures/ref-legacy-simflow/legacy_capture.py",
+        "reference/legacy/reproduction/r0-leg-001-20260810-07/logs/legacy-ctest-all.log"
+      ]
+    }
+  ],
+  "required_artifacts": [
+    "fixtures/ref-legacy-simflow/README.md",
+    "fixtures/ref-legacy-simflow/fixture-manifest.json",
+    "fixtures/ref-legacy-simflow/input.json",
+    "fixtures/ref-legacy-simflow/base-mission.json",
+    "fixtures/ref-legacy-simflow/cases.csv",
+    "fixtures/ref-legacy-simflow/simflow-template.json",
+    "fixtures/ref-legacy-simflow/legacy_capture.py",
+    "fixtures/ref-legacy-simflow/legacy-effective-run-1.json",
+    "fixtures/ref-legacy-simflow/legacy-effective-run-2.json",
+    "fixtures/ref-legacy-simflow/legacy-simflow-run-1.csv",
+    "fixtures/ref-legacy-simflow/legacy-replay-run-1.csv",
+    "fixtures/ref-legacy-simflow/legacy-simflow-run-2.csv",
+    "fixtures/ref-legacy-simflow/legacy-replay-run-2.csv",
+    "fixtures/ref-legacy-simflow/legacy-summary-run-1.csv",
+    "fixtures/ref-legacy-simflow/legacy-summary-run-2.csv",
+    "fixtures/ref-legacy-simflow/legacy-trace-run-1.json",
+    "fixtures/ref-legacy-simflow/legacy-trace-run-2.json",
+    "oracles/ref-legacy-simflow/reference.json",
+    "tests/legacy_simflow.cpp",
+    "tools/legacy_simflow_reference.py",
+    "CMakeLists.txt"
+  ],
+  "acceptance": [
+    "Verifies frozen source, environment, harness, runtime-test and raw capture identities",
+    "Each SimFlow run starts from a fresh output root and plain replay recreates an absent dataset path",
+    "Two effective missions, two summaries and all four SimFlow/replay datasets are byte-identical",
+    "Independent Python materialization and C++17 typed mission probes agree on the hot inputs",
+    "Plain --config replay succeeds twice and matches SimFlow output by semantic dataset fields",
+    "Missing injected input, hidden SimFlow replay context and replay-result mismatch are rejected",
+    "Legacy case index/directory changes are accepted after semantic normalization",
+    "Preserve and Retire recommendations remain pending until the repository owner accepts the disposition choice"
+  ],
+  "open_tasks": [
+    "R0-LEG-002"
+  ]
+}

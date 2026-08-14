@@ -1,0 +1,81 @@
+{
+  "environment": {
+  },
+  "outputs": {
+    "directory": "build/legacy-simflow-capture-v2/runtime-output/case_000001",
+    "enabled": true,
+    "session_name": "simflow_case"
+  },
+  "simulation": {
+    "dt": 1,
+    "duration": 0
+  },
+  "vehicles": [{
+    "common": [{
+      "config": {
+      },
+      "name": "aero_assets",
+      "type": "vehicle.common.aero_assets_3dof.zero"
+    }],
+    "form": {
+      "components": [{
+        "config": {
+          "initial_position": [0, 0, 1000],
+          "initial_velocity": [0, 0, 0]
+        },
+        "name": "dynamics",
+        "type": "form.cartesian_3dof.point_mass"
+      }]
+    },
+    "id": "vehicle",
+    "input": [],
+    "interaction": {
+      "components": [{
+        "config": {
+          "acceleration_mps2": [0, 0, 0]
+        },
+        "name": "interaction",
+        "type": "interaction.cartesian_3dof.standard"
+      }]
+    },
+    "output": [{
+      "config": {
+        "mass_kg": 100
+      },
+      "name": "mass",
+      "type": "vehicle.output.mass_3dof.constant"
+    }, {
+      "config": {
+      },
+      "name": "propulsion",
+      "type": "vehicle.output.propulsion_3dof.zero"
+    }, {
+      "config": {
+      },
+      "name": "actuator",
+      "type": "vehicle.output.actuator_3dof.ideal"
+    }, {
+      "config": {
+      },
+      "name": "aero",
+      "type": "vehicle.output.aerodynamics_3dof.zero"
+    }],
+    "perturbation": {
+      "config": {
+        "enum_maps": {
+          "engine.temp_level": {
+            "0": "cold.txt",
+            "2": "hot.txt"
+          }
+        },
+        "inputs": {
+          "aero.drag_bias": -0.03,
+          "engine.temp_level": 2
+        }
+      },
+      "name": "perturbation",
+      "type": "perturbation.static"
+    },
+    "process": []
+  }]
+}

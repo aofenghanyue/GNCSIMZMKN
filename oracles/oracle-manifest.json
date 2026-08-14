@@ -142,13 +142,40 @@
     {
       "id": "ORACLE-SIMFLOW-07",
       "level": "workflow",
-      "status": "planned",
+      "status": "capturing",
       "claim": "Case materialization remains outside single-mission runtime semantics.",
-      "expected_facts": ["Each materialized case replays through the ordinary compile and run path with deterministic identity."],
-      "reference_kind": "effective-mission replay",
-      "tolerance_policy": "semantic input equality and deterministic case identity",
-      "source_refs": ["reference/legacy/source-manifest.json"],
-      "artifact_refs": []
+      "expected_facts": [
+        "The selected hot matrix row injects engine.temp_level=2 and aero.drag_bias=-0.03 into a self-contained effective mission before runtime execution.",
+        "The effective mission succeeds through plain gnc_sim --config twice, recreates an absent dataset path and produces the same semantic dataset as both SimFlow executions.",
+        "Legacy numeric case index and directory name do not participate in effective-mission or replay semantic equality."
+      ],
+      "reference_kind": "raw Legacy CLI capture plus independent semantic materializer and C++17 typed replay probe",
+      "tolerance_policy": "exact source row, field identity, command mode/order, exit and row identity; frozen scalar absolute tolerance 1e-12 after semantic header mapping; target deterministic CaseId remains pending",
+      "source_refs": [
+        "reference/legacy/source-manifest.json",
+        "reference/legacy/reproduction/r0-leg-001-20260810-07/evidence-index.json",
+        "design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md#10-旧行为-oracle-怎样保护迁移"
+      ],
+      "artifact_refs": [
+        "fixtures/ref-legacy-simflow/input.json",
+        "fixtures/ref-legacy-simflow/base-mission.json",
+        "fixtures/ref-legacy-simflow/cases.csv",
+        "fixtures/ref-legacy-simflow/simflow-template.json",
+        "fixtures/ref-legacy-simflow/legacy_capture.py",
+        "fixtures/ref-legacy-simflow/legacy-effective-run-1.json",
+        "fixtures/ref-legacy-simflow/legacy-effective-run-2.json",
+        "fixtures/ref-legacy-simflow/legacy-simflow-run-1.csv",
+        "fixtures/ref-legacy-simflow/legacy-simflow-run-2.csv",
+        "fixtures/ref-legacy-simflow/legacy-replay-run-1.csv",
+        "fixtures/ref-legacy-simflow/legacy-replay-run-2.csv",
+        "fixtures/ref-legacy-simflow/legacy-summary-run-1.csv",
+        "fixtures/ref-legacy-simflow/legacy-summary-run-2.csv",
+        "fixtures/ref-legacy-simflow/legacy-trace-run-1.json",
+        "fixtures/ref-legacy-simflow/legacy-trace-run-2.json",
+        "oracles/ref-legacy-simflow/reference.json",
+        "tests/legacy_simflow.cpp",
+        "tools/legacy_simflow_reference.py"
+      ]
     }
   ]
 }
