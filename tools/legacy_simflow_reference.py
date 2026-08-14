@@ -84,7 +84,8 @@ def verify_source(case: dict, repo_root: Path) -> int:
 
 
 def verify_capture(case: dict, repo_root: Path) -> tuple[
-        int, list[dict], list[bytes], list[list[dict]], list[dict], list[dict]]:
+        int, list[dict], list[bytes], list[bytes], list[list[dict]],
+        list[dict], list[dict]]:
     capture = case["legacy_capture"]
     require(capture["compiler"] == "w64devkit GCC 16.2.0" and
             "clean R0-LEG-001" in capture["executable_role"],
@@ -154,7 +155,8 @@ def verify_capture(case: dict, repo_root: Path) -> tuple[
                 f"Legacy SimFlow trace {index} rerun identity differs")
         traces.append(trace)
         checks += 4
-    return checks, effective_missions, dataset_raw, datasets, summaries, traces
+    return (checks, effective_missions, effective_raw, dataset_raw,
+            datasets, summaries, traces)
 
 
 def parse_case_source(raw: bytes) -> list[dict]:
@@ -398,8 +400,8 @@ def main() -> int:
 
     expected_mission = materialize_independently(
         base, selected, selected_record["vehicle_id"], requested_inputs)
-    (capture_checks, effective_missions, dataset_raw, datasets,
-     summaries, traces) = verify_capture(case, repo_root)
+    (capture_checks, effective_missions, effective_raw, dataset_raw,
+     datasets, summaries, traces) = verify_capture(case, repo_root)
     checks += capture_checks
     for index, mission in enumerate(effective_missions, start=1):
         checks += validate_mission(
@@ -472,6 +474,7 @@ def main() -> int:
         "PASS-SIMFLOW-INPUT-DECLARATION-REORDERED",
         "PASS-SIMFLOW-CASE-SOURCE-COLUMNS-REORDERED",
         "PASS-SIMFLOW-DATASET-COLUMNS-REORDERED",
+        "PASS-SIMFLOW-EFFECTIVE-MISSION-JSON-REFORMATTED",
     } and all(entry["expected_status"] == "accepted"
               for entry in equivalence_by_id.values()),
             "SimFlow equivalence-case definition differs")
@@ -483,6 +486,14 @@ def main() -> int:
         permute_csv_columns(dataset_raw[0], "SimFlow dataset"))
     require(reordered_dataset == datasets[0],
             "Dataset column order changed replay semantics")
+    reformatted_effective_raw = json.dumps(
+        effective_missions[0], sort_keys=True, indent=1).encode("utf-8")
+    require(reformatted_effective_raw != effective_raw[0],
+            "Effective-mission JSON mutation did not change encoding")
+    reformatted_effective = json.loads(
+        reformatted_effective_raw.decode("utf-8"))
+    validate_mission(reformatted_effective, effective_missions[0],
+                     "Effective-mission JSON-format equivalence")
     reordered_mission = materialize_independently(
         base, selected, selected_record["vehicle_id"],
         list(reversed(requested_inputs)))
@@ -497,7 +508,7 @@ def main() -> int:
                    "Legacy identity equivalence")
     validate_mission(renamed_mission, expected_mission,
                      "Output-directory equivalence")
-    checks += 10
+    checks += 12
 
     first_stdout, probe = run_probe(arguments.probe)
     second_stdout, second_probe = run_probe(arguments.probe)
@@ -557,6 +568,7 @@ def main() -> int:
         "input_declaration_order_equivalent": True,
         "case_source_column_order_equivalent": True,
         "dataset_column_order_equivalent": True,
+        "effective_mission_json_format_equivalent": True,
         "deterministic_target_case_id": "pending",
         "disposition_status": decision["status"],
     }, separators=(",", ":")))

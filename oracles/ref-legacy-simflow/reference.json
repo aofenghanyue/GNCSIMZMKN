@@ -127,6 +127,11 @@
       "id": "PASS-SIMFLOW-DATASET-COLUMNS-REORDERED",
       "mutation": "Reverse every encoded dataset column while preserving header-value identity",
       "expected_status": "accepted"
+    },
+    {
+      "id": "PASS-SIMFLOW-EFFECTIVE-MISSION-JSON-REFORMATTED",
+      "mutation": "Re-encode the effective mission with sorted object members and different whitespace",
+      "expected_status": "accepted"
     }
   ],
   "disposition_decision": {

@@ -15,7 +15,7 @@
 - `legacy_continuous_group_reference.py`：核对冻结 Legacy group/RK4 来源、环境、capture harness 和两份 stage trace，以 50 位 `decimal` 与独立 C++17 joint-state RK4 验证共享候选、组级提交、split closure、membership 失败用例和按 member identity 重排等价性。
 - `legacy_csv_reference.py`：核对冻结 Legacy logger/sink 来源、capture harness 和两份 CSV，以 50 位 `decimal`、fixture-local 语义字段映射与独立 C++17 probe 验证 `t_k` 行、发布态字段、四条编码等价路径和六条直接失败路径；重复未映射表头不会改变语义 dataset。
 - `legacy_stop_reference.py`：核对冻结 Legacy 终止、logger/sink 来源、capture harness、两份 t0 dataset 与事件 trace，以 `decimal` 和独立 C++17 timeline 验证停止状态先记录、同边界终止、record-field 换序等价、五条独立失败路径及 free-text reason 语义无关性。
-- `legacy_simflow_reference.py`：核对冻结 Legacy SimFlow 来源、环境、运行测试、capture harness、两份 effective mission 和四份 dataset，独立完成按字段 identity 的 matrix row 物化与 dataset 映射，并与 C++17 typed probe 交叉验证 requested-input 声明、case-source 列和 dataset 列重排、普通 `--config` 重放、独立全新工作目录、case 目录外输入和五条直接失败路径。
+- `legacy_simflow_reference.py`：核对冻结 Legacy SimFlow 来源、环境、运行测试、capture harness、两份 effective mission 和四份 dataset，独立完成按字段 identity 的 matrix row 物化与 dataset 映射，并与 C++17 typed probe 交叉验证 effective-mission JSON 重编码、requested-input 声明、case-source 列和 dataset 列重排、普通 `--config` 重放、独立全新工作目录、case 目录外输入和五条直接失败路径。
 - `validate-license-provenance.ps1`：校验 Proposed 许可证策略、provenance inventory、Legacy archive 扫描、外部工具身份、故障注入与审计报告。
 - `validate-team-toolchain.ps1`：校验角色双人复核、科学/架构独立性、候选工具链矩阵、preset/CI 固定配置、治理阻塞与故障注入。
 - `extract-legacy-reference.ps1`：校验并解包只读 legacy archive 到忽略目录。
