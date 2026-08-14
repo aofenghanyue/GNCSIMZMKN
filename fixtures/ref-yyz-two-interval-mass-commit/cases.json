@@ -1,0 +1,133 @@
+{
+  "schema_version": "gnczmkn.yyz-two-interval-mass-commit-cases/1",
+  "fixture_id": "REF-YYZ-TWO-INTERVAL-MASS-COMMIT-001",
+  "oracle_id": "ORACLE-YYZ-TWO-INTERVAL-MASS-COMMIT-001",
+  "model_choice": {
+    "status": "accepted",
+    "owner_role": "scientific_authority",
+    "accepted_scope": "Fixture-local composition of constant-geometry scalar-burn MassState evolution with two consecutive FrozenInterval rigid translations and atomic closing-boundary commits.",
+    "temporal_policy": "Interval k integrates with committed mass m_k. Fuel flow produces candidate m_{k+1}, which remains hidden until the closing tick. The rigid and mass candidates commit together, and interval k+1 reads the newly committed rigid state and mass.",
+    "trajectory_policy": "Identity attitude, zero angular rate, zero moment and a held body force aligned with the inertial x axis reduce each interval to exact constant acceleration. The independent reference composes two analytic segments; the C++17 probe uses classical RK4.",
+    "mass_policy": "candidate_mass = committed_mass - nonnegative_rate * interval_duration; CoM and every inertia entry remain exactly constant under MODEL-YYZ-SCALAR-BURN-CONSTANT-GEOMETRY-001.",
+    "excluded": [
+      "aero, environment and propulsion query recomputation inside either interval",
+      "fuel geometry, dry mass, depletion events, CoM or inertia motion",
+      "configuration changes, canonical mission or vehicle assets",
+      "public runtime, transaction or product contracts and R1-R8 capability"
+    ]
+  },
+  "model": {
+    "model_id": "MODEL-YYZ-TWO-INTERVAL-MASS-COMMIT-001",
+    "mass_evolution_model_id": "MODEL-YYZ-SCALAR-BURN-CONSTANT-GEOMETRY-001",
+    "mass_state_id": "mass.fixture.yyz.vehicle@1",
+    "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+    "body_frame_id": "frame.fixture.yyz.body@1",
+    "clock_domain": "clock.fixture.yyz.simulation@1",
+    "configuration_revision": 11,
+    "closure_strategy": "FrozenInterval",
+    "commit_policy": "atomic-rigid-and-mass",
+    "integration": "classical fixed-step RK4 with q_I_B normalization",
+    "validity_domain": [
+      "all identities, ticks and configuration revisions agree",
+      "exactly two contiguous one-tick half-open intervals are supplied",
+      "base_dt_s is positive and all physical inputs are finite",
+      "current and candidate mass are strictly positive and fuel-consumption rates are nonnegative",
+      "q_I_B is identity up to sign, angular rate and held moment are zero",
+      "CoM is finite and inertia is symmetric positive definite",
+      "the terminal tick equals the second closing tick"
+    ]
+  },
+  "tolerances": {
+    "formula_absolute": 2e-12,
+    "formula_relative": 2e-12,
+    "position_absolute_m": 2e-12,
+    "velocity_absolute_mps": 2e-12,
+    "stored_decimal_absolute": "1e-68"
+  },
+  "cases": [
+    {
+      "id": "CASE-YYZ-TWO-INTERVAL-MASS-COMMIT-TRAJECTORY",
+      "base_dt_s": 0.1,
+      "initial_state": {
+        "sample_tick": 0,
+        "position_I_m": [0.0, 0.0, 0.0],
+        "velocity_I_mps": [10.0, 0.0, 0.0],
+        "q_I_B_wxyz": [1.0, 0.0, 0.0, 0.0],
+        "omega_BI_B_radps": [0.0, 0.0, 0.0]
+      },
+      "committed_mass_state": {
+        "sample_tick": 0,
+        "valid_from_tick": 0,
+        "valid_until_tick": 1,
+        "mass_state_id": "mass.fixture.yyz.vehicle@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 11,
+        "mass_kg": 120.0,
+        "r_body_origin_to_CoM_B_m": [0.2, -0.1, 0.05],
+        "inertia_about_CoM_B_kgm2_row_major": [12.0, 1.0, 0.5, 1.0, 20.0, 2.0, 0.5, 2.0, 30.0]
+      },
+      "intervals": [
+        {
+          "sample_tick": 0,
+          "valid_from_tick": 0,
+          "valid_until_tick": 1,
+          "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+          "body_frame_id": "frame.fixture.yyz.body@1",
+          "clock_domain": "clock.fixture.yyz.simulation@1",
+          "mass_state_id": "mass.fixture.yyz.vehicle@1",
+          "configuration_revision": 11,
+          "force_total_B_N": [240.0, 0.0, 0.0],
+          "moment_total_about_CoM_B_Nm": [0.0, 0.0, 0.0],
+          "gravity_I_mps2": [0.0, 0.0, 0.0],
+          "fuel_consumption_rate_kgps": 0.5
+        },
+        {
+          "sample_tick": 1,
+          "valid_from_tick": 1,
+          "valid_until_tick": 2,
+          "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+          "body_frame_id": "frame.fixture.yyz.body@1",
+          "clock_domain": "clock.fixture.yyz.simulation@1",
+          "mass_state_id": "mass.fixture.yyz.vehicle@1",
+          "configuration_revision": 11,
+          "force_total_B_N": [240.0, 0.0, 0.0],
+          "moment_total_about_CoM_B_Nm": [0.0, 0.0, 0.0],
+          "gravity_I_mps2": [0.0, 0.0, 0.0],
+          "fuel_consumption_rate_kgps": 0.5
+        }
+      ],
+      "terminal": {
+        "kind": "duration_exact_grid",
+        "expected_tick": 2
+      }
+    }
+  ],
+  "equivalence_cases": [
+    {
+      "id": "EQUIV-YYZ-TWO-INTERVAL-MASS-COMMIT-RK4-SUBSTEPS",
+      "operation": "integrate each frozen interval with one full RK4 step and with two half RK4 steps",
+      "expected": "both paths reach the same committed tick-2 rigid and mass state"
+    }
+  ],
+  "invalid_input_cases": [
+    {"id": "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-STATE-ID", "mutation": "change the first interval mass_state_id", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-FRAME", "mutation": "change the second interval body frame", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-CLOCK", "mutation": "change the committed mass clock", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-REVISION", "mutation": "change the second interval configuration revision", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-SAMPLE-TICK", "mutation": "change the first interval sample tick", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-INTERVAL-SEQUENCE", "mutation": "start the second interval after a gap", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-NONPOSITIVE-DT", "mutation": "set base_dt_s to zero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-NONPOSITIVE-MASS", "mutation": "set committed mass to zero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-NEGATIVE-FLOW", "mutation": "set the first fuel-consumption rate negative", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-DEPLETION", "mutation": "consume the full committed mass in the first interval", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-NONZERO-MOMENT", "mutation": "set a nonzero held moment", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-NONZERO-RATE", "mutation": "set a nonzero initial angular rate", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-ZERO-QUATERNION", "mutation": "set q_I_B to zero norm", "expected_status": "input-domain-error"}
+  ],
+  "mutation_cases": [
+    {"id": "MUTATION-YYZ-TWO-INTERVAL-MASS-COMMIT-EARLY-VISIBILITY", "mutation": "integrate interval zero with its pending mass candidate", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-TWO-INTERVAL-MASS-COMMIT-STALE-NEXT-MASS", "mutation": "integrate interval one with the pre-commit mass", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-TWO-INTERVAL-MASS-COMMIT-STALE-RIGID-STATE", "mutation": "commit mass at tick one while reusing the tick-zero rigid state", "expected_status": "oracle-mismatch"}
+  ]
+}

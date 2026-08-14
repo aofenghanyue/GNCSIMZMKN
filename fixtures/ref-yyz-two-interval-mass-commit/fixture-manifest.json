@@ -1,0 +1,67 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-YYZ-TWO-INTERVAL-MASS-COMMIT-001",
+  "status": "executable",
+  "purpose": "Provide an executable two-interval trajectory that proves candidate-only scalar burn, atomic rigid/mass commit and next-boundary committed-mass consumption.",
+  "authority": "scientific_authority",
+  "provenance": {
+    "source_refs": [
+      "docs/adr/0006-si-frame-and-simulation-time-conventions.md",
+      "docs/adr/0007-passive-hamilton-quaternion-convention.md",
+      "design-notes/gnczmkn-architecture-roadmap/14-cycle-dataflow-state-transaction-and-continuous-closure.md#16-6dof-轻量闭环的明确时间语义",
+      "fixtures/ref-yyz-scalar-burn-mass/cases.json",
+      "fixtures/ref-yyz-frozen-interval/cases.json",
+      "fixtures/ref-yyz-6dof-core/cases.json"
+    ],
+    "notes": "The repository owner accepted the recommended fixture-local two-interval composition. Product and Legacy runtime APIs are absent from the executable path."
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-YYZ-TWO-INTERVAL-MASS-COMMIT-VISIBILITY",
+      "claim": "Each interval integrates with its opening committed mass while the scalar-burn result remains candidate-only until the closing tick.",
+      "tolerance_policy": "Tick, visibility and identity relationships are exact; mass formulas use the declared numeric tolerance.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-two-interval-mass-commit/cases.json",
+        "oracles/ref-yyz-two-interval-mass-commit/reference.json",
+        "tests/yyz_two_interval_mass_commit.cpp",
+        "tools/yyz_two_interval_mass_commit_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-YYZ-TWO-INTERVAL-MASS-COMMIT-TRAJECTORY",
+      "claim": "The tick-1 rigid and mass candidates commit together, the second interval reads both committed values, and independent Decimal analytic and C++17 RK4 trajectories agree through tick 2.",
+      "tolerance_policy": "Commit and terminal identities are exact; position and velocity use the declared absolute-plus-relative tolerance.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-two-interval-mass-commit/cases.json",
+        "oracles/ref-yyz-two-interval-mass-commit/reference.json",
+        "tests/yyz_two_interval_mass_commit.cpp",
+        "tools/yyz_two_interval_mass_commit_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-YYZ-TWO-INTERVAL-MASS-COMMIT-FAILURES",
+      "claim": "Invalid identities, interval ordering, mass/flow inputs and analytic-domain values fail directly; early visibility, stale next mass and stale rigid state each diverge from the accepted trajectory.",
+      "tolerance_policy": "Domain rejection identities are exact and every mutation must have a positive physical difference.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-two-interval-mass-commit/cases.json",
+        "oracles/ref-yyz-two-interval-mass-commit/reference.json",
+        "tests/yyz_two_interval_mass_commit.cpp",
+        "tools/yyz_two_interval_mass_commit_reference.py"
+      ]
+    }
+  ],
+  "required_artifacts": [
+    "fixtures/ref-yyz-two-interval-mass-commit/README.md",
+    "fixtures/ref-yyz-two-interval-mass-commit/cases.json",
+    "oracles/ref-yyz-two-interval-mass-commit/reference.json",
+    "tests/yyz_two_interval_mass_commit.cpp",
+    "tools/yyz_two_interval_mass_commit_reference.py",
+    "CMakeLists.txt"
+  ],
+  "acceptance": [
+    "The bundle executes two contiguous FrozenIntervals with candidate-only mass and atomic rigid/mass commits",
+    "The Decimal piecewise-analytic reference and C++17 RK4 probe share no implementation and neither imports product or Legacy code",
+    "Query recomputation, fuel geometry, depletion events, canonical assets and product contracts remain outside this slice"
+  ],
+  "open_tasks": ["R0-SCI-003"]
+}

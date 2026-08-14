@@ -31,6 +31,8 @@ Fixture 是可复制、可校验、带 provenance 的规范实例。每个目录
 
 `ref-yyz-frozen-interval` 已达到 `executable`，把已接受的 uniform environment、air-data、三轴 aero lookup、dimensionalization、propulsion response、当前 MassProperties、Closure 与刚体核心组合在同一 `[0,1)` 区间。80 位 Decimal 常加速度闭式轨迹与独立 C++17 一步 RK4 交叉检查查表权重和系数、tick 1 状态、候选质量延迟可见性、四元数符号等价、十条输入域拒绝和四条跨组件 mutation。canonical aero assets、asset schema/loaders、制导控制、产品终止指标与提交后的质量几何仍在后续范围内。
 
+`ref-yyz-two-interval-mass-commit` 已达到 `executable`，把 constant-geometry scalar burn 与两个连续 `FrozenInterval` 组合为 candidate → atomic commit → next consumer 轨迹。区间 0 使用 `120 kg` 并在 tick 1 提交 `119.95 kg` 与刚体候选，区间 1 读取两项新 committed state 并在 tick 2 提交 `119.90 kg`。80 位 Decimal 分段闭式轨迹与独立 C++17 RK4 完成 451 项交叉检查、一步/两子步等价、十三条输入拒绝和三条时间 mutation。query 重算、fuel geometry、depletion event、canonical assets 与产品 contract 仍在后续范围内。
+
 `ref-legacy-sync-commit` 已达到 `executable`，将 `ORACLE-YYZ-SYNC-03` 的冻结来源、独立 Decimal 结果、C++17 candidate/commit journal 和 early-commit 失败用例连成切片；已接受的处置保留 candidate barrier 与 committed-`t_k` 读取，并退出 Legacy 实现形状。
 
 `ref-legacy-publish` 已达到 `executable`，交叉验证 publish 前后状态恒等、truth 边界时间、解析轨迹与 publish-time mutation 失败；已接受的处置保留只读发布与 `t_k` 边界刷新，并退出 Legacy 发布接口和存储形状。

@@ -1,0 +1,523 @@
+{
+  "schema_version": "gnczmkn.yyz-two-interval-mass-commit-reference/1",
+  "fixture_id": "REF-YYZ-TWO-INTERVAL-MASS-COMMIT-001",
+  "oracle_id": "ORACLE-YYZ-TWO-INTERVAL-MASS-COMMIT-001",
+  "model_id": "MODEL-YYZ-TWO-INTERVAL-MASS-COMMIT-001",
+  "precision": {
+    "implementation": "Python standard-library Decimal piecewise analytic trajectory",
+    "decimal_digits": 80
+  },
+  "input_identity": {
+    "path": "fixtures/ref-yyz-two-interval-mass-commit/cases.json",
+    "bytes": 7933,
+    "sha256": "b4c2e352fe0ca2fc1eae99d5afaf81e73d17dd4e063fe1b1c77361c41325c1e6"
+  },
+  "cases": {
+    "CASE-YYZ-TWO-INTERVAL-MASS-COMMIT-TRAJECTORY": {
+      "id": "CASE-YYZ-TWO-INTERVAL-MASS-COMMIT-TRAJECTORY",
+      "model_id": "MODEL-YYZ-TWO-INTERVAL-MASS-COMMIT-001",
+      "mass_evolution_model_id": "MODEL-YYZ-SCALAR-BURN-CONSTANT-GEOMETRY-001",
+      "base_dt_s": "0.1",
+      "intervals": [
+        {
+          "sample_tick": 0,
+          "valid_from_tick": 0,
+          "valid_until_tick": 1,
+          "current_committed_mass_kg": "120",
+          "integration_mass_kg": "120",
+          "fuel_consumption_rate_kgps": "0.5",
+          "consumed_mass_kg": "0.05",
+          "pending_mass_candidate_kg": "119.95",
+          "pending_visibility_before_commit": "candidate-only",
+          "held_force_total_B_N": [
+            "240",
+            "0",
+            "0"
+          ],
+          "held_moment_total_about_CoM_B_Nm": [
+            "0",
+            "0",
+            "0"
+          ],
+          "gravity_I_mps2": [
+            "0",
+            "0",
+            "0"
+          ],
+          "acceleration_I_mps2": [
+            "2",
+            "0",
+            "0"
+          ],
+          "initial_rigid_state": {
+            "position_I_m": [
+              "0",
+              "0",
+              "0"
+            ],
+            "velocity_I_mps": [
+              "10",
+              "0",
+              "0"
+            ],
+            "q_I_B_wxyz": [
+              "1",
+              "0",
+              "0",
+              "0"
+            ],
+            "omega_BI_B_radps": [
+              "0",
+              "0",
+              "0"
+            ]
+          },
+          "rigid_candidate": {
+            "position_I_m": [
+              "1.01",
+              "0",
+              "0"
+            ],
+            "velocity_I_mps": [
+              "10.2",
+              "0",
+              "0"
+            ],
+            "q_I_B_wxyz": [
+              "1",
+              "0",
+              "0",
+              "0"
+            ],
+            "omega_BI_B_radps": [
+              "0",
+              "0",
+              "0"
+            ]
+          },
+          "closing_commit": {
+            "tick": 1,
+            "kind": "atomic-rigid-and-mass",
+            "mass_kg": "119.95",
+            "r_body_origin_to_CoM_B_m": [
+              "0.2",
+              "-0.1",
+              "0.05"
+            ],
+            "inertia_about_CoM_B_kgm2_row_major": [
+              "12",
+              "1",
+              "0.5",
+              "1",
+              "20",
+              "2",
+              "0.5",
+              "2",
+              "30"
+            ],
+            "rigid_state": {
+              "position_I_m": [
+                "1.01",
+                "0",
+                "0"
+              ],
+              "velocity_I_mps": [
+                "10.2",
+                "0",
+                "0"
+              ],
+              "q_I_B_wxyz": [
+                "1",
+                "0",
+                "0",
+                "0"
+              ],
+              "omega_BI_B_radps": [
+                "0",
+                "0",
+                "0"
+              ]
+            }
+          }
+        },
+        {
+          "sample_tick": 1,
+          "valid_from_tick": 1,
+          "valid_until_tick": 2,
+          "current_committed_mass_kg": "119.95",
+          "integration_mass_kg": "119.95",
+          "fuel_consumption_rate_kgps": "0.5",
+          "consumed_mass_kg": "0.05",
+          "pending_mass_candidate_kg": "119.9",
+          "pending_visibility_before_commit": "candidate-only",
+          "held_force_total_B_N": [
+            "240",
+            "0",
+            "0"
+          ],
+          "held_moment_total_about_CoM_B_Nm": [
+            "0",
+            "0",
+            "0"
+          ],
+          "gravity_I_mps2": [
+            "0",
+            "0",
+            "0"
+          ],
+          "acceleration_I_mps2": [
+            "2.0008336807002917882451021258857857440600250104210087536473530637765735723218007",
+            "0",
+            "0"
+          ],
+          "initial_rigid_state": {
+            "position_I_m": [
+              "1.01",
+              "0",
+              "0"
+            ],
+            "velocity_I_mps": [
+              "10.2",
+              "0",
+              "0"
+            ],
+            "q_I_B_wxyz": [
+              "1",
+              "0",
+              "0",
+              "0"
+            ],
+            "omega_BI_B_radps": [
+              "0",
+              "0",
+              "0"
+            ]
+          },
+          "rigid_candidate": {
+            "position_I_m": [
+              "2.040004168403501458941225510629428928720300125052105043768236765318882867861609",
+              "0",
+              "0"
+            ],
+            "velocity_I_mps": [
+              "10.40008336807002917882451021258857857440600250104210087536473530637765735723218",
+              "0",
+              "0"
+            ],
+            "q_I_B_wxyz": [
+              "1",
+              "0",
+              "0",
+              "0"
+            ],
+            "omega_BI_B_radps": [
+              "0",
+              "0",
+              "0"
+            ]
+          },
+          "closing_commit": {
+            "tick": 2,
+            "kind": "atomic-rigid-and-mass",
+            "mass_kg": "119.9",
+            "r_body_origin_to_CoM_B_m": [
+              "0.2",
+              "-0.1",
+              "0.05"
+            ],
+            "inertia_about_CoM_B_kgm2_row_major": [
+              "12",
+              "1",
+              "0.5",
+              "1",
+              "20",
+              "2",
+              "0.5",
+              "2",
+              "30"
+            ],
+            "rigid_state": {
+              "position_I_m": [
+                "2.040004168403501458941225510629428928720300125052105043768236765318882867861609",
+                "0",
+                "0"
+              ],
+              "velocity_I_mps": [
+                "10.40008336807002917882451021258857857440600250104210087536473530637765735723218",
+                "0",
+                "0"
+              ],
+              "q_I_B_wxyz": [
+                "1",
+                "0",
+                "0",
+                "0"
+              ],
+              "omega_BI_B_radps": [
+                "0",
+                "0",
+                "0"
+              ]
+            }
+          }
+        }
+      ],
+      "terminal": {
+        "tick": 2,
+        "time_s": "0.2",
+        "termination_kind": "duration_exact_grid",
+        "committed_mass_kg": "119.9",
+        "r_body_origin_to_CoM_B_m": [
+          "0.2",
+          "-0.1",
+          "0.05"
+        ],
+        "inertia_about_CoM_B_kgm2_row_major": [
+          "12",
+          "1",
+          "0.5",
+          "1",
+          "20",
+          "2",
+          "0.5",
+          "2",
+          "30"
+        ],
+        "rigid_state": {
+          "position_I_m": [
+            "2.040004168403501458941225510629428928720300125052105043768236765318882867861609",
+            "0",
+            "0"
+          ],
+          "velocity_I_mps": [
+            "10.40008336807002917882451021258857857440600250104210087536473530637765735723218",
+            "0",
+            "0"
+          ],
+          "q_I_B_wxyz": [
+            "1",
+            "0",
+            "0",
+            "0"
+          ],
+          "omega_BI_B_radps": [
+            "0",
+            "0",
+            "0"
+          ]
+        }
+      }
+    }
+  },
+  "equivalence_results": [
+    {
+      "id": "EQUIV-YYZ-TWO-INTERVAL-MASS-COMMIT-RK4-SUBSTEPS",
+      "status": "passed",
+      "full_step_terminal_rigid_state": {
+        "position_I_m": [
+          "2.040004168403501458941225510629428928720300125052105043768236765318882867861609",
+          "0",
+          "0"
+        ],
+        "velocity_I_mps": [
+          "10.40008336807002917882451021258857857440600250104210087536473530637765735723218",
+          "0",
+          "0"
+        ],
+        "q_I_B_wxyz": [
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "omega_BI_B_radps": [
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      "two_substep_terminal_rigid_state": {
+        "position_I_m": [
+          "2.0400041684035014589412255106294289287203001250521050437682367653188828678616091",
+          "0",
+          "0"
+        ],
+        "velocity_I_mps": [
+          "10.40008336807002917882451021258857857440600250104210087536473530637765735723218",
+          "0",
+          "0"
+        ],
+        "q_I_B_wxyz": [
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "omega_BI_B_radps": [
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      "full_step_terminal_mass_kg": "119.9",
+      "two_substep_terminal_mass_kg": "119.9",
+      "max_abs_physical_difference": "0.0000000000000000000000000000000000000000000000000000000000000000000000000000001"
+    }
+  ],
+  "invalid_input_rejections": [
+    "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-STATE-ID",
+    "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-FRAME",
+    "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-CLOCK",
+    "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-REVISION",
+    "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-SAMPLE-TICK",
+    "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-INTERVAL-SEQUENCE",
+    "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-NONPOSITIVE-DT",
+    "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-NONPOSITIVE-MASS",
+    "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-NEGATIVE-FLOW",
+    "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-DEPLETION",
+    "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-NONZERO-MOMENT",
+    "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-NONZERO-RATE",
+    "INVALID-YYZ-TWO-INTERVAL-MASS-COMMIT-ZERO-QUATERNION"
+  ],
+  "mutation_results": [
+    {
+      "id": "MUTATION-YYZ-TWO-INTERVAL-MASS-COMMIT-EARLY-VISIBILITY",
+      "status": "rejected",
+      "observed_interval0_integration_mass_kg": "119.95",
+      "observed_tick1_rigid_state": {
+        "position_I_m": [
+          "1.010004168403501458941225510629428928720300125052105043768236765318882867861609",
+          "0",
+          "0"
+        ],
+        "velocity_I_mps": [
+          "10.20008336807002917882451021258857857440600250104210087536473530637765735723218",
+          "0",
+          "0"
+        ],
+        "q_I_B_wxyz": [
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "omega_BI_B_radps": [
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      "observed_terminal_rigid_state": {
+        "position_I_m": [
+          "2.040016673614005835764902042517715714881200500208420175072947061275531471446436",
+          "0",
+          "0"
+        ],
+        "velocity_I_mps": [
+          "10.40016673614005835764902042517715714881200500208420175072947061275531471446436",
+          "0",
+          "0"
+        ],
+        "q_I_B_wxyz": [
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "omega_BI_B_radps": [
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      "max_abs_physical_difference": "0.05"
+    },
+    {
+      "id": "MUTATION-YYZ-TWO-INTERVAL-MASS-COMMIT-STALE-NEXT-MASS",
+      "status": "rejected",
+      "observed_interval1_committed_mass_kg": "119.95",
+      "observed_interval1_integration_mass_kg": "120",
+      "observed_interval1_acceleration_I_mps2": [
+        "2",
+        "0",
+        "0"
+      ],
+      "observed_terminal_rigid_state": {
+        "position_I_m": [
+          "2.04",
+          "0",
+          "0"
+        ],
+        "velocity_I_mps": [
+          "10.4",
+          "0",
+          "0"
+        ],
+        "q_I_B_wxyz": [
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "omega_BI_B_radps": [
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      "max_abs_physical_difference": "0.05"
+    },
+    {
+      "id": "MUTATION-YYZ-TWO-INTERVAL-MASS-COMMIT-STALE-RIGID-STATE",
+      "status": "rejected",
+      "observed_interval1_initial_rigid_state": {
+        "position_I_m": [
+          "0",
+          "0",
+          "0"
+        ],
+        "velocity_I_mps": [
+          "10",
+          "0",
+          "0"
+        ],
+        "q_I_B_wxyz": [
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "omega_BI_B_radps": [
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      "observed_interval1_committed_mass_kg": "119.95",
+      "observed_terminal_rigid_state": {
+        "position_I_m": [
+          "1.010004168403501458941225510629428928720300125052105043768236765318882867861609",
+          "0",
+          "0"
+        ],
+        "velocity_I_mps": [
+          "10.20008336807002917882451021258857857440600250104210087536473530637765735723218",
+          "0",
+          "0"
+        ],
+        "q_I_B_wxyz": [
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "omega_BI_B_radps": [
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      "max_abs_physical_difference": "1.03"
+    }
+  ]
+}
