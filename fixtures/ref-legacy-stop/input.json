@@ -1,0 +1,127 @@
+{
+  "schema_version": "gnczmkn.legacy-stop-input/1",
+  "fixture_id": "REF-LEGACY-STOP-001",
+  "oracle_id": "ORACLE-YYZ-STOP-06",
+  "case_id": "CASE-LEGACY-STOP-AT-T0",
+  "run": {
+    "initial_time_s": "0",
+    "step_s": "1",
+    "duration_s": "2",
+    "record_initial_state": true,
+    "flush_every_step": true
+  },
+  "initial_state": {
+    "altitude_m": "1000",
+    "vertical_velocity_mps": "10"
+  },
+  "termination": {
+    "predicate_id": "altitude-at-or-above-1000m",
+    "field": "published_altitude_m",
+    "relation": ">=",
+    "threshold_m": "1000",
+    "evaluation_boundary": "after the t_k dataset row is recorded"
+  },
+  "legacy_source": {
+    "archive": {
+      "path": "reference/legacy/legacy-source.zip",
+      "prefix": "GNCZMKN-legacy-a63621c/",
+      "bytes": 990450,
+      "sha256": "2159a324fd897e4bd508c140a36c9165d744e4e4e61861c5b568201707f988e5"
+    },
+    "entries": [
+      {
+        "path": "framework/include/gnc/core/simulator.hpp",
+        "bytes": 21226,
+        "sha256": "455b22e68fdd4511a85f9a1c20547d022261cdf3397aabfd5f85115764edae78"
+      },
+      {
+        "path": "framework/include/gnc/infrastructure/auto_data_logger.hpp",
+        "bytes": 19869,
+        "sha256": "309b04ad3c9b4037de7c11aaa1c69b48cdd94445d8a6a8ee83606cfeb06173fb"
+      },
+      {
+        "path": "framework/include/gnc/infrastructure/csv_record_sink.hpp",
+        "bytes": 2314,
+        "sha256": "49c4506cef6ff1421f038ce9e0027ceb71dab3fb8b1e57c03035614cebd9a853"
+      },
+      {
+        "path": "framework/include/gnc/interfaces/i_termination_evaluator.hpp",
+        "bytes": 287,
+        "sha256": "c98fb6246e41101b31d3c35abcfa2e10c2abdf44d6ae74e3d4470efaefd0ce6f"
+      },
+      {
+        "path": "tests/test_publish_semantics.cpp",
+        "bytes": 27073,
+        "sha256": "48c5b86ea7a88a3c7702d5abdf89bcebaf8e8dfa331289317453a698f3802e08"
+      }
+    ],
+    "runtime_test": {
+      "id": "test_publish_semantics",
+      "evidence_path": "reference/legacy/reproduction/r0-leg-001-20260810-07/logs/legacy-ctest-all.log",
+      "evidence_bytes": 4131,
+      "evidence_sha256": "c9b4140b5c6dfe0917036f12ce0dca07005c6913b68751f2649d728d33899c2d"
+    }
+  },
+  "legacy_capture": {
+    "compiler": "w64devkit GCC 16.2.0",
+    "language_standard": "C++17",
+    "compile_command": "<w64devkit-g++> -std=c++17 -O2 -Wall -Wextra -pedantic legacy_capture.cpp -I<legacy-root> -I<generated-config> -I<legacy-root>/framework/include -isystem <eigen-3.4.0> -o legacy_stop_capture.exe",
+    "run_commands": [
+      "legacy_stop_capture.exe --dataset <capture-root>/legacy-run-1.csv --trace <capture-root>/legacy-trace-1.json --rerun-index 1",
+      "legacy_stop_capture.exe --dataset <capture-root>/legacy-run-2.csv --trace <capture-root>/legacy-trace-2.json --rerun-index 2"
+    ],
+    "working_directory_policy": "Repository root with source, generated-config, dependency and output paths resolved explicitly",
+    "environment_evidence": {
+      "path": "reference/legacy/reproduction/r0-leg-001-20260810-07/environment-manifest.json",
+      "bytes": 5549,
+      "sha256": "be340b26caa99033cf63cb1c993690aec18e9750faaff6658be4dba8b6eb3041"
+    },
+    "harness": {
+      "path": "fixtures/ref-legacy-stop/legacy_capture.cpp",
+      "bytes": 13340,
+      "sha256": "ec94cc1a7daaad3d777a43bd723188e6e438293ea791fd4a7e86258fd8b630a1"
+    },
+    "storage_normalization": "Captured CSV CRLF is stored as LF under repository text policy; reconstructing LF as CRLF must recover the captured byte identity.",
+    "datasets": [
+      {
+        "path": "fixtures/ref-legacy-stop/legacy-run-1.csv",
+        "bytes": 76,
+        "sha256": "4cb3fb225188af048730ecf95d6b3ff36d58ebc75f859ecdff31cc46207ac2f7",
+        "stored_line_endings": "LF",
+        "captured_bytes": 78,
+        "captured_sha256": "d0f9512b70796babbe5374feccb30fff656eae26e0bc8cb5559d8eab363bb53b",
+        "captured_line_endings": "CRLF"
+      },
+      {
+        "path": "fixtures/ref-legacy-stop/legacy-run-2.csv",
+        "bytes": 76,
+        "sha256": "4cb3fb225188af048730ecf95d6b3ff36d58ebc75f859ecdff31cc46207ac2f7",
+        "stored_line_endings": "LF",
+        "captured_bytes": 78,
+        "captured_sha256": "d0f9512b70796babbe5374feccb30fff656eae26e0bc8cb5559d8eab363bb53b",
+        "captured_line_endings": "CRLF"
+      }
+    ],
+    "traces": [
+      {
+        "path": "fixtures/ref-legacy-stop/legacy-trace-1.json",
+        "bytes": 836,
+        "sha256": "856205a3a146ed674028a44afdab443de48e5150842c408bb0909f2581d39dad"
+      },
+      {
+        "path": "fixtures/ref-legacy-stop/legacy-trace-2.json",
+        "bytes": 836,
+        "sha256": "93f6c8e30e694604202cc6919dea3e30d190296d4611544484d9f4e63579d387"
+      }
+    ],
+    "semantic_normalization": {
+      "excluded_top_level_fields": [
+        "rerun_index",
+        "dataset_filename"
+      ],
+      "excluded_event_fields": [
+        "termination_reason_text"
+      ]
+    }
+  }
+}

@@ -1,0 +1,114 @@
+{
+  "schema_version": "gnczmkn.legacy-stop-reference/1",
+  "fixture_id": "REF-LEGACY-STOP-001",
+  "oracle_id": "ORACLE-YYZ-STOP-06",
+  "case_id": "CASE-LEGACY-STOP-AT-T0",
+  "input_identity": {
+    "path": "fixtures/ref-legacy-stop/input.json",
+    "bytes": 4912,
+    "sha256": "ad30da34cd17cda21732076655daf86cc881b16233b41a1c8153b29a1a8aebf1"
+  },
+  "reference_method": {
+    "implementation": "CPython standard library csv, Decimal and normalized event partial order plus an independent C++17 timeline probe",
+    "derivation": "Evaluate the declared altitude predicate at t0, require the recorded stopping row to be visible before termination evaluation, then require the run to complete at the same boundary without another observation."
+  },
+  "legacy_observation": {
+    "capture_status": "passed_twice",
+    "runtime_test": "test_publish_semantics",
+    "runtime_test_status": "passed",
+    "source_assertion": "The frozen runtime test requires reason text 'stop at t0', a header plus exactly one t0 data row and row time zero.",
+    "implementation_fact": "Simulator publishes and records each eligible t_k before checking termination; the capture evaluator reads the flushed row before returning true."
+  },
+  "expected": {
+    "event_kinds": [
+      "publish",
+      "record-field-read",
+      "record-field-read",
+      "termination-evaluate",
+      "legacy-run-complete"
+    ],
+    "record_field_ids": [
+      "altitude_m",
+      "vertical_velocity_mps"
+    ],
+    "terminal_dataset": {
+      "row_count": 1,
+      "sample_time_s": "0",
+      "altitude_m": "1000",
+      "vertical_velocity_mps": "10"
+    },
+    "termination": {
+      "predicate_id": "altitude-at-or-above-1000m",
+      "step": 0,
+      "time_s": "0",
+      "predicate_met": true,
+      "recorded_row_visible_before_evaluation_return": true,
+      "final_time_s": "0"
+    },
+    "normalization": {
+      "rerun_index": "excluded",
+      "dataset_filename": "excluded",
+      "termination_reason_text": "ignored as Legacy display text"
+    },
+    "target_mapping": {
+      "terminal_observation": "pending target implementation; must reference the stopping state when implemented",
+      "run_outcome": "pending target implementation; must follow the terminal observation when implemented"
+    }
+  },
+  "tolerances": {
+    "event_identity_and_order": "exact",
+    "event_multiplicity": "exact",
+    "step_and_row_count": "exact",
+    "legacy_seed_time_absolute": "1e-12",
+    "legacy_seed_state_absolute": "1e-12",
+    "termination_reason_text": "not compared"
+  },
+  "failure_cases": [
+    {
+      "id": "FAIL-STOP-TERMINATION-BEFORE-RECORD",
+      "mutation": "Move termination-evaluate before both record-field-read events",
+      "expected_status": "rejected"
+    },
+    {
+      "id": "FAIL-STOP-MISSING-TERMINAL-ROW",
+      "mutation": "Remove the t0 dataset row and mark recorded_row_visible false",
+      "expected_status": "rejected"
+    },
+    {
+      "id": "FAIL-STOP-POST-STOP-ADVANCE",
+      "mutation": "Advance final_time to t1 and append a second dataset row after the satisfied t0 predicate",
+      "expected_status": "rejected"
+    }
+  ],
+  "equivalence_cases": [
+    {
+      "id": "PASS-STOP-REASON-TEXT-CHANGED",
+      "mutation": "Replace the Legacy free-text reason while keeping the semantic timeline unchanged",
+      "expected_status": "accepted"
+    }
+  ],
+  "disposition_decision": {
+    "status": "needs_owner_decision",
+    "owner_role": "validation_lead",
+    "facts": [
+      {
+        "fact_id": "FACT-STOP-RECORDED-STATE-PRECEDES-TERMINAL",
+        "recommended_disposition": "Preserve",
+        "difference_reason": "DeclaredModelChoice",
+        "target_mapping": "A terminal Observation for the stopping state precedes the corresponding RunOutcome"
+      },
+      {
+        "fact_id": "FACT-STOP-LEGACY-REASON-TEXT",
+        "recommended_disposition": "Retire",
+        "difference_reason": "AccidentalStructure",
+        "target_mapping": "Legacy free-text reason is display-only; target termination identity remains a pending typed contract"
+      },
+      {
+        "fact_id": "FACT-STOP-LEGACY-SURFACE",
+        "recommended_disposition": "Retire",
+        "difference_reason": "AccidentalStructure",
+        "target_mapping": "ITerminationEvaluator, evaluator priority/registration order and AutoDataLogger/CSV implementation surface"
+      }
+    ]
+  }
+}

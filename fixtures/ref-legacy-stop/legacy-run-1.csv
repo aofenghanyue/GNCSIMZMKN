@@ -1,0 +1,2 @@
+time,vehicle.state.altitude_m,vehicle.state.vertical_velocity_mps
+0,1000,10

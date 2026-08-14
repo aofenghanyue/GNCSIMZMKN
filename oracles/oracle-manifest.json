@@ -32,7 +32,7 @@
     {
       "id": "ORACLE-YYZ-PHASE-02",
       "level": "mission",
-      "status": "capturing",
+      "status": "executable",
       "claim": "The preserved fixed-step phase order is explicit and observable.",
       "expected_facts": [
         "A due probe in each macro phase runs exactly once in environment, perturbation, input, process, output, interaction and evaluation order.",
@@ -118,13 +118,26 @@
     {
       "id": "ORACLE-YYZ-STOP-06",
       "level": "mission",
-      "status": "planned",
+      "status": "capturing",
       "claim": "A stopping state is observed before the run reaches its terminal outcome.",
-      "expected_facts": ["The terminal observation contains the stopping state and precedes the final RunOutcome."],
-      "reference_kind": "terminal observation and outcome trace",
-      "tolerance_policy": "exact event ordering",
-      "source_refs": ["reference/legacy/source-manifest.json"],
-      "artifact_refs": []
+      "expected_facts": [
+        "The t0 stopping state is recorded and visible before termination evaluation returns true.",
+        "The run completes at the same boundary with one row and no post-stop advance."
+      ],
+      "reference_kind": "raw Legacy dataset and event trace plus independent semantic timeline",
+      "tolerance_policy": "exact event identity/order/multiplicity, step and row count; frozen scalar absolute tolerance 1e-12; free-text reason excluded",
+      "source_refs": ["reference/legacy/source-manifest.json", "design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md#10-旧行为-oracle-怎样保护迁移"],
+      "artifact_refs": [
+        "fixtures/ref-legacy-stop/input.json",
+        "fixtures/ref-legacy-stop/legacy_capture.cpp",
+        "fixtures/ref-legacy-stop/legacy-run-1.csv",
+        "fixtures/ref-legacy-stop/legacy-run-2.csv",
+        "fixtures/ref-legacy-stop/legacy-trace-1.json",
+        "fixtures/ref-legacy-stop/legacy-trace-2.json",
+        "oracles/ref-legacy-stop/reference.json",
+        "tests/legacy_stop.cpp",
+        "tools/legacy_stop_reference.py"
+      ]
     },
     {
       "id": "ORACLE-SIMFLOW-07",

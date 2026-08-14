@@ -14,6 +14,7 @@
 - `legacy_phase_reference.py`：核对冻结 Legacy 来源、环境、capture harness 和两份原始 trace，交叉验证独立 C++17 七阶段调度、双跑确定性、phase swap 与 duplicate 失败用例。
 - `legacy_continuous_group_reference.py`：核对冻结 Legacy group/RK4 来源、环境、capture harness 和两份 stage trace，以 50 位 `decimal` 与独立 C++17 joint-state RK4 验证共享候选、组级提交、split closure 和 membership 失败用例。
 - `legacy_csv_reference.py`：核对冻结 Legacy logger/sink 来源、capture harness 和两份 CSV，以 50 位 `decimal`、fixture-local 语义字段映射与独立 C++17 probe 验证 `t_k` 行、发布态字段、列置换和四条直接失败路径。
+- `legacy_stop_reference.py`：核对冻结 Legacy 终止、logger/sink 来源、capture harness、两份 t0 dataset 与事件 trace，以 `decimal` 和独立 C++17 timeline 验证停止状态先记录、同边界终止、三条错误顺序拒绝及 free-text reason 语义无关性。
 - `validate-license-provenance.ps1`：校验 Proposed 许可证策略、provenance inventory、Legacy archive 扫描、外部工具身份、故障注入与审计报告。
 - `validate-team-toolchain.ps1`：校验角色双人复核、科学/架构独立性、候选工具链矩阵、preset/CI 固定配置、治理阻塞与故障注入。
 - `extract-legacy-reference.ps1`：校验并解包只读 legacy archive 到忽略目录。

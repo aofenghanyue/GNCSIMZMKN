@@ -1,0 +1,77 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-LEGACY-STOP-001",
+  "status": "capturing",
+  "purpose": "Make the frozen Legacy record-before-termination boundary executable while keeping free-text reason and Legacy runtime surfaces outside the preserved fact.",
+  "authority": "validation_lead",
+  "provenance": {
+    "source_refs": [
+      "docs/adr/0001-greenfield-and-legacy-reference.md",
+      "design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md#10-旧行为-oracle-怎样保护迁移",
+      "reference/legacy/source-manifest.json",
+      "reference/legacy/reproduction/r0-leg-001-20260810-07/evidence-index.json"
+    ],
+    "notes": "An external C++17 harness was compiled against a clean frozen extraction with w64devkit GCC 16.2.0 and run twice. During termination evaluation it reads the flushed t0 CSV row; the main build consumes only pinned captures and an independent probe with no Legacy dependency."
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-STOP-RECORDED-STATE-PRECEDES-TERMINAL",
+      "claim": "The t0 stopping state is recorded and visible before termination evaluation returns true, and the run completes at the same boundary.",
+      "tolerance_policy": "Event identity, order, multiplicity, step and row count are exact; the frozen scalar seed uses absolute tolerance 1e-12.",
+      "evidence_refs": [
+        "fixtures/ref-legacy-stop/legacy-run-1.csv",
+        "fixtures/ref-legacy-stop/legacy-run-2.csv",
+        "fixtures/ref-legacy-stop/legacy-trace-1.json",
+        "fixtures/ref-legacy-stop/legacy-trace-2.json",
+        "oracles/ref-legacy-stop/reference.json",
+        "tests/legacy_stop.cpp",
+        "tools/legacy_stop_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-STOP-NO-POST-STOP-ADVANCE",
+      "claim": "A predicate satisfied at t0 yields one t0 row, final time t0 and no later observation.",
+      "tolerance_policy": "Dataset row count and final time are exact at the fixture boundary.",
+      "evidence_refs": [
+        "oracles/ref-legacy-stop/reference.json",
+        "tests/legacy_stop.cpp",
+        "tools/legacy_stop_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-STOP-PROVENANCE",
+      "claim": "The observation is tied to the frozen archive, Simulator, logger, sink, termination interface, runtime test, harness, environment and raw capture identities.",
+      "tolerance_policy": "Paths, byte counts, line-ending reconstruction and SHA-256 values are exact.",
+      "evidence_refs": [
+        "fixtures/ref-legacy-stop/input.json",
+        "fixtures/ref-legacy-stop/legacy_capture.cpp",
+        "reference/legacy/reproduction/r0-leg-001-20260810-07/logs/legacy-ctest-all.log"
+      ]
+    }
+  ],
+  "required_artifacts": [
+    "fixtures/ref-legacy-stop/README.md",
+    "fixtures/ref-legacy-stop/input.json",
+    "fixtures/ref-legacy-stop/legacy_capture.cpp",
+    "fixtures/ref-legacy-stop/legacy-run-1.csv",
+    "fixtures/ref-legacy-stop/legacy-run-2.csv",
+    "fixtures/ref-legacy-stop/legacy-trace-1.json",
+    "fixtures/ref-legacy-stop/legacy-trace-2.json",
+    "oracles/ref-legacy-stop/reference.json",
+    "tests/legacy_stop.cpp",
+    "tools/legacy_stop_reference.py",
+    "CMakeLists.txt"
+  ],
+  "acceptance": [
+    "Verifies frozen source, environment, harness, runtime-test, stored artifacts and reconstructed raw CSV identities",
+    "Two Legacy datasets are byte-identical and two traces normalize to one semantic timeline",
+    "The Legacy evaluator observes the flushed t0 row before returning true",
+    "Independent Decimal/Python and C++17 checks agree on the stopping state, event order and final time",
+    "Termination-before-record, missing terminal row and post-stop advance are rejected",
+    "Changing Legacy free-text reason leaves semantic comparison unchanged",
+    "Preserve and Retire recommendations remain pending until the repository owner accepts the disposition choice"
+  ],
+  "open_tasks": [
+    "R0-LEG-002"
+  ]
+}

@@ -22,4 +22,4 @@ Run the repository checks through CTest:
 ctest --preset dev -R "r0.legacy-phase" --output-on-failure
 ```
 
-The main CMake graph validates the frozen traces and independent probe. Regenerating the raw Legacy traces requires the fixed `R0-LEG-001` extraction environment and the standalone capture harness. The bundle remains `capturing` until the repository owner accepts the recommended Preserve/Retire split.
+The main CMake graph validates the frozen traces and independent probe. Regenerating the raw Legacy traces requires the fixed `R0-LEG-001` extraction environment and the standalone capture harness. The repository owner accepted the Preserve/Retire split, so the bundle is `executable`.

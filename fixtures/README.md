@@ -15,10 +15,12 @@ Fixture 是可复制、可校验、带 provenance 的规范实例。每个目录
 
 `ref-legacy-publish` 已达到 `executable`，交叉验证 publish 前后状态恒等、truth 边界时间、解析轨迹与 publish-time mutation 失败；已接受的处置保留只读发布与 `t_k` 边界刷新，并退出 Legacy 发布接口和存储形状。
 
-`ref-legacy-phase` 处于 `capturing`，包含冻结 Legacy 外部 harness 的两份原始七阶段 trace、无 Legacy 依赖的独立 C++17 调度 probe，以及 phase swap 和 duplicate 失败用例；宏 phase 顺序的处置等待仓库所有者确认。
+`ref-legacy-phase` 已达到 `executable`，包含冻结 Legacy 外部 harness 的两份原始七阶段 trace、无 Legacy 依赖的独立 C++17 调度 probe，以及 phase swap 和 duplicate 失败用例；已接受的处置保留固定宏阶段顺序，并退出 priority、registration/config tie-break 与 Legacy callback 表面。
 
 `ref-legacy-continuous-group` 处于 `capturing`，包含真实 Legacy 四阶段 joint-candidate trace、50 位 Decimal 与独立 C++17 RK4 reference，以及 split closure、未注册 member 和重复 scope ownership 失败用例；共享 closure 的处置等待仓库所有者确认。
 
 `ref-legacy-csv` 处于 `capturing`，包含两份真实 Legacy CSV capture、fixture-local 语义字段映射、50 位 Decimal 与独立 C++17 reference；按表头映射后允许列置换，并拒绝缺失 t0、错位 `t_k`、陈旧发布态和重复必要表头。
+
+`ref-legacy-stop` 处于 `capturing`，包含两份真实 t0 dataset、两份 record/termination trace、独立 Python/Decimal reference 与 C++17 timeline probe；终止判定会在返回 `true` 前读回已 flush 的停止状态，并直接拒绝提前终止、缺失终止行和停止后继续推进。
 
 禁止把蓝图中的演示数值直接升级为 golden。Scientific Authority 需要确认来源、公式和容差。
