@@ -3214,10 +3214,10 @@
                          },
                          {
                              "path":  "tools/modules/R0GovernanceReview.psm1",
-                             "sha256":  "2efedb85d224daa030d4c670cc1f2177cfaab6f8167decc6fb03b2ae028131bf",
+                             "sha256":  "1cbca94cb114496e53a137631cb3caccf18eab802ef6a327f94b16973ed2be3f",
                              "hash_normalization":  "utf8-lf-no-bom",
-                             "stage_object_id":  "bdd66c1303252a7c734067a2d9cedd5a1d87c8d1",
-                             "stage_blob_byte_length":  164319
+                             "stage_object_id":  "ed57809441a02ea9b03d2017095c362cf3e6c5ea",
+                             "stage_blob_byte_length":  164642
                          },
                          {
                              "path":  "tools/modules/R0SpecAcceptance.psm1",
@@ -3256,10 +3256,10 @@
                          },
                          {
                              "path":  "tools/validate-license-provenance.ps1",
-                             "sha256":  "681e30a404983f1dce3de2b448e513921e475d7d2a53c053e907846d9be9dd7a",
+                             "sha256":  "22f0a852092750d7b777674b5395a8cb95d53d3f79a55bf050c86c231a603c1d",
                              "hash_normalization":  "utf8-lf-no-bom",
-                             "stage_object_id":  "21973d5c76ce420ebbf52f1eacea72035e884433",
-                             "stage_blob_byte_length":  45890
+                             "stage_object_id":  "64d366a1fc656743f219e28ee649363f82d38a0d",
+                             "stage_blob_byte_length":  46213
                          },
                          {
                              "path":  "tools/validate-r0-architecture-acceptance.ps1",

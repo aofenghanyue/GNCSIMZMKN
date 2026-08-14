@@ -64,7 +64,15 @@ function Get-NormalizedTextSha256([string]$Path) {
 }
 
 function Get-ObjectCanonicalSha256([object]$Value) {
-    $json = $Value | ConvertTo-Json -Depth 100 -Compress
+    $convertToJsonParameters = @{
+        Depth = 100
+        Compress = $true
+    }
+    # Windows PowerShell 5.1 defaults to EscapeHtml; align PowerShell 7 explicitly.
+    if ((Get-Command ConvertTo-Json).Parameters.ContainsKey('EscapeHandling')) {
+        $convertToJsonParameters.EscapeHandling = 'EscapeHtml'
+    }
+    $json = $Value | ConvertTo-Json @convertToJsonParameters
     $bytes = [System.Text.UTF8Encoding]::new($false).GetBytes($json)
     $algorithm = [System.Security.Cryptography.SHA256]::Create()
     try {

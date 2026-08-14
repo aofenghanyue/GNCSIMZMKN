@@ -995,7 +995,15 @@ function Get-R0GovernanceNormalizedTextSha256 {
 
 function Get-R0GovernanceCanonicalObjectSha256 {
     param($Value)
-    $json = $Value | ConvertTo-Json -Depth 100 -Compress
+    $convertToJsonParameters = @{
+        Depth = 100
+        Compress = $true
+    }
+    # Windows PowerShell 5.1 defaults to EscapeHtml; align PowerShell 7 explicitly.
+    if ((Get-Command ConvertTo-Json).Parameters.ContainsKey('EscapeHandling')) {
+        $convertToJsonParameters.EscapeHandling = 'EscapeHtml'
+    }
+    $json = $Value | ConvertTo-Json @convertToJsonParameters
     return Get-R0GovernanceSha256Hex (
         [System.Text.UTF8Encoding]::new($false).GetBytes($json))
 }
