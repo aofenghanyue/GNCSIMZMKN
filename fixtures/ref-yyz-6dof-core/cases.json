@@ -1,0 +1,154 @@
+{
+  "schema_version": "gnczmkn.yyz-6dof-core-cases/1",
+  "fixture_id": "REF-YYZ-6DOF-CORE-001",
+  "oracle_id": "ORACLE-YYZ-6DOF-CORE-001",
+  "model_choice": {
+    "status": "accepted",
+    "owner_role": "scientific_authority",
+    "accepted_scope": "Fixture-local inertial-Cartesian rigid-body core with supplied uniform gravity, constant positive mass, constant symmetric positive-definite body inertia, total body force applied at the center of mass, total body moment about the center of mass, and passive Hamilton q_I_B attitude.",
+    "numerical_policy": "Classical fixed-step RK4 on the coupled state; normalize q_I_B before every derivative evaluation and before commit, record the pre-commit norm residual, and discard the whole candidate on any domain failure.",
+    "excluded": [
+      "canonical 00A or Legacy mission selection",
+      "Earth, atmosphere, wind, aero, propulsion, guidance, control, allocation, actuator, configuration and variable-mass models",
+      "canonical YYZ terminal, pitch-overshoot metric and production acceptance tolerances",
+      "R1-R8 product types or runtime capability"
+    ]
+  },
+  "model": {
+    "model_id": "MODEL-YYZ-6DOF-RIGID-CORE-001",
+    "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
+    "body_frame_id": "frame.fixture.yyz.body@1",
+    "attitude": {
+      "identity": "q_I_B",
+      "direction": "passive body-to-inertial coordinate transform",
+      "algebra": "Hamilton",
+      "storage_order": ["w", "x", "y", "z"],
+      "body_rate_identity": "omega_BI_B"
+    },
+    "state_equations": [
+      "r_dot_I = v_I",
+      "v_dot_I = R_I_B(q_I_B) * force_B / mass + gravity_I",
+      "q_dot_I_B = -0.5 * pure(omega_BI_B) o q_I_B",
+      "omega_dot_BI_B = inertia_B^-1 * (moment_B - omega_BI_B x (inertia_B * omega_BI_B))"
+    ],
+    "validity_domain": [
+      "all inputs and derived values are finite",
+      "mass is strictly positive",
+      "inertia_B is constant, symmetric and positive definite",
+      "input and committed q_I_B have nonzero norm and are explicitly normalized with a correction flag",
+      "force_B acts at the center of mass and moment_B is about the center of mass",
+      "gravity_I, force_B and moment_B are constant within each fixture case"
+    ],
+    "time_policy": {
+      "authority": "nonnegative integer tick",
+      "grid": "ExactGrid",
+      "equation": "t_k = tick * dt"
+    }
+  },
+  "tolerances": {
+    "formula_absolute": 2e-12,
+    "formula_relative": 2e-12,
+    "position_absolute_m": 2e-12,
+    "position_relative": 2e-12,
+    "velocity_absolute_mps": 2e-12,
+    "velocity_relative": 2e-12,
+    "angular_rate_absolute_radps": 2e-12,
+    "angular_rate_relative": 2e-12,
+    "translation_orientation_error_max_rad": 2e-12,
+    "spin_reference_orientation_error_max_rad": 0.0002,
+    "minimum_observed_orientation_order": 3.8,
+    "finest_orientation_error_max_rad": 1e-8,
+    "maximum_precommit_quaternion_norm_residual": 0.0001,
+    "time_absolute_s": 1e-14,
+    "stored_decimal_absolute": "1e-48"
+  },
+  "cases": [
+    {
+      "id": "CASE-YYZ6-COUPLED-DERIVATIVE",
+      "kind": "formula",
+      "state": {
+        "position_I_m": [10.0, -20.0, 30.0],
+        "velocity_I_mps": [50.0, -4.0, 2.0],
+        "q_I_B_wxyz": [0.70710678118654752440084436210484903928483593768847, 0.0, 0.0, 0.70710678118654752440084436210484903928483593768847],
+        "omega_BI_B_radps": [1.0, 2.0, 3.0]
+      },
+      "inputs": {
+        "mass_kg": 50.0,
+        "inertia_B_kgm2_row_major": [12.0, 1.0, 0.5, 1.0, 20.0, 2.0, 0.5, 2.0, 30.0],
+        "force_B_N": [100.0, 200.0, 300.0],
+        "moment_B_Nm": [4.0, 5.0, 6.0],
+        "gravity_I_mps2": [0.0, 0.0, -9.80665]
+      }
+    },
+    {
+      "id": "CASE-YYZ6-CONSTANT-TRANSLATION",
+      "kind": "analytic_trajectory",
+      "initial_state": {
+        "position_I_m": [100.0, -20.0, 1000.0],
+        "velocity_I_mps": [50.0, 5.0, 0.0],
+        "q_I_B_wxyz": [1.0, 0.0, 0.0, 0.0],
+        "omega_BI_B_radps": [0.0, 0.0, 0.0]
+      },
+      "inputs": {
+        "mass_kg": 100.0,
+        "inertia_B_kgm2_row_major": [40.0, 0.0, 0.0, 0.0, 50.0, 0.0, 0.0, 0.0, 60.0],
+        "force_B_N": [200.0, -100.0, 50.0],
+        "moment_B_Nm": [0.0, 0.0, 0.0],
+        "gravity_I_mps2": [0.0, 0.0, -9.80665]
+      },
+      "dt_s": 0.25,
+      "duration_s": 1.0,
+      "terminal": {"kind": "duration_exact_grid", "expected_tick": 4}
+    },
+    {
+      "id": "CASE-YYZ6-PRINCIPAL-SPIN-CONVERGENCE",
+      "kind": "analytic_convergence",
+      "initial_state": {
+        "position_I_m": [10.0, -5.0, 2.0],
+        "velocity_I_mps": [3.0, -2.0, 1.0],
+        "q_I_B_wxyz": [0.86602540378443864676372317075293618347140262690519, 0.0, 0.5, 0.0],
+        "omega_BI_B_radps": [0.0, 0.0, 1.3]
+      },
+      "inputs": {
+        "mass_kg": 120.0,
+        "inertia_B_kgm2_row_major": [40.0, 0.0, 0.0, 0.0, 50.0, 0.0, 0.0, 0.0, 60.0],
+        "force_B_N": [0.0, 0.0, 0.0],
+        "moment_B_Nm": [0.0, 0.0, 0.0],
+        "gravity_I_mps2": [0.0, 0.0, 0.0]
+      },
+      "duration_s": 2.0,
+      "reference_trajectory_dt_s": 0.4,
+      "dt_ladder_s": [0.4, 0.2, 0.1, 0.05, 0.025]
+    },
+    {
+      "id": "CASE-YYZ6-RK-STAGE-DOMAIN-FAILURE",
+      "kind": "stage_domain_failure",
+      "initial_state": {
+        "position_I_m": [0.0, 0.0, 0.0],
+        "velocity_I_mps": [1.0, 0.0, 0.0],
+        "q_I_B_wxyz": [1.0, 0.0, 0.0, 0.0],
+        "omega_BI_B_radps": [0.0, 0.0, 0.0]
+      },
+      "inputs": {
+        "mass_kg": 100.0,
+        "inertia_B_kgm2_row_major": [40.0, 0.0, 0.0, 0.0, 50.0, 0.0, 0.0, 0.0, 60.0],
+        "force_B_N": [0.0, 0.0, 0.0],
+        "moment_B_Nm": [0.0, 0.0, 0.0],
+        "gravity_I_mps2": [0.0, 0.0, 0.0]
+      },
+      "dt_s": 0.5,
+      "maximum_duration_s": 1.5,
+      "evaluation_time_strictly_less_than_s": 0.75,
+      "expected_failure_stage": "k2"
+    }
+  ],
+  "invalid_input_cases": [
+    {"id": "INVALID-YYZ6-NONPOSITIVE-MASS", "mutation": "Set mass_kg to zero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ6-ASYMMETRIC-INERTIA", "mutation": "Make inertia_B asymmetric", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ6-NON-SPD-INERTIA", "mutation": "Give inertia_B a negative principal value", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ6-ZERO-QUATERNION", "mutation": "Set q_I_B to zero norm", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ6-NONFINITE-INPUT", "mutation": "Set one force component to positive infinity", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ6-ZERO-DT", "mutation": "Set dt to zero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ6-NON-GRID-DURATION", "mutation": "Use a duration that is not an integer multiple of dt", "expected_status": "input-domain-error"}
+  ]
+}

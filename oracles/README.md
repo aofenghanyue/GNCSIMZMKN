@@ -6,6 +6,8 @@ Oracles provide independent facts used to accept, reject or explain an implement
 
 `ref-minimal-3dof/reference.json` is the executable high-precision analytic oracle for `REF-MINIMAL-3DOF-001`. Its comparator addresses semantic case and state fields directly and remains independent of Legacy output layout.
 
+`ref-yyz-6dof-core/reference.json` is the executable 60-digit Decimal oracle for the accepted fixture-local YYZ rigid-body core. It records semantic formula intermediates, analytic constant-translation and principal-axis-spin trajectories, RK4 convergence, ExactGrid termination, whole-candidate discard and seven direct input-domain failures, then cross-checks an implementation-independent C++17 probe. Canonical mission and subsystem truth remain pending `R0-SCI-003`.
+
 `ref-legacy-sync-commit/reference.json` is an executable Legacy behavior slice. It compares a 50-digit Decimal derivation with an isolated C++17 event journal, verifies the frozen archive and passing Legacy test evidence, and rejects an early-commit mutation. Its accepted disposition preserves the candidate barrier and committed-`t_k` cross-system reads while retiring Legacy implementation structure.
 
 `ref-legacy-publish/reference.json` is an executable Legacy behavior slice. It checks a 50-digit constant-acceleration boundary trajectory against an isolated C++17 publish projection, verifies deterministic reruns and frozen provenance, and rejects a publish-time committed-state mutation. Its accepted disposition preserves read-only publication and `t_k` truth refresh while retiring the Legacy surface.

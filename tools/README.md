@@ -9,6 +9,7 @@
 - `scientific_conventions_reference.py`：只使用 CPython 标准库计算 R0 单位、frame、时间与被动 Hamilton 四元数参考结果。
 - `validate-scientific-conventions.ps1`：校验 scientific convention fixture，运行 C++/Python 交叉验证、失败路径检查并核对科学结果。
 - `minimal_3dof_reference.py`：以 CPython `decimal` 闭式解生成 minimal 3DoF oracle，并按语义字段验证独立 C++17 RK4 probe 的轨迹、收敛、终止和失败结果。
+- `yyz_6dof_core_reference.py`：以 60 位 CPython `decimal` 独立计算已接受的 fixture-local YYZ 刚体公式与解析轨迹，并验证 C++17 probe 的 intermediates、RK4 收敛、ExactGrid 终止、candidate 丢弃和输入域失败路径。
 - `legacy_sync_commit_reference.py`：核对冻结 Legacy 来源与已通过测试证据，以 `decimal` 推导同步候选结果，并交叉验证独立 C++17 candidate/commit journal 和 early-commit 失败用例。
 - `legacy_publish_reference.py`：核对冻结 Legacy 来源与已通过测试证据，以 `decimal` 推导 publish 边界轨迹，并交叉验证独立 C++17 状态投影、双跑确定性和 committed-state mutation 失败用例。
 - `legacy_phase_reference.py`：核对冻结 Legacy 来源、环境、capture harness 和两份原始 trace，交叉验证独立 C++17 七阶段调度、双跑确定性、phase swap 与 duplicate 失败用例。

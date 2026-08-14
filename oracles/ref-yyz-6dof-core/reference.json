@@ -1,0 +1,237 @@
+{
+  "schema_version": "gnczmkn.yyz-6dof-core-reference/1",
+  "fixture_id": "REF-YYZ-6DOF-CORE-001",
+  "oracle_id": "ORACLE-YYZ-6DOF-CORE-001",
+  "model_id": "MODEL-YYZ-6DOF-RIGID-CORE-001",
+  "input_identity": {
+    "path": "fixtures/ref-yyz-6dof-core/cases.json",
+    "bytes": 6776,
+    "sha256": "ef23f42b4db5dcde997b42a5372c06f3403ab770b418e8680c9736b1b825ed69"
+  },
+  "reference_method": {
+    "implementation": "CPython standard-library decimal",
+    "precision_digits": 60,
+    "solution": "direct high-precision formula evaluation plus closed-form constant translation and principal-axis spin"
+  },
+  "model_choice_status": "accepted",
+  "cases": {
+    "CASE-YYZ6-COUPLED-DERIVATIVE": {
+      "formula_intermediates": {
+        "position_derivative_I_mps": ["50", "-4", "2"],
+        "force_I_N": ["200", "-100", "300"],
+        "mass_reciprocal_per_kg": "0.02",
+        "gravity_I_mps2": ["0", "0", "-9.80665"],
+        "velocity_derivative_I_mps2": ["4", "-2", "-3.80665"],
+        "angular_momentum_B_kgm2ps": ["15.5", "47", "94.5"],
+        "gyroscopic_moment_B_Nm": ["48", "-48", "16"],
+        "net_moment_B_Nm": ["-44", "53", "-10"],
+        "omega_derivative_B_radps2": [
+          "-3.88832701222081753055204382638010956595027391487568478718923",
+          "2.89053940160134850400337126000842815002107037505267593763169",
+          "-0.461230509903076274757690686894226717235566793088916982722293"
+        ],
+        "q_derivative_I_B_per_s": [
+          "1.06066017177982128660126654315727355892725390653271105488251",
+          "-1.06066017177982128660126654315727355892725390653271105488251",
+          "-0.35355339059327376220042218105242451964241796884423701829417",
+          "-1.06066017177982128660126654315727355892725390653271105488251"
+        ]
+      }
+    },
+    "CASE-YYZ6-CONSTANT-TRANSLATION": {
+      "analytic_trajectory": [
+        {
+          "tick": 0,
+          "time_s": "0",
+          "position_I_m": ["100", "-20", "1000"],
+          "velocity_I_mps": ["50", "5", "0"],
+          "q_I_B_wxyz": ["1", "0", "0", "0"],
+          "omega_BI_B_radps": ["0", "0", "0"]
+        },
+        {
+          "tick": 1,
+          "time_s": "0.25",
+          "position_I_m": ["112.5625", "-18.78125", "999.7091671875"],
+          "velocity_I_mps": ["50.5", "4.75", "-2.3266625"],
+          "q_I_B_wxyz": ["1", "0", "0", "0"],
+          "omega_BI_B_radps": ["0", "0", "0"]
+        },
+        {
+          "tick": 2,
+          "time_s": "0.5",
+          "position_I_m": ["125.25", "-17.625", "998.83666875"],
+          "velocity_I_mps": ["51", "4.5", "-4.653325"],
+          "q_I_B_wxyz": ["1", "0", "0", "0"],
+          "omega_BI_B_radps": ["0", "0", "0"]
+        },
+        {
+          "tick": 3,
+          "time_s": "0.75",
+          "position_I_m": ["138.0625", "-16.53125", "997.3825046875"],
+          "velocity_I_mps": ["51.5", "4.25", "-6.9799875"],
+          "q_I_B_wxyz": ["1", "0", "0", "0"],
+          "omega_BI_B_radps": ["0", "0", "0"]
+        },
+        {
+          "tick": 4,
+          "time_s": "1",
+          "position_I_m": ["151", "-15.5", "995.346675"],
+          "velocity_I_mps": ["52", "4", "-9.30665"],
+          "q_I_B_wxyz": ["1", "0", "0", "0"],
+          "omega_BI_B_radps": ["0", "0", "0"]
+        }
+      ],
+      "terminal": {
+        "kind": "duration_exact_grid",
+        "tick": 4,
+        "time_s": "1"
+      }
+    },
+    "CASE-YYZ6-PRINCIPAL-SPIN-CONVERGENCE": {
+      "analytic_trajectory": [
+        {
+          "tick": 0,
+          "time_s": "0",
+          "position_I_m": ["10", "-5", "2"],
+          "velocity_I_mps": ["3", "-2", "1"],
+          "q_I_B_wxyz": [
+            "0.866025403784438646763723170752936183471402626905190235520928",
+            "0",
+            "0.500000000000000000000000000000000000000000000000000135978071",
+            "0"
+          ],
+          "omega_BI_B_radps": ["0", "0", "1.3"]
+        },
+        {
+          "tick": 1,
+          "time_s": "0.4",
+          "position_I_m": ["11.2", "-5.8", "2.4"],
+          "velocity_I_mps": ["3", "-2", "1"],
+          "q_I_B_wxyz": [
+            "0.836918271027176651066746916039360940265677336826974173744148",
+            "0.12854027594607754867669423218261072728394710414347940605827",
+            "0.483194989067256612779108823225032457044000870716151406523738",
+            "-0.222638288757529950959525735087323718543869922284359498696408"
+          ],
+          "omega_BI_B_radps": ["0", "0", "1.3"]
+        },
+        {
+          "tick": 2,
+          "time_s": "0.8",
+          "position_I_m": ["12.4", "-6.6", "2.8"],
+          "velocity_I_mps": ["3", "-2", "1"],
+          "q_I_B_wxyz": [
+            "0.751553455492217068018235569699827388660265316028420264304482",
+            "0.248440068921868357167229471273875993277106995267290258011517",
+            "0.433909589838824950193923785994255957911574792848348984092759",
+            "-0.430310822008589621991308744638057127682119109399262427035749"
+          ],
+          "omega_BI_B_radps": ["0", "0", "1.3"]
+        },
+        {
+          "tick": 3,
+          "time_s": "1.2",
+          "position_I_m": ["13.6", "-7.4", "3.2"],
+          "velocity_I_mps": ["3", "-2", "1"],
+          "q_I_B_wxyz": [
+            "0.615669183812906370955352398213618872594391007700894479463572",
+            "0.351639709600205092183948662558960921014055840969697583564206",
+            "0.355456769006138678608132511882280848009845317886683337416365",
+            "-0.609057842986320723576859536875054682459898670060230794276295"
+          ],
+          "omega_BI_B_radps": ["0", "0", "1.3"]
+        },
+        {
+          "tick": 4,
+          "time_s": "1.6",
+          "position_I_m": ["14.8", "-8.2", "3.6"],
+          "velocity_I_mps": ["3", "-2", "1"],
+          "q_I_B_wxyz": [
+            "0.43839960267387931545190858720423293296885845880372922022351",
+            "0.431202113621669201640395846058083365451210515485225945524176",
+            "0.253110128616389201867236710496087353339667106217112208487556",
+            "-0.746863969123818924748702927814359522923164511054029576318648"
+          ],
+          "omega_BI_B_radps": ["0", "0", "1.3"]
+        },
+        {
+          "tick": 5,
+          "time_s": "2",
+          "position_I_m": ["16", "-9", "4"],
+          "velocity_I_mps": ["3", "-2", "1"],
+          "q_I_B_wxyz": [
+            "0.2316607810714726639913066498619707248895592653859163266677",
+            "0.481779092708596482350674315019777407671024245658869690000608",
+            "0.133749414312293703498992054646435679637964960839564867332601",
+            "-0.834465866595725539431021728896319284803434905535999897392939"
+          ],
+          "omega_BI_B_radps": ["0", "0", "1.3"]
+        }
+      ],
+      "analytic_final": {
+        "position_I_m": ["16", "-9", "4"],
+        "velocity_I_mps": ["3", "-2", "1"],
+        "q_I_B_wxyz": [
+          "0.2316607810714726639913066498619707248895592653859163266677",
+          "0.481779092708596482350674315019777407671024245658869690000608",
+          "0.133749414312293703498992054646435679637964960839564867332601",
+          "-0.834465866595725539431021728896319284803434905535999897392939"
+        ],
+        "omega_BI_B_radps": ["0", "0", "1.3"]
+      }
+    },
+    "CASE-YYZ6-RK-STAGE-DOMAIN-FAILURE": {
+      "failure": {
+        "code": "reference-domain-error",
+        "stage": "k2",
+        "evaluation_time_s": "0.75",
+        "failed_step_start_tick": 1,
+        "candidate_disposition": "discarded",
+        "last_committed_tick": 1,
+        "last_committed_state": {
+          "position_I_m": ["0.5", "0", "0"],
+          "velocity_I_mps": ["1", "0", "0"],
+          "q_I_B_wxyz": ["1", "0", "0", "0"],
+          "omega_BI_B_radps": ["0", "0", "0"]
+        }
+      }
+    }
+  },
+  "invalid_input_cases": [
+    {
+      "id": "INVALID-YYZ6-NONPOSITIVE-MASS",
+      "mutation": "Set mass_kg to zero",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ6-ASYMMETRIC-INERTIA",
+      "mutation": "Make inertia_B asymmetric",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ6-NON-SPD-INERTIA",
+      "mutation": "Give inertia_B a negative principal value",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ6-ZERO-QUATERNION",
+      "mutation": "Set q_I_B to zero norm",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ6-NONFINITE-INPUT",
+      "mutation": "Set one force component to positive infinity",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ6-ZERO-DT",
+      "mutation": "Set dt to zero",
+      "expected_status": "input-domain-error"
+    },
+    {
+      "id": "INVALID-YYZ6-NON-GRID-DURATION",
+      "mutation": "Use a duration that is not an integer multiple of dt",
+      "expected_status": "input-domain-error"
+    }
+  ]
+}

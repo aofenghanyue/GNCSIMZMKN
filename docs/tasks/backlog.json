@@ -189,15 +189,15 @@
       "id": "R0-SCI-003",
       "stage": "R0",
       "title": "Create the YYZ 6DoF scientific and behavior reference bundle",
-      "status": "planned",
+      "status": "in_progress",
       "priority": "P0",
       "size": "XL",
       "owner_role": "scientific_authority",
-      "assignee": null,
+      "assignee": "codex",
       "depends_on": ["R0-SCI-001", "R0-LEG-002", "R0-SPEC-001"],
       "deliverables": ["Mission and assets", "formula intermediate values", "trajectory and termination references", "tolerance report"],
       "acceptance": ["00A source, step, observation and diagnostic examples become machine-valid fixtures"],
-      "evidence": ["REF-YYZ-001 executable bundle"],
+      "evidence": ["REF-YYZ-6DOF-CORE-001 executable formula slice; REF-YYZ-001 bundle pending"],
       "architecture_refs": ["00A", "15 §2–§9", "15 §20"]
     },
     {

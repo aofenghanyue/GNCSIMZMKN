@@ -1,8 +1,8 @@
 # REF-YYZ-001 科学、行为与 target conformance bundle 设计
 
-- 文档状态：Preparation design
-- 实现成熟度：未实现；不得作为 G1、YYZ model 或 Session pass evidence
-- 任务：`R0-SCI-003`（backlog 保持 `planned`）
+- 文档状态：Implementation in progress
+- 实现成熟度：首个 fixture-local 刚体核心切片已达到 `executable`；完整 bundle 不得作为 G1、canonical YYZ model 或 Session pass evidence
+- 任务：`R0-SCI-003`（backlog 为 `in_progress`）
 - 日期：2026-08-10
 - Authority owner role：Scientific Authority
 - 协作 owner roles：Validation Lead、Runtime Numerics Lead、Model SDK Lead、Architecture Lead
@@ -115,9 +115,11 @@ R0-LEG-001 的 YYZ 双跑观察为：
 
 现有 reproduction 只提交了 report/log/hash，没有提交 raw CSV bytes。R0-SCI-003 若要检查数值，必须从冻结 ZIP 在全新隔离 workspace fresh capture；不能从 hash、日志摘要或 `nominal.csv` 初始/规划输入反推 output trajectory。
 
-### 3.4 Independent science 的当前空缺
+### 3.4 Independent science 的当前实现与空缺
 
-仓库目前没有 YYZ 6DoF 的独立方程集、批准资产、公式 intermediate、轨迹生成器、终止 oracle、pitch overshoot 定义或 tolerance report。`REF-MINIMAL-3DOF-001` 的设计方法可以复用证据纪律，但其平移模型不能替代 YYZ 6DoF truth。
+`REF-YYZ-6DOF-CORE-001` 已实现并接受 fixture-local 惯性笛卡尔刚体核心：supplied uniform gravity、常正质量、常对称正定体轴惯量、质心处总力、质心总力矩、被动 Hamilton `q_I_B`、固定步长经典 RK4，以及每次导数求值前和提交前归一化。独立 60 位 Decimal reference 与 C++17 probe 覆盖公式 intermediates、解析匀速平移、解析主轴自旋、四阶收敛、ExactGrid 终止、阶段失败整候选丢弃和七类输入域拒绝。
+
+完整 `REF-YYZ-001` 仍缺 canonical mission 与资产、环境、气动、推进、制导控制、闭环轨迹、canonical terminal、pitch overshoot 指标和生产 tolerance report。当前 executable 仅在已接受的 fixture-local applicability domain 内提供科学事实，不能代表 00A 或 Legacy mission 的完整 YYZ 6DoF truth。
 
 ## 4. Scenario 冲突与 authority decision
 

@@ -77,6 +77,13 @@ if(GNC_BUILD_TESTS)
     target_compile_features(gnc_minimal_3dof_probe PRIVATE cxx_std_17)
     gnc_enable_warnings(gnc_minimal_3dof_probe)
 
+    # R0 YYZ scientific oracle: accepted fixture-local rigid-body core.
+    add_executable(
+        gnc_yyz_6dof_core_probe
+        tests/yyz_6dof_core.cpp)
+    target_compile_features(gnc_yyz_6dof_core_probe PRIVATE cxx_std_17)
+    gnc_enable_warnings(gnc_yyz_6dof_core_probe)
+
     # R0 Legacy behavior oracle: independent journal, no Legacy linkage.
     add_executable(
         gnc_legacy_sync_commit_probe
@@ -135,6 +142,9 @@ if(GNC_BUILD_TESTS)
     add_test(
         NAME r0.minimal-3dof.probe
         COMMAND gnc_minimal_3dof_probe --self-check)
+    add_test(
+        NAME r0.yyz-6dof-core.probe
+        COMMAND gnc_yyz_6dof_core_probe --self-check)
     add_test(
         NAME r0.legacy-sync-commit.probe
         COMMAND gnc_legacy_sync_commit_probe --self-check)
@@ -220,6 +230,19 @@ if(GNC_BUILD_TESTS)
             ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-minimal-3dof/reference.json
             --probe
             $<TARGET_FILE:gnc_minimal_3dof_probe>)
+    add_test(
+        NAME r0.yyz-6dof-core.oracle
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/yyz_6dof_core_reference.py
+            --cases
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-yyz-6dof-core/cases.json
+            --oracle
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-6dof-core/reference.json
+            --probe
+            $<TARGET_FILE:gnc_yyz_6dof_core_probe>)
     add_test(
         NAME r0.legacy-sync-commit.oracle
         COMMAND
