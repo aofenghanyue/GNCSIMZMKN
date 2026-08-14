@@ -154,6 +154,11 @@ def verify_capture(case: dict, repo_root: Path) -> tuple[
         require(trace["rerun_index"] == index and
                 trace["materialization"]["case_manifest_present"] is False,
                 f"Legacy SimFlow trace {index} rerun identity differs")
+        require([(command["entrypoint"], command["mode"])
+                 for command in trace["commands"]] == [
+                    ("gnc_sim", "--simflow"),
+                    ("gnc_sim", "--config"),
+                ], f"Legacy SimFlow trace {index} CLI provenance differs")
         traces.append(trace)
         checks += 4
     return (checks, effective_missions, effective_raw, dataset_raw,
@@ -297,8 +302,6 @@ def validate_trace(trace: dict, expected_commands: list[dict],
     for sequence, expected in enumerate(expected_commands):
         actual = commands[sequence]
         require(actual["sequence"] == sequence and
-                actual["entrypoint"] == "gnc_sim" and
-                actual["mode"] == expected["mode"] and
                 actual["input_role"] == expected["input_role"] and
                 actual["exit_code"] == expected["exit_code"],
                 f"{label} command {sequence} differs")
@@ -440,6 +443,7 @@ def main() -> int:
         "aero.drag_bias")
     hidden_context = copy.deepcopy(traces[0])
     hidden_context["commands"][1]["mode"] = "--simflow"
+    hidden_context["commands"][1]["input_role"] = "generated-simflow"
     reused_batch_root = copy.deepcopy(traces[0])
     reused_batch_root["lineage_checks"][
         "ordinary_replay_root_started_absent"] = False
@@ -476,6 +480,7 @@ def main() -> int:
         "PASS-SIMFLOW-DATASET-COLUMNS-REORDERED",
         "PASS-SIMFLOW-EFFECTIVE-MISSION-JSON-REFORMATTED",
         "PASS-SIMFLOW-CASE-MANIFEST-PRESENT",
+        "PASS-SIMFLOW-CLI-SPELLING-CHANGED",
     } and all(entry["expected_status"] == "accepted"
               for entry in equivalence_by_id.values()),
             "SimFlow equivalence-case definition differs")
@@ -514,7 +519,14 @@ def main() -> int:
         "case_manifest_present"] = True
     validate_trace(manifest_present_trace, expected_commands,
                    expected_isolation, "Case-manifest equivalence")
-    checks += 13
+    renamed_cli_trace = copy.deepcopy(traces[0])
+    renamed_cli_trace["commands"][0]["entrypoint"] = "target-workflow"
+    renamed_cli_trace["commands"][0]["mode"] = "materialize"
+    renamed_cli_trace["commands"][1]["entrypoint"] = "target-runner"
+    renamed_cli_trace["commands"][1]["mode"] = "ordinary-run"
+    validate_trace(renamed_cli_trace, expected_commands,
+                   expected_isolation, "CLI-spelling equivalence")
+    checks += 14
 
     first_stdout, probe = run_probe(arguments.probe)
     second_stdout, second_probe = run_probe(arguments.probe)
@@ -542,7 +554,8 @@ def main() -> int:
             "input_declaration_order_accepted",
             "case_source_column_order_accepted",
             "dataset_column_order_accepted",
-            "legacy_case_directory_change_accepted"):
+            "legacy_case_directory_change_accepted",
+            "cli_spelling_change_accepted"):
         require(probe[flag] is True,
                 f"C++ SimFlow probe did not enforce {flag}")
     checks += 15
@@ -576,6 +589,7 @@ def main() -> int:
         "dataset_column_order_equivalent": True,
         "effective_mission_json_format_equivalent": True,
         "case_manifest_presence_equivalent": True,
+        "cli_spelling_equivalent": True,
         "deterministic_target_case_id": "pending",
         "disposition_status": decision["status"],
     }, separators=(",", ":")))

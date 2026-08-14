@@ -67,6 +67,7 @@
       "case_source_column_order": "ignored after unique matrix field identities are resolved",
       "legacy_case_index_and_directory": "ignored",
       "case_manifest_presence": "ignored; target manifest content and identity remain pending",
+      "cli_spelling": "ignored after materialization and effective-mission input roles are resolved",
       "simflow_and_ordinary_replay": "same semantic mission and dataset"
     },
     "target_mapping": {
@@ -77,7 +78,7 @@
   },
   "tolerances": {
     "mission_structure_and_input_identity": "exact after output-location exclusion",
-    "command_mode_order_exit_code_and_replay_isolation": "exact",
+    "command_input_role_order_exit_code_and_replay_isolation": "exact by input_role; Legacy entrypoint and mode spelling are capture provenance only",
     "dataset_row_count_and_order": "exact",
     "legacy_seed_scalar_absolute": "1e-12"
   },
@@ -89,7 +90,7 @@
     },
     {
       "id": "FAIL-SIMFLOW-HIDDEN-REPLAY-CONTEXT",
-      "mutation": "Replace the ordinary --config replay with another --simflow invocation",
+      "mutation": "Replace the ordinary --config/effective-mission replay with another --simflow/generated-simflow invocation",
       "expected_status": "rejected"
     },
     {
@@ -137,6 +138,11 @@
     {
       "id": "PASS-SIMFLOW-CASE-MANIFEST-PRESENT",
       "mutation": "Mark a case manifest present while preserving effective-mission and ordinary-replay semantics; manifest content and identity remain pending",
+      "expected_status": "accepted"
+    },
+    {
+      "id": "PASS-SIMFLOW-CLI-SPELLING-CHANGED",
+      "mutation": "Change Legacy entrypoint and mode tokens while preserving materialization/effective-mission input roles, order, exit status and replay isolation",
       "expected_status": "accepted"
     }
   ],

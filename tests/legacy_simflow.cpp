@@ -25,6 +25,7 @@ struct CaseRow {
 };
 
 struct Command {
+    std::string entrypoint;
     std::string mode;
     std::string input_role;
     int exit_code = 1;
@@ -58,6 +59,7 @@ struct ProbeResult {
     bool case_source_column_order_accepted = false;
     bool dataset_column_order_accepted = false;
     bool legacy_case_directory_change_accepted = false;
+    bool cli_spelling_change_accepted = false;
 };
 
 void require(bool condition, const std::string& message) {
@@ -142,8 +144,7 @@ SemanticRow decodeSemanticRow(
 bool validOrdinaryReplay(const Mission& expected_mission,
                          const std::vector<SemanticRow>& expected_rows,
                          const Replay& replay) {
-    return replay.command.mode == "--config" &&
-        replay.command.input_role == "effective-mission" &&
+    return replay.command.input_role == "effective-mission" &&
         replay.command.exit_code == 0 &&
         replay.working_root_started_absent &&
         replay.effective_mission_standalone &&
@@ -170,7 +171,7 @@ ProbeResult runProbe() {
         base, matrix.front(), requested_inputs, "case_000001");
     result.replay = {
         result.effective_mission,
-        {"--config", "effective-mission", 0},
+        {"gnc_sim", "--config", "effective-mission", 0},
         expected_rows,
         true,
         true,
@@ -211,6 +212,7 @@ ProbeResult runProbe() {
 
     Replay hidden_context = result.replay;
     hidden_context.command.mode = "--simflow";
+    hidden_context.command.input_role = "generated-simflow";
     result.hidden_replay_context_rejected = !validOrdinaryReplay(
         result.effective_mission, expected_rows, hidden_context);
 
@@ -233,6 +235,12 @@ ProbeResult runProbe() {
     renamed_directory.mission.output_directory = "renamed-case-directory";
     result.legacy_case_directory_change_accepted = validOrdinaryReplay(
         result.effective_mission, expected_rows, renamed_directory);
+
+    Replay renamed_cli = result.replay;
+    renamed_cli.command.entrypoint = "target-runner";
+    renamed_cli.command.mode = "ordinary-run";
+    result.cli_spelling_change_accepted = validOrdinaryReplay(
+        result.effective_mission, expected_rows, renamed_cli);
     return result;
 }
 
@@ -277,6 +285,8 @@ void writeJson(const ProbeResult& result) {
               << ",\"legacy_case_directory_change_accepted\":"
               << (result.legacy_case_directory_change_accepted
                       ? "true" : "false")
+              << ",\"cli_spelling_change_accepted\":"
+              << (result.cli_spelling_change_accepted ? "true" : "false")
               << "}\n";
 }
 
@@ -319,6 +329,8 @@ int main(int argc, char** argv) {
                 "dataset column order changed replay semantics");
         require(result.legacy_case_directory_change_accepted,
                 "Legacy case directory changed semantic identity");
+        require(result.cli_spelling_change_accepted,
+                "Legacy CLI spelling changed replay semantics");
         writeJson(result);
         return 0;
     } catch (const std::exception& error) {

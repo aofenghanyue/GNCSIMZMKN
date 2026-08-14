@@ -31,7 +31,7 @@
     {
       "id": "FACT-SIMFLOW-ORDINARY-REPLAY",
       "claim": "The materialized hot mission succeeds through plain gnc_sim --config from a distinct fresh working root and produces the same semantic dataset as its SimFlow execution.",
-      "tolerance_policy": "Command mode/order, exit code, fresh replay root, standalone effective-mission input and absent output path are exact; dataset row identity is exact, encoded column order is excluded after header mapping, and frozen scalar values use absolute tolerance 1e-12.",
+      "tolerance_policy": "Semantic input role/order, exit code, fresh replay root, standalone effective-mission input and absent output path are exact; Legacy entrypoint/mode spelling is pinned as capture provenance and excluded from semantic equality; dataset row identity is exact, encoded column order is excluded after header mapping, and frozen scalar values use absolute tolerance 1e-12.",
       "evidence_refs": [
         "fixtures/ref-legacy-simflow/legacy-simflow-run-1.csv",
         "fixtures/ref-legacy-simflow/legacy-replay-run-1.csv",
@@ -94,6 +94,7 @@
     "Plain --config replay succeeds twice and matches SimFlow output by semantic dataset fields after full dataset-column reversal",
     "Missing injected input, hidden SimFlow replay context, reused batch root, case-local replay input and replay-result mismatch are rejected",
     "Legacy case index/directory changes and target case-manifest presence are accepted after semantic normalization; manifest content and identity remain pending",
+    "Legacy CLI entrypoint/mode spelling changes are accepted after materialization and effective-mission input roles are resolved",
     "Preserve and Retire recommendations remain pending until the repository owner accepts the disposition choice"
   ],
   "open_tasks": [
