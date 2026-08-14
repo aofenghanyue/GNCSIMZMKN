@@ -1,0 +1,72 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-YYZ-FROZEN-INTERVAL-001",
+  "status": "executable",
+  "purpose": "Provide one executable FrozenInterval trajectory that composes the accepted fixture-local environment, air-data, aero, propulsion, current mass, Closure and rigid-core profiles.",
+  "authority": "scientific_authority",
+  "provenance": {
+    "source_refs": [
+      "docs/adr/0006-si-frame-and-simulation-time-conventions.md",
+      "docs/adr/0007-passive-hamilton-quaternion-convention.md",
+      "design-notes/gnczmkn-architecture-roadmap/14-cycle-dataflow-state-transaction-and-continuous-closure.md#16-6dof-轻量闭环的明确时间语义",
+      "design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md#7-yyz-v1-一步时序表",
+      "fixtures/ref-yyz-uniform-environment/cases.json",
+      "fixtures/ref-yyz-air-data-kinematics/cases.json",
+      "fixtures/ref-yyz-aero-dimensionalization/cases.json",
+      "fixtures/ref-yyz-propulsion-response/cases.json",
+      "fixtures/ref-yyz-mass-properties/cases.json",
+      "fixtures/ref-yyz-force-moment-closure/cases.json",
+      "fixtures/ref-yyz-6dof-core/cases.json"
+    ],
+    "notes": "This is a direct executable composition of accepted R0 profiles. Product and Legacy runtime APIs are absent from the executable path."
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-YYZ-FROZEN-INTERVAL-COMPOSITION",
+      "claim": "One identity-bound sampled boundary produces uniform environment, air data, aerodynamic and propulsion wrenches, current mass properties and one normalized force/moment closure.",
+      "tolerance_policy": "Identity and tick relationships are exact; finite formula values use the fixture-local absolute-plus-relative tolerance.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-frozen-interval/cases.json",
+        "oracles/ref-yyz-frozen-interval/reference.json",
+        "tests/yyz_frozen_interval.cpp",
+        "tools/yyz_frozen_interval_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-YYZ-FROZEN-INTERVAL-TRAJECTORY",
+      "claim": "The independent C++17 RK4 step matches the 80-digit Decimal constant-acceleration trajectory and reaches the ExactGrid terminal at tick 1 while using the current committed mass.",
+      "tolerance_policy": "Terminal identity is exact; position, velocity, orientation and angular rate use the declared field tolerances.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-frozen-interval/cases.json",
+        "oracles/ref-yyz-frozen-interval/reference.json",
+        "tests/yyz_frozen_interval.cpp",
+        "tools/yyz_frozen_interval_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-YYZ-FROZEN-INTERVAL-FAILURES",
+      "claim": "Quaternion sign leaves the physical result unchanged, while cross-component identity errors, invalid core inputs, wind addition, early candidate visibility and double moment transport fail directly.",
+      "tolerance_policy": "Rejection identity is exact; tolerance cannot repair an invalid identity, time relationship, mass or quaternion.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-frozen-interval/cases.json",
+        "oracles/ref-yyz-frozen-interval/reference.json",
+        "tests/yyz_frozen_interval.cpp",
+        "tools/yyz_frozen_interval_reference.py"
+      ]
+    }
+  ],
+  "required_artifacts": [
+    "fixtures/ref-yyz-frozen-interval/README.md",
+    "fixtures/ref-yyz-frozen-interval/cases.json",
+    "oracles/ref-yyz-frozen-interval/reference.json",
+    "tests/yyz_frozen_interval.cpp",
+    "tools/yyz_frozen_interval_reference.py",
+    "CMakeLists.txt"
+  ],
+  "acceptance": [
+    "The bundle executes the sampled-to-interval-to-commit path across all seven accepted fixture-local consumers",
+    "The Decimal analytic reference and C++17 RK4 probe share no implementation and neither imports product or Legacy code",
+    "Canonical assets, product metrics and post-candidate mass geometry remain outside this slice"
+  ],
+  "open_tasks": ["R0-SCI-003"]
+}

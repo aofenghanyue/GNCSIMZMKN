@@ -132,6 +132,14 @@ if(GNC_BUILD_TESTS)
         gnc_yyz_mass_properties_probe PRIVATE cxx_std_17)
     gnc_enable_warnings(gnc_yyz_mass_properties_probe)
 
+    # R0 YYZ scientific oracle: one composed FrozenInterval trajectory.
+    add_executable(
+        gnc_yyz_frozen_interval_probe
+        tests/yyz_frozen_interval.cpp)
+    target_compile_features(
+        gnc_yyz_frozen_interval_probe PRIVATE cxx_std_17)
+    gnc_enable_warnings(gnc_yyz_frozen_interval_probe)
+
     # R0 Legacy behavior oracle: independent journal, no Legacy linkage.
     add_executable(
         gnc_legacy_sync_commit_probe
@@ -211,6 +219,9 @@ if(GNC_BUILD_TESTS)
     add_test(
         NAME r0.yyz-mass-properties.probe
         COMMAND gnc_yyz_mass_properties_probe --self-check)
+    add_test(
+        NAME r0.yyz-frozen-interval.probe
+        COMMAND gnc_yyz_frozen_interval_probe --self-check)
     add_test(
         NAME r0.legacy-sync-commit.probe
         COMMAND gnc_legacy_sync_commit_probe --self-check)
@@ -387,6 +398,19 @@ if(GNC_BUILD_TESTS)
             ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-mass-properties/reference.json
             --probe
             $<TARGET_FILE:gnc_yyz_mass_properties_probe>)
+    add_test(
+        NAME r0.yyz-frozen-interval.oracle
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/yyz_frozen_interval_reference.py
+            --cases
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-yyz-frozen-interval/cases.json
+            --oracle
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-frozen-interval/reference.json
+            --probe
+            $<TARGET_FILE:gnc_yyz_frozen_interval_probe>)
     add_test(
         NAME r0.legacy-sync-commit.oracle
         COMMAND

@@ -25,6 +25,8 @@ Fixture 是可复制、可校验、带 provenance 的规范实例。每个目录
 
 `ref-yyz-mass-properties` 已达到 `executable`，实现由既有 accepted invariants 固定的 projection-only 路径：同边界 committed MassState 投影正质量、CoM 点坐标和关于 CoM 的完整对称正定体轴惯量；CoM 与作用点坐标生成 Closure 杠杆臂，质量和完整惯量直接进入 rigid-core consumer。待提交质量候选在当前 `FrozenInterval` 内保持 candidate-only，下一边界仅从显式 next committed state 投影。燃料驱动的 CoM/惯量演化、dry mass、configuration jump、canonical assets 与产品 contract 仍在后续范围内。
 
+`ref-yyz-frozen-interval` 已达到 `executable`，把已接受的 uniform environment、air-data、aero dimensionalization、propulsion response、当前 MassProperties、Closure 与刚体核心组合在同一 `[0,1)` 区间。80 位 Decimal 常加速度闭式轨迹与独立 C++17 一步 RK4 交叉检查 tick 1 状态、候选质量延迟可见性、四元数符号等价、八条输入域拒绝和三条跨组件 mutation。canonical assets、lookup、制导控制、产品终止指标与提交后的质量几何仍在后续范围内。
+
 `ref-legacy-sync-commit` 已达到 `executable`，将 `ORACLE-YYZ-SYNC-03` 的冻结来源、独立 Decimal 结果、C++17 candidate/commit journal 和 early-commit 失败用例连成切片；已接受的处置保留 candidate barrier 与 committed-`t_k` 读取，并退出 Legacy 实现形状。
 
 `ref-legacy-publish` 已达到 `executable`，交叉验证 publish 前后状态恒等、truth 边界时间、解析轨迹与 publish-time mutation 失败；已接受的处置保留只读发布与 `t_k` 边界刷新，并退出 Legacy 发布接口和存储形状。

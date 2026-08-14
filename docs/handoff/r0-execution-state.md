@@ -8,7 +8,7 @@
 
 ## 当前治理
 
-仓库所有者已停止原有多智能体执行，并要求改为单一实现智能体、可执行交付优先的工作方式。2026-08-12 的机器角色授权已撤销；AI 可以实现、测试和提出建议，不能进行最终科学、架构、阶段门或发布批准。
+仓库所有者已停止原有多智能体执行，并要求改为单一实现智能体、可执行交付优先的工作方式。2026-08-12 的机器角色授权已撤销。仓库所有者已授权当前 R0 范围内的后续推荐科学与架构项按默认接受记录并实施；许可、阶段门、发布和明显扩大范围的选择仍保留给仓库所有者。
 
 当前规则以以下文件为准：
 
@@ -40,12 +40,12 @@
 - `R0-LEG-002` 已完成；七条 oracle 均达到 `executable`。仓库所有者已接受只读 publish、`t_k` truth 刷新、固定宏阶段顺序、candidate barrier、committed-`t_k` 读取、共享 RK candidate、单次 scope commit、唯一 identity-bound membership、CSV `t_k`/published-state 边界、停止状态 Observation 先于 RunOutcome、SimFlow 预运行自包含任务物化与 ordinary compile/run replay，并接受对应 Legacy 实现形状退出的逐事实处置。
 - `R0-SCI-001` 已由仓库所有者接受并完成。
 - `R0-SCI-002` 已完成，executable bundle 通过独立解析、RK4 收敛、终止与失败检查。
-- `R0-SCI-003` 已进入 `in_progress`；仓库所有者已接受 fixture-local 刚体核心、四元数归一化策略、`FrozenInterval` 力/矩闭合、supplied air-data kinematics、supplied aerodynamic coefficient dimensionalization、supplied uniform environment 和 supplied propulsion response 范围。`REF-YYZ-6DOF-CORE-001` 提供独立公式 intermediates、解析与高精度轨迹、收敛、转动守恒量、ExactGrid 终止及关键失败用例；`REF-YYZ-FORCE-MOMENT-CLOSURE-001` 提供逐来源力矩搬移、规范化闭合、重力分离、闭合到刚体核心的解析短轨迹、输入域拒绝，以及 propulsion 预搬移后重复计矩的回归；`REF-YYZ-AIR-DATA-KINEMATICS-001` 提供风速相减、被动旋转、alpha/beta、动压、Mach 与失败路径；`REF-YYZ-AERO-DIMENSIONALIZATION-001` 提供 `[-C_A,+C_Y,-C_N]` 力映射、展长/弦长分离力矩尺度、显式 aerodynamic reference point 与质心力矩搬移；`REF-YYZ-UNIFORM-ENVIRONMENT-001` 提供 position/tick-invariant 惯性系重力/风、密度/声速、air-data/rigid-core consumer link 与 Legacy-style altitude decay 判别；`REF-YYZ-PROPULSION-RESPONSE-001` 提供显式体轴推力方向、作用点固有力矩、Closure 单次搬移、正消耗区间积分、Mass candidate、区间分割等价和三条定向 mutation；`REF-YYZ-MASS-PROPERTIES-001` 以既有 accepted invariants 实现 committed projection、CoM 点到作用点几何、完整惯量 consumer 和 candidate 提交可见性，不选择燃料驱动的 CoM/惯量演化。完整 `REF-YYZ-001` 仍待 canonical mission/assets、coefficient lookup/适用域、mass evolution、制导控制、终止指标与生产容差闭合。
+- `R0-SCI-003` 已进入 `in_progress`；仓库所有者已接受 fixture-local 刚体核心、四元数归一化策略、`FrozenInterval` 力/矩闭合、supplied air-data kinematics、supplied aerodynamic coefficient dimensionalization、supplied uniform environment、supplied propulsion response，以及标量燃耗下质量更新、CoM/惯量显式保持的专用 mass-evolution 口径。`REF-YYZ-6DOF-CORE-001` 提供独立公式 intermediates、解析与高精度轨迹、收敛、转动守恒量、ExactGrid 终止及关键失败用例；`REF-YYZ-FORCE-MOMENT-CLOSURE-001` 提供逐来源力矩搬移、规范化闭合、重力分离、闭合到刚体核心的解析短轨迹、输入域拒绝，以及 propulsion 预搬移后重复计矩的回归；`REF-YYZ-AIR-DATA-KINEMATICS-001` 提供风速相减、被动旋转、alpha/beta、动压、Mach 与失败路径；`REF-YYZ-AERO-DIMENSIONALIZATION-001` 提供 `[-C_A,+C_Y,-C_N]` 力映射、展长/弦长分离力矩尺度、显式 aerodynamic reference point 与质心力矩搬移；`REF-YYZ-UNIFORM-ENVIRONMENT-001` 提供 position/tick-invariant 惯性系重力/风、密度/声速、air-data/rigid-core consumer link 与 Legacy-style altitude decay 判别；`REF-YYZ-PROPULSION-RESPONSE-001` 提供显式体轴推力方向、作用点固有力矩、Closure 单次搬移、正消耗区间积分、Mass candidate、区间分割等价和三条定向 mutation；`REF-YYZ-MASS-PROPERTIES-001` 以既有 accepted invariants 实现 committed projection、CoM 点到作用点几何、完整惯量 consumer 和 candidate 提交可见性；`REF-YYZ-FROZEN-INTERVAL-001` 将环境、空速、气动、推进、当前质量属性、Closure 和刚体核心组合成一步独立解析/RK4 轨迹，并直接拒绝风向相加、候选质量提前使用和推进力矩重复搬移。完整 `REF-YYZ-001` 仍待 canonical mission/assets、coefficient lookup/适用域、mass evolution 实现、制导控制、终止指标与生产容差闭合。
 - 其余 R0 任务保持 `planned`。
 
 ## 下一条开发主线
 
-1. 继续 `R0-SCI-003` 单一主线，等待仓库所有者选择 fixture-local sampled mass evolution：推荐最小 scalar-burn profile 只按已接受 MassFlowInterval 更新质量，CoM 与惯量在该 model identity 下显式保持；fuel geometry、dry mass、configuration transitions、canonical assets 与产品 contract 保持范围外。
+1. 继续 `R0-SCI-003` 单一主线，实现已接受的 fixture-local scalar-burn mass evolution：按 MassFlowInterval 更新质量，CoM 与惯量在专用 model identity 下显式保持，并拒绝非正候选；fuel geometry、dry mass、configuration transitions、canonical assets 与产品 contract 保持范围外。
 2. 继续保持单一 R0 主线，不展开 gate、性能、CAVH 或架构治理。
 
 ## 保留与恢复

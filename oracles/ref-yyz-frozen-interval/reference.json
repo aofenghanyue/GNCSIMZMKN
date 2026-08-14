@@ -1,0 +1,287 @@
+{
+  "schema_version": "gnczmkn.yyz-frozen-interval-reference/1",
+  "fixture_id": "REF-YYZ-FROZEN-INTERVAL-001",
+  "oracle_id": "ORACLE-YYZ-FROZEN-INTERVAL-001",
+  "model_id": "MODEL-YYZ-FROZEN-INTERVAL-001",
+  "precision": {
+    "implementation": "Python standard-library Decimal analytic composition",
+    "decimal_digits": 80
+  },
+  "input_identity": {
+    "path": "fixtures/ref-yyz-frozen-interval/cases.json",
+    "bytes": 8077,
+    "sha256": "c1f60b99622c1313ad3841fc24af6874ee3a273b2784f249feb991aed9cf11b1"
+  },
+  "cases": {
+    "CASE-YYZ-FROZEN-INTERVAL-COMPOSED-TRAJECTORY": {
+      "id": "CASE-YYZ-FROZEN-INTERVAL-COMPOSED-TRAJECTORY",
+      "context": {
+        "sample_tick": 0,
+        "valid_from_tick": 0,
+        "valid_until_tick": 1,
+        "configuration_revision": 11,
+        "base_dt_s": "0.1"
+      },
+      "environment_sample": {
+        "gravity_I_mps2": [
+          "0",
+          "0",
+          "-9.80665"
+        ],
+        "velocity_airmass_I_mps": [
+          "10",
+          "0",
+          "0"
+        ],
+        "density_kgpm3": "1.225",
+        "speed_of_sound_mps": "340"
+      },
+      "air_data": {
+        "velocity_relative_I_mps": [
+          "100",
+          "0",
+          "0"
+        ],
+        "velocity_relative_B_mps": [
+          "100",
+          "0",
+          "0"
+        ],
+        "airspeed_mps": "100",
+        "alpha_rad": "0",
+        "beta_rad": "0",
+        "dynamic_pressure_Pa": "6125",
+        "mach": "0.29411764705882352941176470588235294117647058823529411764705882352941176470588235"
+      },
+      "aero_contribution": {
+        "source_id": "aero.body",
+        "force_B_N": [
+          "-61.25",
+          "0",
+          "0"
+        ],
+        "r_CoM_to_application_B_m": [
+          "0",
+          "0",
+          "0"
+        ],
+        "moment_at_application_B_Nm": [
+          "0",
+          "0",
+          "0"
+        ],
+        "transport_moment_B_Nm": [
+          "0",
+          "0",
+          "0"
+        ],
+        "moment_about_CoM_B_Nm": [
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      "propulsion_contribution": {
+        "source_id": "propulsion.main",
+        "force_B_N": [
+          "100",
+          "0",
+          "0"
+        ],
+        "r_CoM_to_application_B_m": [
+          "0",
+          "0.2",
+          "0"
+        ],
+        "moment_at_application_B_Nm": [
+          "0",
+          "0",
+          "20"
+        ],
+        "transport_moment_B_Nm": [
+          "0",
+          "0",
+          "-20"
+        ],
+        "moment_about_CoM_B_Nm": [
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      "mass_visibility": {
+        "mass_state_id": "mass.fixture.yyz.vehicle@1",
+        "current_visible_mass_kg": "100",
+        "consumed_mass_kg": "0.05",
+        "pending_mass_candidate_kg": "99.95",
+        "pending_visibility_before_commit": "candidate-only",
+        "integration_mass_kg": "100",
+        "next_commit_tick": 1
+      },
+      "closure": {
+        "force_total_B_N": [
+          "38.75",
+          "0",
+          "0"
+        ],
+        "moment_total_about_CoM_B_Nm": [
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      "rigid_derivative_at_tick0": {
+        "force_total_I_N": [
+          "38.75",
+          "0",
+          "0"
+        ],
+        "acceleration_I_mps2": [
+          "0.3875",
+          "0",
+          "-9.80665"
+        ],
+        "angular_momentum_B_kgm2ps": [
+          "0",
+          "0",
+          "0"
+        ],
+        "gyroscopic_moment_B_Nm": [
+          "0",
+          "0",
+          "0"
+        ],
+        "net_moment_B_Nm": [
+          "0",
+          "0",
+          "0"
+        ],
+        "angular_acceleration_B_radps2": [
+          "0",
+          "0",
+          "0"
+        ],
+        "q_derivative_I_B_per_s": [
+          "0",
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      "analytic_terminal": {
+        "tick": 1,
+        "time_s": "0.1",
+        "position_I_m": [
+          "11.0019375",
+          "0",
+          "999.95096675"
+        ],
+        "velocity_I_mps": [
+          "110.03875",
+          "0",
+          "-0.980665"
+        ],
+        "q_I_B_wxyz": [
+          "1",
+          "0",
+          "0",
+          "0"
+        ],
+        "omega_BI_B_radps": [
+          "0",
+          "0",
+          "0"
+        ],
+        "termination_kind": "duration_exact_grid"
+      }
+    }
+  },
+  "equivalence_results": [
+    {
+      "id": "EQUIV-YYZ-FROZEN-INTERVAL-QUATERNION-SIGN",
+      "status": "passed",
+      "alternate_q_I_B_wxyz": [
+        "-1",
+        "0",
+        "0",
+        "0"
+      ],
+      "orientation_error_rad": "0",
+      "max_abs_physical_difference": "0"
+    }
+  ],
+  "invalid_input_rejections": [
+    "INVALID-YYZ-FROZEN-INTERVAL-BODY-FRAME-MISMATCH",
+    "INVALID-YYZ-FROZEN-INTERVAL-CLOCK-MISMATCH",
+    "INVALID-YYZ-FROZEN-INTERVAL-SAMPLE-TICK-MISMATCH",
+    "INVALID-YYZ-FROZEN-INTERVAL-INTERVAL-MISMATCH",
+    "INVALID-YYZ-FROZEN-INTERVAL-REVISION-MISMATCH",
+    "INVALID-YYZ-FROZEN-INTERVAL-NONPOSITIVE-DT",
+    "INVALID-YYZ-FROZEN-INTERVAL-NONPOSITIVE-MASS",
+    "INVALID-YYZ-FROZEN-INTERVAL-ZERO-QUATERNION"
+  ],
+  "mutation_results": [
+    {
+      "id": "MUTATION-YYZ-FROZEN-INTERVAL-ADD-WIND",
+      "status": "rejected",
+      "observed_velocity_relative_I_mps": [
+        "120",
+        "0",
+        "0"
+      ],
+      "observed_dynamic_pressure_Pa": "8820",
+      "observed_force_total_B_N": [
+        "11.8",
+        "0",
+        "0"
+      ],
+      "observed_terminal_position_I_m": [
+        "11.00059",
+        "0",
+        "999.95096675"
+      ],
+      "max_abs_physical_difference": "2695"
+    },
+    {
+      "id": "MUTATION-YYZ-FROZEN-INTERVAL-EARLY-MASS-CANDIDATE",
+      "status": "rejected",
+      "observed_integration_mass_kg": "99.95",
+      "observed_acceleration_I_mps2": [
+        "0.38769384692346173086543271635817908954477238619309654827413706853426713356678339",
+        "0",
+        "-9.80665"
+      ],
+      "observed_terminal_position_I_m": [
+        "11.001938469234617308654327163581790895447723861930965482741370685342671335667834",
+        "0",
+        "999.95096675"
+      ],
+      "observed_terminal_velocity_I_mps": [
+        "110.03876938469234617308654327163581790895447723861930965482741370685342671335668",
+        "0",
+        "-0.980665"
+      ],
+      "max_abs_physical_difference": "0.05"
+    },
+    {
+      "id": "MUTATION-YYZ-FROZEN-INTERVAL-PRETRANSPORTED-PROPULSION-MOMENT",
+      "status": "rejected",
+      "observed_propulsion_moment_at_application_B_Nm": [
+        "0",
+        "0",
+        "0"
+      ],
+      "observed_moment_total_about_CoM_B_Nm": [
+        "0",
+        "0",
+        "-20"
+      ],
+      "observed_angular_acceleration_B_radps2": [
+        "0",
+        "0",
+        "-0.66666666666666666666666666666666666666666666666666666666666666666666666666666668"
+      ],
+      "max_abs_physical_difference": "20"
+    }
+  ]
+}
