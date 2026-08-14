@@ -1,0 +1,152 @@
+{
+  "schema_version": "gnczmkn.yyz-scalar-burn-mass-cases/1",
+  "fixture_id": "REF-YYZ-SCALAR-BURN-MASS-001",
+  "oracle_id": "ORACLE-YYZ-SCALAR-BURN-MASS-001",
+  "model_choice": {
+    "status": "accepted",
+    "owner_role": "scientific_authority",
+    "accepted_scope": "Fixture-local sampled scalar-burn MassState evolution. A nonnegative MassFlowInterval reduces positive committed mass at the next boundary while the body-origin-to-CoM coordinate and full inertia about the CoM remain exactly constant under a dedicated model identity.",
+    "equations": [
+      "interval_duration = (valid_until_tick - valid_from_tick) * base_dt",
+      "consumed_mass = fuel_consumption_rate * interval_duration",
+      "candidate_mass = committed_mass - consumed_mass",
+      "candidate_r_body_origin_to_CoM_B = committed_r_body_origin_to_CoM_B",
+      "candidate_inertia_about_CoM_B = committed_inertia_about_CoM_B",
+      "next_committed_MassState = candidate_MassState at valid_until_tick"
+    ],
+    "visibility_policy": "The committed sample remains visible throughout the half-open interval. The candidate becomes the committed MassState only at valid_until_tick.",
+    "positivity_policy": "Current and candidate mass must both be strictly positive. Depletion is rejected without a clamp or dry-mass substitution.",
+    "geometry_policy": "The model holds the supplied CoM point coordinate and every entry of the symmetric-positive-definite inertia tensor exactly constant. This fixture-local approximation has its own model identity and does not claim tank geometry.",
+    "excluded": [
+      "fuel volume, tank geometry, slosh, ablation and center-of-mass motion",
+      "dry mass, depletion event handling and rate limiting",
+      "configuration jumps, attachment, separation and parallel-axis transfer",
+      "canonical vehicle assets and product contracts",
+      "R1-R8 runtime capability"
+    ]
+  },
+  "model": {
+    "model_id": "MODEL-YYZ-SCALAR-BURN-CONSTANT-GEOMETRY-001",
+    "mass_state_id": "mass.fixture.yyz.vehicle@1",
+    "body_frame_id": "frame.fixture.yyz.body@1",
+    "body_origin_point_id": "point.fixture.yyz.body-origin@1",
+    "center_of_mass_point_id": "point.fixture.yyz.center-of-mass@1",
+    "clock_domain": "clock.fixture.yyz.simulation@1",
+    "quality": "Valid",
+    "strategy": "SampledIntervalCandidate",
+    "validity_domain": [
+      "all supplied and derived physical values are finite",
+      "configuration revision and ticks are nonnegative integers",
+      "sample_tick = valid_from_tick and valid_until_tick > valid_from_tick",
+      "base_dt_s > 0 and fuel_consumption_rate_kgps >= 0",
+      "committed_mass_kg > 0 and candidate_mass_kg > 0",
+      "CoM is a finite body-frame point coordinate and inertia about the CoM is symmetric positive definite",
+      "MassState, body frame, clock, revision and interval identities agree",
+      "next sample tick equals valid_until_tick and next_valid_until_tick is later"
+    ]
+  },
+  "tolerances": {
+    "formula_absolute": 2e-12,
+    "formula_relative": 2e-12,
+    "stored_decimal_absolute": "1e-68"
+  },
+  "cases": [
+    {
+      "id": "CASE-YYZ-SCALAR-BURN-MASS-FULL-INERTIA",
+      "context": {
+        "mass_state_id": "mass.fixture.yyz.vehicle@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "sample_tick": 20,
+        "configuration_revision": 8,
+        "valid_from_tick": 20,
+        "valid_until_tick": 25,
+        "base_dt_s": 0.1,
+        "next_valid_until_tick": 30
+      },
+      "committed_mass_state": {
+        "mass_kg": 120.0,
+        "r_body_origin_to_CoM_B_m": [0.2, -0.1, 0.05],
+        "inertia_about_CoM_B_kgm2_row_major": [12.0, 1.0, 0.5, 1.0, 20.0, 2.0, 0.5, 2.0, 30.0]
+      },
+      "mass_flow_interval": {
+        "source_id": "propulsion.main",
+        "mass_state_id": "mass.fixture.yyz.vehicle@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 8,
+        "valid_from_tick": 20,
+        "valid_until_tick": 25,
+        "fuel_consumption_rate_kgps": 0.5
+      },
+      "consumer_probe": {
+        "application_point_id": "point.fixture.yyz.propulsion-main@1",
+        "r_body_origin_to_application_B_m": [1.0, 0.4, -0.2],
+        "force_B_N": [300.0, 400.0, 0.0],
+        "intrinsic_moment_at_application_B_Nm": [1.0, -2.0, 3.0],
+        "omega_BI_B_radps": [1.0, 2.0, 3.0]
+      }
+    },
+    {
+      "id": "CASE-YYZ-SCALAR-BURN-MASS-ZERO-FLOW",
+      "context": {
+        "mass_state_id": "mass.fixture.yyz.vehicle@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "sample_tick": 3,
+        "configuration_revision": 9,
+        "valid_from_tick": 3,
+        "valid_until_tick": 7,
+        "base_dt_s": 0.25,
+        "next_valid_until_tick": 8
+      },
+      "committed_mass_state": {
+        "mass_kg": 10.0,
+        "r_body_origin_to_CoM_B_m": [-0.5, 0.25, 0.1],
+        "inertia_about_CoM_B_kgm2_row_major": [4.0, 0.0, 0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 6.0]
+      },
+      "mass_flow_interval": {
+        "source_id": "propulsion.main",
+        "mass_state_id": "mass.fixture.yyz.vehicle@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 9,
+        "valid_from_tick": 3,
+        "valid_until_tick": 7,
+        "fuel_consumption_rate_kgps": 0.0
+      },
+      "consumer_probe": {
+        "application_point_id": "point.fixture.yyz.propulsion-main@1",
+        "r_body_origin_to_application_B_m": [0.2, -0.1, 0.3],
+        "force_B_N": [40.0, 0.0, 30.0],
+        "intrinsic_moment_at_application_B_Nm": [-4.0, 5.0, -6.0],
+        "omega_BI_B_radps": [0.2, -0.1, 0.3]
+      }
+    }
+  ],
+  "equivalence_cases": [
+    {
+      "id": "EQUIV-YYZ-SCALAR-BURN-MASS-INTERVAL-PARTITION",
+      "operation": "split [20,25) into [20,22) and [22,25), committing the first candidate before evaluating the second interval",
+      "expected": "summed consumption and final committed mass equal the unsplit interval while CoM and inertia remain exactly equal"
+    }
+  ],
+  "invalid_input_cases": [
+    {"id": "INVALID-YYZ-SCALAR-BURN-MASS-STATE-IDENTITY", "mutation": "change the MassFlowInterval mass_state_id", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-SCALAR-BURN-MASS-FRAME-MISMATCH", "mutation": "change the MassFlowInterval body frame", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-SCALAR-BURN-MASS-CLOCK-MISMATCH", "mutation": "change the MassFlowInterval clock domain", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-SCALAR-BURN-MASS-REVISION-MISMATCH", "mutation": "change the MassFlowInterval configuration revision", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-SCALAR-BURN-MASS-INTERVAL-MISMATCH", "mutation": "change the MassFlowInterval valid_until_tick", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-SCALAR-BURN-MASS-NONPOSITIVE-DT", "mutation": "set base_dt_s to zero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-SCALAR-BURN-MASS-NONPOSITIVE-CURRENT", "mutation": "set committed mass to zero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-SCALAR-BURN-MASS-NEGATIVE-CONSUMPTION", "mutation": "set fuel consumption rate below zero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-SCALAR-BURN-MASS-DEPLETED-CANDIDATE", "mutation": "make interval consumption equal committed mass", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-SCALAR-BURN-MASS-NON-SPD-INERTIA", "mutation": "give committed inertia a negative principal value", "expected_status": "input-domain-error"}
+  ],
+  "mutation_cases": [
+    {"id": "MUTATION-YYZ-SCALAR-BURN-MASS-GAIN", "mutation": "add consumed mass to committed mass", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-SCALAR-BURN-MASS-EARLY-VISIBILITY", "mutation": "publish candidate mass to interval consumers before commit", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-SCALAR-BURN-MASS-COM-DRIFT", "mutation": "shift the candidate CoM x coordinate by consumed mass in fixture units", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-SCALAR-BURN-MASS-INERTIA-SCALE", "mutation": "scale candidate inertia by candidate_mass/committed_mass", "expected_status": "oracle-mismatch"}
+  ]
+}

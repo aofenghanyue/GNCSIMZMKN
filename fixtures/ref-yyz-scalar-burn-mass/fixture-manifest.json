@@ -1,0 +1,68 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-YYZ-SCALAR-BURN-MASS-001",
+  "status": "executable",
+  "purpose": "Provide an executable sampled scalar-burn MassState evolution with constant CoM and full inertia under a dedicated fixture-local model identity.",
+  "authority": "scientific_authority",
+  "provenance": {
+    "source_refs": [
+      "docs/adr/0006-si-frame-and-simulation-time-conventions.md",
+      "design-notes/gnczmkn-architecture-roadmap/14-cycle-dataflow-state-transaction-and-continuous-closure.md#181-sampled-interval-edge",
+      "design-notes/gnczmkn-architecture-roadmap/15-reference-vertical-designs-and-object-placement.md#83-massproperties",
+      "fixtures/ref-yyz-propulsion-response/cases.json",
+      "fixtures/ref-yyz-mass-properties/cases.json",
+      "fixtures/ref-yyz-force-moment-closure/cases.json",
+      "fixtures/ref-yyz-6dof-core/cases.json"
+    ],
+    "notes": "The repository owner accepted the recommended fixture-local scalar-burn constant-geometry choice. The dedicated identity limits the approximation to this executable R0 profile. Product and Legacy runtime APIs are absent."
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-YYZ-SCALAR-BURN-MASS-CANDIDATE",
+      "claim": "Independent 80-digit Decimal and C++17 implementations subtract the exact interval consumption from positive committed mass and copy the CoM coordinate and full inertia tensor exactly into a positive candidate.",
+      "tolerance_policy": "Identity, tick and geometry-copy relationships are exact; mass formulas use the fixture-local absolute-plus-relative tolerance.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-scalar-burn-mass/cases.json",
+        "oracles/ref-yyz-scalar-burn-mass/reference.json",
+        "tests/yyz_scalar_burn_mass.cpp",
+        "tools/yyz_scalar_burn_mass_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-YYZ-SCALAR-BURN-MASS-COMMIT",
+      "claim": "The current sample remains visible through the interval, the complete candidate commits at valid_until_tick, and next-boundary Closure geometry plus constant-inertia rotational dynamics remain continuous while translational specific force reflects the new mass.",
+      "tolerance_policy": "Visibility and commit identities are exact; consumer formulas use the fixture-local formula tolerance.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-scalar-burn-mass/cases.json",
+        "oracles/ref-yyz-scalar-burn-mass/reference.json",
+        "tests/yyz_scalar_burn_mass.cpp",
+        "tools/yyz_scalar_burn_mass_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-YYZ-SCALAR-BURN-MASS-FAILURES",
+      "claim": "Interval partitioning preserves final state, while invalid identities, nonpositive masses, depletion, mass gain, early visibility, CoM drift and inertia scaling fail directly.",
+      "tolerance_policy": "Rejection and equivalence identities are exact; tolerance never clamps mass or changes geometry policy.",
+      "evidence_refs": [
+        "fixtures/ref-yyz-scalar-burn-mass/cases.json",
+        "oracles/ref-yyz-scalar-burn-mass/reference.json",
+        "tests/yyz_scalar_burn_mass.cpp",
+        "tools/yyz_scalar_burn_mass_reference.py"
+      ]
+    }
+  ],
+  "required_artifacts": [
+    "fixtures/ref-yyz-scalar-burn-mass/README.md",
+    "fixtures/ref-yyz-scalar-burn-mass/cases.json",
+    "oracles/ref-yyz-scalar-burn-mass/reference.json",
+    "tests/yyz_scalar_burn_mass.cpp",
+    "tools/yyz_scalar_burn_mass_reference.py",
+    "CMakeLists.txt"
+  ],
+  "acceptance": [
+    "The dedicated model identity fixes scalar subtraction, candidate positivity, constant CoM/full inertia and next-boundary publication",
+    "The Decimal reference and C++17 probe share no implementation and neither imports product or Legacy code",
+    "Fuel geometry, dry mass, depletion handling, configuration changes, canonical assets and product contracts remain outside this slice"
+  ],
+  "open_tasks": ["R0-SCI-003"]
+}

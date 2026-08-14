@@ -24,7 +24,7 @@
     ],
     "temporal_policy": "The current committed sample is visible throughout its FrozenInterval. A pending scalar mass candidate remains candidate-only and can appear in projection only after the declared next-boundary commit.",
     "inertia_policy": "The sample carries the full finite symmetric-positive-definite inertia tensor about the current center of mass, expressed in the declared body frame. Products of inertia are preserved.",
-    "unresolved_choice": "How a MassFlowInterval derives candidate center of mass and inertia is intentionally unimplemented and still requires Scientific Authority selection.",
+    "related_evolution_profile": "This projection-only model does not derive candidate geometry. The accepted dedicated MODEL-YYZ-SCALAR-BURN-CONSTANT-GEOMETRY-001 profile is executable in REF-YYZ-SCALAR-BURN-MASS-001.",
     "excluded": [
       "a fuel, ablation, dry-mass, center-of-mass or inertia evolution law",
       "configuration jumps, attachment/separation and parallel-axis transfer",

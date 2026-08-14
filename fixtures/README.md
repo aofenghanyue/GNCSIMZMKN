@@ -23,7 +23,9 @@ Fixture 是可复制、可校验、带 provenance 的规范实例。每个目录
 
 `ref-yyz-propulsion-response` 已达到 `executable`，包含已接受的 fixture-local supplied propulsion response：非负推力标量与显式单位体轴方向组成力，响应携带作用点和该点固有力矩，Closure 独占 `r × F` 搬移；正值燃料消耗率在半开区间内积分并从 committed mass 扣除。80 位 Decimal 与独立 C++17 实现交叉检查三个公式 case、区间分割等价、十条输入域失败和三条 thrust/moment/mass mutation；command mapping、engine/fuel dynamics、dry-mass policy、canonical assets 与产品 contract 仍在后续范围内。
 
-`ref-yyz-mass-properties` 已达到 `executable`，实现由既有 accepted invariants 固定的 projection-only 路径：同边界 committed MassState 投影正质量、CoM 点坐标和关于 CoM 的完整对称正定体轴惯量；CoM 与作用点坐标生成 Closure 杠杆臂，质量和完整惯量直接进入 rigid-core consumer。待提交质量候选在当前 `FrozenInterval` 内保持 candidate-only，下一边界仅从显式 next committed state 投影。燃料驱动的 CoM/惯量演化、dry mass、configuration jump、canonical assets 与产品 contract 仍在后续范围内。
+`ref-yyz-mass-properties` 已达到 `executable`，实现由既有 accepted invariants 固定的 projection-only 路径：同边界 committed MassState 投影正质量、CoM 点坐标和关于 CoM 的完整对称正定体轴惯量；CoM 与作用点坐标生成 Closure 杠杆臂，质量和完整惯量直接进入 rigid-core consumer。待提交质量候选在当前 `FrozenInterval` 内保持 candidate-only，下一边界仅从显式 next committed state 投影。已接受的 constant-geometry scalar-burn 具有独立模型身份和下述可执行 bundle。
+
+`ref-yyz-scalar-burn-mass` 已达到 `executable`，实现专用 `MODEL-YYZ-SCALAR-BURN-CONSTANT-GEOMETRY-001`：按半开区间积分正值燃耗并从 committed mass 扣除，候选必须保持正值，CoM 坐标与完整惯量逐项保持，区间末一次提交完整候选。80 位 Decimal 与独立 C++17 实现覆盖 full-inertia 正燃耗、zero-flow、区间分割等价、十条输入拒绝，以及 mass gain、提前可见、CoM 漂移和惯量缩放 mutation。fuel geometry、dry mass、depletion event、configuration jump、canonical assets 与产品 contract 仍在后续范围内。
 
 `ref-yyz-frozen-interval` 已达到 `executable`，把已接受的 uniform environment、air-data、aero dimensionalization、propulsion response、当前 MassProperties、Closure 与刚体核心组合在同一 `[0,1)` 区间。80 位 Decimal 常加速度闭式轨迹与独立 C++17 一步 RK4 交叉检查 tick 1 状态、候选质量延迟可见性、四元数符号等价、八条输入域拒绝和三条跨组件 mutation。canonical assets、lookup、制导控制、产品终止指标与提交后的质量几何仍在后续范围内。
 

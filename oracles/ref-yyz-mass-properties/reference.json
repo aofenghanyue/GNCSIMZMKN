@@ -9,8 +9,8 @@
   },
   "input_identity": {
     "path": "fixtures/ref-yyz-mass-properties/cases.json",
-    "bytes": 9825,
-    "sha256": "d5863cd02a770f4fbc651aede429ceccad53a9ca350bdf938a2cdfd19365b0f3"
+    "bytes": 9868,
+    "sha256": "171e75c728427b46bd34570b0889dac923d7503192fc708fa944484cdabbbb96"
   },
   "cases": {
     "CASE-YYZ-MASS-PROPERTIES-CURRENT-CANDIDATE-PUBLICATION": {

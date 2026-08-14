@@ -14,7 +14,7 @@
       "fixtures/ref-yyz-force-moment-closure/cases.json",
       "fixtures/ref-yyz-propulsion-response/cases.json"
     ],
-    "notes": "This projection-only slice implements identities and domains already fixed by accepted ADR, architecture and executable bundles. It makes no choice for fuel-driven center-of-mass or inertia evolution. Product and Legacy runtime APIs are absent from the executable path."
+    "notes": "This projection-only slice implements identities and domains already fixed by accepted ADR, architecture and executable bundles. Candidate geometry derivation stays outside this model; the accepted constant-geometry scalar-burn choice has the separate REF-YYZ-SCALAR-BURN-MASS-001 identity. Product and Legacy runtime APIs are absent from the executable path."
   },
   "expected_facts": [
     {
@@ -62,7 +62,7 @@
   "acceptance": [
     "The bundle records committed projection identity, full inertia, CoM-to-application geometry, direct Closure/rigid-core consumers and candidate publication timing",
     "The Python reference and C++17 probe share no implementation and neither imports product or Legacy code",
-    "Fuel/ablation/dry-mass/CG/inertia evolution, configuration jumps, canonical assets and product contracts remain outside this projection-only slice"
+    "Mass evolution remains outside this projection-only identity; REF-YYZ-SCALAR-BURN-MASS-001 covers the accepted constant-geometry scalar-burn approximation"
   ],
   "open_tasks": ["R0-SCI-003"]
 }

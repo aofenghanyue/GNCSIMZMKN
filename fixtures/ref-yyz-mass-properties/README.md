@@ -38,6 +38,8 @@ Run the direct checks through CTest:
 ctest --preset dev -R "^r0.yyz-mass-properties" --output-on-failure
 ```
 
-Fuel, ablation, dry-mass, CoM/inertia evolution, configuration jumps,
+This projection model does not derive a next CoM or inertia from fuel flow.
+The accepted constant-geometry scalar burn is implemented separately by
+`REF-YYZ-SCALAR-BURN-MASS-001`. Fuel geometry, dry mass, configuration jumps,
 parallel-axis transfers, canonical vehicle assets and product contracts remain
-outside this projection-only slice.
+outside both profiles.
