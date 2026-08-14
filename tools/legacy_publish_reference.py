@@ -176,9 +176,11 @@ def main() -> int:
     decision = oracle["disposition_decision"]
     require(decision["status"] in {"needs_owner_decision", "accepted"},
             "Disposition decision has an unsupported status")
-    require({entry["recommended_disposition"]
+    disposition_field = ("disposition" if decision["status"] == "accepted"
+                         else "recommended_disposition")
+    require({entry[disposition_field]
              for entry in decision["facts"]} == {"Preserve", "Retire"},
-            "Disposition recommendation must separate Preserve and Retire")
+            "Disposition must separate Preserve and Retire")
     checks += 1
 
     print(json.dumps({

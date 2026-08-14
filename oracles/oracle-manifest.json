@@ -13,7 +13,7 @@
     {
       "id": "ORACLE-YYZ-PUBLISH-01",
       "level": "component",
-      "status": "capturing",
+      "status": "executable",
       "claim": "Publishing t_k does not advance continuous state.",
       "expected_facts": [
         "Committed state is exactly unchanged by publish at each boundary.",
@@ -73,13 +73,24 @@
     {
       "id": "ORACLE-YYZ-GROUP-04",
       "level": "closure",
-      "status": "planned",
+      "status": "capturing",
       "claim": "Shared RK candidate-state behavior is preserved by IntegrationScopePlan.",
-      "expected_facts": ["Declared members observe the same RK stage candidate set and commit together."],
-      "reference_kind": "legacy/new trajectory and stage comparison",
-      "tolerance_policy": "to be frozen by R0-SCI-003",
-      "source_refs": ["reference/legacy/source-manifest.json"],
-      "artifact_refs": []
+      "expected_facts": [
+        "Mass and position members observe one joint candidate state at all four RK stages, yielding mass=8 and position=9 after dt=1.",
+        "The joint candidate commits once to all declared members; unregistered membership and duplicate scope ownership are rejected."
+      ],
+      "reference_kind": "raw Legacy RK stage trace plus independent Decimal and C++17 joint-state references",
+      "tolerance_policy": "exact stage/event/membership identity and order; synthetic scalar absolute tolerance 1e-12; YYZ trajectory tolerance remains pending R0-SCI-003",
+      "source_refs": ["reference/legacy/source-manifest.json", "design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md#10-旧行为-oracle-怎样保护迁移"],
+      "artifact_refs": [
+        "fixtures/ref-legacy-continuous-group/input.json",
+        "fixtures/ref-legacy-continuous-group/legacy_capture.cpp",
+        "fixtures/ref-legacy-continuous-group/legacy-run-1.json",
+        "fixtures/ref-legacy-continuous-group/legacy-run-2.json",
+        "oracles/ref-legacy-continuous-group/reference.json",
+        "tests/legacy_continuous_group.cpp",
+        "tools/legacy_continuous_group_reference.py"
+      ]
     },
     {
       "id": "ORACLE-YYZ-CSV-05",

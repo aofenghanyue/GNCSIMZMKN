@@ -1,0 +1,82 @@
+{
+  "schema_version": "gnczmkn.fixture-manifest/1",
+  "fixture_id": "REF-LEGACY-CONTINUOUS-GROUP-001",
+  "status": "capturing",
+  "purpose": "Make the frozen Legacy shared RK candidate closure, group commit and membership validation executable without linking Legacy into the main build.",
+  "authority": "validation_lead",
+  "provenance": {
+    "source_refs": [
+      "docs/adr/0001-greenfield-and-legacy-reference.md",
+      "design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md#10-旧行为-oracle-怎样保护迁移",
+      "reference/legacy/source-manifest.json",
+      "reference/legacy/reproduction/r0-leg-001-20260810-07/evidence-index.json"
+    ],
+    "notes": "An external C++17 harness was compiled against a clean extraction of the frozen archive with w64devkit GCC 16.2.0 and run twice. The main build consumes pinned traces, a 50-digit Decimal derivation and an independent C++17 joint-state probe with no Legacy dependency."
+  },
+  "expected_facts": [
+    {
+      "id": "FACT-GROUP-SHARED-CANDIDATE",
+      "claim": "Mass and position derivatives read one joint candidate vector at all four RK stages, producing mass=8 and position=9 after dt=1.",
+      "tolerance_policy": "Stage identity, time, event order and multiplicity are exact; synthetic scalar fields use absolute tolerance 1e-12.",
+      "evidence_refs": [
+        "fixtures/ref-legacy-continuous-group/legacy-run-1.json",
+        "fixtures/ref-legacy-continuous-group/legacy-run-2.json",
+        "oracles/ref-legacy-continuous-group/reference.json",
+        "tests/legacy_continuous_group.cpp",
+        "tools/legacy_continuous_group_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-GROUP-ATOMIC-COMMIT",
+      "claim": "The joint candidate commits once and distributes mass=8 and position=9 to both declared members.",
+      "tolerance_policy": "Commit event identity and count are exact; synthetic scalar fields use absolute tolerance 1e-12.",
+      "evidence_refs": [
+        "fixtures/ref-legacy-continuous-group/legacy-run-1.json",
+        "oracles/ref-legacy-continuous-group/reference.json",
+        "tests/legacy_continuous_group.cpp"
+      ]
+    },
+    {
+      "id": "FACT-GROUP-MEMBERSHIP",
+      "claim": "Every scope member must be registered and may belong to only one continuous scope.",
+      "tolerance_policy": "Valid, unregistered and duplicate-ownership outcomes are exact.",
+      "evidence_refs": [
+        "fixtures/ref-legacy-continuous-group/legacy-run-1.json",
+        "fixtures/ref-legacy-continuous-group/legacy-run-2.json",
+        "tests/legacy_continuous_group.cpp",
+        "tools/legacy_continuous_group_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-GROUP-PROVENANCE",
+      "claim": "The trace is tied to the frozen archive, group interface, RK4 implementation, simulator, passing runtime test, capture harness and canonical environment evidence.",
+      "tolerance_policy": "Paths, byte counts and SHA-256 values are exact.",
+      "evidence_refs": [
+        "fixtures/ref-legacy-continuous-group/input.json",
+        "fixtures/ref-legacy-continuous-group/legacy_capture.cpp",
+        "reference/legacy/reproduction/r0-leg-001-20260810-07/logs/legacy-ctest-all.log"
+      ]
+    }
+  ],
+  "required_artifacts": [
+    "fixtures/ref-legacy-continuous-group/README.md",
+    "fixtures/ref-legacy-continuous-group/input.json",
+    "fixtures/ref-legacy-continuous-group/legacy_capture.cpp",
+    "fixtures/ref-legacy-continuous-group/legacy-run-1.json",
+    "fixtures/ref-legacy-continuous-group/legacy-run-2.json",
+    "oracles/ref-legacy-continuous-group/reference.json",
+    "tests/legacy_continuous_group.cpp",
+    "tools/legacy_continuous_group_reference.py",
+    "CMakeLists.txt"
+  ],
+  "acceptance": [
+    "Verifies frozen source, environment, harness and runtime-test identities before comparing behavior",
+    "Two raw Legacy captures normalize to one semantic stage and commit trace after excluding only rerun_index",
+    "Independent 50-digit Decimal and C++17 joint-state RK4 implementations agree with every Legacy stage and final member value",
+    "Rejects split snapshot closure, an unregistered member and duplicate scope ownership",
+    "Preserve and Retire recommendations remain visibly pending until the repository owner accepts the disposition choice"
+  ],
+  "open_tasks": [
+    "R0-LEG-002"
+  ]
+}

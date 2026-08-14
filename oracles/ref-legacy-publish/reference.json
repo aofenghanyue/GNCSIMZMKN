@@ -55,24 +55,24 @@
     "expected_status": "rejected"
   },
   "disposition_decision": {
-    "status": "needs_owner_decision",
+    "status": "accepted",
     "owner_role": "validation_lead",
     "facts": [
       {
         "fact_id": "FACT-PUBLISH-STATE-READONLY",
-        "recommended_disposition": "Preserve",
+        "disposition": "Preserve",
         "difference_reason": "ScientificInvariant",
         "target_mapping": "Publish projects the committed boundary state without changing it"
       },
       {
         "fact_id": "FACT-PUBLISH-TIME-BOUNDARY",
-        "recommended_disposition": "Preserve",
+        "disposition": "Preserve",
         "difference_reason": "ScientificInvariant",
         "target_mapping": "published truth identifies its t_k boundary and changes only at a publish boundary"
       },
       {
         "fact_id": "FACT-PUBLISH-LEGACY-SURFACE",
-        "recommended_disposition": "Retire",
+        "disposition": "Retire",
         "difference_reason": "AccidentalStructure",
         "target_mapping": "IPublishTask, PublishContext, callback names and Legacy truth storage shape"
       }

@@ -1,7 +1,7 @@
 # R0-LEG-002 Legacy 行为 oracle 捕获计划
 
 - 文档状态：Implementation tracking
-- 实现成熟度：`ORACLE-YYZ-SYNC-03` 已达到 `executable`，`ORACLE-YYZ-PUBLISH-01` 与 `ORACLE-YYZ-PHASE-02` 处于 `capturing`；其余四条未实现；不得作为完整 G1 或 runtime migration pass evidence
+- 实现成熟度：`ORACLE-YYZ-PUBLISH-01` 与 `ORACLE-YYZ-SYNC-03` 已达到 `executable`，`ORACLE-YYZ-PHASE-02` 与 `ORACLE-YYZ-GROUP-04` 处于 `capturing`；其余三条未实现；不得作为完整 G1 或 runtime migration pass evidence
 - 任务：`R0-LEG-002`（backlog 为 `in_progress`）
 - 日期：2026-08-14
 - Authority owner role：Validation Lead
@@ -9,7 +9,7 @@
 
 ## 1. 目标与证据边界
 
-本计划把冻结 Legacy 中值得迁移的运行时事实转成可执行、可复核的 oracle bundle，同时明确退出旧类名、节点数量、priority/registration 偶然顺序、CSV 列序、free-text reason、目录命名和 old Mission shape。oracle 的目标是保护科学、时间、事务和重放语义，不是保存旧实现拓扑。
+本计划把冻结 Legacy 中值得迁移的运行时事实转成可执行、可复核的 oracle bundle，同时明确退出旧类名、节点数量、priority/registration 偶然顺序、CSV 列序、free-text reason、目录命名和 old Mission shape。oracle 保护科学、时间、事务和重放语义；旧实现拓扑不在保护范围内。
 
 每条证据分三层：冻结来源事实、隔离 probe 的运行时观察、经 owner 批准的迁移处置。源码阅读可以解释 trace，但不能代替 trace；Legacy 运行结果可以证明旧路径，却不能伪造尚未实现的 target `RunOutcome`、`IntegrationScopePlan` 或 deterministic CaseId。
 
@@ -41,7 +41,7 @@ canonical Legacy 捕获候选应优先复用 `R0-LEG-001` 已成功验证的 Win
 
 ## 3. Bundle 的概念性最小内容
 
-以下是验收信息需求，不是已批准的新 schema：
+以下列出验收信息需求，尚未形成已批准的新 schema：
 
 | 信息组 | 必需内容 |
 | --- | --- |
@@ -57,7 +57,7 @@ canonical Legacy 捕获候选应优先复用 `R0-LEG-001` 已成功验证的 Win
 
 ### 3.1 当前切片的契约路由
 
-现有 `gnczmkn.oracle-manifest/1` 继续承担集合索引，只引用实际 artifact。前三个切片使用各自 fixture-local `input.json` 与 `reference.json`，由当前 Python comparator 和 C++ probe 直接消费；每份 `reference.json` 对对应 `input.json` 原始 bytes 记录 SHA-256，并把事实级处置保存为枚举字段与独立 decision status。phase 切片另保存外部 Legacy capture harness 和两份原始 trace。同步提交切片的状态已接受，publish 与 phase 切片保持待定。
+现有 `gnczmkn.oracle-manifest/1` 继续承担集合索引，只引用实际 artifact。前四个切片使用各自 fixture-local `input.json` 与 `reference.json`，由当前 Python comparator 和 C++ probe 直接消费；每份 `reference.json` 对对应 `input.json` 原始 bytes 记录 SHA-256，并把事实级处置保存为枚举字段与独立 decision status。phase 与 continuous-group 切片另保存外部 Legacy capture harness 和两份原始 trace。publish 与同步提交切片的状态已接受，phase 与 continuous-group 切片保持待定。
 
 这组 fixture-local JSON 不扩展公共 schema。后续出现第二个共享 consumer 或跨 bundle 合并需求时，再以窄 ADR 决定通用 sidecar 或 oracle schema revision。当前 `needs_owner_decision` 不能把 `R0-LEG-002` 或关联 oracle 标为完成。
 
@@ -78,12 +78,12 @@ canonical Legacy 捕获候选应优先复用 `R0-LEG-001` 已成功验证的 Win
 
 | Oracle | 最小隔离输入 | 冻结种子事实 | 当前 capture | 比较/容差边界 | 当前处置 |
 | --- | --- | --- | --- | --- | --- |
-| `ORACLE-YYZ-PUBLISH-01` | dt=0.5 的单连续状态 + truth publisher + before/after probe | run 在每步先 publish；t0 before 见 altitude=1000/sample_time=0；t0 after 见 altitude=1004.75 但 sample_time 仍为 0 | 已捕获两个边界的 committed state/truth、事件序列和双跑输出；epoch/tick 等 target 字段保持 pending | 当前 state identity/sample time/event order exact；种子 scalar 为 1e-12 | 待定：建议 Preserve publish 只读与 truth 边界时间（ScientificInvariant）；Retire Legacy callback/class surface |
+| `ORACLE-YYZ-PUBLISH-01` | dt=0.5 的单连续状态 + truth publisher + before/after probe | run 在每步先 publish；t0 before 见 altitude=1000/sample_time=0；t0 after 见 altitude=1004.75 但 sample_time 仍为 0 | 已捕获两个边界的 committed state/truth、事件序列和双跑输出；epoch/tick 等 target 字段保持 pending | 当前 state identity/sample time/event order exact；种子 scalar 为 1e-12 | 已接受：Preserve publish 只读与 truth 边界时间（ScientificInvariant）；Retire Legacy callback/class surface |
 | `ORACLE-YYZ-PHASE-02` | 每个 phase 一个无状态 trace probe，单 tick | 宏顺序为 environment→perturbation→input→process→output→interaction→evaluation；同 phase 用 priority 后 registration order | 已用乱序注册与跨 phase priority 捕获两份真实 Legacy trace，并以独立 C++17 probe 复核；含 step/time/phase/probe/sequence | event identity/order/multiplicity/step/time exact；只从归一化中排除 rerun_index | 待定：建议 Preserve 宏 phase temporal convention（DeclaredModelChoice）；Retire priority 数值、registration/config tie-break 和 Legacy callback surface |
 | `ORACLE-YYZ-SYNC-03` | mass'=−2、position'=mass 的两个独立连续系统，RK4，dt=1 | 最终 mass=8、position=10；源码先完成全部 pending candidate 再 setState | 已捕获 candidate-complete/commit journal、双跑输出和 early-commit 失败路径 | event partial order exact；种子 scalar 为 1e-12 | 已接受：Preserve 候选屏障与 committed-`t_k` 读取（ScientificInvariant）；Retire `pending_states`、setState 循环顺序与 Legacy 接口名称 |
-| `ORACLE-YYZ-GROUP-04` | mass'=−2、position'=candidate mass 的二元连续组，RK4，dt=1 | 最终 mass=8、position=9，当前断言 1e-12；拒绝未注册成员和重复 group ownership | RK stage candidate set、member observation、group commit trace；valid/invalid membership cases | membership/order exact；种子 scalar 1e-12 只证明旧测试；YYZ trajectory tolerance 由 R0-SCI-003 冻结 | Preserve：共享候选闭包（DeclaredModelChoice/closure invariant）；Retire：`IContinuousGroup` 名称与接口形状 |
+| `ORACLE-YYZ-GROUP-04` | mass'=−2、position'=candidate mass 的二元连续组，RK4，dt=1 | 最终 mass=8、position=9，当前断言 1e-12；拒绝未注册成员和重复 group ownership | 已捕获两份真实四阶段 candidate/derivative 与单次 group commit trace，并用 50 位 Decimal、独立 C++17 joint RK4、valid/invalid membership cases 复核 | stage/event/membership exact；种子 scalar 1e-12 只覆盖合成用例；YYZ trajectory tolerance 由 R0-SCI-003 冻结 | 待定：建议 Preserve 共享 candidate、单次 scope commit 与唯一 membership（DeclaredModelChoice）；Retire `IContinuousGroup`、group node 和手工 vector 分发 |
 | `ORACLE-YYZ-CSV-05` | constant-acceleration mission，dt=0.5/duration=1，record initial | rows: t0=(0,1000)、t1=(0.5,1004.75,vz=9)、t2=(1,1009)；time 1e-12、state 1e-9 | 按 header 解析后生成 semantic FieldId sidecar；记录每字段 publish/update boundary、unit/frame/time relation 和 dataset hash | time/identity metadata exact；字段级数值 tolerance 由 scientific owner 批准；禁止全文件 byte equality 作为唯一判据 | Preserve：`t_k` 与 semantic boundary；Retire：CSV 列序、列名拼接、格式/目录；target encoding 可变 |
-| `ORACLE-YYZ-STOP-06` | t0 即满足的 altitude stop，record initial | termination reason 为 `stop at t0`；header + 一行，row time=0；run 中 record 在 checkTermination 前 | publish/record/termination-evaluate/terminal-observation trace；Legacy terminal facts与 target-pending mapping 分开 | observation-before-terminal exact；free text 不比较 | Preserve：停止状态先观察再终态；Retire：free-text reason；target `RunOutcome` 是新证据，不是 Legacy 事实 |
+| `ORACLE-YYZ-STOP-06` | t0 即满足的 altitude stop，record initial | termination reason 为 `stop at t0`；header + 一行，row time=0；run 中 record 在 checkTermination 前 | publish/record/termination-evaluate/terminal-observation trace；Legacy terminal facts与 target-pending mapping 分开 | observation-before-terminal exact；free text 不比较 | Preserve：停止状态先观察再终态；Retire：free-text reason；target `RunOutcome` 是新证据，Legacy 无此事实 |
 | `ORACLE-SIMFLOW-07` | base mission + 两行 variation matrix + numeric perturbation materializer | `hot` case id 被物化；effective mission 含注入值；`effective_mission.json` 可由普通 `gnc_sim --config` 重放 | base/matrix/materializer/effective mission 语义 hash、命令路径、普通 replay exit/artifacts；target CaseId 映射显式 pending | canonical semantic input equality；replay result 按所选 mission oracle；CaseId 规则待 target authority | Preserve：预运行物化 + ordinary compile/run replay；Retire：`case_000001`、不生成 case manifest、old Mission shape；deterministic target CaseId 为新契约 |
 
 ### 5.1 当前没有可自动批准的 Fix
@@ -97,7 +97,7 @@ canonical Legacy 捕获候选应优先复用 `R0-LEG-001` 已成功验证的 Win
 - publish：以 run 前初态/上一 step after-commit hash 对照下一次 `before_step`，在 publish 已完成但离散更新尚未发生的位置观察；
 - phase：外部 harness 在干净 Legacy 解压目录中注册七个无状态 `IDiscreteTask` probe，各属一个 phase，只向 trace 文件写自身事件；主构建读取冻结 trace 并运行独立 probe；
 - sync：测试连续系统在 derivative/candidate 完成与 `setState` 时写 journal；probe 不读写对方 state；
-- group：由 group harness 记录每个 RK stage 的共享 candidate 与一次 group commit；
+- group：外部 harness 在干净 Legacy 解压目录中记录每个 RK stage 的共享 candidate/derivative、一次 group commit 和 membership failures；主构建读取冻结 trace，并运行 Decimal 与独立 C++17 reference；
 - CSV：事后解析输出并映射 semantic field，不改变 logger 或列顺序；
 - stop：termination evaluator、recorded dataset 与 simulator ordering 共同证明 Legacy half；
 - SimFlow：捕获实际 CLI 命令，并用 materialized effective mission 调普通 runner。
@@ -130,7 +130,7 @@ raw trace 至少使用以下稳定概念字段；具体 schema 名称待第 3.1 
 
 ## 9. 当前直接失败检查
 
-`ORACLE-YYZ-SYNC-03` 的直接失败用例会在 position candidate 完成前提交 mass；Python evaluator 和 C++ probe 都拒绝该 journal，并证明错误路径得到 `position=8`。`ORACLE-YYZ-PUBLISH-01` 的直接失败用例在 publish 内把 committed altitude 增加 `1 m`，C++ probe 拒绝该状态变化，Python comparator 同时核对失败事实。`ORACLE-YYZ-PHASE-02` 拒绝 process/output 交换和重复 input phase。重复 id、跨平台聚合 hash、通用 classification completeness 等检查留到出现当前 consumer 或直接回归后再增加。
+`ORACLE-YYZ-SYNC-03` 的直接失败用例会在 position candidate 完成前提交 mass；Python evaluator 和 C++ probe 都拒绝该 journal，并证明错误路径得到 `position=8`。`ORACLE-YYZ-PUBLISH-01` 的直接失败用例在 publish 内把 committed altitude 增加 `1 m`，C++ probe 拒绝该状态变化，Python comparator 同时核对失败事实。`ORACLE-YYZ-PHASE-02` 拒绝 process/output 交换和重复 input phase。`ORACLE-YYZ-GROUP-04` 拒绝得到 `position=10` 的 split snapshot closure、未注册 member 和重复 scope ownership。重复 id、跨平台聚合 hash、通用 classification completeness 等检查留到出现当前 consumer 或直接回归后再增加。
 
 ## 10. 退出检查
 
@@ -141,7 +141,7 @@ raw trace 至少使用以下稳定概念字段；具体 schema 名称待第 3.1 
 - schema 缺口、owner 和 ADR gate 显式保留；
 - canonical Legacy capture 环境与 target 平台证据分离，MSVC gap 没有被掩盖；
 - capture 仅发生于隔离 build workspace，产品 tree 与冻结 Legacy 零修改；
-- 前三个切片分别包含 early-commit、publish-time mutation、phase swap 与 duplicate 直接失败用例；其余失败检查随具体 oracle consumer 增加；
+- 前四个切片包含 early-commit、publish-time mutation、phase swap/duplicate、split closure 与 membership 直接失败用例；其余失败检查随具体 oracle consumer 增加；
 - target 尚不存在的对象显式为 pending，没有 vacuous pass；
-- `R0-LEG-001` 已完成，`R0-LEG-002` 保持 `in_progress`；同步提交切片的处置已接受，publish 与 phase 切片仍显式待定；
+- `R0-LEG-001` 已完成，`R0-LEG-002` 保持 `in_progress`；publish 与同步提交切片的处置已接受，phase 与 continuous-group 切片仍显式待定；
 - UTF-8、Markdown links、repository verification 与 `git diff --check` 通过。

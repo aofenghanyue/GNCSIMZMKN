@@ -1,0 +1,97 @@
+{
+  "schema_version": "gnczmkn.legacy-continuous-group-input/1",
+  "fixture_id": "REF-LEGACY-CONTINUOUS-GROUP-001",
+  "oracle_id": "ORACLE-YYZ-GROUP-04",
+  "case_id": "CASE-LEGACY-GROUP-CANDIDATE-CLOSURE",
+  "run": {
+    "initial_time_s": "0",
+    "step_s": "1",
+    "step_count": 1,
+    "integration_method": "fixed-step classical RK4"
+  },
+  "initial_state": {
+    "mass_kg": "10",
+    "position_m": "0"
+  },
+  "dynamics": {
+    "mass_rate_kg_per_s": "-2",
+    "position_rate_source": "joint candidate mass state"
+  },
+  "membership": {
+    "scope_id": "scope:mass-position",
+    "member_ids": [
+      "mass",
+      "position"
+    ],
+    "registered_members_required": true,
+    "unique_scope_ownership_required": true
+  },
+  "legacy_source": {
+    "archive": {
+      "path": "reference/legacy/legacy-source.zip",
+      "prefix": "GNCZMKN-legacy-a63621c/",
+      "bytes": 990450,
+      "sha256": "2159a324fd897e4bd508c140a36c9165d744e4e4e61861c5b568201707f988e5"
+    },
+    "entries": [
+      {
+        "path": "framework/include/gnc/interfaces/i_continuous_group.hpp",
+        "bytes": 711,
+        "sha256": "6e1b859da99e3e50c8947e2cbc9f5d1017e9d5ea018610bede401cf814027ae9"
+      },
+      {
+        "path": "framework/include/gnc/core/integrators/rk4_integrator.hpp",
+        "bytes": 891,
+        "sha256": "ac569d642a762861ed3df211390442797db13619b9031b9f3bbb7fa1f22e20ce"
+      },
+      {
+        "path": "framework/include/gnc/core/simulator.hpp",
+        "bytes": 21226,
+        "sha256": "455b22e68fdd4511a85f9a1c20547d022261cdf3397aabfd5f85115764edae78"
+      },
+      {
+        "path": "tests/test_continuous_group.cpp",
+        "bytes": 11404,
+        "sha256": "6d6f01098b1b606c5e1a23eaceb501ba99f07370fc51d22fb6f5cea06b2d9d46"
+      }
+    ],
+    "runtime_test": {
+      "id": "test_continuous_group",
+      "evidence_path": "reference/legacy/reproduction/r0-leg-001-20260810-07/logs/legacy-ctest-all.log",
+      "evidence_bytes": 4131,
+      "evidence_sha256": "c9b4140b5c6dfe0917036f12ce0dca07005c6913b68751f2649d728d33899c2d"
+    }
+  },
+  "legacy_capture": {
+    "compiler": "w64devkit GCC 16.2.0",
+    "language_standard": "C++17",
+    "compile_command": "<w64devkit-g++> -std=c++17 -O2 -Wall -Wextra -pedantic legacy_capture.cpp -I<legacy-root> -I<generated-config> -I<legacy-root>/framework/include -isystem <eigen-3.4.0> -o legacy_group_capture.exe",
+    "run_commands": [
+      "legacy_group_capture.exe --output legacy-run-1.json --rerun-index 1",
+      "legacy_group_capture.exe --output legacy-run-2.json --rerun-index 2"
+    ],
+    "working_directory_policy": "Repository root with all source, generated-config, dependency and output paths resolved explicitly",
+    "environment_evidence": {
+      "path": "reference/legacy/reproduction/r0-leg-001-20260810-07/environment-manifest.json",
+      "bytes": 5549,
+      "sha256": "be340b26caa99033cf63cb1c993690aec18e9750faaff6658be4dba8b6eb3041"
+    },
+    "harness": {
+      "path": "fixtures/ref-legacy-continuous-group/legacy_capture.cpp",
+      "bytes": 14639,
+      "sha256": "e4fa9a37a72f4b4945b4734244f54169ac6aa09d2ca2a799ee6b97d1cc17a927"
+    },
+    "traces": [
+      {
+        "path": "fixtures/ref-legacy-continuous-group/legacy-run-1.json",
+        "bytes": 1036,
+        "sha256": "6993d709b3cfd41e4b7623ba45b1aee70bafd86cd62a3d4a98b30f7cbd0906b4"
+      },
+      {
+        "path": "fixtures/ref-legacy-continuous-group/legacy-run-2.json",
+        "bytes": 1036,
+        "sha256": "04d702ad7953d9e9ccc86874ffe4047bf7dec35de5602bc87a044b91ee322eec"
+      }
+    ]
+  }
+}

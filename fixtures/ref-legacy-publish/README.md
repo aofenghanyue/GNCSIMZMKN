@@ -7,7 +7,7 @@ The case starts at `t0=0` with altitude `1000 m`, vertical velocity `10 m/s` and
 The bundle keeps three evidence layers separate:
 
 - [`input.json`](input.json) pins the raw fixture bytes, Legacy archive, relevant source entries and recorded runtime test;
-- [`reference.json`](../../oracles/ref-legacy-publish/reference.json) contains the 50-digit Decimal derivation, boundary timeline, mutation failure case and pending disposition recommendation;
+- [`reference.json`](../../oracles/ref-legacy-publish/reference.json) contains the 50-digit Decimal derivation, boundary timeline, mutation failure case and accepted disposition;
 - the C++17 probe independently runs RK4, projects both boundary states, checks exact state identity and rejects a publish-time altitude mutation.
 
 Run the two executable checks through CTest:
@@ -16,4 +16,4 @@ Run the two executable checks through CTest:
 ctest --preset dev -R "r0.legacy-publish" --output-on-failure
 ```
 
-The bundle remains `capturing` until the repository owner accepts the recommended Preserve/Retire split. It does not include, link or execute Legacy production code.
+The bundle is `executable`. The accepted disposition preserves read-only publication and `t_k` truth refresh while retiring the Legacy task, context, callback and truth-storage surface. It does not include, link or execute Legacy production code.

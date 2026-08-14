@@ -1,0 +1,149 @@
+{
+  "schema_version": "gnczmkn.legacy-continuous-group-reference/1",
+  "fixture_id": "REF-LEGACY-CONTINUOUS-GROUP-001",
+  "oracle_id": "ORACLE-YYZ-GROUP-04",
+  "case_id": "CASE-LEGACY-GROUP-CANDIDATE-CLOSURE",
+  "input_identity": {
+    "path": "fixtures/ref-legacy-continuous-group/input.json",
+    "bytes": 3553,
+    "sha256": "8661d2df199d75374c27db73d2d44df0ea7e9bb87cbdf64137586648e8880a72"
+  },
+  "reference_method": {
+    "implementation": "CPython standard library Decimal at 50 digits plus an independent C++17 joint-state RK4 probe",
+    "derivation": "Evaluate mass and position from one joint candidate vector at every RK stage, compare two raw Legacy captures, and contrast with split snapshot coupling."
+  },
+  "legacy_observation": {
+    "capture_status": "passed_twice",
+    "runtime_test": "test_continuous_group",
+    "runtime_test_status": "passed",
+    "joint_candidate_final_mass_kg": "8",
+    "joint_candidate_final_position_m": "9",
+    "split_snapshot_final_position_m": "10",
+    "implementation_fact": "Grouped members are excluded from separate stepping; the group integrates one joint vector and distributes one committed replacement."
+  },
+  "expected": {
+    "scope_id": "scope:mass-position",
+    "member_ids": [
+      "mass",
+      "position"
+    ],
+    "stages": [
+      {
+        "sequence": 0,
+        "event_kind": "rk-stage",
+        "rk_stage": 1,
+        "time_s": "0",
+        "candidate_mass_kg": "10",
+        "candidate_position_m": "0",
+        "mass_rate_kg_per_s": "-2",
+        "position_rate_mps": "10"
+      },
+      {
+        "sequence": 1,
+        "event_kind": "rk-stage",
+        "rk_stage": 2,
+        "time_s": "0.5",
+        "candidate_mass_kg": "9",
+        "candidate_position_m": "5",
+        "mass_rate_kg_per_s": "-2",
+        "position_rate_mps": "9"
+      },
+      {
+        "sequence": 2,
+        "event_kind": "rk-stage",
+        "rk_stage": 3,
+        "time_s": "0.5",
+        "candidate_mass_kg": "9",
+        "candidate_position_m": "4.5",
+        "mass_rate_kg_per_s": "-2",
+        "position_rate_mps": "9"
+      },
+      {
+        "sequence": 3,
+        "event_kind": "rk-stage",
+        "rk_stage": 4,
+        "time_s": "1",
+        "candidate_mass_kg": "8",
+        "candidate_position_m": "9",
+        "mass_rate_kg_per_s": "-2",
+        "position_rate_mps": "8"
+      }
+    ],
+    "commit": {
+      "sequence": 4,
+      "event_kind": "group-commit",
+      "effective_time_s": "1",
+      "committed_mass_kg": "8",
+      "committed_position_m": "9"
+    },
+    "member_final": {
+      "mass_kg": "8",
+      "position_m": "9"
+    },
+    "commit_count": 1,
+    "unregistered_member_rejected": true,
+    "duplicate_ownership_rejected": true,
+    "normalization": {
+      "excluded_top_level_fields": [
+        "rerun_index"
+      ],
+      "excluded_event_fields": []
+    }
+  },
+  "tolerances": {
+    "synthetic_scalar_absolute": "1e-12",
+    "stage_and_event_identity": "exact",
+    "stage_time": "exact",
+    "event_order_and_multiplicity": "exact",
+    "membership_outcome": "exact",
+    "yyz_trajectory": "pending R0-SCI-003"
+  },
+  "failure_cases": [
+    {
+      "id": "FAIL-GROUP-SPLIT-SNAPSHOT-CLOSURE",
+      "mutation": "Integrate position separately with position_rate=committed t_k mass",
+      "mutated_position_final_m": "10",
+      "expected_status": "rejected"
+    },
+    {
+      "id": "FAIL-GROUP-UNREGISTERED-MEMBER",
+      "mutation": "Declare a scope member absent from the registered system set",
+      "expected_status": "rejected"
+    },
+    {
+      "id": "FAIL-GROUP-DUPLICATE-OWNERSHIP",
+      "mutation": "Assign one continuous member to two scopes",
+      "expected_status": "rejected"
+    }
+  ],
+  "disposition_decision": {
+    "status": "needs_owner_decision",
+    "owner_role": "validation_lead",
+    "facts": [
+      {
+        "fact_id": "FACT-GROUP-SHARED-CANDIDATE",
+        "recommended_disposition": "Preserve",
+        "difference_reason": "DeclaredModelChoice",
+        "target_mapping": "IntegrationScopePlan members read one shared RK candidate state"
+      },
+      {
+        "fact_id": "FACT-GROUP-ATOMIC-COMMIT",
+        "recommended_disposition": "Preserve",
+        "difference_reason": "DeclaredModelChoice",
+        "target_mapping": "one validated scope replacement commits all declared member state together"
+      },
+      {
+        "fact_id": "FACT-GROUP-MEMBERSHIP",
+        "recommended_disposition": "Preserve",
+        "difference_reason": "DeclaredModelChoice",
+        "target_mapping": "Compiler proves registered membership and unique scope ownership"
+      },
+      {
+        "fact_id": "FACT-GROUP-LEGACY-SURFACE",
+        "recommended_disposition": "Retire",
+        "difference_reason": "AccidentalStructure",
+        "target_mapping": "IContinuousGroup, group node identity, manual vector packing and setState distribution"
+      }
+    ]
+  }
+}
