@@ -28,8 +28,20 @@ the second interval with 80-digit Decimal arithmetic. The independent C++17
 probe recomputes both intervals, including air-data, trilinear coefficients,
 forces, moments, mass transitions and full attitude/rate RK4. A 1/2/4/8
 substep series demonstrates fourth-order self-convergence for the rotating
-second interval. Canonical mission source, Compiler/Session contracts,
-guidance/control and durable evidence remain outside this R0 fixture.
+second interval.
+
+Three precommit failure projections cover a stale boundary Closure, a
+non-atomic rigid/mass candidate group and a Mach query beyond the validated
+aerodynamic domain. Each projection emits a structured diagnostic fact, a
+separate fixture policy decision and a failed step outcome. The outcome proves
+that commit identity, sample tick and committed mass stay at the base sample
+and that no candidate commit is published. The `GNC-SCH-0201`, `GNC-INT-0301`
+and `GNC-PHY-0201` codes are stable inside this fixture bundle only; this slice
+does not allocate a product code registry or product `DiagnosticRecord`
+contract.
+
+Canonical mission source, Compiler/Session contracts, guidance/control and
+durable evidence remain outside this R0 fixture.
 
 After configuring and building a preset, run CTest test
 `r0.yyz-mission-composition.oracle`.

@@ -1,10 +1,10 @@
 {
-  "schema_version": "gnczmkn.yyz-mission-composition-reference/2",
+  "schema_version": "gnczmkn.yyz-mission-composition-reference/3",
   "fixture_id": "REF-YYZ-MISSION-COMPOSITION-001",
   "oracle_id": "ORACLE-YYZ-MISSION-COMPOSITION-001",
-  "model_id": "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-002",
+  "model_id": "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-003",
   "precision": {
-    "implementation": "Python Decimal composition over executable component formula references with boundary recomputation and full-state RK4",
+    "implementation": "Python Decimal composition over executable component formula references with boundary recomputation, full-state RK4 and fixture-local structured failure projection",
     "decimal_digits": 80
   },
   "source_identity": {
@@ -16,7 +16,7 @@
       "id": "CASE-YYZ-MISSION-COMPOSITION-BASELINE",
       "mission_source_id": "mission.fixture.yyz.lookup-open-loop@1",
       "execution_id": "execution.fixture.yyz.lookup-open-loop.0001",
-      "composition_model_id": "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-002",
+      "composition_model_id": "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-003",
       "resolved_components": [
         {
           "role": "aero_dimensionalization",
@@ -1067,6 +1067,227 @@
       ],
       "observed_terminal_observation_sealed": false,
       "max_abs_result_difference": "1"
+    }
+  ],
+  "diagnostic_results": [
+    {
+      "id": "DIAGNOSTIC-YYZ-MISSION-STALE-BOUNDARY-CLOSURE",
+      "source_failure_id": "MUTATION-YYZ-MISSION-COMPOSITION-STALE-BOUNDARY-CLOSURE",
+      "diagnostic_record": {
+        "diagnostic_id": "diag:fixture:yyz:stale-boundary-closure",
+        "code": "GNC-SCH-0201",
+        "code_scope": "fixture-local",
+        "category": "scheduling",
+        "authority_domain": "Model",
+        "stage": "step",
+        "region": "advance",
+        "callsite": "closure-input-validation",
+        "subject": {
+          "component_role": "force_moment_closure",
+          "fixture_id": "REF-YYZ-FORCE-MOMENT-CLOSURE-001",
+          "oracle_id": "ORACLE-YYZ-FORCE-MOMENT-CLOSURE-001",
+          "model_id": "MODEL-YYZ-FORCE-MOMENT-CLOSURE-001"
+        },
+        "message_key": "closure.sample_tick_mismatch",
+        "parameters": {
+          "expected_sample_tick": 1,
+          "observed_sample_tick": 0
+        },
+        "simulation_context": {
+          "sample_tick": 1,
+          "time_s": "0.1",
+          "clock_domain": "clock.fixture.yyz.simulation@1"
+        },
+        "evidence": {
+          "required_valid_from_tick": 1,
+          "observed_valid_from_tick": 0,
+          "observed_valid_until_tick": 1,
+          "expected_force_total_B_N": [
+            "-80.37915382284792877540613864749989811588114791684736832532905967915322471963848",
+            "0",
+            "48.010230721181929701155922293741276378031215568460118407971011551927894491088951"
+          ],
+          "observed_force_total_B_N": [
+            "-94.55882352941176470588235294117647058823529411764705882352941176470588235294118",
+            "0",
+            "0"
+          ],
+          "max_abs_force_difference_N": "48.010230721181929701155922293741276378031215568460118407971011551927894491088951"
+        },
+        "cause_ids": [],
+        "related_ids": [],
+        "remediation": [
+          "recompute_closure_from_current_committed_boundary"
+        ]
+      },
+      "policy_decision": {
+        "decision_id": "policy-decision:fixture:yyz:stale-boundary-closure",
+        "diagnostic_id": "diag:fixture:yyz:stale-boundary-closure",
+        "policy_rule_set_id": "qualification.fixture.yyz@1",
+        "matched_rule_id": "step-error-fails-before-commit",
+        "severity": "Error",
+        "disposition": "FailOperation",
+        "validity_effect": "Invalid"
+      },
+      "step_outcome": {
+        "outcome_type": "FixtureStepOutcome",
+        "status": "Failed",
+        "evidence_validity": "Invalid",
+        "base_commit_id": "commit.fixture.yyz.mission.1",
+        "resulting_commit_id": "commit.fixture.yyz.mission.1",
+        "base_tick": 1,
+        "resulting_tick": 1,
+        "base_committed_mass_kg": "99.95",
+        "resulting_committed_mass_kg": "99.95",
+        "primary_diagnostic_id": "diag:fixture:yyz:stale-boundary-closure",
+        "candidate_commit_published": false,
+        "rollback_verified": true
+      }
+    },
+    {
+      "id": "DIAGNOSTIC-YYZ-MISSION-NONATOMIC-COMMIT",
+      "source_failure_id": "MUTATION-YYZ-MISSION-COMPOSITION-NONATOMIC-MASS-COMMIT",
+      "diagnostic_record": {
+        "diagnostic_id": "diag:fixture:yyz:nonatomic-rigid-mass-commit",
+        "code": "GNC-INT-0301",
+        "code_scope": "fixture-local",
+        "category": "internal",
+        "authority_domain": "Model",
+        "stage": "step",
+        "region": "commit",
+        "callsite": "atomic-commit-validation",
+        "subject": {
+          "component_role": "atomic_mass_commit",
+          "fixture_id": "REF-YYZ-TWO-INTERVAL-MASS-COMMIT-001",
+          "oracle_id": "ORACLE-YYZ-TWO-INTERVAL-MASS-COMMIT-001",
+          "model_id": "MODEL-YYZ-TWO-INTERVAL-MASS-COMMIT-001"
+        },
+        "message_key": "commit.rigid_mass_candidate_mismatch",
+        "parameters": {
+          "rigid_candidate_tick": 1,
+          "observed_mass_candidate_tick": 0
+        },
+        "simulation_context": {
+          "sample_tick": 0,
+          "time_s": "0",
+          "clock_domain": "clock.fixture.yyz.simulation@1"
+        },
+        "evidence": {
+          "required_commit_kind": "atomic-rigid-and-mass",
+          "expected_intermediate_mass_kg": "99.95",
+          "observed_intermediate_mass_kg": "100",
+          "max_abs_mass_difference_kg": "0.05"
+        },
+        "cause_ids": [],
+        "related_ids": [],
+        "remediation": [
+          "stage_rigid_and_mass_candidates_in_one_atomic_group"
+        ]
+      },
+      "policy_decision": {
+        "decision_id": "policy-decision:fixture:yyz:nonatomic-rigid-mass-commit",
+        "diagnostic_id": "diag:fixture:yyz:nonatomic-rigid-mass-commit",
+        "policy_rule_set_id": "qualification.fixture.yyz@1",
+        "matched_rule_id": "step-error-fails-before-commit",
+        "severity": "Error",
+        "disposition": "FailOperation",
+        "validity_effect": "Invalid"
+      },
+      "step_outcome": {
+        "outcome_type": "FixtureStepOutcome",
+        "status": "Failed",
+        "evidence_validity": "Invalid",
+        "base_commit_id": "commit.fixture.yyz.mission.0",
+        "resulting_commit_id": "commit.fixture.yyz.mission.0",
+        "base_tick": 0,
+        "resulting_tick": 0,
+        "base_committed_mass_kg": "100",
+        "resulting_committed_mass_kg": "100",
+        "primary_diagnostic_id": "diag:fixture:yyz:nonatomic-rigid-mass-commit",
+        "candidate_commit_published": false,
+        "rollback_verified": true
+      }
+    },
+    {
+      "id": "DIAGNOSTIC-YYZ-MISSION-AERO-DOMAIN",
+      "source_failure_id": "FAILURE-YYZ-MISSION-COMPOSITION-AERO-DOMAIN",
+      "diagnostic_record": {
+        "diagnostic_id": "diag:fixture:yyz:aero-model-domain",
+        "code": "GNC-PHY-0201",
+        "code_scope": "fixture-local",
+        "category": "physical-domain",
+        "authority_domain": "Model",
+        "stage": "step",
+        "region": "advance",
+        "callsite": "aero-query",
+        "subject": {
+          "component_role": "aero_lookup",
+          "fixture_id": "REF-YYZ-AERO-LOOKUP-001",
+          "oracle_id": "ORACLE-YYZ-AERO-LOOKUP-001",
+          "model_id": "MODEL-YYZ-AERO-TRILINEAR-LOOKUP-001"
+        },
+        "message_key": "aero.mach_outside_validated_domain",
+        "parameters": {
+          "axis_id": "mach",
+          "domain_policy": "Reject"
+        },
+        "simulation_context": {
+          "sample_tick": 0,
+          "time_s": "0",
+          "clock_domain": "clock.fixture.yyz.simulation@1"
+        },
+        "evidence": {
+          "injected_velocity_I_mps": [
+            "220",
+            "0",
+            "0"
+          ],
+          "velocity_airmass_I_mps": [
+            "10",
+            "0",
+            "0"
+          ],
+          "velocity_relative_I_mps": [
+            "210",
+            "0",
+            "0"
+          ],
+          "airspeed_mps": "210",
+          "speed_of_sound_mps": "340",
+          "query_value": "0.61764705882352941176470588235294117647058823529411764705882352941176470588235294",
+          "minimum_inclusive": "0.2",
+          "maximum_inclusive": "0.6",
+          "excess_above_maximum": "0.01764705882352941176470588235294117647058823529411764705882352941176470588235294"
+        },
+        "cause_ids": [],
+        "related_ids": [],
+        "remediation": [
+          "use_an_operating_point_inside_the_validated_aero_domain"
+        ]
+      },
+      "policy_decision": {
+        "decision_id": "policy-decision:fixture:yyz:aero-model-domain",
+        "diagnostic_id": "diag:fixture:yyz:aero-model-domain",
+        "policy_rule_set_id": "qualification.fixture.yyz@1",
+        "matched_rule_id": "step-error-fails-before-commit",
+        "severity": "Error",
+        "disposition": "FailOperation",
+        "validity_effect": "Invalid"
+      },
+      "step_outcome": {
+        "outcome_type": "FixtureStepOutcome",
+        "status": "Failed",
+        "evidence_validity": "Invalid",
+        "base_commit_id": "commit.fixture.yyz.mission.0",
+        "resulting_commit_id": "commit.fixture.yyz.mission.0",
+        "base_tick": 0,
+        "resulting_tick": 0,
+        "base_committed_mass_kg": "100",
+        "resulting_committed_mass_kg": "100",
+        "primary_diagnostic_id": "diag:fixture:yyz:aero-model-domain",
+        "candidate_commit_published": false,
+        "rollback_verified": true
+      }
     }
   ]
 }

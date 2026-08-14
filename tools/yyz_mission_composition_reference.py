@@ -15,9 +15,9 @@ import sys
 
 FIXTURE_ID = "REF-YYZ-MISSION-COMPOSITION-001"
 ORACLE_ID = "ORACLE-YYZ-MISSION-COMPOSITION-001"
-MODEL_ID = "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-002"
-CASES_SCHEMA = "gnczmkn.yyz-mission-composition-cases/2"
-REFERENCE_SCHEMA = "gnczmkn.yyz-mission-composition-reference/2"
+MODEL_ID = "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-003"
+CASES_SCHEMA = "gnczmkn.yyz-mission-composition-cases/3"
+REFERENCE_SCHEMA = "gnczmkn.yyz-mission-composition-reference/3"
 MISSION_SOURCE_ID = "mission.fixture.yyz.lookup-open-loop@1"
 EXECUTION_ID = "execution.fixture.yyz.lookup-open-loop.0001"
 SUBJECT = "vehicle.fixture.yyz@1"
@@ -43,6 +43,49 @@ REQUIRED_ROLES = {
     "frozen_interval",
     "atomic_mass_commit",
     "run_evaluation",
+}
+DIAGNOSTIC_CASES = {
+    "stale-boundary-closure": {
+        "id": "DIAGNOSTIC-YYZ-MISSION-STALE-BOUNDARY-CLOSURE",
+        "source_failure_id":
+            "MUTATION-YYZ-MISSION-COMPOSITION-STALE-BOUNDARY-CLOSURE",
+        "code": "GNC-SCH-0201",
+        "component_role": "force_moment_closure",
+        "stage": "step",
+        "region": "advance",
+        "callsite": "closure-input-validation",
+        "sample_tick": 1,
+        "message_key": "closure.sample_tick_mismatch",
+        "remediation": "recompute_closure_from_current_committed_boundary",
+    },
+    "nonatomic-rigid-mass-commit": {
+        "id": "DIAGNOSTIC-YYZ-MISSION-NONATOMIC-COMMIT",
+        "source_failure_id":
+            "MUTATION-YYZ-MISSION-COMPOSITION-NONATOMIC-MASS-COMMIT",
+        "code": "GNC-INT-0301",
+        "component_role": "atomic_mass_commit",
+        "stage": "step",
+        "region": "commit",
+        "callsite": "atomic-commit-validation",
+        "sample_tick": 0,
+        "message_key": "commit.rigid_mass_candidate_mismatch",
+        "remediation":
+            "stage_rigid_and_mass_candidates_in_one_atomic_group",
+    },
+    "aero-model-domain": {
+        "id": "DIAGNOSTIC-YYZ-MISSION-AERO-DOMAIN",
+        "source_failure_id":
+            "FAILURE-YYZ-MISSION-COMPOSITION-AERO-DOMAIN",
+        "code": "GNC-PHY-0201",
+        "component_role": "aero_lookup",
+        "stage": "step",
+        "region": "advance",
+        "callsite": "aero-query",
+        "sample_tick": 0,
+        "message_key": "aero.mach_outside_validated_domain",
+        "remediation":
+            "use_an_operating_point_inside_the_validated_aero_domain",
+    },
 }
 EVENT_ORDER = [
     "resolve-components",
@@ -149,6 +192,7 @@ def validate_cases_identity(cases: dict) -> None:
     require(len(cases["cases"]) == 1 and
             cases["cases"][0]["id"] == CASE_ID,
             "mission-composition bundle must contain its baseline case")
+    validate_diagnostic_profile(cases)
 
 
 def validate_case(case: dict) -> None:
@@ -190,6 +234,45 @@ def validate_case(case: dict) -> None:
         "position_I_m", "velocity_I_mps", "q_I_B_wxyz",
         "omega_BI_B_radps", "committed_mass_kg", "metrics", "decision"
     ], "terminal observation field selection differs")
+
+
+def validate_diagnostic_profile(cases: dict) -> None:
+    profile = cases["diagnostic_profile"]
+    require(profile == {
+        "scope": "fixture-local",
+        "authority_domain": "Model",
+        "policy_rule_set_id": "qualification.fixture.yyz@1",
+        "matched_rule_id": "step-error-fails-before-commit",
+        "severity": "Error",
+        "disposition": "FailOperation",
+        "validity_effect": "Invalid",
+    }, "fixture diagnostic policy differs")
+    specifications = cases["diagnostic_cases"]
+    require(isinstance(specifications, list) and
+            len(specifications) == len(DIAGNOSTIC_CASES),
+            "fixture diagnostic case count differs")
+    require([specification["failure_kind"] for specification in specifications]
+            == list(DIAGNOSTIC_CASES),
+            "fixture diagnostic case order differs")
+    for specification in specifications:
+        kind = specification["failure_kind"]
+        require(kind in DIAGNOSTIC_CASES,
+                f"unsupported diagnostic failure kind: {kind}")
+        expected = DIAGNOSTIC_CASES[kind]
+        require(all(specification.get(key) == value
+                    for key, value in expected.items()),
+                f"fixture diagnostic specification differs: {kind}")
+        require(specification["component_role"] in REQUIRED_ROLES and
+                valid_integer(specification["sample_tick"]) and
+                0 <= specification["sample_tick"] <
+                    cases["model"]["terminal_tick"],
+                f"fixture diagnostic context differs: {kind}")
+        if kind == "aero-model-domain":
+            vector(specification["injected_velocity_I_mps"], 3,
+                   "diagnostic injected velocity")
+        else:
+            require("injected_velocity_I_mps" not in specification,
+                    f"unexpected diagnostic injection: {kind}")
 
 
 def resolve_components(cases: dict, repo_root: Path) -> tuple[list[dict], dict]:
@@ -970,6 +1053,217 @@ def mutation_results(cases: dict, repo_root: Path,
     return results
 
 
+def resolved_binding(accepted: dict, role: str) -> dict:
+    selected = [binding for binding in accepted["resolved_components"]
+                if binding["role"] == role]
+    require(len(selected) == 1,
+            f"resolved diagnostic component differs: {role}")
+    return selected[0]
+
+
+def committed_sample_at(accepted: dict, tick: int) -> dict:
+    selected = [sample for sample in accepted["committed_samples"]
+                if sample["sample_tick"] == tick]
+    require(len(selected) == 1,
+            f"diagnostic base commit differs at tick {tick}")
+    return selected[0]
+
+
+def vector_max_difference(lhs: object, rhs: object, label: str) -> Decimal:
+    left = vector(lhs, 3, f"{label} left")
+    right = vector(rhs, 3, f"{label} right")
+    return max(abs(first - second) for first, second in zip(left, right))
+
+
+def diagnostic_result(cases: dict, accepted: dict, specification: dict,
+                      parameters: dict, evidence: dict) -> dict:
+    profile = cases["diagnostic_profile"]
+    kind = specification["failure_kind"]
+    diagnostic_id = f"diag:fixture:yyz:{kind}"
+    base = committed_sample_at(accepted, specification["sample_tick"])
+    binding = resolved_binding(accepted, specification["component_role"])
+    return {
+        "id": specification["id"],
+        "source_failure_id": specification["source_failure_id"],
+        "diagnostic_record": {
+            "diagnostic_id": diagnostic_id,
+            "code": specification["code"],
+            "code_scope": profile["scope"],
+            "category": {
+                "stale-boundary-closure": "scheduling",
+                "nonatomic-rigid-mass-commit": "internal",
+                "aero-model-domain": "physical-domain",
+            }[kind],
+            "authority_domain": profile["authority_domain"],
+            "stage": specification["stage"],
+            "region": specification["region"],
+            "callsite": specification["callsite"],
+            "subject": {
+                "component_role": binding["role"],
+                "fixture_id": binding["fixture_id"],
+                "oracle_id": binding["oracle_id"],
+                "model_id": binding["model_id"],
+            },
+            "message_key": specification["message_key"],
+            "parameters": parameters,
+            "simulation_context": {
+                "sample_tick": base["sample_tick"],
+                "time_s": decimal(base["time_s"]),
+                "clock_domain": CLOCK_DOMAIN,
+            },
+            "evidence": evidence,
+            "cause_ids": [],
+            "related_ids": [],
+            "remediation": [specification["remediation"]],
+        },
+        "policy_decision": {
+            "decision_id": f"policy-decision:fixture:yyz:{kind}",
+            "diagnostic_id": diagnostic_id,
+            "policy_rule_set_id": profile["policy_rule_set_id"],
+            "matched_rule_id": profile["matched_rule_id"],
+            "severity": profile["severity"],
+            "disposition": profile["disposition"],
+            "validity_effect": profile["validity_effect"],
+        },
+        "step_outcome": {
+            "outcome_type": "FixtureStepOutcome",
+            "status": "Failed",
+            "evidence_validity": profile["validity_effect"],
+            "base_commit_id": base["commit_id"],
+            "resulting_commit_id": base["commit_id"],
+            "base_tick": base["sample_tick"],
+            "resulting_tick": base["sample_tick"],
+            "base_committed_mass_kg": decimal(base["committed_mass_kg"]),
+            "resulting_committed_mass_kg":
+                decimal(base["committed_mass_kg"]),
+            "primary_diagnostic_id": diagnostic_id,
+            "candidate_commit_published": False,
+            "rollback_verified": True,
+        },
+    }
+
+
+def diagnostic_results(cases: dict, repo_root: Path,
+                       accepted: dict) -> list[dict]:
+    specifications = {
+        value["failure_kind"]: value for value in cases["diagnostic_cases"]
+    }
+    stale = compose(cases, repo_root, stale_boundary_closure=True)
+    expected_interval = accepted["interval_executions"][1]
+    observed_interval = stale["interval_executions"][1]
+    stale_specification = specifications["stale-boundary-closure"]
+    stale_result = diagnostic_result(
+        cases, accepted, stale_specification,
+        {
+            "expected_sample_tick": expected_interval["sample_tick"],
+            "observed_sample_tick":
+                stale["interval_executions"][0]["sample_tick"],
+        },
+        {
+            "required_valid_from_tick":
+                expected_interval["valid_from_tick"],
+            "observed_valid_from_tick":
+                stale["interval_executions"][0]["valid_from_tick"],
+            "observed_valid_until_tick":
+                stale["interval_executions"][0]["valid_until_tick"],
+            "expected_force_total_B_N":
+                expected_interval["closure"]["force_total_B_N"],
+            "observed_force_total_B_N":
+                observed_interval["closure"]["force_total_B_N"],
+            "max_abs_force_difference_N": vector_max_difference(
+                expected_interval["closure"]["force_total_B_N"],
+                observed_interval["closure"]["force_total_B_N"],
+                "stale Closure force"),
+        })
+
+    nonatomic = compose(cases, repo_root, nonatomic_mass_commit=True)
+    accepted_intermediate = accepted["committed_samples"][1]
+    observed_intermediate = nonatomic["committed_samples"][1]
+    atomic_specification = specifications["nonatomic-rigid-mass-commit"]
+    atomic_result = diagnostic_result(
+        cases, accepted, atomic_specification,
+        {
+            "rigid_candidate_tick": 1,
+            "observed_mass_candidate_tick": 0,
+        },
+        {
+            "required_commit_kind": "atomic-rigid-and-mass",
+            "expected_intermediate_mass_kg":
+                decimal(accepted_intermediate["committed_mass_kg"]),
+            "observed_intermediate_mass_kg":
+                decimal(observed_intermediate["committed_mass_kg"]),
+            "max_abs_mass_difference_kg":
+                abs(decimal(accepted_intermediate["committed_mass_kg"]) -
+                    decimal(observed_intermediate["committed_mass_kg"])),
+        })
+
+    _, documents = resolve_components(cases, repo_root)
+    frozen_cases = documents["frozen_interval"]["cases"]
+    baseline_case = find_case(
+        frozen_cases["cases"], FROZEN_CASE_ID, "diagnostic aero input")
+    domain_specification = specifications["aero-model-domain"]
+    injected_velocity = vector(
+        domain_specification["injected_velocity_I_mps"], 3,
+        "diagnostic injected velocity")
+    environment = baseline_case["environment_sample"]
+    airmass = vector(
+        environment["velocity_airmass_I_mps"], 3, "diagnostic airmass")
+    relative_velocity = [value - wind for value, wind in
+                         zip(injected_velocity, airmass)]
+    airspeed = sum((value * value for value in relative_velocity),
+                   Decimal(0)).sqrt()
+    sound_speed = decimal(environment["speed_of_sound_mps"])
+    mach = airspeed / sound_speed
+    aero = baseline_case["aero_lookup"]
+    mach_axis = [decimal(value) for value in
+                 aero["prepared_table"]["mach_axis"]]
+    domain_minimum = min(mach_axis)
+    domain_maximum = max(mach_axis)
+    frozen_module = load_reference_module(
+        repo_root, "yyz_mission_diagnostic_frozen_reference",
+        "tools/yyz_frozen_interval_reference.py")
+    rejected = False
+    try:
+        frozen_module.aero_lookup(
+            aero, mach, Decimal(0), Decimal(0), "trilinear")
+    except (ArithmeticError, IndexError, KeyError, TypeError, ValueError):
+        rejected = True
+    require(rejected and mach > domain_maximum,
+            "aero model-domain diagnostic was not triggered")
+    domain_result = diagnostic_result(
+        cases, accepted, domain_specification,
+        {"axis_id": "mach", "domain_policy": "Reject"},
+        {
+            "injected_velocity_I_mps": injected_velocity,
+            "velocity_airmass_I_mps": airmass,
+            "velocity_relative_I_mps": relative_velocity,
+            "airspeed_mps": airspeed,
+            "speed_of_sound_mps": sound_speed,
+            "query_value": mach,
+            "minimum_inclusive": domain_minimum,
+            "maximum_inclusive": domain_maximum,
+            "excess_above_maximum": mach - domain_maximum,
+        })
+
+    results_by_kind = {
+        "stale-boundary-closure": stale_result,
+        "nonatomic-rigid-mass-commit": atomic_result,
+        "aero-model-domain": domain_result,
+    }
+    results = [results_by_kind[value["failure_kind"]]
+               for value in cases["diagnostic_cases"]]
+    require(all(result["diagnostic_record"]["diagnostic_id"] ==
+                result["policy_decision"]["diagnostic_id"] ==
+                result["step_outcome"]["primary_diagnostic_id"] and
+                result["step_outcome"]["base_commit_id"] ==
+                result["step_outcome"]["resulting_commit_id"] and
+                not result["step_outcome"]["candidate_commit_published"] and
+                result["step_outcome"]["rollback_verified"]
+                for result in results),
+            "fixture diagnostic linkage or rollback differs")
+    return results
+
+
 def stringify(value):
     if isinstance(value, Decimal):
         if value.is_zero():
@@ -1010,7 +1304,7 @@ def build_reference(cases: dict, repo_root: Path,
         "model_id": MODEL_ID,
         "precision": {
             "implementation":
-                "Python Decimal composition over executable component formula references with boundary recomputation and full-state RK4",
+                "Python Decimal composition over executable component formula references with boundary recomputation, full-state RK4 and fixture-local structured failure projection",
             "decimal_digits": getcontext().prec,
         },
         "source_identity": {
@@ -1022,6 +1316,8 @@ def build_reference(cases: dict, repo_root: Path,
         "equivalence_results": equivalence,
         "invalid_input_rejections": invalid_rejections(cases, repo_root),
         "mutation_results": mutation_results(cases, repo_root, accepted),
+        "diagnostic_results": diagnostic_results(
+            cases, repo_root, accepted),
     })
 
 
@@ -1127,8 +1423,11 @@ def verify_reference(cases: dict, repo_root: Path, cases_path: Path,
                    "invalid-input identities differ",
                    len(oracle["invalid_input_rejections"]))
     compare_tree(checks, probe["mutation_results"],
-                  oracle["mutation_results"], absolute, relative,
+                 oracle["mutation_results"], absolute, relative,
                  "mutation_results", convergence_ratio_absolute)
+    compare_tree(checks, probe["diagnostic_results"],
+                 oracle["diagnostic_results"], absolute, relative,
+                 "diagnostic_results", convergence_ratio_absolute)
 
     accepted = probe["cases"][0]
     return stringify({
@@ -1156,6 +1455,8 @@ def verify_reference(cases: dict, repo_root: Path, cases_path: Path,
         "invalid_input_cases_rejected":
             len(oracle["invalid_input_rejections"]),
         "mutation_cases_rejected": len(oracle["mutation_results"]),
+        "diagnostic_failures_structured":
+            len(oracle["diagnostic_results"]),
     })
 
 

@@ -16,7 +16,7 @@ namespace {
 constexpr const char* kOracleId =
     "ORACLE-YYZ-MISSION-COMPOSITION-001";
 constexpr const char* kModelId =
-    "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-002";
+    "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-003";
 constexpr const char* kMissionSourceId =
     "mission.fixture.yyz.lookup-open-loop@1";
 constexpr const char* kExecutionId =
@@ -298,6 +298,56 @@ struct Options {
     bool result_before_observation = false;
 };
 
+enum class DiagnosticKind {
+    StaleBoundaryClosure,
+    NonatomicRigidMassCommit,
+    AeroModelDomain,
+};
+
+struct DiagnosticResult {
+    DiagnosticKind kind = DiagnosticKind::StaleBoundaryClosure;
+    std::string id;
+    std::string source_failure_id;
+    std::string failure_kind;
+    std::string diagnostic_id;
+    std::string code;
+    std::string category;
+    std::string region;
+    std::string callsite;
+    Binding subject;
+    std::string message_key;
+    std::string remediation;
+    std::int64_t sample_tick = 0;
+    double time_s = 0.0;
+    std::string base_commit_id;
+    double base_committed_mass_kg = 0.0;
+
+    std::int64_t expected_sample_tick = 0;
+    std::int64_t observed_sample_tick = 0;
+    std::int64_t required_valid_from_tick = 0;
+    std::int64_t observed_valid_from_tick = 0;
+    std::int64_t observed_valid_until_tick = 0;
+    Vec3 expected_force_total_b_n;
+    Vec3 observed_force_total_b_n;
+    double max_abs_force_difference_n = 0.0;
+
+    std::int64_t rigid_candidate_tick = 0;
+    std::int64_t observed_mass_candidate_tick = 0;
+    double expected_intermediate_mass_kg = 0.0;
+    double observed_intermediate_mass_kg = 0.0;
+    double max_abs_mass_difference_kg = 0.0;
+
+    Vec3 injected_velocity_i_mps;
+    Vec3 velocity_airmass_i_mps;
+    Vec3 velocity_relative_i_mps;
+    double airspeed_mps = 0.0;
+    double speed_of_sound_mps = 0.0;
+    double query_value = 0.0;
+    double minimum_inclusive = 0.0;
+    double maximum_inclusive = 0.0;
+    double excess_above_maximum = 0.0;
+};
+
 struct ProbeResult {
     Composition accepted;
     std::vector<std::string> invalid_input_rejections;
@@ -306,6 +356,7 @@ struct ProbeResult {
     Composition stale_boundary_closure;
     Composition low_priority;
     Composition result_before_observation;
+    std::vector<DiagnosticResult> diagnostic_results;
 };
 
 void require(bool condition, const std::string& message) {
@@ -1282,6 +1333,159 @@ bool equivalentCore(const Composition& lhs, const Composition& rhs) {
                 rhs.committed_samples.back().committed_mass_kg);
 }
 
+const Binding& resolvedBinding(const Composition& value,
+                               const std::string& role) {
+    const auto found = std::find_if(
+        value.resolved_components.begin(), value.resolved_components.end(),
+        [&](const Binding& binding) { return binding.role == role; });
+    require(found != value.resolved_components.end(),
+            "diagnostic component binding is missing");
+    return *found;
+}
+
+const CommittedSample& committedSampleAt(const Composition& value,
+                                         std::int64_t tick) {
+    const auto found = std::find_if(
+        value.committed_samples.begin(), value.committed_samples.end(),
+        [&](const CommittedSample& sample) {
+            return sample.sample_tick == tick;
+        });
+    require(found != value.committed_samples.end(),
+            "diagnostic base commit is missing");
+    return *found;
+}
+
+double vectorMaxDifference(const Vec3& lhs, const Vec3& rhs) {
+    return std::max({std::abs(lhs.x - rhs.x), std::abs(lhs.y - rhs.y),
+                     std::abs(lhs.z - rhs.z)});
+}
+
+DiagnosticResult diagnosticBase(DiagnosticKind kind,
+                                const Composition& accepted,
+                                std::int64_t sample_tick,
+                                const std::string& component_role) {
+    DiagnosticResult result;
+    result.kind = kind;
+    result.subject = resolvedBinding(accepted, component_role);
+    result.sample_tick = sample_tick;
+    const CommittedSample& base = committedSampleAt(accepted, sample_tick);
+    result.time_s = base.time_s;
+    result.base_commit_id = base.commit_id;
+    result.base_committed_mass_kg = base.committed_mass_kg;
+    switch (kind) {
+    case DiagnosticKind::StaleBoundaryClosure:
+        result.id = "DIAGNOSTIC-YYZ-MISSION-STALE-BOUNDARY-CLOSURE";
+        result.source_failure_id =
+            "MUTATION-YYZ-MISSION-COMPOSITION-STALE-BOUNDARY-CLOSURE";
+        result.failure_kind = "stale-boundary-closure";
+        result.diagnostic_id =
+            "diag:fixture:yyz:stale-boundary-closure";
+        result.code = "GNC-SCH-0201";
+        result.category = "scheduling";
+        result.region = "advance";
+        result.callsite = "closure-input-validation";
+        result.message_key = "closure.sample_tick_mismatch";
+        result.remediation =
+            "recompute_closure_from_current_committed_boundary";
+        break;
+    case DiagnosticKind::NonatomicRigidMassCommit:
+        result.id = "DIAGNOSTIC-YYZ-MISSION-NONATOMIC-COMMIT";
+        result.source_failure_id =
+            "MUTATION-YYZ-MISSION-COMPOSITION-NONATOMIC-MASS-COMMIT";
+        result.failure_kind = "nonatomic-rigid-mass-commit";
+        result.diagnostic_id =
+            "diag:fixture:yyz:nonatomic-rigid-mass-commit";
+        result.code = "GNC-INT-0301";
+        result.category = "internal";
+        result.region = "commit";
+        result.callsite = "atomic-commit-validation";
+        result.message_key = "commit.rigid_mass_candidate_mismatch";
+        result.remediation =
+            "stage_rigid_and_mass_candidates_in_one_atomic_group";
+        break;
+    case DiagnosticKind::AeroModelDomain:
+        result.id = "DIAGNOSTIC-YYZ-MISSION-AERO-DOMAIN";
+        result.source_failure_id =
+            "FAILURE-YYZ-MISSION-COMPOSITION-AERO-DOMAIN";
+        result.failure_kind = "aero-model-domain";
+        result.diagnostic_id = "diag:fixture:yyz:aero-model-domain";
+        result.code = "GNC-PHY-0201";
+        result.category = "physical-domain";
+        result.region = "advance";
+        result.callsite = "aero-query";
+        result.message_key = "aero.mach_outside_validated_domain";
+        result.remediation =
+            "use_an_operating_point_inside_the_validated_aero_domain";
+        break;
+    }
+    return result;
+}
+
+std::vector<DiagnosticResult> buildDiagnosticResults(
+    const Composition& accepted, const Composition& nonatomic,
+    const Composition& stale) {
+    DiagnosticResult stale_result = diagnosticBase(
+        DiagnosticKind::StaleBoundaryClosure, accepted, 1,
+        "force_moment_closure");
+    const IntervalExecution& expected_interval =
+        accepted.interval_executions[1];
+    const IntervalExecution& stale_source = stale.interval_executions[0];
+    const IntervalExecution& observed_interval = stale.interval_executions[1];
+    stale_result.expected_sample_tick = expected_interval.sample_tick;
+    stale_result.observed_sample_tick = stale_source.sample_tick;
+    stale_result.required_valid_from_tick = expected_interval.valid_from_tick;
+    stale_result.observed_valid_from_tick = stale_source.valid_from_tick;
+    stale_result.observed_valid_until_tick = stale_source.valid_until_tick;
+    stale_result.expected_force_total_b_n =
+        expected_interval.closure.force_total_b_n;
+    stale_result.observed_force_total_b_n =
+        observed_interval.closure.force_total_b_n;
+    stale_result.max_abs_force_difference_n = vectorMaxDifference(
+        stale_result.expected_force_total_b_n,
+        stale_result.observed_force_total_b_n);
+
+    DiagnosticResult atomic_result = diagnosticBase(
+        DiagnosticKind::NonatomicRigidMassCommit, accepted, 0,
+        "atomic_mass_commit");
+    atomic_result.rigid_candidate_tick = 1;
+    atomic_result.observed_mass_candidate_tick = 0;
+    atomic_result.expected_intermediate_mass_kg =
+        accepted.committed_samples[1].committed_mass_kg;
+    atomic_result.observed_intermediate_mass_kg =
+        nonatomic.committed_samples[1].committed_mass_kg;
+    atomic_result.max_abs_mass_difference_kg =
+        std::abs(atomic_result.expected_intermediate_mass_kg -
+                 atomic_result.observed_intermediate_mass_kg);
+
+    DiagnosticResult domain_result = diagnosticBase(
+        DiagnosticKind::AeroModelDomain, accepted, 0, "aero_lookup");
+    domain_result.injected_velocity_i_mps = {220.0, 0.0, 0.0};
+    domain_result.velocity_airmass_i_mps = {10.0, 0.0, 0.0};
+    domain_result.velocity_relative_i_mps = subtract(
+        domain_result.injected_velocity_i_mps,
+        domain_result.velocity_airmass_i_mps);
+    domain_result.airspeed_mps = std::sqrt(dot(
+        domain_result.velocity_relative_i_mps,
+        domain_result.velocity_relative_i_mps));
+    domain_result.speed_of_sound_mps = 340.0;
+    domain_result.query_value =
+        domain_result.airspeed_mps / domain_result.speed_of_sound_mps;
+    domain_result.minimum_inclusive = 0.2;
+    domain_result.maximum_inclusive = 0.6;
+    domain_result.excess_above_maximum =
+        domain_result.query_value - domain_result.maximum_inclusive;
+    bool domain_rejected = false;
+    try {
+        static_cast<void>(lookupAero(domain_result.query_value, 0.0, 0.0));
+    } catch (const std::domain_error&) {
+        domain_rejected = true;
+    }
+    require(domain_rejected && domain_result.excess_above_maximum > 0.0,
+            "aero model-domain diagnostic was not triggered");
+
+    return {stale_result, atomic_result, domain_result};
+}
+
 ProbeResult runProbe() {
     const Input input = acceptedInput();
     ProbeResult result;
@@ -1418,6 +1622,30 @@ ProbeResult runProbe() {
                     "duration-complete" &&
                 !result.result_before_observation.terminal_observation.sealed,
             "a mission-composition mutation matched the accepted result");
+    result.diagnostic_results = buildDiagnosticResults(
+        result.accepted, result.nonatomic_mass,
+        result.stale_boundary_closure);
+    require(result.diagnostic_results.size() == 3 &&
+                result.diagnostic_results[0].code == "GNC-SCH-0201" &&
+                result.diagnostic_results[0].sample_tick == 1 &&
+                result.diagnostic_results[0].max_abs_force_difference_n >
+                    48.0 &&
+                result.diagnostic_results[1].code == "GNC-INT-0301" &&
+                result.diagnostic_results[1].sample_tick == 0 &&
+                near(result.diagnostic_results[1]
+                         .max_abs_mass_difference_kg, 0.05) &&
+                result.diagnostic_results[2].code == "GNC-PHY-0201" &&
+                result.diagnostic_results[2].query_value >
+                    result.diagnostic_results[2].maximum_inclusive &&
+                std::all_of(
+                    result.diagnostic_results.begin(),
+                    result.diagnostic_results.end(),
+                    [](const DiagnosticResult& value) {
+                        return !value.base_commit_id.empty() &&
+                               value.base_committed_mass_kg > 0.0 &&
+                               !value.subject.model_id.empty();
+                    }),
+            "fixture diagnostic projection differs");
     return result;
 }
 
@@ -1980,6 +2208,137 @@ void writeMutations(const ProbeResult& value) {
     std::cout << ",\"max_abs_result_difference\":1}]";
 }
 
+void writeDiagnosticParameters(const DiagnosticResult& value) {
+    std::cout << '{';
+    switch (value.kind) {
+    case DiagnosticKind::StaleBoundaryClosure:
+        std::cout << "\"expected_sample_tick\":"
+                  << value.expected_sample_tick
+                  << ",\"observed_sample_tick\":"
+                  << value.observed_sample_tick;
+        break;
+    case DiagnosticKind::NonatomicRigidMassCommit:
+        std::cout << "\"rigid_candidate_tick\":"
+                  << value.rigid_candidate_tick
+                  << ",\"observed_mass_candidate_tick\":"
+                  << value.observed_mass_candidate_tick;
+        break;
+    case DiagnosticKind::AeroModelDomain:
+        std::cout << "\"axis_id\":\"mach\",\"domain_policy\":\"Reject\"";
+        break;
+    }
+    std::cout << '}';
+}
+
+void writeDiagnosticEvidence(const DiagnosticResult& value) {
+    std::cout << '{';
+    switch (value.kind) {
+    case DiagnosticKind::StaleBoundaryClosure:
+        std::cout << "\"required_valid_from_tick\":"
+                  << value.required_valid_from_tick
+                  << ",\"observed_valid_from_tick\":"
+                  << value.observed_valid_from_tick
+                  << ",\"observed_valid_until_tick\":"
+                  << value.observed_valid_until_tick
+                  << ",\"expected_force_total_B_N\":";
+        writeVec3(value.expected_force_total_b_n);
+        std::cout << ",\"observed_force_total_B_N\":";
+        writeVec3(value.observed_force_total_b_n);
+        std::cout << ",\"max_abs_force_difference_N\":";
+        writeNumber(value.max_abs_force_difference_n);
+        break;
+    case DiagnosticKind::NonatomicRigidMassCommit:
+        std::cout << "\"required_commit_kind\":"
+                     "\"atomic-rigid-and-mass\","
+                     "\"expected_intermediate_mass_kg\":";
+        writeNumber(value.expected_intermediate_mass_kg);
+        std::cout << ",\"observed_intermediate_mass_kg\":";
+        writeNumber(value.observed_intermediate_mass_kg);
+        std::cout << ",\"max_abs_mass_difference_kg\":";
+        writeNumber(value.max_abs_mass_difference_kg);
+        break;
+    case DiagnosticKind::AeroModelDomain:
+        std::cout << "\"injected_velocity_I_mps\":";
+        writeVec3(value.injected_velocity_i_mps);
+        std::cout << ",\"velocity_airmass_I_mps\":";
+        writeVec3(value.velocity_airmass_i_mps);
+        std::cout << ",\"velocity_relative_I_mps\":";
+        writeVec3(value.velocity_relative_i_mps);
+        std::cout << ",\"airspeed_mps\":";
+        writeNumber(value.airspeed_mps);
+        std::cout << ",\"speed_of_sound_mps\":";
+        writeNumber(value.speed_of_sound_mps);
+        std::cout << ",\"query_value\":";
+        writeNumber(value.query_value);
+        std::cout << ",\"minimum_inclusive\":";
+        writeNumber(value.minimum_inclusive);
+        std::cout << ",\"maximum_inclusive\":";
+        writeNumber(value.maximum_inclusive);
+        std::cout << ",\"excess_above_maximum\":";
+        writeNumber(value.excess_above_maximum);
+        break;
+    }
+    std::cout << '}';
+}
+
+void writeDiagnosticResult(const DiagnosticResult& value) {
+    std::cout << "{\"id\":\"" << value.id
+              << "\",\"source_failure_id\":\"" << value.source_failure_id
+              << "\",\"diagnostic_record\":{\"diagnostic_id\":\""
+              << value.diagnostic_id << "\",\"code\":\"" << value.code
+              << "\",\"code_scope\":\"fixture-local\",\"category\":\""
+              << value.category
+              << "\",\"authority_domain\":\"Model\",\"stage\":\"step\","
+                 "\"region\":\""
+              << value.region << "\",\"callsite\":\"" << value.callsite
+              << "\",\"subject\":{\"component_role\":\""
+              << value.subject.role << "\",\"fixture_id\":\""
+              << value.subject.fixture_id << "\",\"oracle_id\":\""
+              << value.subject.oracle_id << "\",\"model_id\":\""
+              << value.subject.model_id << "\"},\"message_key\":\""
+              << value.message_key << "\",\"parameters\":";
+    writeDiagnosticParameters(value);
+    std::cout << ",\"simulation_context\":{\"sample_tick\":"
+              << value.sample_tick << ",\"time_s\":";
+    writeNumber(value.time_s);
+    std::cout << ",\"clock_domain\":\"" << kClockDomain
+              << "\"},\"evidence\":";
+    writeDiagnosticEvidence(value);
+    std::cout << ",\"cause_ids\":[],\"related_ids\":[],\"remediation\":[\""
+              << value.remediation
+              << "\"]},\"policy_decision\":{\"decision_id\":\""
+                 "policy-decision:fixture:yyz:"
+              << value.failure_kind << "\",\"diagnostic_id\":\""
+              << value.diagnostic_id
+              << "\",\"policy_rule_set_id\":\"qualification.fixture.yyz@1\","
+                 "\"matched_rule_id\":\"step-error-fails-before-commit\","
+                 "\"severity\":\"Error\",\"disposition\":\"FailOperation\","
+                 "\"validity_effect\":\"Invalid\"},\"step_outcome\":{"
+                 "\"outcome_type\":\"FixtureStepOutcome\",\"status\":\"Failed\","
+                 "\"evidence_validity\":\"Invalid\",\"base_commit_id\":\""
+              << value.base_commit_id << "\",\"resulting_commit_id\":\""
+              << value.base_commit_id << "\",\"base_tick\":"
+              << value.sample_tick << ",\"resulting_tick\":"
+              << value.sample_tick << ",\"base_committed_mass_kg\":";
+    writeNumber(value.base_committed_mass_kg);
+    std::cout << ",\"resulting_committed_mass_kg\":";
+    writeNumber(value.base_committed_mass_kg);
+    std::cout << ",\"primary_diagnostic_id\":\"" << value.diagnostic_id
+              << "\",\"candidate_commit_published\":false,"
+                 "\"rollback_verified\":true}}";
+}
+
+void writeDiagnostics(const std::vector<DiagnosticResult>& values) {
+    std::cout << '[';
+    for (std::size_t index = 0; index < values.size(); ++index) {
+        if (index != 0) {
+            std::cout << ',';
+        }
+        writeDiagnosticResult(values[index]);
+    }
+    std::cout << ']';
+}
+
 void writeJson(const ProbeResult& result) {
     std::cout << std::setprecision(17)
               << "{\"oracle_id\":\"" << kOracleId
@@ -1999,6 +2358,8 @@ void writeJson(const ProbeResult& result) {
     writeStringList(result.invalid_input_rejections);
     std::cout << ",\"mutation_results\":";
     writeMutations(result);
+    std::cout << ",\"diagnostic_results\":";
+    writeDiagnostics(result.diagnostic_results);
     std::cout << "}\n";
 }
 

@@ -1,24 +1,25 @@
 {
-  "schema_version": "gnczmkn.yyz-mission-composition-cases/2",
+  "schema_version": "gnczmkn.yyz-mission-composition-cases/3",
   "fixture_id": "REF-YYZ-MISSION-COMPOSITION-001",
   "oracle_id": "ORACLE-YYZ-MISSION-COMPOSITION-001",
   "model_choice": {
     "status": "accepted",
     "owner_role": "scientific_authority",
-    "accepted_scope": "Fixture-local executable composition from resolved YYZ scientific components through two consecutive lookup-composed FrozenIntervals, two atomic rigid-and-mass commits, committed-boundary evaluation, a sealed terminal observation and a frozen mission result.",
+    "accepted_scope": "Fixture-local executable composition from resolved YYZ scientific components through two consecutive lookup-composed FrozenIntervals, two atomic rigid-and-mass commits, committed-boundary evaluation, a sealed terminal observation, a frozen mission result and structured diagnostics for three pre-commit failures.",
     "source_policy": "The source is a fixture input with explicit stable identities and component bindings. It does not define the product MissionSource schema or invoke a product Compiler, Plan, Session or Artifact runtime.",
     "numeric_policy": "REF-YYZ-FROZEN-INTERVAL-001 supplies the accepted interval formulas. Tick 1 recomputes air-data, aero lookup, dimensionalization, propulsion, mass projection and Closure from the newly committed rigid state and mass. Each interval uses one classical RK4 base step; 1/2/4/8 substep results expose fourth-order self-convergence.",
     "reuse_policy": "REF-YYZ-TWO-INTERVAL-MASS-COMMIT-001 contributes the accepted atomic commit time relation. Its independent supplied-force trajectory is not substituted for the lookup-composed trajectory.",
     "termination_policy": "Metrics read committed samples only. Inclusive AtGrid any-of predicates use higher integer priority and ascending predicate_id tie-breaking. The terminal observation seals before the mission result freezes.",
+    "diagnostic_policy": "The fixture emits immutable diagnostic facts, a separate qualification decision and a failed step outcome for stale Closure timing, a split rigid/mass candidate set and an aero model-domain violation. Codes are stable inside this fixture and do not allocate entries in a production DiagnosticCode registry.",
     "excluded": [
       "canonical YYZ mission, qualification thresholds, assets and production tolerances",
       "guidance, controller, allocator, actuator dynamics and closed-loop altitude-hold claims",
-      "product MissionSource, Compiler, PlanProofRecord, Session, ObservationBatch, RunOutcome and Artifact contracts",
+      "product MissionSource, Compiler, PlanProofRecord, Session, DiagnosticRecord, DiagnosticCode registry, ObservationBatch, RunOutcome and Artifact contracts",
       "continuous event location, partial-time commit, persistence, evidence durability and R1-R8 runtime capability"
     ]
   },
   "model": {
-    "model_id": "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-002",
+    "model_id": "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-003",
     "mission_source_id": "mission.fixture.yyz.lookup-open-loop@1",
     "execution_id": "execution.fixture.yyz.lookup-open-loop.0001",
     "subject": "vehicle.fixture.yyz@1",
@@ -43,6 +44,7 @@
       "tick 1 committed rigid and mass state are the only inputs to the recomputed second interval",
       "each interval's rigid and mass candidates share one closing commit identity and become visible together",
       "the second interval one-step RK4 trajectory is accompanied by positive 1/2/4/8 substep error reduction",
+      "each diagnostic case resolves one component identity, emits the declared stable fixture code and preserves its base commit after pre-commit failure",
       "termination predicates use supported metrics, inclusive relations and nonnegative integer priorities",
       "the first terminal committed boundary is sealed into the terminal observation before result freeze"
     ]
@@ -191,6 +193,57 @@
         "metrics",
         "decision"
       ]
+    }
+  ],
+  "diagnostic_profile": {
+    "scope": "fixture-local",
+    "authority_domain": "Model",
+    "policy_rule_set_id": "qualification.fixture.yyz@1",
+    "matched_rule_id": "step-error-fails-before-commit",
+    "severity": "Error",
+    "disposition": "FailOperation",
+    "validity_effect": "Invalid"
+  },
+  "diagnostic_cases": [
+    {
+      "id": "DIAGNOSTIC-YYZ-MISSION-STALE-BOUNDARY-CLOSURE",
+      "source_failure_id": "MUTATION-YYZ-MISSION-COMPOSITION-STALE-BOUNDARY-CLOSURE",
+      "failure_kind": "stale-boundary-closure",
+      "code": "GNC-SCH-0201",
+      "component_role": "force_moment_closure",
+      "stage": "step",
+      "region": "advance",
+      "callsite": "closure-input-validation",
+      "sample_tick": 1,
+      "message_key": "closure.sample_tick_mismatch",
+      "remediation": "recompute_closure_from_current_committed_boundary"
+    },
+    {
+      "id": "DIAGNOSTIC-YYZ-MISSION-NONATOMIC-COMMIT",
+      "source_failure_id": "MUTATION-YYZ-MISSION-COMPOSITION-NONATOMIC-MASS-COMMIT",
+      "failure_kind": "nonatomic-rigid-mass-commit",
+      "code": "GNC-INT-0301",
+      "component_role": "atomic_mass_commit",
+      "stage": "step",
+      "region": "commit",
+      "callsite": "atomic-commit-validation",
+      "sample_tick": 0,
+      "message_key": "commit.rigid_mass_candidate_mismatch",
+      "remediation": "stage_rigid_and_mass_candidates_in_one_atomic_group"
+    },
+    {
+      "id": "DIAGNOSTIC-YYZ-MISSION-AERO-DOMAIN",
+      "source_failure_id": "FAILURE-YYZ-MISSION-COMPOSITION-AERO-DOMAIN",
+      "failure_kind": "aero-model-domain",
+      "code": "GNC-PHY-0201",
+      "component_role": "aero_lookup",
+      "stage": "step",
+      "region": "advance",
+      "callsite": "aero-query",
+      "sample_tick": 0,
+      "message_key": "aero.mach_outside_validated_domain",
+      "remediation": "use_an_operating_point_inside_the_validated_aero_domain",
+      "injected_velocity_I_mps": [220.0, 0.0, 0.0]
     }
   ],
   "tolerances": {
