@@ -124,6 +124,14 @@ if(GNC_BUILD_TESTS)
         gnc_yyz_propulsion_response_probe PRIVATE cxx_std_17)
     gnc_enable_warnings(gnc_yyz_propulsion_response_probe)
 
+    # R0 YYZ scientific oracle: committed MassProperties projection.
+    add_executable(
+        gnc_yyz_mass_properties_probe
+        tests/yyz_mass_properties.cpp)
+    target_compile_features(
+        gnc_yyz_mass_properties_probe PRIVATE cxx_std_17)
+    gnc_enable_warnings(gnc_yyz_mass_properties_probe)
+
     # R0 Legacy behavior oracle: independent journal, no Legacy linkage.
     add_executable(
         gnc_legacy_sync_commit_probe
@@ -200,6 +208,9 @@ if(GNC_BUILD_TESTS)
     add_test(
         NAME r0.yyz-propulsion-response.probe
         COMMAND gnc_yyz_propulsion_response_probe --self-check)
+    add_test(
+        NAME r0.yyz-mass-properties.probe
+        COMMAND gnc_yyz_mass_properties_probe --self-check)
     add_test(
         NAME r0.legacy-sync-commit.probe
         COMMAND gnc_legacy_sync_commit_probe --self-check)
@@ -363,6 +374,19 @@ if(GNC_BUILD_TESTS)
             ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-propulsion-response/reference.json
             --probe
             $<TARGET_FILE:gnc_yyz_propulsion_response_probe>)
+    add_test(
+        NAME r0.yyz-mass-properties.oracle
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/yyz_mass_properties_reference.py
+            --cases
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-yyz-mass-properties/cases.json
+            --oracle
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-mass-properties/reference.json
+            --probe
+            $<TARGET_FILE:gnc_yyz_mass_properties_probe>)
     add_test(
         NAME r0.legacy-sync-commit.oracle
         COMMAND

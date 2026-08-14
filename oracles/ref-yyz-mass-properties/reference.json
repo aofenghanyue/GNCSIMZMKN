@@ -1,0 +1,420 @@
+{
+  "schema_version": "gnczmkn.yyz-mass-properties-reference/1",
+  "fixture_id": "REF-YYZ-MASS-PROPERTIES-001",
+  "oracle_id": "ORACLE-YYZ-MASS-PROPERTIES-001",
+  "model_id": "MODEL-YYZ-MASS-PROPERTIES-PROJECTION-001",
+  "status": "executable",
+  "precision": {
+    "decimal_digits": 80
+  },
+  "input_identity": {
+    "path": "fixtures/ref-yyz-mass-properties/cases.json",
+    "bytes": 9825,
+    "sha256": "d5863cd02a770f4fbc651aede429ceccad53a9ca350bdf938a2cdfd19365b0f3"
+  },
+  "cases": {
+    "CASE-YYZ-MASS-PROPERTIES-CURRENT-CANDIDATE-PUBLICATION": {
+      "id": "CASE-YYZ-MASS-PROPERTIES-CURRENT-CANDIDATE-PUBLICATION",
+      "current_sample": {
+        "model_id": "MODEL-YYZ-MASS-PROPERTIES-PROJECTION-001",
+        "quality": "Valid",
+        "mass_state_id": "mass.fixture.yyz.vehicle@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "body_origin_point_id": "point.fixture.yyz.body-origin@1",
+        "center_of_mass_point_id": "point.fixture.yyz.center-of-mass@1",
+        "sample_tick": 20,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 8,
+        "valid_from_tick": 20,
+        "valid_until_tick": 25,
+        "mass_kg": "120",
+        "r_body_origin_to_CoM_B_m": [
+          "0.2",
+          "-0.1",
+          "0.05"
+        ],
+        "inertia_about_CoM_B_kgm2_row_major": [
+          "12",
+          "1",
+          "0.5",
+          "1",
+          "20",
+          "2",
+          "0.5",
+          "2",
+          "30"
+        ]
+      },
+      "closure_consumer": {
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "sample_tick": 20,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 8,
+        "application_point_id": "point.fixture.yyz.propulsion-main@1",
+        "r_body_origin_to_application_B_m": [
+          "1",
+          "0.4",
+          "-0.2"
+        ],
+        "r_CoM_to_application_B_m": [
+          "0.8",
+          "0.5",
+          "-0.25"
+        ],
+        "force_B_N": [
+          "300",
+          "400",
+          "0"
+        ],
+        "moment_at_application_B_Nm": [
+          "1",
+          "-2",
+          "3"
+        ],
+        "lever_arm_moment_B_Nm": [
+          "100",
+          "-75",
+          "170"
+        ],
+        "moment_about_CoM_B_Nm": [
+          "101",
+          "-77",
+          "173"
+        ]
+      },
+      "rigid_core_consumer": {
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "sample_tick": 20,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 8,
+        "mass_kg": "120",
+        "mass_reciprocal_per_kg": "0.0083333333333333333333333333333333333333333333333333333333333333333333333333333333",
+        "force_B_N": [
+          "300",
+          "400",
+          "0"
+        ],
+        "specific_force_B_mps2": [
+          "2.5",
+          "3.3333333333333333333333333333333333333333333333333333333333333333333333333333333",
+          "0"
+        ],
+        "inertia_about_CoM_B_kgm2_row_major": [
+          "12",
+          "1",
+          "0.5",
+          "1",
+          "20",
+          "2",
+          "0.5",
+          "2",
+          "30"
+        ],
+        "omega_BI_B_radps": [
+          "1",
+          "2",
+          "3"
+        ],
+        "angular_momentum_B_kgm2ps": [
+          "15.5",
+          "47",
+          "94.5"
+        ],
+        "gyroscopic_moment_B_Nm": [
+          "48",
+          "-48",
+          "16"
+        ],
+        "net_moment_B_Nm": [
+          "53",
+          "-29",
+          "157"
+        ],
+        "angular_acceleration_B_radps2": [
+          "4.3788453434471133586177833965444584913611462284028655710071639275179098187947746",
+          "-2.1996418036241045090602612726506531816266329540665823851664559629161399072903497",
+          "5.3069953645174884112937210282343025705857564264643910661609776654024441635061105"
+        ]
+      },
+      "publication_sequence": {
+        "current_sample_tick": 20,
+        "current_visible_mass_kg": "120",
+        "pending_source_interval_id": "mass-flow.fixture.propulsion.main.[20,25)",
+        "pending_visibility_before_commit": "candidate-only",
+        "pending_mass_candidate_kg": "119.75",
+        "next_commit_tick": 25,
+        "next_visible_mass_kg": "119.75",
+        "next_sample": {
+          "model_id": "MODEL-YYZ-MASS-PROPERTIES-PROJECTION-001",
+          "quality": "Valid",
+          "mass_state_id": "mass.fixture.yyz.vehicle@1",
+          "body_frame_id": "frame.fixture.yyz.body@1",
+          "body_origin_point_id": "point.fixture.yyz.body-origin@1",
+          "center_of_mass_point_id": "point.fixture.yyz.center-of-mass@1",
+          "sample_tick": 25,
+          "clock_domain": "clock.fixture.yyz.simulation@1",
+          "configuration_revision": 8,
+          "valid_from_tick": 25,
+          "valid_until_tick": 30,
+          "mass_kg": "119.75",
+          "r_body_origin_to_CoM_B_m": [
+            "0.18",
+            "-0.08",
+            "0.04"
+          ],
+          "inertia_about_CoM_B_kgm2_row_major": [
+            "11.5",
+            "0.8",
+            "0.4",
+            "0.8",
+            "19.2",
+            "1.6",
+            "0.4",
+            "1.6",
+            "29"
+          ]
+        }
+      }
+    },
+    "CASE-YYZ-MASS-PROPERTIES-DIAGONAL-ZERO-FLOW": {
+      "id": "CASE-YYZ-MASS-PROPERTIES-DIAGONAL-ZERO-FLOW",
+      "current_sample": {
+        "model_id": "MODEL-YYZ-MASS-PROPERTIES-PROJECTION-001",
+        "quality": "Valid",
+        "mass_state_id": "mass.fixture.yyz.vehicle@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "body_origin_point_id": "point.fixture.yyz.body-origin@1",
+        "center_of_mass_point_id": "point.fixture.yyz.center-of-mass@1",
+        "sample_tick": 3,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 9,
+        "valid_from_tick": 3,
+        "valid_until_tick": 7,
+        "mass_kg": "10",
+        "r_body_origin_to_CoM_B_m": [
+          "-0.5",
+          "0.25",
+          "0.1"
+        ],
+        "inertia_about_CoM_B_kgm2_row_major": [
+          "4",
+          "0",
+          "0",
+          "0",
+          "5",
+          "0",
+          "0",
+          "0",
+          "6"
+        ]
+      },
+      "closure_consumer": {
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "sample_tick": 3,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 9,
+        "application_point_id": "point.fixture.yyz.propulsion-main@1",
+        "r_body_origin_to_application_B_m": [
+          "0.2",
+          "-0.1",
+          "0.3"
+        ],
+        "r_CoM_to_application_B_m": [
+          "0.7",
+          "-0.35",
+          "0.2"
+        ],
+        "force_B_N": [
+          "40",
+          "0",
+          "30"
+        ],
+        "moment_at_application_B_Nm": [
+          "-4",
+          "5",
+          "-6"
+        ],
+        "lever_arm_moment_B_Nm": [
+          "-10.5",
+          "-13",
+          "14"
+        ],
+        "moment_about_CoM_B_Nm": [
+          "-14.5",
+          "-8",
+          "8"
+        ]
+      },
+      "rigid_core_consumer": {
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "sample_tick": 3,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 9,
+        "mass_kg": "10",
+        "mass_reciprocal_per_kg": "0.1",
+        "force_B_N": [
+          "40",
+          "0",
+          "30"
+        ],
+        "specific_force_B_mps2": [
+          "4",
+          "0",
+          "3"
+        ],
+        "inertia_about_CoM_B_kgm2_row_major": [
+          "4",
+          "0",
+          "0",
+          "0",
+          "5",
+          "0",
+          "0",
+          "0",
+          "6"
+        ],
+        "omega_BI_B_radps": [
+          "0.2",
+          "-0.1",
+          "0.3"
+        ],
+        "angular_momentum_B_kgm2ps": [
+          "0.8",
+          "-0.5",
+          "1.8"
+        ],
+        "gyroscopic_moment_B_Nm": [
+          "-0.03",
+          "-0.12",
+          "-0.02"
+        ],
+        "net_moment_B_Nm": [
+          "-14.47",
+          "-7.88",
+          "8.02"
+        ],
+        "angular_acceleration_B_radps2": [
+          "-3.6175",
+          "-1.576",
+          "1.3366666666666666666666666666666666666666666666666666666666666666666666666666667"
+        ]
+      },
+      "publication_sequence": {
+        "current_sample_tick": 3,
+        "current_visible_mass_kg": "10",
+        "pending_source_interval_id": "mass-flow.fixture.propulsion.main.[3,7)",
+        "pending_visibility_before_commit": "candidate-only",
+        "pending_mass_candidate_kg": "10",
+        "next_commit_tick": 7,
+        "next_visible_mass_kg": "10",
+        "next_sample": {
+          "model_id": "MODEL-YYZ-MASS-PROPERTIES-PROJECTION-001",
+          "quality": "Valid",
+          "mass_state_id": "mass.fixture.yyz.vehicle@1",
+          "body_frame_id": "frame.fixture.yyz.body@1",
+          "body_origin_point_id": "point.fixture.yyz.body-origin@1",
+          "center_of_mass_point_id": "point.fixture.yyz.center-of-mass@1",
+          "sample_tick": 7,
+          "clock_domain": "clock.fixture.yyz.simulation@1",
+          "configuration_revision": 9,
+          "valid_from_tick": 7,
+          "valid_until_tick": 8,
+          "mass_kg": "10",
+          "r_body_origin_to_CoM_B_m": [
+            "-0.5",
+            "0.25",
+            "0.1"
+          ],
+          "inertia_about_CoM_B_kgm2_row_major": [
+            "4",
+            "0",
+            "0",
+            "0",
+            "5",
+            "0",
+            "0",
+            "0",
+            "6"
+          ]
+        }
+      }
+    }
+  },
+  "equivalence_results": [
+    {
+      "id": "EQUIV-YYZ-MASS-PROPERTIES-BODY-ORIGIN-TRANSLATION",
+      "status": "passed",
+      "translation_B_m": [
+        "10",
+        "-5",
+        "2"
+      ],
+      "shifted_r_body_origin_to_CoM_B_m": [
+        "10.2",
+        "-5.1",
+        "2.05"
+      ],
+      "max_abs_consumer_difference": "0"
+    }
+  ],
+  "invalid_input_rejections": [
+    "INVALID-YYZ-MASS-PROPERTIES-STATE-IDENTITY",
+    "INVALID-YYZ-MASS-PROPERTIES-FRAME-MISMATCH",
+    "INVALID-YYZ-MASS-PROPERTIES-CLOCK-MISMATCH",
+    "INVALID-YYZ-MASS-PROPERTIES-NEGATIVE-REVISION",
+    "INVALID-YYZ-MASS-PROPERTIES-SAMPLE-INTERVAL-MISMATCH",
+    "INVALID-YYZ-MASS-PROPERTIES-NONPOSITIVE-MASS",
+    "INVALID-YYZ-MASS-PROPERTIES-NONFINITE-COM",
+    "INVALID-YYZ-MASS-PROPERTIES-ASYMMETRIC-INERTIA",
+    "INVALID-YYZ-MASS-PROPERTIES-NON-SPD-INERTIA",
+    "INVALID-YYZ-MASS-PROPERTIES-CANDIDATE-COMMIT-MISMATCH"
+  ],
+  "mutation_results": [
+    {
+      "id": "MUTATION-YYZ-MASS-PROPERTIES-EARLY-CANDIDATE-VISIBILITY",
+      "status": "rejected",
+      "max_abs_physical_difference": "0.25",
+      "observed_current_visible_mass_kg": "119.75",
+      "observed_specific_force_B_mps2": [
+        "2.5052192066805845511482254697286012526096033402922755741127348643006263048016701",
+        "3.3402922755741127348643006263048016701461377870563674321503131524008350730688935",
+        "0"
+      ]
+    },
+    {
+      "id": "MUTATION-YYZ-MASS-PROPERTIES-OMIT-COM-OFFSET",
+      "status": "rejected",
+      "max_abs_physical_difference": "110",
+      "observed_r_CoM_to_application_B_m": [
+        "1",
+        "0.4",
+        "-0.2"
+      ],
+      "observed_moment_about_CoM_B_Nm": [
+        "81",
+        "-62",
+        "283"
+      ]
+    },
+    {
+      "id": "MUTATION-YYZ-MASS-PROPERTIES-DIAGONALIZE-INERTIA",
+      "status": "rejected",
+      "max_abs_physical_difference": "12",
+      "observed_angular_momentum_B_kgm2ps": [
+        "12",
+        "40",
+        "90"
+      ],
+      "observed_gyroscopic_moment_B_Nm": [
+        "60",
+        "-54",
+        "16"
+      ],
+      "observed_angular_acceleration_B_radps2": [
+        "3.4166666666666666666666666666666666666666666666666666666666666666666666666666665",
+        "-1.15",
+        "5.2333333333333333333333333333333333333333333333333333333333333333333333333333334"
+      ]
+    }
+  ]
+}

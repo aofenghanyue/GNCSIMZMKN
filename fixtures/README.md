@@ -23,6 +23,8 @@ Fixture 是可复制、可校验、带 provenance 的规范实例。每个目录
 
 `ref-yyz-propulsion-response` 已达到 `executable`，包含已接受的 fixture-local supplied propulsion response：非负推力标量与显式单位体轴方向组成力，响应携带作用点和该点固有力矩，Closure 独占 `r × F` 搬移；正值燃料消耗率在半开区间内积分并从 committed mass 扣除。80 位 Decimal 与独立 C++17 实现交叉检查三个公式 case、区间分割等价、十条输入域失败和三条 thrust/moment/mass mutation；command mapping、engine/fuel dynamics、dry-mass policy、canonical assets 与产品 contract 仍在后续范围内。
 
+`ref-yyz-mass-properties` 已达到 `executable`，实现由既有 accepted invariants 固定的 projection-only 路径：同边界 committed MassState 投影正质量、CoM 点坐标和关于 CoM 的完整对称正定体轴惯量；CoM 与作用点坐标生成 Closure 杠杆臂，质量和完整惯量直接进入 rigid-core consumer。待提交质量候选在当前 `FrozenInterval` 内保持 candidate-only，下一边界仅从显式 next committed state 投影。燃料驱动的 CoM/惯量演化、dry mass、configuration jump、canonical assets 与产品 contract 仍在后续范围内。
+
 `ref-legacy-sync-commit` 已达到 `executable`，将 `ORACLE-YYZ-SYNC-03` 的冻结来源、独立 Decimal 结果、C++17 candidate/commit journal 和 early-commit 失败用例连成切片；已接受的处置保留 candidate barrier 与 committed-`t_k` 读取，并退出 Legacy 实现形状。
 
 `ref-legacy-publish` 已达到 `executable`，交叉验证 publish 前后状态恒等、truth 边界时间、解析轨迹与 publish-time mutation 失败；已接受的处置保留只读发布与 `t_k` 边界刷新，并退出 Legacy 发布接口和存储形状。

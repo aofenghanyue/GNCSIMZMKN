@@ -119,7 +119,7 @@ R0-LEG-001 的 YYZ 双跑观察为：
 
 `REF-YYZ-6DOF-CORE-001` 已实现并接受 fixture-local 惯性笛卡尔刚体核心：supplied uniform gravity、常正质量、常对称正定体轴惯量、质心处总力、质心总力矩、被动 Hamilton `q_I_B`、固定步长经典 RK4，以及每次导数求值前和提交前归一化。独立 60 位 Decimal reference 与 C++17 probe 覆盖公式 intermediates、解析匀速平移、解析主轴自旋、非主轴无外力矩高精度轨迹、姿态与角速度四阶收敛、转动能与角动量模守恒、ExactGrid 终止、阶段失败整候选丢弃和七类输入域拒绝。
 
-完整 `REF-YYZ-001` 仍缺 canonical mission 与资产、Earth/atmosphere/wind、coefficient lookup 与适用域、engine/fuel 与完整 mass properties、制导控制、闭环轨迹、canonical terminal、pitch overshoot 指标和生产 tolerance report。当前 executable 仅在已接受的 fixture-local applicability domain 内提供科学事实，不能代表 00A 或 Legacy mission 的完整 YYZ 6DoF truth。
+完整 `REF-YYZ-001` 仍缺 canonical mission 与资产、Earth/atmosphere/wind、coefficient lookup 与适用域、engine/fuel 与 mass evolution、制导控制、闭环轨迹、canonical terminal、pitch overshoot 指标和生产 tolerance report。当前 executable 仅在已接受的 fixture-local applicability domain 内提供科学事实，不能代表 00A 或 Legacy mission 的完整 YYZ 6DoF truth。
 
 ## 4. Scenario 冲突与 authority decision
 
@@ -289,6 +289,8 @@ R0-SCI-001 提供的 SI、frame、binary64、integer tick、ExactGrid 和 quater
 `REF-YYZ-UNIFORM-ENVIRONMENT-001` 已执行 fixture-local supplied uniform environment 子集：pure query 接收有限惯性系位置、非负 tick、clock 与 configuration revision，返回位置/时间不变的 `gravity_I_mps2`、`airmass_velocity_I_mps`、`density_kgpm3` 和 `speed_of_sound_mps`。响应在同一 sample identity 进入已接受的 air-data `v_rel/qbar/Mach` 与 rigid-core `force_I/m+gravity_I` 关系。80 位 Decimal reference 与独立 C++17 probe 覆盖普通 consumer link、零密度/亚单位声速边界、position/tick 等价、严格输入域和 Legacy-style altitude density/gravity decay。Earth/geodetic/rotation、海拔模型、压力/温度/湿度、风廓线/阵风、canonical constants/assets 与产品 contract 仍待后续确定。
 
 `REF-YYZ-PROPULSION-RESPONSE-001` 已执行 fixture-local supplied propulsion response 子集：有限非负推力标量乘显式单位体轴方向形成 `F_B`；响应携带 `r_CoM_to_application_B` 与作用点固有力矩，Closure 独占 `r × F` 搬移。有限非负燃料消耗率在同一 clock/revision 的半开区间内积分，Mass consumer 以 `m_candidate=m_committed-rate*duration` 形成候选，非正候选直接产生 domain error。80 位 Decimal reference 与独立 C++17 probe 覆盖三个公式 case、区间分割等价、十条输入域失败，以及推力反向、预搬移力矩和质量增加 mutation。Command/throttle mapping、engine/fuel dynamics、dry-mass policy、完整 CG/inertia、canonical assets 与产品 contract 仍待后续确定。
+
+`REF-YYZ-MASS-PROPERTIES-001` 已执行由既有 accepted invariants 固定的 projection-only 子集：显式 committed MassState 在 `t_k` 投影正质量、body-origin 到 CoM 的点坐标和关于 CoM 的完整对称正定体轴惯量；Closure 以 CoM 与作用点坐标差生成 application vector，rigid-core consumer 使用质量倒数、完整惯量、角动量和陀螺力矩。待提交 scalar mass candidate 在当前 `FrozenInterval` 内不可见，下一边界从显式 next committed state 投影。80 位 Decimal reference 与独立 C++17 probe 覆盖两个 consumer case、body-origin 坐标共同平移等价、严格输入域，以及 early-candidate、omitted-CoM-offset 和 diagonalized-inertia 失败。Fuel/ablation/dry-mass/CG/inertia evolution、configuration jump、canonical assets 与产品 contract 仍待后续确定。
 
 ### 7.3 Legacy 公式不可原样继承的地方
 

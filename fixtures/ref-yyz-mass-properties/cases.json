@@ -1,0 +1,179 @@
+{
+  "schema_version": "gnczmkn.yyz-mass-properties-cases/1",
+  "fixture_id": "REF-YYZ-MASS-PROPERTIES-001",
+  "oracle_id": "ORACLE-YYZ-MASS-PROPERTIES-001",
+  "semantic_profile": {
+    "status": "implemented-from-accepted-invariants",
+    "authority_basis": [
+      "ADR-0006 accepted SI, point/free-vector, frame and half-open validity semantics",
+      "accepted REF-YYZ-6DOF-CORE-001 positive-mass and symmetric-positive-definite inertia domain",
+      "accepted REF-YYZ-FORCE-MOMENT-CLOSURE-001 center-of-mass application-vector convention",
+      "accepted REF-YYZ-PROPULSION-RESPONSE-001 scalar mass candidate sign and interval semantics",
+      "architecture 14 section 18.1 current-sample versus interval-candidate visibility"
+    ],
+    "implemented_scope": "Fixture-local projection of explicit committed MassState into MassPropertiesSample, direct Closure and rigid-core consumer links, and current-versus-candidate publication timing.",
+    "equations": [
+      "MassPropertiesSample@t_k = project(explicit committed MassState_k)",
+      "r_CoM_to_application_B = r_body_origin_to_application_B - r_body_origin_to_CoM_B",
+      "lever_arm_moment_B = r_CoM_to_application_B x force_B",
+      "moment_about_CoM_B = intrinsic_moment_at_application_B + lever_arm_moment_B",
+      "specific_force_B = force_B / mass",
+      "angular_momentum_B = inertia_about_CoM_B * omega_B",
+      "gyroscopic_moment_B = omega_B x angular_momentum_B",
+      "angular_acceleration_B = inertia_about_CoM_B^-1 * (moment_about_CoM_B - gyroscopic_moment_B)"
+    ],
+    "temporal_policy": "The current committed sample is visible throughout its FrozenInterval. A pending scalar mass candidate remains candidate-only and can appear in projection only after the declared next-boundary commit.",
+    "inertia_policy": "The sample carries the full finite symmetric-positive-definite inertia tensor about the current center of mass, expressed in the declared body frame. Products of inertia are preserved.",
+    "unresolved_choice": "How a MassFlowInterval derives candidate center of mass and inertia is intentionally unimplemented and still requires Scientific Authority selection.",
+    "excluded": [
+      "a fuel, ablation, dry-mass, center-of-mass or inertia evolution law",
+      "configuration jumps, attachment/separation and parallel-axis transfer",
+      "canonical vehicle geometry, tanks, assets and applicability",
+      "R1-R8 product contracts or runtime capability"
+    ]
+  },
+  "model": {
+    "model_id": "MODEL-YYZ-MASS-PROPERTIES-PROJECTION-001",
+    "mass_state_id": "mass.fixture.yyz.vehicle@1",
+    "body_frame_id": "frame.fixture.yyz.body@1",
+    "body_origin_point_id": "point.fixture.yyz.body-origin@1",
+    "center_of_mass_point_id": "point.fixture.yyz.center-of-mass@1",
+    "clock_domain": "clock.fixture.yyz.simulation@1",
+    "quality": "Valid",
+    "strategy": "FrozenInterval",
+    "execution_form": "fixture-local-committed-state-projection",
+    "validity_domain": [
+      "all supplied and derived physical values are finite",
+      "sample_tick, valid_from_tick and configuration_revision are nonnegative integers",
+      "sample_tick = valid_from_tick and valid_until_tick > valid_from_tick",
+      "mass_kg > 0",
+      "r_body_origin_to_CoM_B is a body-frame point coordinate relative to the declared body origin",
+      "inertia_about_CoM_B is finite, symmetric and positive definite",
+      "pending candidate and explicit next committed state agree on next tick and mass",
+      "current and next projections each retain their own exact state, frame, clock and revision identity"
+    ]
+  },
+  "tolerances": {
+    "formula_absolute": 2e-12,
+    "formula_relative": 2e-12,
+    "stored_decimal_absolute": "1e-68"
+  },
+  "cases": [
+    {
+      "id": "CASE-YYZ-MASS-PROPERTIES-CURRENT-CANDIDATE-PUBLICATION",
+      "current_context": {
+        "mass_state_id": "mass.fixture.yyz.vehicle@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "sample_tick": 20,
+        "configuration_revision": 8,
+        "valid_from_tick": 20,
+        "valid_until_tick": 25
+      },
+      "current_committed_state": {
+        "mass_kg": 120.0,
+        "r_body_origin_to_CoM_B_m": [0.2, -0.1, 0.05],
+        "inertia_about_CoM_B_kgm2_row_major": [12.0, 1.0, 0.5, 1.0, 20.0, 2.0, 0.5, 2.0, 30.0]
+      },
+      "pending_mass_candidate": {
+        "source_interval_id": "mass-flow.fixture.propulsion.main.[20,25)",
+        "next_commit_tick": 25,
+        "mass_candidate_kg": 119.75,
+        "visibility_before_commit": "candidate-only"
+      },
+      "next_context": {
+        "mass_state_id": "mass.fixture.yyz.vehicle@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "sample_tick": 25,
+        "configuration_revision": 8,
+        "valid_from_tick": 25,
+        "valid_until_tick": 30
+      },
+      "explicit_next_committed_state": {
+        "mass_kg": 119.75,
+        "r_body_origin_to_CoM_B_m": [0.18, -0.08, 0.04],
+        "inertia_about_CoM_B_kgm2_row_major": [11.5, 0.8, 0.4, 0.8, 19.2, 1.6, 0.4, 1.6, 29.0]
+      },
+      "closure_probe": {
+        "application_point_id": "point.fixture.yyz.propulsion-main@1",
+        "r_body_origin_to_application_B_m": [1.0, 0.4, -0.2],
+        "force_B_N": [300.0, 400.0, 0.0],
+        "intrinsic_moment_at_application_B_Nm": [1.0, -2.0, 3.0]
+      },
+      "rigid_core_probe": {
+        "omega_BI_B_radps": [1.0, 2.0, 3.0]
+      }
+    },
+    {
+      "id": "CASE-YYZ-MASS-PROPERTIES-DIAGONAL-ZERO-FLOW",
+      "current_context": {
+        "mass_state_id": "mass.fixture.yyz.vehicle@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "sample_tick": 3,
+        "configuration_revision": 9,
+        "valid_from_tick": 3,
+        "valid_until_tick": 7
+      },
+      "current_committed_state": {
+        "mass_kg": 10.0,
+        "r_body_origin_to_CoM_B_m": [-0.5, 0.25, 0.1],
+        "inertia_about_CoM_B_kgm2_row_major": [4.0, 0.0, 0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 6.0]
+      },
+      "pending_mass_candidate": {
+        "source_interval_id": "mass-flow.fixture.propulsion.main.[3,7)",
+        "next_commit_tick": 7,
+        "mass_candidate_kg": 10.0,
+        "visibility_before_commit": "candidate-only"
+      },
+      "next_context": {
+        "mass_state_id": "mass.fixture.yyz.vehicle@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "sample_tick": 7,
+        "configuration_revision": 9,
+        "valid_from_tick": 7,
+        "valid_until_tick": 8
+      },
+      "explicit_next_committed_state": {
+        "mass_kg": 10.0,
+        "r_body_origin_to_CoM_B_m": [-0.5, 0.25, 0.1],
+        "inertia_about_CoM_B_kgm2_row_major": [4.0, 0.0, 0.0, 0.0, 5.0, 0.0, 0.0, 0.0, 6.0]
+      },
+      "closure_probe": {
+        "application_point_id": "point.fixture.yyz.propulsion-main@1",
+        "r_body_origin_to_application_B_m": [0.2, -0.1, 0.3],
+        "force_B_N": [40.0, 0.0, 30.0],
+        "intrinsic_moment_at_application_B_Nm": [-4.0, 5.0, -6.0]
+      },
+      "rigid_core_probe": {
+        "omega_BI_B_radps": [0.2, -0.1, 0.3]
+      }
+    }
+  ],
+  "equivalence_cases": [
+    {
+      "id": "EQUIV-YYZ-MASS-PROPERTIES-BODY-ORIGIN-TRANSLATION",
+      "operation": "translate the body-origin coordinates of the current CoM and application point by the same finite body-frame offset",
+      "expected": "r_CoM_to_application, Closure wrench and rigid-core consumer values remain equal"
+    }
+  ],
+  "invalid_input_cases": [
+    {"id": "INVALID-YYZ-MASS-PROPERTIES-STATE-IDENTITY", "mutation": "change current mass_state_id", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-MASS-PROPERTIES-FRAME-MISMATCH", "mutation": "change current body_frame_id", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-MASS-PROPERTIES-CLOCK-MISMATCH", "mutation": "change current clock domain", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-MASS-PROPERTIES-NEGATIVE-REVISION", "mutation": "set current configuration_revision below zero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-MASS-PROPERTIES-SAMPLE-INTERVAL-MISMATCH", "mutation": "make current sample_tick differ from valid_from_tick", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-MASS-PROPERTIES-NONPOSITIVE-MASS", "mutation": "set current mass to zero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-MASS-PROPERTIES-NONFINITE-COM", "mutation": "set one current center-of-mass coordinate to positive infinity", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-MASS-PROPERTIES-ASYMMETRIC-INERTIA", "mutation": "make current inertia asymmetric", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-MASS-PROPERTIES-NON-SPD-INERTIA", "mutation": "give current inertia a negative principal value", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-MASS-PROPERTIES-CANDIDATE-COMMIT-MISMATCH", "mutation": "make pending mass_candidate differ from the explicit next committed mass", "expected_status": "input-domain-error"}
+  ],
+  "mutation_cases": [
+    {"id": "MUTATION-YYZ-MASS-PROPERTIES-EARLY-CANDIDATE-VISIBILITY", "mutation": "project pending mass_candidate at the current tick before commit", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-MASS-PROPERTIES-OMIT-COM-OFFSET", "mutation": "use r_body_origin_to_application directly as r_CoM_to_application", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-MASS-PROPERTIES-DIAGONALIZE-INERTIA", "mutation": "discard products of inertia before the rigid-core consumer", "expected_status": "oracle-mismatch"}
+  ]
+}
