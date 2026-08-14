@@ -3,13 +3,13 @@
     "task_id":  "R0-SCI-001",
     "convention_id":  "SCI-CONVENTIONS-001",
     "status":  "pass",
-    "generated_at":  "2026-08-10T10:52:11.4291733Z",
+    "generated_at":  "2026-08-13T08:30:39.4970305Z",
     "environment":  {
-                        "os":  "Microsoft Windows NT 10.0.26200.0",
+                        "os":  "Microsoft Windows NT 10.0.26100.0",
                         "architecture":  "X64",
-                        "powershell":  "5.1.26100.8457",
-                        "cpp_runtime":  "MSVC 1950",
-                        "python_runtime":  "CPython 3.13.5"
+                        "powershell":  "5.1.26100.6584",
+                        "cpp_runtime":  "GCC 15.1.0",
+                        "python_runtime":  "CPython 3.12.7"
                     },
     "inputs":  [
                    {
@@ -26,11 +26,11 @@
                    },
                    {
                        "path":  "docs/tasks/work-packages/R0-SCI-001.md",
-                       "sha256_normalized_utf8_lf":  "3584f667d32e2cf35f0d2a2a6131209fa9920fcee603a98b251d33eba67b9850"
+                       "sha256_normalized_utf8_lf":  "ea07fd56399362d34e92d81efeb489893c6a1d0f3f0370a687ee119d2e193dba"
                    },
                    {
                        "path":  "fixtures/ref-scientific-conventions/fixture-manifest.json",
-                       "sha256_normalized_utf8_lf":  "a9ea1e8fd5c7ee9a3f03b5ebe07aac2c7d28083fdf4c042d7a08316be8c7cb93"
+                       "sha256_normalized_utf8_lf":  "8f3630ffd681b040ea7036df5fac7f3b48f0d0bb272adbc67a0d0f820eade864"
                    },
                    {
                        "path":  "fixtures/ref-scientific-conventions/conventions.json",

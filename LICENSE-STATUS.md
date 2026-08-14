@@ -8,7 +8,7 @@ Internal handling is limited to the already-authorized project workspace and col
 
 External sharing is blocked for source code, documentation, data assets, fixtures, reference archives, generated artifacts, reports, and binaries until all of the following are recorded:
 
-1. an accepted license decision approved by the Product Owner and Architecture Lead;
+1. a separate accepted decision that explicitly selects a repository distribution license and is approved by the Product Owner and Architecture Lead;
 2. ownership or permission evidence for the material being shared;
 3. compatible third-party license conclusions and required notices/source offers;
 4. provenance, integrity, classification, sensitive-information, and export review;
@@ -16,4 +16,4 @@ External sharing is blocked for source code, documentation, data assets, fixture
 
 The frozen Legacy archive remains evidence-only and must not be redistributed. External tools and dependencies used from ignored workspaces remain subject to their upstream terms and must not be bundled into a project release without a separate review.
 
-The proposed controls are documented in [ADR-0008](docs/adr/0008-internal-default-license-and-provenance-gate.md) and the [license and provenance policy](docs/governance/license-and-provenance-policy.md). The decision is tracked as `R0-GOV-002` in `docs/tasks/backlog.json`.
+The fail-closed technical candidate is documented in [ADR-0008](docs/adr/0008-internal-default-license-and-provenance-gate.md) and the [license and provenance policy](docs/governance/license-and-provenance-policy.md). Accepting that workflow will not select a distribution license. The decision is tracked as `R0-GOV-002` in `docs/tasks/backlog.json`.

@@ -12,6 +12,8 @@ $inventoryPath = Join-Path $repoRoot 'docs\governance\provenance-inventory.json'
 $reportPath = Join-Path $repoRoot 'docs\quality\license-provenance-conformance-report.json'
 $errors = [System.Collections.Generic.List[string]]::new()
 $mutationResults = [System.Collections.Generic.List[object]]::new()
+Import-Module (Join-Path $repoRoot 'tools\modules\JsonSchemaSubset.psm1') -Force
+Import-Module (Join-Path $repoRoot 'tools\modules\R0GovernanceReview.psm1') -Force
 
 function Add-Error([string]$Message) {
     $script:errors.Add($Message)
@@ -23,7 +25,7 @@ function Read-Json([string]$Path) {
         return $null
     }
     try {
-        return Get-Content -LiteralPath $Path -Raw -Encoding utf8 | ConvertFrom-Json
+        return Read-StrictJsonFile -Path $Path
     }
     catch {
         Add-Error "Invalid JSON: $Path :: $($_.Exception.Message)"
@@ -59,6 +61,68 @@ function Get-NormalizedTextSha256([string]$Path) {
     finally {
         $algorithm.Dispose()
     }
+}
+
+function Get-ObjectCanonicalSha256([object]$Value) {
+    $json = $Value | ConvertTo-Json -Depth 100 -Compress
+    $bytes = [System.Text.UTF8Encoding]::new($false).GetBytes($json)
+    $algorithm = [System.Security.Cryptography.SHA256]::Create()
+    try {
+        return ([System.BitConverter]::ToString(
+                $algorithm.ComputeHash($bytes))).Replace('-', '').ToLowerInvariant()
+    }
+    finally {
+        $algorithm.Dispose()
+    }
+}
+
+function Test-RepositoryRelativeLocator([string]$Value) {
+    if ([string]::IsNullOrWhiteSpace($Value) -or
+        $Value.Contains('\') -or
+        $Value.Contains('%') -or
+        $Value.Contains('?') -or
+        $Value.Contains('#') -or
+        $Value -match '^[A-Za-z]:' -or
+        $Value -match '^[A-Za-z][A-Za-z0-9+.-]*:' -or
+        [System.IO.Path]::IsPathRooted($Value)) {
+        return $false
+    }
+    $segments = @($Value.Split('/'))
+    return $segments.Count -gt 0 -and
+        @($segments | Where-Object { $_ -eq '' -or $_ -eq '.' -or $_ -eq '..' }).Count -eq 0
+}
+
+function Test-TrackedRepositoryLocator([string]$Value) {
+    if (-not (Test-RepositoryRelativeLocator $Value)) {
+        return $false
+    }
+    $stageLines = @(& git -C $repoRoot -c core.quotepath=false --literal-pathspecs `
+        ls-files --stage -- $Value)
+    if ($LASTEXITCODE -ne 0 -or $stageLines.Count -ne 1) {
+        return $false
+    }
+    $stage = [string]$stageLines[0]
+    if ($stage -cnotmatch '^(100(?:644|755))\s+([0-9a-f]{40,64})\s+0\t(.+)$' -or
+        $Matches[3] -cne $Value) {
+        return $false
+    }
+    $resolved = Join-Path $repoRoot $Value
+    if (-not (Test-Path -LiteralPath $resolved -PathType Leaf)) { return $false }
+    $item = Get-Item -LiteralPath $resolved -Force
+    if ($item -isnot [System.IO.FileInfo] -or
+        ($item.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0 -or
+        $item.Length -le 0) { return $false }
+    $rootFull = [System.IO.Path]::GetFullPath($repoRoot).TrimEnd('\', '/')
+    $cursor = $item.Directory
+    while ($null -ne $cursor -and
+        $cursor.FullName.StartsWith($rootFull, [System.StringComparison]::OrdinalIgnoreCase)) {
+        if (($cursor.Attributes -band [System.IO.FileAttributes]::ReparsePoint) -ne 0) {
+            return $false
+        }
+        if ($cursor.FullName -ceq $rootFull) { break }
+        $cursor = $cursor.Parent
+    }
+    return $true
 }
 
 function Test-InventoryObject([object]$Inventory) {
@@ -124,6 +188,21 @@ function Test-InventoryObject([object]$Inventory) {
         'sha256',
         'environment-identity',
         'git-commit')
+    if (($allowedScans -join ',') -cne
+        'no-license-information-found,license-information-present,not-scanned-nonredistributed-tool') {
+        $issues.Add('Provenance scan vocabulary differs from the reviewed technical inventory.')
+    }
+    if (($allowedPresence -join ',') -cne 'tracked,embedded-archive,external-untracked') {
+        $issues.Add('Repository-presence vocabulary differs from the reviewed technical inventory.')
+    }
+    if (($allowedInternal -join ',') -cne
+        'existing-access-only,evidence-only,subject-to-upstream-terms') {
+        $issues.Add('Internal-handling vocabulary differs from the reviewed technical inventory.')
+    }
+    if (($allowedExternal -join ',') -cne
+        'blocked-pending-accepted-adr,blocked-pending-item-review,not-redistributed') {
+        $issues.Add('External-distribution vocabulary differs from the reviewed technical inventory.')
+    }
     foreach ($expected in @(
             'no-license-information-found',
             'license-information-present',
@@ -223,9 +302,21 @@ function Test-InventoryObject([object]$Inventory) {
             $issues.Add("Inventory item '$id' has no source reference.")
         }
         foreach ($sourceRef in $sourceRefs) {
-            if ([string]::IsNullOrWhiteSpace([string]$sourceRef)) {
+            $sourceValue = [string]$sourceRef
+            if ([string]::IsNullOrWhiteSpace($sourceValue)) {
                 $issues.Add("Inventory item '$id' has an empty source reference.")
             }
+            elseif ($sourceValue -cnotmatch '^[A-Za-z][A-Za-z0-9+.-]*://' -and
+                -not (Test-TrackedRepositoryLocator $sourceValue)) {
+                $issues.Add("Inventory item '$id' has an invalid or untracked local source locator '$sourceValue'.")
+            }
+        }
+
+        if ([string]::IsNullOrWhiteSpace([string](Get-Field $item 'purpose'))) {
+            $issues.Add("Inventory item '$id' purpose is empty.")
+        }
+        if ([string]::IsNullOrWhiteSpace([string](Get-Field $item 'version'))) {
+            $issues.Add("Inventory item '$id' version is empty.")
         }
 
         $scope = Get-Field $item 'scope'
@@ -283,6 +374,13 @@ function Test-InventoryObject([object]$Inventory) {
                 }).Count -eq 0) {
             $issues.Add("LicenseRef item '$id' has no preserved custom license text.")
         }
+        foreach ($evidenceRef in @(Get-Field $license 'evidence_refs')) {
+            $evidenceValue = [string]$evidenceRef
+            if ($evidenceValue -cnotmatch '^[A-Za-z][A-Za-z0-9+.-]*://' -and
+                -not (Test-TrackedRepositoryLocator $evidenceValue)) {
+                $issues.Add("Inventory item '$id' has an invalid or untracked local license-evidence locator '$evidenceValue'.")
+            }
+        }
     }
 
     $requiredIds = @(
@@ -297,6 +395,27 @@ function Test-InventoryObject([object]$Inventory) {
     foreach ($requiredId in $requiredIds) {
         if (-not $ids.ContainsKey($requiredId)) {
             $issues.Add("Required inventory item is missing: $requiredId")
+        }
+    }
+    if ((@($items | ForEach-Object { [string](Get-Field $_ 'id') }) -join ',') -cne
+        ($requiredIds -join ',')) {
+        $issues.Add('Inventory item set/order differs from the reviewed technical inventory.')
+    }
+
+    $reviewedItemHashes = [ordered]@{
+        'repository-default-content' = '84634e86eb5353a2e99a22c64e082412991ee9befcda9af536681ed236e1a169'
+        'architecture-blueprint' = 'c6cdd3a14b61736729e6a7540e4f1b57462c16d2e60f5a256484f6d326151198'
+        'r0-research-evidence' = '2fab3ebf5f37be6c49e9f4e8db00d26ffdcd2fe631890d745a903db38333955f'
+        'legacy-source-archive' = 'd4af233b70553bcd82149a14fe12b112d1b54f65f16c25854eee5310457dddbe'
+        'eigen-3.4.0-legacy-reproduction' = 'e55713b44c84f4527516bdc1ed0925ff026fc658923937bc6442af9c407fef3d'
+        'w64devkit-2.9.1-legacy-reproduction' = 'f64465d3d59c24923de4082992c2db7e757688efdf53a53d366f0c3e16e2a08c'
+        'host-validation-toolchain' = '62e81a5b30adfa75c6b3e371bd1185f52bdd77c0d133fb1d28da6ef9da450321'
+        'github-actions-checkout-6.0.2' = '9c87fd5655be91d713162a973ef6409da96a4d714f548e167942b6a432d69471'
+    }
+    foreach ($id in $reviewedItemHashes.Keys) {
+        if ($ids.ContainsKey($id) -and
+            (Get-ObjectCanonicalSha256 $ids[$id]) -cne $reviewedItemHashes[$id]) {
+            $issues.Add("Inventory item '$id' reviewed semantic projection differs from the technical inventory.")
         }
     }
 
@@ -456,12 +575,45 @@ $requiredPaths = @(
     'docs/adr/0008-internal-default-license-and-provenance-gate.md',
     'docs/governance/license-and-provenance-policy.md',
     'docs/governance/provenance-inventory.json',
+    'docs/governance/r0-governance-review-contract.json',
+    'docs/governance/r0-owner-authorization.json',
+    'docs/governance/schemas/scientific-context.schema.json',
+    'docs/team/role-assignments.json',
     'docs/quality/provenance-review-checklist.md',
+    'docs/quality/r0-first-wave-reconciliation-audit.md',
+    'docs/quality/r0-g0-g1-readiness-audit.md',
+    'docs/quality/scientific-conventions-cross-tool-report.json',
+    'docs/tasks/backlog.json',
     'docs/tasks/work-packages/R0-GOV-002.md',
+    'docs/tasks/work-packages/R0-GATE-001.md',
+    'docs/tasks/work-packages/R0-SCI-001.md',
+    'project-manifest.json',
+    'docs/adr/0006-si-frame-and-simulation-time-conventions.md',
+    'docs/adr/0007-passive-hamilton-quaternion-convention.md',
+    'design-notes/gnczmkn-architecture-roadmap/03-mathematics-and-numerical-foundation.md',
+    'design-notes/gnczmkn-architecture-roadmap/06-simulation-kernel-time-and-lifecycle.md',
+    'fixtures/ref-scientific-conventions/fixture-manifest.json',
+    'fixtures/ref-scientific-conventions/scientific-context.json',
+    'fixtures/ref-scientific-conventions/conventions.json',
+    'fixtures/ref-scientific-conventions/cases.json',
+    'fixtures/ref-minimal-3dof/fixture-manifest.json',
+    'fixtures/ref-yyz-001/fixture-manifest.json',
+    'fixtures/ref-cavh-formula/fixture-manifest.json',
+    'tests/scientific_conventions.cpp',
+    'tools/scientific_conventions_reference.py',
+    'tools/validate-scientific-conventions.ps1',
+    'specs/fixture-manifest.schema.json',
+    'specs/oracle-manifest.schema.json',
+    'specs/plan-proof-record.schema.json',
+    'specs/r0-schema-contract-lock.json',
+    'tools/modules/JsonSchemaSubset.psm1',
+    'CMakeLists.txt',
+    'tools/verify-repository.ps1',
     'reference/legacy/source-manifest.json',
     'reference/legacy/legacy-source.zip',
     'reference/legacy/legacy-source.sha256',
     'reference/legacy/reproduction/current.json',
+    'tools/modules/R0GovernanceReview.psm1',
     'tools/validate-license-provenance.ps1')
 foreach ($relativePath in $requiredPaths) {
     if (-not (Test-Path -LiteralPath (Join-Path $repoRoot $relativePath) -PathType Leaf)) {
@@ -699,6 +851,63 @@ if ($null -ne $inventory) {
         param($value)
         $value.items[2].integrity.value = ''
     }
+    Invoke-Mutation 'extra-inventory-item' 'Inventory item set/order differs' {
+        param($value)
+        $extra = $value.items[0] | ConvertTo-Json -Depth 100 | ConvertFrom-Json
+        $extra.id = 'extra-inventory-item'
+        $value.items = @($value.items) + @($extra)
+    }
+    Invoke-Mutation 'inventory-item-order-drift' 'Inventory item set/order differs' {
+        param($value)
+        $first = $value.items[0]
+        $value.items[0] = $value.items[1]
+        $value.items[1] = $first
+    }
+    Invoke-Mutation 'inventory-vocabulary-extra' 'scan vocabulary differs' {
+        param($value)
+        $value.vocabulary.scan_results = @($value.vocabulary.scan_results) + @('unknown')
+    }
+    Invoke-Mutation 'inventory-owner-drift' 'reviewed semantic projection differs' {
+        param($value)
+        $value.items[0].owner_role = 'architecture_lead'
+    }
+    Invoke-Mutation 'inventory-purpose-empty' 'purpose is empty' {
+        param($value)
+        $value.items[0].purpose = ''
+    }
+    Invoke-Mutation 'inventory-version-empty' 'version is empty' {
+        param($value)
+        $value.items[0].version = ''
+    }
+    Invoke-Mutation 'inventory-scope-drift' 'reviewed semantic projection differs' {
+        param($value)
+        $value.items[0].scope.exclude = @($value.items[0].scope.exclude) + @('framework/**')
+    }
+    Invoke-Mutation 'generated-valid-parent-dropped' 'reviewed semantic projection differs' {
+        param($value)
+        $value.items[2].lineage_parents = @($value.items[2].lineage_parents | Select-Object -Skip 1)
+    }
+    Invoke-Mutation 'generated-false-existing-parent-added' 'reviewed semantic projection differs' {
+        param($value)
+        $value.items[7].lineage_parents = @('repository-default-content')
+    }
+    Invoke-Mutation 'local-source-absolute-locator' 'invalid or untracked local source locator' {
+        param($value)
+        $value.items[0].source_refs[1] = 'C:/review/LICENSE-STATUS.md'
+    }
+    Invoke-Mutation 'local-source-percent-locator' 'invalid or untracked local source locator' {
+        param($value)
+        $value.items[0].source_refs[1] = 'docs/%71uality/provenance-review-checklist.md'
+    }
+    Invoke-Mutation 'local-evidence-untracked-locator' 'invalid or untracked local license-evidence locator' {
+        param($value)
+        $value.items[0].license.evidence_refs[0] = 'docs/governance/not-tracked.txt'
+    }
+}
+
+$governanceReview = Test-R0GovernanceReview -RepoRoot $repoRoot -RunMutations
+foreach ($issue in @($governanceReview.Issues)) {
+    Add-Error ([string]$issue)
 }
 
 $roles = Read-Json (Join-Path $repoRoot 'docs\team\role-assignments.json')
@@ -712,37 +921,8 @@ foreach ($roleId in @('product_owner', 'architecture_lead')) {
         -not [string]::IsNullOrWhiteSpace([string](Get-Field $role 'assignee')))
 }
 
-$inputRelativePaths = @(
-    'LICENSE-STATUS.md',
-    'docs/adr/0008-internal-default-license-and-provenance-gate.md',
-    'docs/governance/license-and-provenance-policy.md',
-    'docs/governance/provenance-inventory.json',
-    'docs/quality/provenance-review-checklist.md',
-    'docs/tasks/work-packages/R0-GOV-002.md',
-    'reference/legacy/source-manifest.json',
-    'reference/legacy/legacy-source.sha256',
-    'reference/legacy/legacy-source.zip',
-    'reference/legacy/reproduction/current.json',
-    $environmentRelativePath,
-    'tools/validate-license-provenance.ps1') | Where-Object {
-        -not [string]::IsNullOrWhiteSpace([string]$_)
-    }
-$inputHashes = [System.Collections.Generic.List[object]]::new()
-foreach ($relativePath in $inputRelativePaths) {
-    $absolutePath = Join-Path $repoRoot $relativePath
-    if (-not (Test-Path -LiteralPath $absolutePath -PathType Leaf)) { continue }
-    $isBinary = [System.IO.Path]::GetExtension($absolutePath) -eq '.zip'
-    $inputHashes.Add([pscustomobject][ordered]@{
-            path = ([string]$relativePath).Replace('\', '/')
-            sha256 = if ($isBinary) {
-                Get-Sha256 $absolutePath
-            }
-            else {
-                Get-NormalizedTextSha256 $absolutePath
-            }
-            hash_normalization = if ($isBinary) { 'raw-bytes' } else { 'utf8-lf-no-bom' }
-        })
-}
+$inputHashes = @(Get-R0GovernanceReportInputFacts -RepoRoot $repoRoot `
+    -EnvironmentRelativePath $environmentRelativePath)
 
 $items = if ($null -ne $inventory) { @(Get-Field $inventory 'items') } else { @() }
 $noAssertionCount = @($items | Where-Object {
@@ -758,7 +938,7 @@ $notRedistributedCount = @($items | Where-Object {
 $expectedReport = [pscustomobject][ordered]@{
     schema_version = 'gnczmkn.license-provenance-conformance/1'
     task_id = 'R0-GOV-002'
-    reviewed_on = '2026-08-10'
+    reviewed_on = '2026-08-12'
     status = 'passed'
     policy = [ordered]@{
         id = 'GNC-LIC-PROV-001'
@@ -773,6 +953,18 @@ $expectedReport = [pscustomobject][ordered]@{
         externally_blocked_count = $blockedCount
         external_not_redistributed_count = $notRedistributedCount
         runtime_consumers = 0
+    }
+    scientific_context = [ordered]@{
+        schema_id = 'https://internal.gnczmkn/schemas/scientific-context/1'
+        instance_version = 'gnczmkn.scientific-context/1'
+        context_count = $governanceReview.ContextCount
+        review_state = 'registered-pending-scientific-acceptance'
+        runtime_consumers = $governanceReview.RuntimeConsumerCount
+        implementation_independence = 'confirmed'
+        scientific_source_independence = 'not-claimed'
+        rights_effect = 'no-change'
+        external_distribution = 'blocked-pending-accepted-adr'
+        mutation_tests = @($governanceReview.MutationResults)
     }
     legacy_archive_audit = $legacyAudit
     pinned_external_inputs = @(
@@ -835,4 +1027,5 @@ if (-not $Quiet) {
     Write-Host "Inventory items: $($items.Count); NOASSERTION: $noAssertionCount"
     Write-Host "Legacy archive: $($legacyAudit.file_entries) files; license signals: $($legacyAudit.license_named_entries + $legacyAudit.license_text_signal_entries)"
     Write-Host "Mutation tests rejected: $(@($mutationResults | Where-Object { $_.rejected }).Count)/$($mutationResults.Count)"
+    Write-Host "Scientific context mutations rejected: $(@($governanceReview.MutationResults | Where-Object { $_.rejected }).Count)/$($governanceReview.MutationCount)"
 }

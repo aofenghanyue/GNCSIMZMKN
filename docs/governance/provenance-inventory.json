@@ -207,10 +207,10 @@
     {
       "id": "host-validation-toolchain",
       "category": "external-validation-tools",
-      "scope": {"mode": "external-installed-tools", "include": ["MSVC 19.50.35725", "CMake 4.1.2-msvc8", "Ninja 1.12.1", "Python 3.13.5", "Windows PowerShell 5.1.26100.8457", "Git 2.54.0.windows.1"], "exclude": []},
+      "scope": {"mode": "external-installed-tools", "include": ["MSVC 19.50.35725", "GCC 15.1.0", "CMake 4.1.2-msvc8", "Ninja 1.12.1", "Python 3.13.5", "CPython 3.12.7", "Windows PowerShell 5.1.26100.6584", "Git 2.54.0.windows.1"], "exclude": []},
       "owner_role": "validation_lead",
       "purpose": "Configure, compile, test, validate and version the greenfield repository",
-      "source_refs": ["docs/quality/scientific-conventions-cross-tool-report.json", "CMakePresets.json"],
+      "source_refs": ["docs/quality/scientific-conventions-cross-tool-report.json", "CMakePresets.json", "docs/governance/toolchain-support-matrix.json", "docs/tasks/work-packages/R0-GOV-001.md", "docs/quality/hosted-ci-evidence-R0-GOV-001.json"],
       "version": "versions-listed-in-scope",
       "integrity": {"kind": "environment-identity", "value": "installed executables are not project artifacts"},
       "repository_presence": "external-untracked",
