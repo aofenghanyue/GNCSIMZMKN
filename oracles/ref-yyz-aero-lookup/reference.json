@@ -1,0 +1,418 @@
+{
+  "schema_version": "gnczmkn.yyz-aero-lookup-reference/1",
+  "fixture_id": "REF-YYZ-AERO-LOOKUP-001",
+  "oracle_id": "ORACLE-YYZ-AERO-LOOKUP-001",
+  "model_id": "MODEL-YYZ-AERO-TRILINEAR-LOOKUP-001",
+  "precision": {
+    "implementation": "Python standard-library Decimal trilinear lookup",
+    "decimal_digits": 80
+  },
+  "input_identity": {
+    "path": "fixtures/ref-yyz-aero-lookup/cases.json",
+    "bytes": 8783,
+    "sha256": "2bc49703380fa2b7776771f2f6da3608e9b64eb33a9c710ba0df6ee254d34753"
+  },
+  "cases": {
+    "CASE-YYZ-AERO-LOOKUP-INTERIOR": {
+      "id": "CASE-YYZ-AERO-LOOKUP-INTERIOR",
+      "query_identity": {
+        "model_id": "MODEL-YYZ-AERO-TRILINEAR-LOOKUP-001",
+        "table_id": "aero-table.fixture.yyz.multiaffine@1",
+        "configuration_id": "configuration.fixture.yyz.clean@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "sample_tick": 0,
+        "configuration_revision": 11
+      },
+      "operating_point": {
+        "mach": "0.35",
+        "alpha_rad": "0.025",
+        "beta_rad": "-0.0125",
+        "omega_BI_B_radps": [
+          "0",
+          "0",
+          "0"
+        ],
+        "surface_state_rad": [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "required_derivative_count": 0
+      },
+      "brackets": {
+        "mach": {
+          "lower_index": 0,
+          "upper_index": 1,
+          "lower_value": "0.2",
+          "upper_value": "0.6",
+          "weight": "0.375"
+        },
+        "alpha": {
+          "lower_index": 0,
+          "upper_index": 1,
+          "lower_value": "-0.1",
+          "upper_value": "0.1",
+          "weight": "0.625"
+        },
+        "beta": {
+          "lower_index": 0,
+          "upper_index": 1,
+          "lower_value": "-0.05",
+          "upper_value": "0.05",
+          "weight": "0.375"
+        }
+      },
+      "response": {
+        "quality": "Valid",
+        "domain_status": "Inside",
+        "coefficient_order": [
+          "C_A",
+          "C_Y",
+          "C_N",
+          "C_l",
+          "C_m",
+          "C_n"
+        ],
+        "coefficients": [
+          "0.039875",
+          "0.00603125",
+          "0.01996875",
+          "0.00125",
+          "-0.058",
+          "-0.001971875"
+        ]
+      },
+      "dimensionalization_consumer": {
+        "dynamic_pressure_Pa": "6125",
+        "reference_area_m2": "1",
+        "reference_span_m": "1",
+        "reference_chord_m": "1",
+        "force_B_N": [
+          "-244.234375",
+          "36.94140625",
+          "-122.30859375"
+        ],
+        "moment_at_aero_reference_B_Nm": [
+          "7.65625",
+          "-355.25",
+          "-12.077734375"
+        ]
+      }
+    },
+    "CASE-YYZ-AERO-LOOKUP-EXACT-KNOT": {
+      "id": "CASE-YYZ-AERO-LOOKUP-EXACT-KNOT",
+      "query_identity": {
+        "model_id": "MODEL-YYZ-AERO-TRILINEAR-LOOKUP-001",
+        "table_id": "aero-table.fixture.yyz.multiaffine@1",
+        "configuration_id": "configuration.fixture.yyz.clean@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "sample_tick": 4,
+        "configuration_revision": 11
+      },
+      "operating_point": {
+        "mach": "0.2",
+        "alpha_rad": "-0.1",
+        "beta_rad": "0.05",
+        "omega_BI_B_radps": [
+          "0",
+          "0",
+          "0"
+        ],
+        "surface_state_rad": [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "required_derivative_count": 0
+      },
+      "brackets": {
+        "mach": {
+          "lower_index": 0,
+          "upper_index": 1,
+          "lower_value": "0.2",
+          "upper_value": "0.6",
+          "weight": "0"
+        },
+        "alpha": {
+          "lower_index": 0,
+          "upper_index": 1,
+          "lower_value": "-0.1",
+          "upper_value": "0.1",
+          "weight": "0"
+        },
+        "beta": {
+          "lower_index": 0,
+          "upper_index": 1,
+          "lower_value": "-0.05",
+          "upper_value": "0.05",
+          "weight": "1"
+        }
+      },
+      "response": {
+        "quality": "Valid",
+        "domain_status": "Boundary",
+        "coefficient_order": [
+          "C_A",
+          "C_Y",
+          "C_N",
+          "C_l",
+          "C_m",
+          "C_n"
+        ],
+        "coefficients": [
+          "0.006",
+          "-0.0245",
+          "-0.0805",
+          "-0.005",
+          "0.014",
+          "0.00755"
+        ]
+      },
+      "dimensionalization_consumer": {
+        "dynamic_pressure_Pa": "1000",
+        "reference_area_m2": "2",
+        "reference_span_m": "3",
+        "reference_chord_m": "1.5",
+        "force_B_N": [
+          "-12",
+          "-49",
+          "161"
+        ],
+        "moment_at_aero_reference_B_Nm": [
+          "-30",
+          "42",
+          "45.3"
+        ]
+      }
+    },
+    "CASE-YYZ-AERO-LOOKUP-UPPER-BOUNDARY": {
+      "id": "CASE-YYZ-AERO-LOOKUP-UPPER-BOUNDARY",
+      "query_identity": {
+        "model_id": "MODEL-YYZ-AERO-TRILINEAR-LOOKUP-001",
+        "table_id": "aero-table.fixture.yyz.multiaffine@1",
+        "configuration_id": "configuration.fixture.yyz.clean@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "sample_tick": 8,
+        "configuration_revision": 12
+      },
+      "operating_point": {
+        "mach": "0.6",
+        "alpha_rad": "0.1",
+        "beta_rad": "0.05",
+        "omega_BI_B_radps": [
+          "0",
+          "0",
+          "0"
+        ],
+        "surface_state_rad": [
+          "0",
+          "0",
+          "0",
+          "0"
+        ],
+        "required_derivative_count": 0
+      },
+      "brackets": {
+        "mach": {
+          "lower_index": 0,
+          "upper_index": 1,
+          "lower_value": "0.2",
+          "upper_value": "0.6",
+          "weight": "1"
+        },
+        "alpha": {
+          "lower_index": 0,
+          "upper_index": 1,
+          "lower_value": "-0.1",
+          "upper_value": "0.1",
+          "weight": "1"
+        },
+        "beta": {
+          "lower_index": 0,
+          "upper_index": 1,
+          "lower_value": "-0.05",
+          "upper_value": "0.05",
+          "weight": "1"
+        }
+      },
+      "response": {
+        "quality": "Valid",
+        "domain_status": "Boundary",
+        "coefficient_order": [
+          "C_A",
+          "C_Y",
+          "C_N",
+          "C_l",
+          "C_m",
+          "C_n"
+        ],
+        "coefficients": [
+          "0.07",
+          "-0.0235",
+          "0.0805",
+          "-0.005",
+          "-0.098",
+          "0.00825"
+        ]
+      },
+      "dimensionalization_consumer": {
+        "dynamic_pressure_Pa": "500",
+        "reference_area_m2": "4",
+        "reference_span_m": "2",
+        "reference_chord_m": "0.5",
+        "force_B_N": [
+          "-140",
+          "-47",
+          "-161"
+        ],
+        "moment_at_aero_reference_B_Nm": [
+          "-20",
+          "-98",
+          "33"
+        ]
+      }
+    }
+  },
+  "equivalence_results": [
+    {
+      "id": "EQUIV-YYZ-AERO-LOOKUP-INTERPOLATION-ORDER",
+      "status": "passed",
+      "alternate_coefficients": [
+        "0.039875",
+        "0.00603125",
+        "0.01996875",
+        "0.00125",
+        "-0.058",
+        "-0.001971875"
+      ],
+      "alternate_force_B_N": [
+        "-244.234375",
+        "36.94140625",
+        "-122.30859375"
+      ],
+      "alternate_moment_at_aero_reference_B_Nm": [
+        "7.65625",
+        "-355.25",
+        "-12.077734375"
+      ],
+      "max_abs_physical_difference": "0"
+    }
+  ],
+  "invalid_input_rejections": [
+    "INVALID-YYZ-AERO-LOOKUP-CONFIGURATION",
+    "INVALID-YYZ-AERO-LOOKUP-CLOCK",
+    "INVALID-YYZ-AERO-LOOKUP-NEGATIVE-TICK",
+    "INVALID-YYZ-AERO-LOOKUP-DERIVATIVE-REQUEST",
+    "INVALID-YYZ-AERO-LOOKUP-NONZERO-RATE",
+    "INVALID-YYZ-AERO-LOOKUP-NONZERO-SURFACE",
+    "INVALID-YYZ-AERO-LOOKUP-MACH-LOW",
+    "INVALID-YYZ-AERO-LOOKUP-ALPHA-HIGH",
+    "INVALID-YYZ-AERO-LOOKUP-BETA-LOW",
+    "INVALID-YYZ-AERO-LOOKUP-DUPLICATE-AXIS",
+    "INVALID-YYZ-AERO-LOOKUP-ROW-COUNT",
+    "INVALID-YYZ-AERO-LOOKUP-NONFINITE-COEFFICIENT"
+  ],
+  "mutation_results": [
+    {
+      "id": "MUTATION-YYZ-AERO-LOOKUP-NEAREST-NEIGHBOR",
+      "status": "rejected",
+      "observed_coefficients": [
+        "0.05",
+        "0.0245",
+        "0.0795",
+        "0.005",
+        "-0.106",
+        "-0.00785"
+      ],
+      "observed_force_B_N": [
+        "-306.25",
+        "150.0625",
+        "-486.9375"
+      ],
+      "observed_moment_at_aero_reference_B_Nm": [
+        "30.625",
+        "-649.25",
+        "-48.08125"
+      ],
+      "max_abs_physical_difference": "364.62890625"
+    },
+    {
+      "id": "MUTATION-YYZ-AERO-LOOKUP-CLAMP-MACH",
+      "status": "rejected",
+      "observed_coefficients": [
+        "0.0335",
+        "0.006125",
+        "0.01996875",
+        "0.00125",
+        "-0.061",
+        "-0.001934375"
+      ],
+      "observed_force_B_N": [
+        "-205.1875",
+        "37.515625",
+        "-122.30859375"
+      ],
+      "observed_moment_at_aero_reference_B_Nm": [
+        "7.65625",
+        "-373.625",
+        "-11.848046875"
+      ],
+      "max_abs_physical_difference": "39.046875",
+      "out_of_domain_query_mach": "0.1",
+      "observed_clamped_mach": "0.2"
+    },
+    {
+      "id": "MUTATION-YYZ-AERO-LOOKUP-SWAP-ALPHA-BETA",
+      "status": "rejected",
+      "observed_coefficients": [
+        "0.0310625",
+        "-0.0120625",
+        "-0.01003125",
+        "-0.0025",
+        "-0.0355",
+        "0.003915625"
+      ],
+      "observed_force_B_N": [
+        "-190.2578125",
+        "-73.8828125",
+        "61.44140625"
+      ],
+      "observed_moment_at_aero_reference_B_Nm": [
+        "-15.3125",
+        "-217.4375",
+        "23.983203125"
+      ],
+      "max_abs_physical_difference": "183.75",
+      "observed_alpha_rad": "-0.0125",
+      "observed_beta_rad": "0.025"
+    },
+    {
+      "id": "MUTATION-YYZ-AERO-LOOKUP-LOWER-BETA-FACE",
+      "status": "rejected",
+      "observed_coefficients": [
+        "0.039875",
+        "0.024125",
+        "0.019875",
+        "0.005",
+        "-0.058",
+        "-0.0078875"
+      ],
+      "observed_force_B_N": [
+        "-244.234375",
+        "147.765625",
+        "-121.734375"
+      ],
+      "observed_moment_at_aero_reference_B_Nm": [
+        "30.625",
+        "-355.25",
+        "-48.3109375"
+      ],
+      "max_abs_physical_difference": "110.82421875"
+    }
+  ]
+}

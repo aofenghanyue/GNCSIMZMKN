@@ -19,6 +19,8 @@ Fixture 是可复制、可校验、带 provenance 的规范实例。每个目录
 
 `ref-yyz-aero-dimensionalization` 已达到 `executable`，包含已接受的 fixture-local supplied coefficient 维度化：`[-C_A,+C_Y,-C_N]` 体轴力映射，roll/yaw 使用展长、pitch 使用参考弦长，以及从显式 aerodynamic reference point 到质心的力矩搬移。80 位 Decimal 与独立 C++17 实现交叉检查三个公式 case、两条等价性、十条输入域失败和三条 sign/scale/reference-vector mutation；coefficient lookup、插值、asset provenance、canonical 几何与产品 contract 仍在后续范围内。
 
+`ref-yyz-aero-lookup` 已达到 `executable`，实现 fixture-local immutable `Mach × alpha × beta` 表、三轴严格递增检查、闭区间三线性 pure query 和越界直接失败。查得的 `[C_A,C_Y,C_N,C_l,C_m,C_n]` 立即进入既有 dimensionalization consumer。80 位 Decimal 与独立 C++17 实现覆盖内点、精确 knot、上边界、插值嵌套等价、十二条 query/table 拒绝，以及 nearest-neighbor、Mach clamp、alpha/beta 交换和遗漏 beta 插值 mutation。canonical asset、loader/hash、非零 rates/surfaces、derivative query、extrapolation 与产品 contract 仍在后续范围内。
+
 `ref-yyz-uniform-environment` 已达到 `executable`，包含已接受的 fixture-local pure query：显式提供的惯性系重力、air-mass velocity、密度和声速对有限查询位置与非负 tick 保持物理恒定，并在同一 sample identity 直接供给 air-data 与 rigid-body 公式。80 位 Decimal 与独立 C++17 实现覆盖普通 consumer link、零密度/亚单位声速边界、position/tick 等价、严格输入域及 Legacy-style altitude decay 失败；Earth、海拔模型、风廓线、canonical constants 与产品 contract 仍在后续范围内。
 
 `ref-yyz-propulsion-response` 已达到 `executable`，包含已接受的 fixture-local supplied propulsion response：非负推力标量与显式单位体轴方向组成力，响应携带作用点和该点固有力矩，Closure 独占 `r × F` 搬移；正值燃料消耗率在半开区间内积分并从 committed mass 扣除。80 位 Decimal 与独立 C++17 实现交叉检查三个公式 case、区间分割等价、十条输入域失败和三条 thrust/moment/mass mutation；command mapping、engine/fuel dynamics、dry-mass policy、canonical assets 与产品 contract 仍在后续范围内。

@@ -1,0 +1,169 @@
+{
+  "schema_version": "gnczmkn.yyz-aero-lookup-cases/1",
+  "fixture_id": "REF-YYZ-AERO-LOOKUP-001",
+  "oracle_id": "ORACLE-YYZ-AERO-LOOKUP-001",
+  "model_choice": {
+    "status": "accepted",
+    "owner_role": "scientific_authority",
+    "accepted_scope": "Fixture-local immutable three-axis aerodynamic coefficient lookup over Mach, alpha and beta, with one supported configuration, explicit coefficient convention, inclusive validated domain and trilinear interpolation.",
+    "interpolation_policy": "Each axis is finite and strictly increasing. Locate the enclosing interval independently on Mach, alpha and beta, form normalized weights in [0,1], and evaluate the eight-corner tensor product. Exact upper endpoints use the final cell with weight 1.",
+    "domain_policy": "The validated axis box is inclusive. A query outside any axis fails directly. Clamp and extrapolation are disabled.",
+    "coefficient_order": ["C_A", "C_Y", "C_N", "C_l", "C_m", "C_n"],
+    "query_scope": "The fixture accepts finite Mach/alpha/beta, zero body rates, zero four-surface state and an empty derivative request for configuration.fixture.yyz.clean@1.",
+    "excluded": [
+      "canonical YYZ aerodynamic data and qualification envelope",
+      "file formats, artifact hashing, adapters and prepare-time loaders",
+      "nonzero rate, control-surface and configuration increments",
+      "coefficient derivatives, extrapolation, clamping and waivers",
+      "public product contracts and R1-R8 runtime capability"
+    ]
+  },
+  "model": {
+    "model_id": "MODEL-YYZ-AERO-TRILINEAR-LOOKUP-001",
+    "table_id": "aero-table.fixture.yyz.multiaffine@1",
+    "configuration_id": "configuration.fixture.yyz.clean@1",
+    "body_frame_id": "frame.fixture.yyz.body@1",
+    "body_axes": "right-handed x-forward/y-right/z-down",
+    "clock_domain": "clock.fixture.yyz.simulation@1",
+    "quality": "Valid",
+    "execution_form": "fixture-local-pure-query",
+    "validity_domain": [
+      "all axes, coefficients, query values and dimensionalization inputs are finite",
+      "each axis has at least two strictly increasing values",
+      "coefficient row count equals mach_count * alpha_count * beta_count with six values per row",
+      "query model, table, configuration, body-frame and clock identities agree",
+      "sample tick and configuration revision are nonnegative integers",
+      "Mach, alpha and beta lie in the inclusive prepared-table box",
+      "body rates and four surface states are exactly zero and derivative request is empty",
+      "dynamic pressure is nonnegative and reference area/span/chord are positive"
+    ]
+  },
+  "prepared_table": {
+    "layout": "mach-major-alpha-middle-beta-fastest",
+    "mach_axis": [0.2, 0.6],
+    "alpha_axis_rad": [-0.1, 0.1],
+    "beta_axis_rad": [-0.05, 0.05],
+    "coefficient_rows_CA_CY_CN_Cl_Cm_Cn": [
+      [0.006, 0.0245, -0.0795, 0.005, 0.014, -0.00755],
+      [0.006, -0.0245, -0.0805, -0.005, 0.014, 0.00755],
+      [0.05, 0.0245, 0.0795, 0.005, -0.106, -0.00785],
+      [0.05, -0.0245, 0.0805, -0.005, -0.106, 0.00785],
+      [0.018, 0.0235, -0.0795, 0.005, 0.022, -0.00795],
+      [0.018, -0.0235, -0.0805, -0.005, 0.022, 0.00795],
+      [0.07, 0.0235, 0.0795, 0.005, -0.098, -0.00825],
+      [0.07, -0.0235, 0.0805, -0.005, -0.098, 0.00825]
+    ]
+  },
+  "tolerances": {
+    "formula_absolute": 2e-12,
+    "formula_relative": 2e-12,
+    "stored_decimal_absolute": "1e-68"
+  },
+  "cases": [
+    {
+      "id": "CASE-YYZ-AERO-LOOKUP-INTERIOR",
+      "context": {
+        "model_id": "MODEL-YYZ-AERO-TRILINEAR-LOOKUP-001",
+        "table_id": "aero-table.fixture.yyz.multiaffine@1",
+        "configuration_id": "configuration.fixture.yyz.clean@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "sample_tick": 0,
+        "configuration_revision": 11
+      },
+      "operating_point": {
+        "mach": 0.35,
+        "alpha_rad": 0.025,
+        "beta_rad": -0.0125,
+        "omega_BI_B_radps": [0.0, 0.0, 0.0],
+        "surface_state_rad": [0.0, 0.0, 0.0, 0.0],
+        "required_derivative_set": []
+      },
+      "dimensionalization_probe": {
+        "dynamic_pressure_Pa": 6125.0,
+        "reference_area_m2": 1.0,
+        "reference_span_m": 1.0,
+        "reference_chord_m": 1.0
+      }
+    },
+    {
+      "id": "CASE-YYZ-AERO-LOOKUP-EXACT-KNOT",
+      "context": {
+        "model_id": "MODEL-YYZ-AERO-TRILINEAR-LOOKUP-001",
+        "table_id": "aero-table.fixture.yyz.multiaffine@1",
+        "configuration_id": "configuration.fixture.yyz.clean@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "sample_tick": 4,
+        "configuration_revision": 11
+      },
+      "operating_point": {
+        "mach": 0.2,
+        "alpha_rad": -0.1,
+        "beta_rad": 0.05,
+        "omega_BI_B_radps": [0.0, 0.0, 0.0],
+        "surface_state_rad": [0.0, 0.0, 0.0, 0.0],
+        "required_derivative_set": []
+      },
+      "dimensionalization_probe": {
+        "dynamic_pressure_Pa": 1000.0,
+        "reference_area_m2": 2.0,
+        "reference_span_m": 3.0,
+        "reference_chord_m": 1.5
+      }
+    },
+    {
+      "id": "CASE-YYZ-AERO-LOOKUP-UPPER-BOUNDARY",
+      "context": {
+        "model_id": "MODEL-YYZ-AERO-TRILINEAR-LOOKUP-001",
+        "table_id": "aero-table.fixture.yyz.multiaffine@1",
+        "configuration_id": "configuration.fixture.yyz.clean@1",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "sample_tick": 8,
+        "configuration_revision": 12
+      },
+      "operating_point": {
+        "mach": 0.6,
+        "alpha_rad": 0.1,
+        "beta_rad": 0.05,
+        "omega_BI_B_radps": [0.0, 0.0, 0.0],
+        "surface_state_rad": [0.0, 0.0, 0.0, 0.0],
+        "required_derivative_set": []
+      },
+      "dimensionalization_probe": {
+        "dynamic_pressure_Pa": 500.0,
+        "reference_area_m2": 4.0,
+        "reference_span_m": 2.0,
+        "reference_chord_m": 0.5
+      }
+    }
+  ],
+  "equivalence_cases": [
+    {
+      "id": "EQUIV-YYZ-AERO-LOOKUP-INTERPOLATION-ORDER",
+      "operation": "evaluate the interior tensor product with Mach-alpha-beta nesting and beta-alpha-Mach nesting",
+      "expected": "all six coefficients and the dimensionalized force/moment remain equal"
+    }
+  ],
+  "invalid_input_cases": [
+    {"id": "INVALID-YYZ-AERO-LOOKUP-CONFIGURATION", "mutation": "change the query configuration id", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AERO-LOOKUP-CLOCK", "mutation": "change the query clock domain", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AERO-LOOKUP-NEGATIVE-TICK", "mutation": "set sample tick below zero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AERO-LOOKUP-DERIVATIVE-REQUEST", "mutation": "request an unsupported coefficient derivative", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AERO-LOOKUP-NONZERO-RATE", "mutation": "set one body rate nonzero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AERO-LOOKUP-NONZERO-SURFACE", "mutation": "set one surface state nonzero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AERO-LOOKUP-MACH-LOW", "mutation": "query Mach below the validated axis", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AERO-LOOKUP-ALPHA-HIGH", "mutation": "query alpha above the validated axis", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AERO-LOOKUP-BETA-LOW", "mutation": "query beta below the validated axis", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AERO-LOOKUP-DUPLICATE-AXIS", "mutation": "duplicate one Mach axis knot", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AERO-LOOKUP-ROW-COUNT", "mutation": "remove one coefficient row", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-AERO-LOOKUP-NONFINITE-COEFFICIENT", "mutation": "set one table coefficient to NaN", "expected_status": "input-domain-error"}
+  ],
+  "mutation_cases": [
+    {"id": "MUTATION-YYZ-AERO-LOOKUP-NEAREST-NEIGHBOR", "mutation": "return the nearest grid row for the interior query", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-AERO-LOOKUP-CLAMP-MACH", "mutation": "clamp a Mach 0.1 query to the lower endpoint and return coefficients", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-AERO-LOOKUP-SWAP-ALPHA-BETA", "mutation": "use beta as alpha and alpha as beta for the interior query", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-AERO-LOOKUP-LOWER-BETA-FACE", "mutation": "ignore the beta weight and use only the lower beta face", "expected_status": "oracle-mismatch"}
+  ]
+}

@@ -31,6 +31,8 @@ Run the direct checks through CTest:
 ctest --preset dev -R "^r0.yyz-aero-dimensionalization" --output-on-failure
 ```
 
-Coefficient table lookup, interpolation, coefficient-asset provenance,
-canonical geometry, aerodynamic applicability and product contracts remain
-outside this fixture-local slice.
+Coefficient lookup remains outside this dimensionalization identity. The
+accepted fixture-local trilinear query and strict applicability box are
+executable in `REF-YYZ-AERO-LOOKUP-001`. Canonical coefficient assets,
+canonical geometry, loaders, extrapolation and product contracts remain
+outside both profiles.
