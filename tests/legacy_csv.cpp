@@ -34,6 +34,7 @@ struct ProbeResult {
     bool column_permutation_accepted = false;
     bool numeric_text_format_accepted = false;
     bool unmapped_column_change_accepted = false;
+    bool non_finite_required_value_rejected = false;
     bool missing_t0_rejected = false;
     bool shifted_tk_rejected = false;
     bool stale_published_state_rejected = false;
@@ -185,6 +186,23 @@ ProbeResult runProbe() {
     result.unmapped_column_change_accepted = sameRows(
         result.rows, decodeByHeader(canonical_header, changed_unmapped));
 
+    result.non_finite_required_value_rejected = true;
+    const std::vector<std::pair<std::size_t, std::string>>
+        non_finite_mutations{
+            {0, "NaN"},
+            {1, "Infinity"},
+            {2, "-Infinity"},
+        };
+    for (const auto& mutation : non_finite_mutations) {
+        auto non_finite_encoded = canonical_encoded;
+        non_finite_encoded[0][mutation.first] = mutation.second;
+        result.non_finite_required_value_rejected =
+            result.non_finite_required_value_rejected && rejected([&]() {
+                (void)decodeByHeader(
+                    canonical_header, non_finite_encoded);
+            });
+    }
+
     auto missing_t0 = result.rows;
     missing_t0.erase(missing_t0.begin());
     result.missing_t0_rejected = !validDataset(missing_t0);
@@ -227,6 +245,8 @@ void writeJson(const ProbeResult& result) {
               << (result.numeric_text_format_accepted ? "true" : "false")
               << ",\"unmapped_column_change_accepted\":"
               << (result.unmapped_column_change_accepted ? "true" : "false")
+              << ",\"non_finite_required_value_rejected\":"
+              << (result.non_finite_required_value_rejected ? "true" : "false")
               << ",\"missing_t0_rejected\":"
               << (result.missing_t0_rejected ? "true" : "false")
               << ",\"shifted_tk_rejected\":"
@@ -256,6 +276,8 @@ int main(int argc, char** argv) {
                 "equivalent numeric text changed semantic rows");
         require(result.unmapped_column_change_accepted,
                 "unmapped column data changed semantic rows");
+        require(result.non_finite_required_value_rejected,
+                "non-finite required numeric value was accepted");
         require(result.missing_t0_rejected,
                 "missing initial sample was accepted");
         require(result.shifted_tk_rejected,

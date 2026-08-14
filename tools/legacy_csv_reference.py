@@ -309,6 +309,20 @@ def change_unmapped_column_values(raw: bytes,
     return output.getvalue().encode("utf-8")
 
 
+def replace_required_numeric_value(raw: bytes, required_column: str,
+                                   encoded_value: str) -> bytes:
+    header, rows = parse_csv_rows(raw)
+    require(required_column in header,
+            "CSV mutation requires a mapped semantic column")
+    column_index = header.index(required_column)
+    rows[0][column_index] = encoded_value
+    output = io.StringIO(newline="")
+    writer = csv.writer(output, lineterminator="\n")
+    writer.writerow(header)
+    writer.writerows(rows)
+    return output.getvalue().encode("utf-8")
+
+
 def duplicate_required_header(raw: bytes, required_column: str) -> bytes:
     header, rows = parse_csv_rows(raw)
     replacement_index = next(index for index, name in enumerate(header)
@@ -439,6 +453,7 @@ def main() -> int:
     require(set(failure_by_id) == {
         "FAIL-CSV-MISSING-T0", "FAIL-CSV-SHIFTED-TK",
         "FAIL-CSV-STALE-PUBLISHED-STATE",
+        "FAIL-CSV-NONFINITE-REQUIRED-VALUE",
         "FAIL-CSV-DUPLICATE-REQUIRED-HEADER",
     } and all(entry["expected_status"] == "rejected"
               for entry in failure_by_id.values()),
@@ -449,6 +464,11 @@ def main() -> int:
     shifted_tk[1]["sample_time_s"] = Decimal("0.75")
     stale_state = [dict(row) for row in normalized[0]]
     stale_state[1]["altitude_m"] = Decimal("1000")
+    non_finite_mutations = (
+        (fields_by_id[TIME_FIELD_ID]["legacy_column"], "NaN"),
+        (fields_by_id[ALTITUDE_FIELD_ID]["legacy_column"], "Infinity"),
+        (fields_by_id[VELOCITY_FIELD_ID]["legacy_column"], "-Infinity"),
+    )
     require(rejected(lambda: validate_semantic_rows(
                 missing_t0, analytic, time_tolerance, state_tolerance,
                 "Missing-t0 mutation")) and
@@ -463,7 +483,14 @@ def main() -> int:
                     datasets[0], "vehicle.dynamics.position.z"),
                 fields_by_id)),
             "A CSV semantic failure mutation was accepted")
-    checks += 5
+    for required_column, encoded_value in non_finite_mutations:
+        require(rejected(lambda required_column=required_column,
+                         encoded_value=encoded_value: normalize_dataset(
+                    replace_required_numeric_value(
+                        datasets[0], required_column, encoded_value),
+                    fields_by_id)),
+                f"Non-finite CSV token was accepted: {encoded_value}")
+    checks += 8
 
     first_stdout, probe = run_probe(arguments.probe)
     second_stdout, second_probe = run_probe(arguments.probe)
@@ -482,11 +509,12 @@ def main() -> int:
         probe_rows, analytic, time_tolerance, state_tolerance, "C++ probe")
     for flag in (
             "column_permutation_accepted", "numeric_text_format_accepted",
-            "unmapped_column_change_accepted", "missing_t0_rejected",
+            "unmapped_column_change_accepted",
+            "non_finite_required_value_rejected", "missing_t0_rejected",
             "shifted_tk_rejected", "stale_published_state_rejected",
             "duplicate_required_header_rejected"):
         require(probe[flag] is True, f"C++ CSV probe did not enforce {flag}")
-    checks += 10
+    checks += 11
 
     decision = oracle["disposition_decision"]
     require(decision["status"] in {"needs_owner_decision", "accepted"},

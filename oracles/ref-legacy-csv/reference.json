@@ -95,6 +95,11 @@
       "expected_status": "rejected"
     },
     {
+      "id": "FAIL-CSV-NONFINITE-REQUIRED-VALUE",
+      "mutation": "Replace each required numeric field in turn with NaN, Infinity or -Infinity",
+      "expected_status": "rejected"
+    },
+    {
       "id": "FAIL-CSV-DUPLICATE-REQUIRED-HEADER",
       "mutation": "Encode the required altitude column twice",
       "expected_status": "rejected"

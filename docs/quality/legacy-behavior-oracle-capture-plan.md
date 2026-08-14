@@ -130,7 +130,7 @@ raw trace 至少使用以下稳定概念字段；具体 schema 名称待第 3.1 
 
 ## 9. 当前直接失败检查
 
-`ORACLE-YYZ-SYNC-03` 的直接失败用例会在 position candidate 完成前提交 mass；Python evaluator 和 C++ probe 都拒绝该 journal，并证明错误路径得到 `position=8`。`ORACLE-YYZ-PUBLISH-01` 的直接失败用例在 publish 内把 committed altitude 增加 `1 m`，C++ probe 拒绝该状态变化，Python comparator 同时核对失败事实。`ORACLE-YYZ-PHASE-02` 拒绝 process/output 交换和重复 input phase。`ORACLE-YYZ-GROUP-04` 拒绝得到 `position=10` 的 split snapshot closure、未注册 member 和重复 scope ownership。`ORACLE-YYZ-CSV-05` 接受列置换后的语义等价 dataset，并拒绝缺失 t0、错位 `t_k`、陈旧发布态和重复必要表头。`ORACLE-YYZ-STOP-06` 拒绝提前终止、缺失终止行和停止后继续推进。`ORACLE-SIMFLOW-07` 拒绝缺失注入输入、用第二次 `--simflow` 隐藏普通重放上下文，以及普通重放结果漂移；Legacy case 目录与 numeric index 变化不影响语义等价。重复 id、跨平台聚合 hash、通用 classification completeness 等检查留到出现当前 consumer 或直接回归后再增加。
+`ORACLE-YYZ-SYNC-03` 的直接失败用例会在 position candidate 完成前提交 mass；Python evaluator 和 C++ probe 都拒绝该 journal，并证明错误路径得到 `position=8`。`ORACLE-YYZ-PUBLISH-01` 的直接失败用例在 publish 内把 committed altitude 增加 `1 m`，C++ probe 拒绝该状态变化，Python comparator 同时核对失败事实。`ORACLE-YYZ-PHASE-02` 拒绝 process/output 交换和重复 input phase。`ORACLE-YYZ-GROUP-04` 拒绝得到 `position=10` 的 split snapshot closure、未注册 member 和重复 scope ownership。`ORACLE-YYZ-CSV-05` 接受列置换、有限等值数值文本和未映射列变化后的语义等价 dataset，并拒绝缺失 t0、错位 `t_k`、陈旧发布态、非有限必要字段值和重复必要表头。`ORACLE-YYZ-STOP-06` 拒绝提前终止、缺失终止行和停止后继续推进。`ORACLE-SIMFLOW-07` 拒绝缺失注入输入、用第二次 `--simflow` 隐藏普通重放上下文，以及普通重放结果漂移；Legacy case 目录与 numeric index 变化不影响语义等价。重复 id、跨平台聚合 hash、通用 classification completeness 等检查留到出现当前 consumer 或直接回归后再增加。
 
 ## 10. 退出检查
 
