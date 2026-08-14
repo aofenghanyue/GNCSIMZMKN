@@ -73,7 +73,7 @@
     {
       "id": "ORACLE-YYZ-GROUP-04",
       "level": "closure",
-      "status": "capturing",
+      "status": "executable",
       "claim": "Shared RK candidate-state behavior is preserved by IntegrationScopePlan.",
       "expected_facts": [
         "Mass and position members observe one joint candidate state at all four RK stages, yielding mass=8 and position=9 after dt=1.",

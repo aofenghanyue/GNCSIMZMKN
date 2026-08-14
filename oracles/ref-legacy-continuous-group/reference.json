@@ -124,30 +124,30 @@
     }
   ],
   "disposition_decision": {
-    "status": "needs_owner_decision",
+    "status": "accepted",
     "owner_role": "validation_lead",
     "facts": [
       {
         "fact_id": "FACT-GROUP-SHARED-CANDIDATE",
-        "recommended_disposition": "Preserve",
+        "disposition": "Preserve",
         "difference_reason": "DeclaredModelChoice",
         "target_mapping": "IntegrationScopePlan members read one shared RK candidate state"
       },
       {
         "fact_id": "FACT-GROUP-ATOMIC-COMMIT",
-        "recommended_disposition": "Preserve",
+        "disposition": "Preserve",
         "difference_reason": "DeclaredModelChoice",
         "target_mapping": "one validated scope replacement commits all declared member state together"
       },
       {
         "fact_id": "FACT-GROUP-MEMBERSHIP",
-        "recommended_disposition": "Preserve",
+        "disposition": "Preserve",
         "difference_reason": "DeclaredModelChoice",
         "target_mapping": "Compiler proves registered membership and unique scope ownership"
       },
       {
         "fact_id": "FACT-GROUP-LEGACY-SURFACE",
-        "recommended_disposition": "Retire",
+        "disposition": "Retire",
         "difference_reason": "AccidentalStructure",
         "target_mapping": "IContinuousGroup, group node identity, manual vector packing and setState distribution"
       }

@@ -1,7 +1,7 @@
 {
   "schema_version": "gnczmkn.fixture-manifest/1",
   "fixture_id": "REF-LEGACY-CONTINUOUS-GROUP-001",
-  "status": "capturing",
+  "status": "executable",
   "purpose": "Make the frozen Legacy shared RK candidate closure, group commit and membership validation executable without linking Legacy into the main build.",
   "authority": "validation_lead",
   "provenance": {
@@ -75,7 +75,7 @@
     "Independent 50-digit Decimal and C++17 joint-state RK4 implementations agree with every Legacy stage and final member value",
     "Rejects split snapshot closure, an unregistered member and duplicate scope ownership",
     "Accepts member declaration and packed storage reordering after stable identity binding",
-    "Preserve and Retire recommendations remain visibly pending until the repository owner accepts the disposition choice"
+    "The accepted disposition preserves shared candidates, one scope commit and unique identity-bound membership while retiring the Legacy group surface and manual vector packing"
   ],
   "open_tasks": [
     "R0-LEG-002"

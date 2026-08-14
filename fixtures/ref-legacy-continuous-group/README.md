@@ -20,7 +20,7 @@ The bundle separates actual Legacy capture and target-independent checks:
 - [`legacy_capture.cpp`](legacy_capture.cpp) instruments the public Legacy group/test surface in a clean extraction workspace;
 - [`legacy-run-1.json`](legacy-run-1.json) and [`legacy-run-2.json`](legacy-run-2.json) contain the raw stage, commit and membership results;
 - [`input.json`](input.json) pins the archive, group/RK4/simulator/test entries, canonical environment, harness and trace bytes;
-- [`reference.json`](../../oracles/ref-legacy-continuous-group/reference.json) contains the 50-digit Decimal stages, split-closure control, exact membership outcomes and pending disposition;
+- [`reference.json`](../../oracles/ref-legacy-continuous-group/reference.json) contains the 50-digit Decimal stages, split-closure control, exact membership outcomes and accepted disposition;
 - the repository C++17 probe independently evaluates the joint RK4 state and membership rules without including or linking Legacy.
 
 Run the repository checks through CTest:
@@ -29,4 +29,4 @@ Run the repository checks through CTest:
 ctest --preset dev -R "r0.legacy-continuous-group" --output-on-failure
 ```
 
-The main CMake graph validates frozen traces and independent references. Raw Legacy regeneration uses the fixed `R0-LEG-001` extraction environment and standalone harness. The bundle remains `capturing` until the repository owner accepts the recommended Preserve/Retire split.
+The main CMake graph validates frozen traces and independent references. Raw Legacy regeneration uses the fixed `R0-LEG-001` extraction environment and standalone harness. The bundle is `executable`: shared candidates, one scope commit and unique identity-bound membership are preserved; the Legacy group surface and manual vector packing are retired. Target YYZ trajectory tolerances remain pending `R0-SCI-003`.
