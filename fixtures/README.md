@@ -29,7 +29,7 @@ Fixture 是可复制、可校验、带 provenance 的规范实例。每个目录
 
 `ref-yyz-scalar-burn-mass` 已达到 `executable`，实现专用 `MODEL-YYZ-SCALAR-BURN-CONSTANT-GEOMETRY-001`：按半开区间积分正值燃耗并从 committed mass 扣除，候选必须保持正值，CoM 坐标与完整惯量逐项保持，区间末一次提交完整候选。80 位 Decimal 与独立 C++17 实现覆盖 full-inertia 正燃耗、zero-flow、区间分割等价、十条输入拒绝，以及 mass gain、提前可见、CoM 漂移和惯量缩放 mutation。fuel geometry、dry mass、depletion event、configuration jump、canonical assets 与产品 contract 仍在后续范围内。
 
-`ref-yyz-frozen-interval` 已达到 `executable`，把已接受的 uniform environment、air-data、aero dimensionalization、propulsion response、当前 MassProperties、Closure 与刚体核心组合在同一 `[0,1)` 区间。80 位 Decimal 常加速度闭式轨迹与独立 C++17 一步 RK4 交叉检查 tick 1 状态、候选质量延迟可见性、四元数符号等价、八条输入域拒绝和三条跨组件 mutation。canonical assets、lookup、制导控制、产品终止指标与提交后的质量几何仍在后续范围内。
+`ref-yyz-frozen-interval` 已达到 `executable`，把已接受的 uniform environment、air-data、三轴 aero lookup、dimensionalization、propulsion response、当前 MassProperties、Closure 与刚体核心组合在同一 `[0,1)` 区间。80 位 Decimal 常加速度闭式轨迹与独立 C++17 一步 RK4 交叉检查查表权重和系数、tick 1 状态、候选质量延迟可见性、四元数符号等价、十条输入域拒绝和四条跨组件 mutation。canonical aero assets、asset schema/loaders、制导控制、产品终止指标与提交后的质量几何仍在后续范围内。
 
 `ref-legacy-sync-commit` 已达到 `executable`，将 `ORACLE-YYZ-SYNC-03` 的冻结来源、独立 Decimal 结果、C++17 candidate/commit journal 和 early-commit 失败用例连成切片；已接受的处置保留 candidate barrier 与 committed-`t_k` 读取，并退出 Legacy 实现形状。
 

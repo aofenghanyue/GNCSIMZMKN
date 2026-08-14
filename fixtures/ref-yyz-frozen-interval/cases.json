@@ -1,5 +1,5 @@
 {
-  "schema_version": "gnczmkn.yyz-frozen-interval-cases/1",
+  "schema_version": "gnczmkn.yyz-frozen-interval-cases/2",
   "fixture_id": "REF-YYZ-FROZEN-INTERVAL-001",
   "oracle_id": "ORACLE-YYZ-FROZEN-INTERVAL-001",
   "semantic_profile": {
@@ -9,24 +9,25 @@
       "ADR-0007 accepted passive Hamilton q_I_B convention",
       "accepted REF-YYZ-UNIFORM-ENVIRONMENT-001 supplied uniform environment",
       "accepted REF-YYZ-AIR-DATA-KINEMATICS-001 air-relative kinematics",
+      "accepted REF-YYZ-AERO-LOOKUP-001 immutable three-axis trilinear coefficient query",
       "accepted REF-YYZ-AERO-DIMENSIONALIZATION-001 supplied coefficient dimensionalization",
       "accepted REF-YYZ-PROPULSION-RESPONSE-001 supplied propulsion response and scalar mass candidate",
       "accepted REF-YYZ-MASS-PROPERTIES-001 current committed projection",
       "accepted REF-YYZ-FORCE-MOMENT-CLOSURE-001 FrozenInterval closure",
       "accepted REF-YYZ-6DOF-CORE-001 rigid-body equations and RK4 policy"
     ],
-    "implemented_scope": "One fixture-local sampled boundary and one FrozenInterval compose the accepted environment, air-data, aero, propulsion, current MassProperties, Closure and rigid-core profiles into an executable trajectory.",
+    "implemented_scope": "One fixture-local sampled boundary and one FrozenInterval compose the accepted environment, air-data, three-axis aero lookup, dimensionalization, propulsion, current MassProperties, Closure and rigid-core profiles into an executable trajectory.",
     "temporal_policy": "Every sampled input has tick 0 identity. The closure and current mass are frozen on [0,1); the scalar mass candidate remains candidate-only until tick 1.",
-    "trajectory_policy": "The accepted case has zero total moment and zero angular rate, so the held body force has constant inertial coordinates. A one-step classical RK4 result is checked against the exact constant-acceleration trajectory.",
+    "trajectory_policy": "The accepted air-data query lies inside the synthetic Mach-alpha-beta table. The fixture-local aerodynamic application point exactly balances the nominal lookup pitch coefficient in Decimal arithmetic; zero closed moment and zero angular rate keep the held body force fixed in inertial coordinates. A one-step classical RK4 result is checked against the exact constant-acceleration trajectory.",
     "excluded": [
       "canonical mission, vehicle, environment, atmosphere, aero or propulsion assets",
-      "coefficient lookup, command mapping, control, guidance and product termination metrics",
+      "canonical aero tables, asset schema/loaders, command mapping, control, guidance and product termination metrics",
       "a committed center-of-mass or inertia evolution law",
       "R1-R8 product contracts or runtime capability"
     ]
   },
   "model": {
-    "model_id": "MODEL-YYZ-FROZEN-INTERVAL-001",
+    "model_id": "MODEL-YYZ-LOOKUP-FROZEN-INTERVAL-001",
     "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
     "body_frame_id": "frame.fixture.yyz.body@1",
     "body_axes": "right-handed x-forward/y-right/z-down",
@@ -40,6 +41,9 @@
       "sample tick and configuration revision are nonnegative integers",
       "sample_tick = valid_from_tick and valid_until_tick = sample_tick + 1",
       "base_dt_s > 0, density >= 0 and speed_of_sound > 0",
+      "aero lookup model, table, configuration, body-frame, clock, tick and revision identities agree",
+      "lookup axes are finite and strictly increasing, the coefficient tensor has the declared shape, and the derived Mach/alpha/beta query lies inside the inclusive box",
+      "body rates and four surface states are zero and the derivative request is empty",
       "current mass and scalar mass candidate are strictly positive",
       "thrust is nonnegative and its direction is unit length",
       "q_I_B has nonzero norm and inertia about the CoM is symmetric positive definite"
@@ -95,8 +99,11 @@
         "r_body_origin_to_CoM_B_m": [0.2, 0.0, 0.0],
         "inertia_about_CoM_B_kgm2_row_major": [10.0, 0.0, 0.0, 0.0, 20.0, 0.0, 0.0, 0.0, 30.0]
       },
-      "aero_response": {
+      "aero_lookup": {
         "source_id": "aero.body",
+        "model_id": "MODEL-YYZ-AERO-TRILINEAR-LOOKUP-001",
+        "table_id": "aero-table.fixture.yyz.multiaffine@1",
+        "configuration_id": "configuration.fixture.yyz.clean@1",
         "body_frame_id": "frame.fixture.yyz.body@1",
         "clock_domain": "clock.fixture.yyz.simulation@1",
         "sample_tick": 0,
@@ -106,8 +113,26 @@
         "reference_area_m2": 1.0,
         "reference_span_m": 1.0,
         "reference_chord_m": 1.0,
-        "coefficients_CA_CY_CN_Cl_Cm_Cn": [0.01, 0.0, 0.0, 0.0, 0.0, 0.0],
-        "r_body_origin_to_application_B_m": [0.2, 0.0, 0.0]
+        "omega_BI_B_radps": [0.0, 0.0, 0.0],
+        "surface_state_rad": [0.0, 0.0, 0.0, 0.0],
+        "required_derivative_set": [],
+        "prepared_table": {
+          "layout": "mach-major-alpha-middle-beta-fastest",
+          "mach_axis": [0.2, 0.6],
+          "alpha_axis_rad": [-0.1, 0.1],
+          "beta_axis_rad": [-0.05, 0.05],
+          "coefficient_rows_CA_CY_CN_Cl_Cm_Cn": [
+            [0.006, 0.0245, -0.0795, 0.005, 0.014, -0.00755],
+            [0.006, -0.0245, -0.0805, -0.005, 0.014, 0.00755],
+            [0.05, 0.0245, 0.0795, 0.005, -0.106, -0.00785],
+            [0.05, -0.0245, 0.0805, -0.005, -0.106, 0.00785],
+            [0.018, 0.0235, -0.0795, 0.005, 0.022, -0.00795],
+            [0.018, -0.0235, -0.0805, -0.005, 0.022, 0.00795],
+            [0.07, 0.0235, 0.0795, 0.005, -0.098, -0.00825],
+            [0.07, -0.0235, 0.0805, -0.005, -0.098, 0.00825]
+          ]
+        },
+        "r_body_origin_to_application_B_m": [0.2, 0.0, -1.3888888888888888888888888888888888888888888888888888888888888888888888888888889]
       },
       "propulsion_response": {
         "source_id": "propulsion.main",
@@ -137,11 +162,13 @@
     }
   ],
   "invalid_input_cases": [
-    {"id": "INVALID-YYZ-FROZEN-INTERVAL-BODY-FRAME-MISMATCH", "mutation": "change the aero body frame", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-FROZEN-INTERVAL-BODY-FRAME-MISMATCH", "mutation": "change the aero lookup body frame", "expected_status": "input-domain-error"},
     {"id": "INVALID-YYZ-FROZEN-INTERVAL-CLOCK-MISMATCH", "mutation": "change the environment clock domain", "expected_status": "input-domain-error"},
     {"id": "INVALID-YYZ-FROZEN-INTERVAL-SAMPLE-TICK-MISMATCH", "mutation": "change the MassProperties sample tick", "expected_status": "input-domain-error"},
     {"id": "INVALID-YYZ-FROZEN-INTERVAL-INTERVAL-MISMATCH", "mutation": "extend the propulsion validity interval", "expected_status": "input-domain-error"},
-    {"id": "INVALID-YYZ-FROZEN-INTERVAL-REVISION-MISMATCH", "mutation": "change the aero configuration revision", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-FROZEN-INTERVAL-REVISION-MISMATCH", "mutation": "change the aero lookup configuration revision", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-FROZEN-INTERVAL-LOOKUP-TABLE-ID", "mutation": "change the prepared aero table identity", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-FROZEN-INTERVAL-LOOKUP-MACH-HIGH", "mutation": "raise vehicle speed until the air-data Mach query exceeds the prepared table", "expected_status": "input-domain-error"},
     {"id": "INVALID-YYZ-FROZEN-INTERVAL-NONPOSITIVE-DT", "mutation": "set base_dt_s to zero", "expected_status": "input-domain-error"},
     {"id": "INVALID-YYZ-FROZEN-INTERVAL-NONPOSITIVE-MASS", "mutation": "set current mass to zero", "expected_status": "input-domain-error"},
     {"id": "INVALID-YYZ-FROZEN-INTERVAL-ZERO-QUATERNION", "mutation": "set q_I_B to zero norm", "expected_status": "input-domain-error"}
@@ -149,6 +176,7 @@
   "mutation_cases": [
     {"id": "MUTATION-YYZ-FROZEN-INTERVAL-ADD-WIND", "mutation": "add air-mass velocity to vehicle velocity", "expected_status": "oracle-mismatch"},
     {"id": "MUTATION-YYZ-FROZEN-INTERVAL-EARLY-MASS-CANDIDATE", "mutation": "use the tick-1 mass candidate in the current interval", "expected_status": "oracle-mismatch"},
-    {"id": "MUTATION-YYZ-FROZEN-INTERVAL-PRETRANSPORTED-PROPULSION-MOMENT", "mutation": "transport the propulsion moment before Closure transports it again", "expected_status": "oracle-mismatch"}
+    {"id": "MUTATION-YYZ-FROZEN-INTERVAL-PRETRANSPORTED-PROPULSION-MOMENT", "mutation": "transport the propulsion moment before Closure transports it again", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-FROZEN-INTERVAL-NEAREST-AERO-LOOKUP", "mutation": "replace trilinear interpolation with nearest-grid coefficient selection", "expected_status": "oracle-mismatch"}
   ]
 }

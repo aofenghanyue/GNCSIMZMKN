@@ -12,7 +12,8 @@
 namespace {
 
 constexpr const char* kOracleId = "ORACLE-YYZ-FROZEN-INTERVAL-001";
-constexpr const char* kModelId = "MODEL-YYZ-FROZEN-INTERVAL-001";
+constexpr const char* kModelId =
+    "MODEL-YYZ-LOOKUP-FROZEN-INTERVAL-001";
 constexpr const char* kProfileStatus =
     "implemented-from-accepted-profiles";
 constexpr const char* kInertialFrameId =
@@ -20,6 +21,12 @@ constexpr const char* kInertialFrameId =
 constexpr const char* kBodyFrameId = "frame.fixture.yyz.body@1";
 constexpr const char* kClockDomain = "clock.fixture.yyz.simulation@1";
 constexpr const char* kMassStateId = "mass.fixture.yyz.vehicle@1";
+constexpr const char* kAeroLookupModelId =
+    "MODEL-YYZ-AERO-TRILINEAR-LOOKUP-001";
+constexpr const char* kAeroTableId =
+    "aero-table.fixture.yyz.multiaffine@1";
+constexpr const char* kAeroConfigurationId =
+    "configuration.fixture.yyz.clean@1";
 constexpr double kFormulaAbsolute = 2.0e-12;
 constexpr double kFormulaRelative = 2.0e-12;
 
@@ -82,10 +89,19 @@ struct Input {
 
     Identity aero_identity;
     std::string aero_source_id;
+    std::string aero_lookup_model_id;
+    std::string aero_table_id;
+    std::string aero_configuration_id;
     double reference_area_m2 = 0.0;
     double reference_span_m = 0.0;
     double reference_chord_m = 0.0;
-    std::array<double, 6> aero_coefficients{};
+    Vec3 aero_query_rates_b_radps;
+    std::array<double, 4> aero_surface_state_rad{};
+    std::vector<std::string> aero_required_derivatives;
+    std::array<double, 2> mach_axis{};
+    std::array<double, 2> alpha_axis_rad{};
+    std::array<double, 2> beta_axis_rad{};
+    std::array<std::array<double, 6>, 8> aero_coefficient_rows{};
     Vec3 r_body_origin_to_aero_application_b_m;
 
     Identity propulsion_identity;
@@ -106,6 +122,7 @@ struct Options {
     WindMode wind_mode = WindMode::Subtract;
     bool early_mass_candidate = false;
     bool pretransport_propulsion_moment = false;
+    bool nearest_aero_lookup = false;
 };
 
 struct AirData {
@@ -116,6 +133,16 @@ struct AirData {
     double beta_rad = 0.0;
     double dynamic_pressure_pa = 0.0;
     double mach = 0.0;
+};
+
+struct AeroLookup {
+    std::string model_id;
+    std::string table_id;
+    std::string configuration_id;
+    std::string domain_status;
+    std::array<std::size_t, 3> cell_indices{};
+    Vec3 weights;
+    std::array<double, 6> coefficients{};
 };
 
 struct Contribution {
@@ -166,6 +193,7 @@ struct Composition {
     double density_kgpm3 = 0.0;
     double speed_of_sound_mps = 0.0;
     AirData air_data;
+    AeroLookup aero_lookup;
     Contribution aero;
     Contribution propulsion;
     MassVisibility mass;
@@ -190,7 +218,12 @@ struct EquivalenceResult {
     double max_abs_physical_difference = 0.0;
 };
 
-enum class MutationKind { AddWind, EarlyMass, PretransportedMoment };
+enum class MutationKind {
+    AddWind,
+    EarlyMass,
+    PretransportedMoment,
+    NearestAeroLookup,
+};
 
 struct MutationResult {
     std::string id;
@@ -454,6 +487,10 @@ void validateInput(const Input& input) {
                       !input.propulsion_source_id.empty() &&
                       input.aero_source_id != input.propulsion_source_id,
                   "Closure source identities must be distinct");
+    requireDomain(input.aero_lookup_model_id == kAeroLookupModelId &&
+                      input.aero_table_id == kAeroTableId &&
+                      input.aero_configuration_id == kAeroConfigurationId,
+                  "aero lookup identity differs");
     requireDomain(finite(input.initial_state.position_i_m) &&
                       finite(input.initial_state.velocity_i_mps) &&
                       finite(input.initial_state.omega_bi_b_radps),
@@ -477,10 +514,39 @@ void validateInput(const Input& input) {
                       finite(input.reference_chord_m) &&
                       input.reference_chord_m > 0.0 &&
                       finite(input.r_body_origin_to_aero_application_b_m) &&
-                      std::all_of(input.aero_coefficients.begin(),
-                                  input.aero_coefficients.end(),
-                                  [](double value) { return finite(value); }),
-                  "aero response is outside its domain");
+                      finite(input.aero_query_rates_b_radps) &&
+                      maxDifference(input.aero_query_rates_b_radps,
+                                    input.initial_state.omega_bi_b_radps) == 0.0 &&
+                      dot(input.aero_query_rates_b_radps,
+                          input.aero_query_rates_b_radps) == 0.0 &&
+                      std::all_of(input.aero_surface_state_rad.begin(),
+                                  input.aero_surface_state_rad.end(),
+                                  [](double value) {
+                                      return finite(value) && value == 0.0;
+                                  }) &&
+                      input.aero_required_derivatives.empty(),
+                  "aero lookup query scope is outside its domain");
+    requireDomain(input.mach_axis[0] < input.mach_axis[1] &&
+                      input.alpha_axis_rad[0] < input.alpha_axis_rad[1] &&
+                      input.beta_axis_rad[0] < input.beta_axis_rad[1] &&
+                      std::all_of(input.mach_axis.begin(),
+                                  input.mach_axis.end(),
+                                  [](double value) { return finite(value); }) &&
+                      std::all_of(input.alpha_axis_rad.begin(),
+                                  input.alpha_axis_rad.end(),
+                                  [](double value) { return finite(value); }) &&
+                      std::all_of(input.beta_axis_rad.begin(),
+                                  input.beta_axis_rad.end(),
+                                  [](double value) { return finite(value); }) &&
+                      std::all_of(
+                          input.aero_coefficient_rows.begin(),
+                          input.aero_coefficient_rows.end(),
+                          [](const auto& row) {
+                              return std::all_of(
+                                  row.begin(), row.end(),
+                                  [](double value) { return finite(value); });
+                          }),
+                  "prepared aero table is outside its domain");
     requireDomain(finite(input.thrust_magnitude_n) &&
                       input.thrust_magnitude_n >= 0.0 &&
                       finite(input.thrust_direction_b_unit) &&
@@ -535,11 +601,29 @@ Input acceptedInput() {
         }};
     input.aero_identity = {kBodyFrameId, kClockDomain, 0, 11, 0, 1};
     input.aero_source_id = "aero.body";
+    input.aero_lookup_model_id = kAeroLookupModelId;
+    input.aero_table_id = kAeroTableId;
+    input.aero_configuration_id = kAeroConfigurationId;
     input.reference_area_m2 = 1.0;
     input.reference_span_m = 1.0;
     input.reference_chord_m = 1.0;
-    input.aero_coefficients = {0.01, 0.0, 0.0, 0.0, 0.0, 0.0};
-    input.r_body_origin_to_aero_application_b_m = {0.2, 0.0, 0.0};
+    input.aero_query_rates_b_radps = {0.0, 0.0, 0.0};
+    input.aero_surface_state_rad = {0.0, 0.0, 0.0, 0.0};
+    input.mach_axis = {0.2, 0.6};
+    input.alpha_axis_rad = {-0.1, 0.1};
+    input.beta_axis_rad = {-0.05, 0.05};
+    input.aero_coefficient_rows = {{
+        {{0.006, 0.0245, -0.0795, 0.005, 0.014, -0.00755}},
+        {{0.006, -0.0245, -0.0805, -0.005, 0.014, 0.00755}},
+        {{0.05, 0.0245, 0.0795, 0.005, -0.106, -0.00785}},
+        {{0.05, -0.0245, 0.0805, -0.005, -0.106, 0.00785}},
+        {{0.018, 0.0235, -0.0795, 0.005, 0.022, -0.00795}},
+        {{0.018, -0.0235, -0.0805, -0.005, 0.022, 0.00795}},
+        {{0.07, 0.0235, 0.0795, 0.005, -0.098, -0.00825}},
+        {{0.07, -0.0235, 0.0805, -0.005, -0.098, 0.00825}},
+    }};
+    input.r_body_origin_to_aero_application_b_m =
+        {0.2, 0.0, -25.0 / 18.0};
     input.propulsion_identity = {
         kBodyFrameId, kClockDomain, 0, 11, 0, 1};
     input.propulsion_source_id = "propulsion.main";
@@ -552,6 +636,92 @@ Input acceptedInput() {
     input.terminal_kind = "duration_exact_grid";
     input.terminal_tick = 1;
     return input;
+}
+
+struct AxisLocation {
+    std::size_t index = 0;
+    double weight = 0.0;
+    bool boundary = false;
+};
+
+AxisLocation locateAxis(const std::array<double, 2>& axis,
+                        double query, const std::string& label) {
+    requireDomain(finite(query) && axis.front() <= query &&
+                      query <= axis.back(),
+                  label + " query is outside the inclusive table domain");
+    if (query == axis.back()) {
+        return {0, 1.0, true};
+    }
+    const double weight = (query - axis.front()) /
+                          (axis.back() - axis.front());
+    return {0, weight, query == axis.front()};
+}
+
+AeroLookup evaluateAeroLookup(const Input& input, double mach,
+                              double alpha_rad, double beta_rad,
+                              bool nearest) {
+    const AxisLocation mach_location = locateAxis(
+        input.mach_axis, mach, "Mach");
+    const AxisLocation alpha_location = locateAxis(
+        input.alpha_axis_rad, alpha_rad, "alpha");
+    const AxisLocation beta_location = locateAxis(
+        input.beta_axis_rad, beta_rad, "beta");
+    const std::array<AxisLocation, 3> locations{
+        mach_location, alpha_location, beta_location};
+    std::array<double, 6> coefficients{};
+    const auto rowIndex = [](std::size_t mach_index,
+                             std::size_t alpha_index,
+                             std::size_t beta_index) {
+        return (mach_index * 2 + alpha_index) * 2 + beta_index;
+    };
+    if (nearest) {
+        const std::size_t mach_index =
+            mach_location.weight >= 0.5 ? 1 : 0;
+        const std::size_t alpha_index =
+            alpha_location.weight >= 0.5 ? 1 : 0;
+        const std::size_t beta_index =
+            beta_location.weight >= 0.5 ? 1 : 0;
+        coefficients = input.aero_coefficient_rows[
+            rowIndex(mach_index, alpha_index, beta_index)];
+    } else {
+        for (std::size_t mach_offset = 0; mach_offset < 2; ++mach_offset) {
+            const double mach_factor = mach_offset == 0
+                ? 1.0 - mach_location.weight : mach_location.weight;
+            for (std::size_t alpha_offset = 0;
+                 alpha_offset < 2; ++alpha_offset) {
+                const double alpha_factor = alpha_offset == 0
+                    ? 1.0 - alpha_location.weight : alpha_location.weight;
+                for (std::size_t beta_offset = 0;
+                     beta_offset < 2; ++beta_offset) {
+                    const double beta_factor = beta_offset == 0
+                        ? 1.0 - beta_location.weight : beta_location.weight;
+                    const double factor =
+                        mach_factor * alpha_factor * beta_factor;
+                    const auto& row = input.aero_coefficient_rows[
+                        rowIndex(mach_offset, alpha_offset, beta_offset)];
+                    for (std::size_t coefficient = 0;
+                         coefficient < coefficients.size(); ++coefficient) {
+                        coefficients[coefficient] += factor * row[coefficient];
+                    }
+                }
+            }
+        }
+    }
+    for (double& coefficient : coefficients) {
+        coefficient = canonicalZero(coefficient);
+    }
+    const bool boundary = std::any_of(
+        locations.begin(), locations.end(),
+        [](const AxisLocation& value) { return value.boundary; });
+    return {
+        input.aero_lookup_model_id,
+        input.aero_table_id,
+        input.aero_configuration_id,
+        boundary ? "Boundary" : "Interior",
+        {mach_location.index, alpha_location.index, beta_location.index},
+        {mach_location.weight, alpha_location.weight, beta_location.weight},
+        coefficients,
+    };
 }
 
 RigidDerivative evaluateRigidDerivative(
@@ -665,18 +835,21 @@ Composition compose(const Input& input, const Options& options = {}) {
         0.5 * input.density_kgpm3 * airspeed * airspeed,
         airspeed / input.speed_of_sound_mps,
     };
+    const AeroLookup lookup = evaluateAeroLookup(
+        input, air_data.mach, air_data.alpha_rad, air_data.beta_rad,
+        options.nearest_aero_lookup);
 
     const double pressure_area =
         air_data.dynamic_pressure_pa * input.reference_area_m2;
     const Vec3 aero_force{
-        -pressure_area * input.aero_coefficients[0],
-        pressure_area * input.aero_coefficients[1],
-        -pressure_area * input.aero_coefficients[2],
+        -pressure_area * lookup.coefficients[0],
+        pressure_area * lookup.coefficients[1],
+        -pressure_area * lookup.coefficients[2],
     };
     const Vec3 aero_application_moment{
-        pressure_area * input.reference_span_m * input.aero_coefficients[3],
-        pressure_area * input.reference_chord_m * input.aero_coefficients[4],
-        pressure_area * input.reference_span_m * input.aero_coefficients[5],
+        pressure_area * input.reference_span_m * lookup.coefficients[3],
+        pressure_area * input.reference_chord_m * lookup.coefficients[4],
+        pressure_area * input.reference_span_m * lookup.coefficients[5],
     };
     const Vec3 aero_lever = subtract(
         input.r_body_origin_to_aero_application_b_m,
@@ -736,6 +909,7 @@ Composition compose(const Input& input, const Options& options = {}) {
         input.density_kgpm3,
         input.speed_of_sound_mps,
         air_data,
+        lookup,
         aero,
         propulsion,
         mass,
@@ -755,7 +929,12 @@ void append(std::vector<double>& destination, const Vec3& value) {
     destination.push_back(value.z);
 }
 
-std::vector<double> physicalVector(const Composition& value) {
+void append(std::vector<double>& destination,
+            const std::array<double, 6>& value) {
+    destination.insert(destination.end(), value.begin(), value.end());
+}
+
+std::vector<double> instantaneousVector(const Composition& value) {
     std::vector<double> result;
     append(result, value.air_data.velocity_relative_i_mps);
     append(result, value.air_data.velocity_relative_b_mps);
@@ -764,6 +943,8 @@ std::vector<double> physicalVector(const Composition& value) {
     result.push_back(value.air_data.beta_rad);
     result.push_back(value.air_data.dynamic_pressure_pa);
     result.push_back(value.air_data.mach);
+    append(result, value.aero_lookup.weights);
+    append(result, value.aero_lookup.coefficients);
     append(result, value.aero.force_b_n);
     append(result, value.aero.moment_about_com_b_nm);
     append(result, value.propulsion.force_b_n);
@@ -775,6 +956,11 @@ std::vector<double> physicalVector(const Composition& value) {
     append(result, value.moment_total_about_com_b_nm);
     append(result, value.derivative.acceleration_i_mps2);
     append(result, value.derivative.angular_acceleration_b_radps2);
+    return result;
+}
+
+std::vector<double> physicalVector(const Composition& value) {
+    std::vector<double> result = instantaneousVector(value);
     append(result, value.terminal.state.position_i_m);
     append(result, value.terminal.state.velocity_i_mps);
     append(result, value.terminal.state.omega_bi_b_radps);
@@ -809,14 +995,22 @@ ProbeResult runProbe() {
     const Input accepted_input = acceptedInput();
     const Composition accepted = compose(accepted_input);
     require(near(accepted.air_data.dynamic_pressure_pa, 6125.0) &&
-                near(accepted.force_total_b_n.x, 38.75) &&
+                accepted.aero_lookup.domain_status == "Interior" &&
+                near(accepted.aero_lookup.weights.x, 4.0 / 17.0) &&
+                near(accepted.aero_lookup.weights.y, 0.5) &&
+                near(accepted.aero_lookup.weights.z, 0.5) &&
+                near(accepted.aero_lookup.coefficients[0], 27.0 / 850.0) &&
+                near(accepted.aero_lookup.coefficients[4], -3.0 / 68.0) &&
+                near(accepted.force_total_b_n.x, -3215.0 / 34.0) &&
                 maxDifference(accepted.moment_total_about_com_b_nm,
                               {0.0, 0.0, 0.0}) <= kFormulaAbsolute &&
                 near(accepted.mass.current_visible_mass_kg, 100.0) &&
                 near(accepted.mass.pending_mass_candidate_kg, 99.95) &&
-                near(accepted.terminal.state.position_i_m.x, 11.0019375) &&
+                near(accepted.terminal.state.position_i_m.x,
+                     10.995272058823529) &&
                 near(accepted.terminal.state.position_i_m.z, 999.95096675) &&
-                near(accepted.terminal.state.velocity_i_mps.x, 110.03875) &&
+                near(accepted.terminal.state.velocity_i_mps.x,
+                     109.90544117647059) &&
                 near(accepted.terminal.state.velocity_i_mps.z, -0.980665),
             "accepted FrozenInterval result differs from analytic anchors");
 
@@ -860,6 +1054,16 @@ ProbeResult runProbe() {
             value.aero_identity.configuration_revision = 12;
         });
     expectDomainRejection(
+        invalid, "INVALID-YYZ-FROZEN-INTERVAL-LOOKUP-TABLE-ID",
+        [](Input& value) {
+            value.aero_table_id = "aero-table.fixture.yyz.other@1";
+        });
+    expectDomainRejection(
+        invalid, "INVALID-YYZ-FROZEN-INTERVAL-LOOKUP-MACH-HIGH",
+        [](Input& value) {
+            value.initial_state.velocity_i_mps = {300.0, 0.0, 0.0};
+        });
+    expectDomainRejection(
         invalid, "INVALID-YYZ-FROZEN-INTERVAL-NONPOSITIVE-DT",
         [](Input& value) { value.dt_s = 0.0; });
     expectDomainRejection(
@@ -881,13 +1085,18 @@ ProbeResult runProbe() {
     pretransport_options.pretransport_propulsion_moment = true;
     const Composition pretransported = compose(
         accepted_input, pretransport_options);
+    Options nearest_lookup_options;
+    nearest_lookup_options.nearest_aero_lookup = true;
+    const Composition nearest_lookup = compose(
+        accepted_input, nearest_lookup_options);
     std::vector<MutationResult> mutations{
         {
             "MUTATION-YYZ-FROZEN-INTERVAL-ADD-WIND",
             "rejected",
             MutationKind::AddWind,
             add_wind,
-            maxDifference(physicalVector(accepted), physicalVector(add_wind)),
+            maxDifference(instantaneousVector(accepted),
+                          instantaneousVector(add_wind)),
         },
         {
             "MUTATION-YYZ-FROZEN-INTERVAL-EARLY-MASS-CANDIDATE",
@@ -901,13 +1110,22 @@ ProbeResult runProbe() {
             "rejected",
             MutationKind::PretransportedMoment,
             pretransported,
-            maxDifference(accepted.moment_total_about_com_b_nm,
-                          pretransported.moment_total_about_com_b_nm),
+            maxDifference(instantaneousVector(accepted),
+                          instantaneousVector(pretransported)),
+        },
+        {
+            "MUTATION-YYZ-FROZEN-INTERVAL-NEAREST-AERO-LOOKUP",
+            "rejected",
+            MutationKind::NearestAeroLookup,
+            nearest_lookup,
+            maxDifference(instantaneousVector(accepted),
+                          instantaneousVector(nearest_lookup)),
         },
     };
     require(near(mutations[0].max_abs_physical_difference, 2695.0) &&
                 near(mutations[1].max_abs_physical_difference, 0.05) &&
-                near(mutations[2].max_abs_physical_difference, 20.0),
+                near(mutations[2].max_abs_physical_difference, 20.0) &&
+                near(mutations[3].max_abs_physical_difference, 493.0625),
             "a FrozenInterval mutation matched the accepted result");
     return {accepted, equivalence, invalid, mutations};
 }
@@ -936,6 +1154,32 @@ void writeQuaternion(const Quaternion& value) {
     std::cout << ',';
     writeNumber(value.z);
     std::cout << ']';
+}
+
+void writeCoefficients(const std::array<double, 6>& values) {
+    std::cout << '[';
+    for (std::size_t index = 0; index < values.size(); ++index) {
+        if (index != 0) {
+            std::cout << ',';
+        }
+        writeNumber(values[index]);
+    }
+    std::cout << ']';
+}
+
+void writeAeroLookup(const AeroLookup& value) {
+    std::cout << "{\"model_id\":\"" << value.model_id
+              << "\",\"table_id\":\"" << value.table_id
+              << "\",\"configuration_id\":\"" << value.configuration_id
+              << "\",\"domain_status\":\"" << value.domain_status
+              << "\",\"cell_indices_M_alpha_beta\":["
+              << value.cell_indices[0] << ',' << value.cell_indices[1]
+              << ',' << value.cell_indices[2]
+              << "],\"weights_M_alpha_beta\":";
+    writeVec3(value.weights);
+    std::cout << ",\"coefficients_CA_CY_CN_Cl_Cm_Cn\":";
+    writeCoefficients(value.coefficients);
+    std::cout << '}';
 }
 
 void writeContribution(const Contribution& value) {
@@ -985,7 +1229,9 @@ void writeComposition(const Composition& value) {
     writeNumber(value.air_data.dynamic_pressure_pa);
     std::cout << ",\"mach\":";
     writeNumber(value.air_data.mach);
-    std::cout << "},\"aero_contribution\":";
+    std::cout << "},\"aero_lookup\":";
+    writeAeroLookup(value.aero_lookup);
+    std::cout << ",\"aero_contribution\":";
     writeContribution(value.aero);
     std::cout << ",\"propulsion_contribution\":";
     writeContribution(value.propulsion);
@@ -1057,8 +1303,6 @@ void writeMutation(const MutationResult& value) {
         writeNumber(value.observed.air_data.dynamic_pressure_pa);
         std::cout << ",\"observed_force_total_B_N\":";
         writeVec3(value.observed.force_total_b_n);
-        std::cout << ",\"observed_terminal_position_I_m\":";
-        writeVec3(value.observed.terminal.state.position_i_m);
     } else if (value.kind == MutationKind::EarlyMass) {
         std::cout << ",\"observed_integration_mass_kg\":";
         writeNumber(value.observed.mass.integration_mass_kg);
@@ -1068,7 +1312,7 @@ void writeMutation(const MutationResult& value) {
         writeVec3(value.observed.terminal.state.position_i_m);
         std::cout << ",\"observed_terminal_velocity_I_mps\":";
         writeVec3(value.observed.terminal.state.velocity_i_mps);
-    } else {
+    } else if (value.kind == MutationKind::PretransportedMoment) {
         std::cout <<
             ",\"observed_propulsion_moment_at_application_B_Nm\":";
         writeVec3(value.observed.propulsion.moment_at_application_b_nm);
@@ -1076,6 +1320,14 @@ void writeMutation(const MutationResult& value) {
         writeVec3(value.observed.moment_total_about_com_b_nm);
         std::cout << ",\"observed_angular_acceleration_B_radps2\":";
         writeVec3(value.observed.derivative.angular_acceleration_b_radps2);
+    } else {
+        std::cout <<
+            ",\"observed_coefficients_CA_CY_CN_Cl_Cm_Cn\":";
+        writeCoefficients(value.observed.aero_lookup.coefficients);
+        std::cout << ",\"observed_force_total_B_N\":";
+        writeVec3(value.observed.force_total_b_n);
+        std::cout << ",\"observed_moment_total_about_CoM_B_Nm\":";
+        writeVec3(value.observed.moment_total_about_com_b_nm);
     }
     std::cout << ",\"max_abs_physical_difference\":";
     writeNumber(value.max_abs_physical_difference);

@@ -15,14 +15,17 @@ import sys
 
 FIXTURE_ID = "REF-YYZ-FROZEN-INTERVAL-001"
 ORACLE_ID = "ORACLE-YYZ-FROZEN-INTERVAL-001"
-MODEL_ID = "MODEL-YYZ-FROZEN-INTERVAL-001"
-CASES_SCHEMA = "gnczmkn.yyz-frozen-interval-cases/1"
-REFERENCE_SCHEMA = "gnczmkn.yyz-frozen-interval-reference/1"
+MODEL_ID = "MODEL-YYZ-LOOKUP-FROZEN-INTERVAL-001"
+CASES_SCHEMA = "gnczmkn.yyz-frozen-interval-cases/2"
+REFERENCE_SCHEMA = "gnczmkn.yyz-frozen-interval-reference/2"
 PROFILE_STATUS = "implemented-from-accepted-profiles"
 INERTIAL_FRAME_ID = "frame.fixture.yyz.inertial-cartesian@1"
 BODY_FRAME_ID = "frame.fixture.yyz.body@1"
 CLOCK_DOMAIN = "clock.fixture.yyz.simulation@1"
 MASS_STATE_ID = "mass.fixture.yyz.vehicle@1"
+AERO_LOOKUP_MODEL_ID = "MODEL-YYZ-AERO-TRILINEAR-LOOKUP-001"
+AERO_TABLE_ID = "aero-table.fixture.yyz.multiaffine@1"
+AERO_CONFIGURATION_ID = "configuration.fixture.yyz.clean@1"
 
 
 def require(condition: bool, message: str) -> None:
@@ -209,6 +212,102 @@ def valid_nonnegative_integer(value: object) -> bool:
             value >= 0)
 
 
+def validate_axis(values: object, label: str) -> list[Decimal]:
+    require(isinstance(values, list) and len(values) >= 2,
+            f"{label} must have at least two knots")
+    axis = [decimal(value) for value in values]
+    require(all(axis[index] < axis[index + 1]
+                for index in range(len(axis) - 1)),
+            f"{label} must be strictly increasing")
+    return axis
+
+
+def prepared_aero_table(aero: dict) -> tuple[
+        list[Decimal], list[Decimal], list[Decimal], list[list[Decimal]]]:
+    prepared = aero["prepared_table"]
+    require(prepared["layout"] ==
+            "mach-major-alpha-middle-beta-fastest",
+            "aero table layout differs")
+    mach_axis = validate_axis(prepared["mach_axis"], "Mach axis")
+    alpha_axis = validate_axis(prepared["alpha_axis_rad"], "alpha axis")
+    beta_axis = validate_axis(prepared["beta_axis_rad"], "beta axis")
+    rows = prepared["coefficient_rows_CA_CY_CN_Cl_Cm_Cn"]
+    expected_rows = len(mach_axis) * len(alpha_axis) * len(beta_axis)
+    require(isinstance(rows, list) and len(rows) == expected_rows,
+            "aero coefficient tensor shape differs")
+    coefficients = [vector(row, 6, "aero coefficient row") for row in rows]
+    return mach_axis, alpha_axis, beta_axis, coefficients
+
+
+def locate_axis(axis: list[Decimal], query: Decimal,
+                label: str) -> tuple[int, Decimal, bool]:
+    require(axis[0] <= query <= axis[-1],
+            f"{label} query is outside the inclusive table domain")
+    if query == axis[-1]:
+        return len(axis) - 2, Decimal(1), True
+    for index in range(len(axis) - 1):
+        if axis[index] <= query <= axis[index + 1]:
+            weight = ((query - axis[index]) /
+                      (axis[index + 1] - axis[index]))
+            return index, weight, query == axis[index]
+    raise ValueError(f"{label} interval was not located")
+
+
+def aero_lookup(aero: dict, mach: Decimal, alpha: Decimal, beta: Decimal,
+                mode: str = "trilinear") -> dict:
+    require(mode in ("trilinear", "nearest"),
+            "unsupported composed aero lookup mode")
+    mach_axis, alpha_axis, beta_axis, rows = prepared_aero_table(aero)
+    mach_index, mach_weight, mach_boundary = locate_axis(
+        mach_axis, mach, "Mach")
+    alpha_index, alpha_weight, alpha_boundary = locate_axis(
+        alpha_axis, alpha, "alpha")
+    beta_index, beta_weight, beta_boundary = locate_axis(
+        beta_axis, beta, "beta")
+    indices = [mach_index, alpha_index, beta_index]
+    weights = [mach_weight, alpha_weight, beta_weight]
+    shape = [len(mach_axis), len(alpha_axis), len(beta_axis)]
+
+    def row_at(mach_offset: int, alpha_offset: int,
+               beta_offset: int) -> list[Decimal]:
+        row_index = (((mach_index + mach_offset) * shape[1] +
+                      alpha_index + alpha_offset) * shape[2] +
+                     beta_index + beta_offset)
+        return rows[row_index]
+
+    if mode == "nearest":
+        offsets = [1 if weight >= Decimal("0.5") else 0
+                   for weight in weights]
+        coefficients = row_at(*offsets)
+    else:
+        coefficients = [Decimal(0)] * 6
+        for mach_offset in range(2):
+            mach_factor = (mach_weight if mach_offset else
+                           Decimal(1) - mach_weight)
+            for alpha_offset in range(2):
+                alpha_factor = (alpha_weight if alpha_offset else
+                                Decimal(1) - alpha_weight)
+                for beta_offset in range(2):
+                    beta_factor = (beta_weight if beta_offset else
+                                   Decimal(1) - beta_weight)
+                    factor = mach_factor * alpha_factor * beta_factor
+                    row = row_at(mach_offset, alpha_offset, beta_offset)
+                    coefficients = add(coefficients, scale(row, factor))
+
+    return {
+        "model_id": aero["model_id"],
+        "table_id": aero["table_id"],
+        "configuration_id": aero["configuration_id"],
+        "domain_status": ("Boundary" if any((mach_boundary,
+                                               alpha_boundary,
+                                               beta_boundary))
+                          else "Interior"),
+        "cell_indices_M_alpha_beta": indices,
+        "weights_M_alpha_beta": weights,
+        "coefficients_CA_CY_CN_Cl_Cm_Cn": coefficients,
+    }
+
+
 def validate_shared_identity(section: dict, context: dict,
                              label: str, body: bool = False,
                              interval: bool = False) -> None:
@@ -250,7 +349,7 @@ def validate_case(case: dict) -> None:
 
     environment = case["environment_sample"]
     mass = case["mass_properties_sample"]
-    aero = case["aero_response"]
+    aero = case["aero_lookup"]
     propulsion = case["propulsion_response"]
     validate_shared_identity(environment, context, "environment")
     validate_shared_identity(mass, context, "MassProperties", True, True)
@@ -261,6 +360,10 @@ def validate_case(case: dict) -> None:
     require(aero["source_id"] and propulsion["source_id"] and
             aero["source_id"] != propulsion["source_id"],
             "Closure contribution source identities must be distinct")
+    require(aero["model_id"] == AERO_LOOKUP_MODEL_ID and
+            aero["table_id"] == AERO_TABLE_ID and
+            aero["configuration_id"] == AERO_CONFIGURATION_ID,
+            "aero lookup identity differs")
 
     state = case["initial_state"]
     vector(state["position_I_m"], 3, "initial position")
@@ -283,8 +386,19 @@ def validate_case(case: dict) -> None:
             decimal(aero["reference_span_m"]) > 0 and
             decimal(aero["reference_chord_m"]) > 0,
             "aero reference geometry must be positive")
-    vector(aero["coefficients_CA_CY_CN_Cl_Cm_Cn"], 6,
-           "aero coefficients")
+    aero_rates = vector(aero["omega_BI_B_radps"], 3,
+                        "aero lookup body rates")
+    state_rates = vector(state["omega_BI_B_radps"], 3,
+                         "initial angular rate")
+    require(aero_rates == state_rates and
+            all(value.is_zero() for value in aero_rates),
+            "composed aero lookup requires zero truth body rates")
+    surfaces = vector(aero["surface_state_rad"], 4,
+                      "aero lookup surface state")
+    require(all(value.is_zero() for value in surfaces) and
+            aero["required_derivative_set"] == [],
+            "composed aero lookup query scope differs")
+    prepared_aero_table(aero)
     vector(aero["r_body_origin_to_application_B_m"], 3,
            "aero application point")
 
@@ -311,13 +425,14 @@ def validate_case(case: dict) -> None:
 def compose(case: dict, *, wind_mode: str = "subtract",
             mass_mode: str = "current",
             propulsion_moment_mode: str = "application",
+            aero_lookup_mode: str = "trilinear",
             include_trajectory: bool = True) -> dict:
     validate_case(case)
     context = case["context"]
     state = case["initial_state"]
     environment = case["environment_sample"]
     mass = case["mass_properties_sample"]
-    aero = case["aero_response"]
+    aero = case["aero_lookup"]
     propulsion = case["propulsion_response"]
     dt_s = decimal(context["base_dt_s"])
 
@@ -347,8 +462,8 @@ def compose(case: dict, *, wind_mode: str = "subtract",
     center_of_mass = vector(
         mass["r_body_origin_to_CoM_B_m"], 3, "center of mass")
     inertia = matrix(mass["inertia_about_CoM_B_kgm2_row_major"], "inertia")
-    coefficients = vector(
-        aero["coefficients_CA_CY_CN_Cl_Cm_Cn"], 6, "coefficients")
+    lookup = aero_lookup(aero, mach, alpha, beta, aero_lookup_mode)
+    coefficients = lookup["coefficients_CA_CY_CN_Cl_Cm_Cn"]
     ca_value, cy_value, cn_value, cl_value, cm_value, cn_moment = coefficients
     area = decimal(aero["reference_area_m2"])
     span = decimal(aero["reference_span_m"])
@@ -427,6 +542,7 @@ def compose(case: dict, *, wind_mode: str = "subtract",
             "dynamic_pressure_Pa": dynamic_pressure,
             "mach": mach,
         },
+        "aero_lookup": lookup,
         "aero_contribution": {
             "source_id": aero["source_id"],
             "force_B_N": aero_force,
@@ -468,7 +584,7 @@ def compose(case: dict, *, wind_mode: str = "subtract",
     }
     if include_trajectory:
         require(all(value.is_zero() for value in omega_b) and
-                all(value.is_zero() for value in moment_total_b),
+                max(abs(value) for value in moment_total_b) <= Decimal("1e-68"),
                 "analytic trajectory requires zero rotation")
         half_dt_squared = dt_s * dt_s / Decimal(2)
         final_position = add(
@@ -493,12 +609,14 @@ def max_difference(lhs: list[Decimal], rhs: list[Decimal]) -> Decimal:
                default=Decimal(0))
 
 
-def physical_vector(result: dict) -> list[Decimal]:
+def instantaneous_vector(result: dict) -> list[Decimal]:
     values: list[Decimal] = []
     for section, fields in (
         ("air_data", ("velocity_relative_I_mps", "velocity_relative_B_mps",
                       "airspeed_mps", "alpha_rad", "beta_rad",
                       "dynamic_pressure_Pa", "mach")),
+        ("aero_lookup", ("weights_M_alpha_beta",
+                         "coefficients_CA_CY_CN_Cl_Cm_Cn")),
         ("aero_contribution", ("force_B_N", "moment_about_CoM_B_Nm")),
         ("propulsion_contribution", ("force_B_N", "moment_about_CoM_B_Nm")),
         ("mass_visibility", ("current_visible_mass_kg",
@@ -507,9 +625,7 @@ def physical_vector(result: dict) -> list[Decimal]:
         ("closure", ("force_total_B_N",
                      "moment_total_about_CoM_B_Nm")),
         ("rigid_derivative_at_tick0", ("acceleration_I_mps2",
-                                       "angular_acceleration_B_radps2")),
-        ("analytic_terminal", ("position_I_m", "velocity_I_mps",
-                               "omega_BI_B_radps")),
+                                        "angular_acceleration_B_radps2")),
     ):
         for field in fields:
             value = result[section][field]
@@ -517,10 +633,17 @@ def physical_vector(result: dict) -> list[Decimal]:
     return values
 
 
+def physical_vector(result: dict) -> list[Decimal]:
+    values = instantaneous_vector(result)
+    for field in ("position_I_m", "velocity_I_mps", "omega_BI_B_radps"):
+        values.extend(result["analytic_terminal"][field])
+    return values
+
+
 def invalid_rejections(cases: dict, accepted_case: dict) -> list[str]:
     actions = {
         "INVALID-YYZ-FROZEN-INTERVAL-BODY-FRAME-MISMATCH":
-            lambda item: item["aero_response"].__setitem__(
+            lambda item: item["aero_lookup"].__setitem__(
                 "body_frame_id", "frame.fixture.yyz.other@1"),
         "INVALID-YYZ-FROZEN-INTERVAL-CLOCK-MISMATCH":
             lambda item: item["environment_sample"].__setitem__(
@@ -532,8 +655,14 @@ def invalid_rejections(cases: dict, accepted_case: dict) -> list[str]:
             lambda item: item["propulsion_response"].__setitem__(
                 "valid_until_tick", 2),
         "INVALID-YYZ-FROZEN-INTERVAL-REVISION-MISMATCH":
-            lambda item: item["aero_response"].__setitem__(
+            lambda item: item["aero_lookup"].__setitem__(
                 "configuration_revision", 12),
+        "INVALID-YYZ-FROZEN-INTERVAL-LOOKUP-TABLE-ID":
+            lambda item: item["aero_lookup"].__setitem__(
+                "table_id", "aero-table.fixture.yyz.other@1"),
+        "INVALID-YYZ-FROZEN-INTERVAL-LOOKUP-MACH-HIGH":
+            lambda item: item["initial_state"].__setitem__(
+                "velocity_I_mps", [300, 0, 0]),
         "INVALID-YYZ-FROZEN-INTERVAL-NONPOSITIVE-DT":
             lambda item: item["context"].__setitem__("base_dt_s", 0),
         "INVALID-YYZ-FROZEN-INTERVAL-NONPOSITIVE-MASS":
@@ -561,11 +690,14 @@ def invalid_rejections(cases: dict, accepted_case: dict) -> list[str]:
 
 def mutation_results(cases: dict, accepted_case: dict,
                      accepted: dict) -> list[dict]:
-    add_wind = compose(accepted_case, wind_mode="add")
+    add_wind = compose(accepted_case, wind_mode="add",
+                       include_trajectory=False)
     early_mass = compose(accepted_case, mass_mode="candidate")
     pretransported = compose(
         accepted_case, propulsion_moment_mode="pretransported",
         include_trajectory=False)
+    nearest_lookup = compose(
+        accepted_case, aero_lookup_mode="nearest", include_trajectory=False)
     results = [
         {
             "id": "MUTATION-YYZ-FROZEN-INTERVAL-ADD-WIND",
@@ -576,10 +708,9 @@ def mutation_results(cases: dict, accepted_case: dict,
                 add_wind["air_data"]["dynamic_pressure_Pa"],
             "observed_force_total_B_N":
                 add_wind["closure"]["force_total_B_N"],
-            "observed_terminal_position_I_m":
-                add_wind["analytic_terminal"]["position_I_m"],
             "max_abs_physical_difference": max_difference(
-                physical_vector(accepted), physical_vector(add_wind)),
+                instantaneous_vector(accepted),
+                instantaneous_vector(add_wind)),
         },
         {
             "id": "MUTATION-YYZ-FROZEN-INTERVAL-EARLY-MASS-CANDIDATE",
@@ -609,9 +740,23 @@ def mutation_results(cases: dict, accepted_case: dict,
                 pretransported["rigid_derivative_at_tick0"][
                     "angular_acceleration_B_radps2"],
             "max_abs_physical_difference": max_difference(
-                accepted["closure"]["moment_total_about_CoM_B_Nm"],
-                pretransported["closure"][
-                    "moment_total_about_CoM_B_Nm"]),
+                instantaneous_vector(accepted),
+                instantaneous_vector(pretransported)),
+        },
+        {
+            "id": "MUTATION-YYZ-FROZEN-INTERVAL-NEAREST-AERO-LOOKUP",
+            "status": "rejected",
+            "observed_coefficients_CA_CY_CN_Cl_Cm_Cn":
+                nearest_lookup["aero_lookup"][
+                    "coefficients_CA_CY_CN_Cl_Cm_Cn"],
+            "observed_force_total_B_N":
+                nearest_lookup["closure"]["force_total_B_N"],
+            "observed_moment_total_about_CoM_B_Nm":
+                nearest_lookup["closure"][
+                    "moment_total_about_CoM_B_Nm"],
+            "max_abs_physical_difference": max_difference(
+                instantaneous_vector(accepted),
+                instantaneous_vector(nearest_lookup)),
         },
     ]
     require([entry["id"] for entry in results] ==

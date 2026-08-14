@@ -1,16 +1,16 @@
 {
-  "schema_version": "gnczmkn.yyz-frozen-interval-reference/1",
+  "schema_version": "gnczmkn.yyz-frozen-interval-reference/2",
   "fixture_id": "REF-YYZ-FROZEN-INTERVAL-001",
   "oracle_id": "ORACLE-YYZ-FROZEN-INTERVAL-001",
-  "model_id": "MODEL-YYZ-FROZEN-INTERVAL-001",
+  "model_id": "MODEL-YYZ-LOOKUP-FROZEN-INTERVAL-001",
   "precision": {
     "implementation": "Python standard-library Decimal analytic composition",
     "decimal_digits": 80
   },
   "input_identity": {
     "path": "fixtures/ref-yyz-frozen-interval/cases.json",
-    "bytes": 8077,
-    "sha256": "c1f60b99622c1313ad3841fc24af6874ee3a273b2784f249feb991aed9cf11b1"
+    "bytes": 10427,
+    "sha256": "17609b48b02c43bfe9e103218cba04210bcb93938fbfbc332935225461cf0bc6"
   },
   "cases": {
     "CASE-YYZ-FROZEN-INTERVAL-COMPOSED-TRAJECTORY": {
@@ -53,31 +53,55 @@
         "dynamic_pressure_Pa": "6125",
         "mach": "0.29411764705882352941176470588235294117647058823529411764705882352941176470588235"
       },
+      "aero_lookup": {
+        "model_id": "MODEL-YYZ-AERO-TRILINEAR-LOOKUP-001",
+        "table_id": "aero-table.fixture.yyz.multiaffine@1",
+        "configuration_id": "configuration.fixture.yyz.clean@1",
+        "domain_status": "Interior",
+        "cell_indices_M_alpha_beta": [
+          0,
+          0,
+          0
+        ],
+        "weights_M_alpha_beta": [
+          "0.23529411764705882352941176470588235294117647058823529411764705882352941176470588",
+          "0.5",
+          "0.5"
+        ],
+        "coefficients_CA_CY_CN_Cl_Cm_Cn": [
+          "0.031764705882352941176470588235294117647058823529411764705882352941176470588235294",
+          "0",
+          "0",
+          "0",
+          "-0.044117647058823529411764705882352941176470588235294117647058823529411764705882353",
+          "0"
+        ]
+      },
       "aero_contribution": {
         "source_id": "aero.body",
         "force_B_N": [
-          "-61.25",
+          "-194.55882352941176470588235294117647058823529411764705882352941176470588235294118",
           "0",
           "0"
         ],
         "r_CoM_to_application_B_m": [
           "0",
           "0",
-          "0"
+          "-1.3888888888888888888888888888888888888888888888888888888888888888888888888888889"
         ],
         "moment_at_application_B_Nm": [
           "0",
-          "0",
+          "-270.22058823529411764705882352941176470588235294117647058823529411764705882352941",
           "0"
         ],
         "transport_moment_B_Nm": [
           "0",
-          "0",
+          "270.22058823529411764705882352941176470588235294117647058823529411764705882352942",
           "0"
         ],
         "moment_about_CoM_B_Nm": [
           "0",
-          "0",
+          "0.00000000000000000000000000000000000000000000000000000000000000000000000000001",
           "0"
         ]
       },
@@ -120,24 +144,24 @@
       },
       "closure": {
         "force_total_B_N": [
-          "38.75",
+          "-94.55882352941176470588235294117647058823529411764705882352941176470588235294118",
           "0",
           "0"
         ],
         "moment_total_about_CoM_B_Nm": [
           "0",
-          "0",
+          "0.00000000000000000000000000000000000000000000000000000000000000000000000000001",
           "0"
         ]
       },
       "rigid_derivative_at_tick0": {
         "force_total_I_N": [
-          "38.75",
+          "-94.55882352941176470588235294117647058823529411764705882352941176470588235294118",
           "0",
           "0"
         ],
         "acceleration_I_mps2": [
-          "0.3875",
+          "-0.9455882352941176470588235294117647058823529411764705882352941176470588235294118",
           "0",
           "-9.80665"
         ],
@@ -153,12 +177,12 @@
         ],
         "net_moment_B_Nm": [
           "0",
-          "0",
+          "0.00000000000000000000000000000000000000000000000000000000000000000000000000001",
           "0"
         ],
         "angular_acceleration_B_radps2": [
           "0",
-          "0",
+          "0.0000000000000000000000000000000000000000000000000000000000000000000000000000005",
           "0"
         ],
         "q_derivative_I_B_per_s": [
@@ -172,12 +196,12 @@
         "tick": 1,
         "time_s": "0.1",
         "position_I_m": [
-          "11.0019375",
+          "10.995272058823529411764705882352941176470588235294117647058823529411764705882353",
           "0",
           "999.95096675"
         ],
         "velocity_I_mps": [
-          "110.03875",
+          "109.90544117647058823529411764705882352941176470588235294117647058823529411764706",
           "0",
           "-0.980665"
         ],
@@ -216,6 +240,8 @@
     "INVALID-YYZ-FROZEN-INTERVAL-SAMPLE-TICK-MISMATCH",
     "INVALID-YYZ-FROZEN-INTERVAL-INTERVAL-MISMATCH",
     "INVALID-YYZ-FROZEN-INTERVAL-REVISION-MISMATCH",
+    "INVALID-YYZ-FROZEN-INTERVAL-LOOKUP-TABLE-ID",
+    "INVALID-YYZ-FROZEN-INTERVAL-LOOKUP-MACH-HIGH",
     "INVALID-YYZ-FROZEN-INTERVAL-NONPOSITIVE-DT",
     "INVALID-YYZ-FROZEN-INTERVAL-NONPOSITIVE-MASS",
     "INVALID-YYZ-FROZEN-INTERVAL-ZERO-QUATERNION"
@@ -231,14 +257,9 @@
       ],
       "observed_dynamic_pressure_Pa": "8820",
       "observed_force_total_B_N": [
-        "11.8",
+        "-200.91764705882352941176470588235294117647058823529411764705882352941176470588235",
         "0",
-        "0"
-      ],
-      "observed_terminal_position_I_m": [
-        "11.00059",
-        "0",
-        "999.95096675"
+        "0.000000000000000000000000000000000000000000000000000000000000000000000000000003528"
       ],
       "max_abs_physical_difference": "2695"
     },
@@ -247,17 +268,17 @@
       "status": "rejected",
       "observed_integration_mass_kg": "99.95",
       "observed_acceleration_I_mps2": [
-        "0.38769384692346173086543271635817908954477238619309654827413706853426713356678339",
+        "-0.94606126592708118765264985433893417296883735985639878762910867198305034870376368",
         "0",
         "-9.80665"
       ],
       "observed_terminal_position_I_m": [
-        "11.001938469234617308654327163581790895447723861930965482741370685342671335667834",
+        "10.995269693670364594061736750728305329135155813200718006061854456640084748256481",
         "0",
         "999.95096675"
       ],
       "observed_terminal_velocity_I_mps": [
-        "110.03876938469234617308654327163581790895447723861930965482741370685342671335668",
+        "109.90539387340729188123473501456610658270311626401436012123708913280169496512962",
         "0",
         "-0.980665"
       ],
@@ -273,15 +294,38 @@
       ],
       "observed_moment_total_about_CoM_B_Nm": [
         "0",
-        "0",
+        "0.00000000000000000000000000000000000000000000000000000000000000000000000000001",
         "-20"
       ],
       "observed_angular_acceleration_B_radps2": [
         "0",
-        "0",
+        "0.0000000000000000000000000000000000000000000000000000000000000000000000000000005",
         "-0.66666666666666666666666666666666666666666666666666666666666666666666666666666668"
       ],
       "max_abs_physical_difference": "20"
+    },
+    {
+      "id": "MUTATION-YYZ-FROZEN-INTERVAL-NEAREST-AERO-LOOKUP",
+      "status": "rejected",
+      "observed_coefficients_CA_CY_CN_Cl_Cm_Cn": [
+        "0.05",
+        "-0.0245",
+        "0.0805",
+        "-0.005",
+        "-0.106",
+        "0.00785"
+      ],
+      "observed_force_total_B_N": [
+        "-206.25",
+        "-150.0625",
+        "-493.0625"
+      ],
+      "observed_moment_total_about_CoM_B_Nm": [
+        "-239.04513888888888888888888888888888888888888888888888888888888888888888888888889",
+        "-223.90277777777777777777777777777777777777777777777777777777777777777777777777777",
+        "48.08125"
+      ],
+      "max_abs_physical_difference": "493.0625"
     }
   ]
 }
