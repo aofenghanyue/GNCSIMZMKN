@@ -1,0 +1,75 @@
+{
+  "schema_version": "gnczmkn.r0-hardware-profile/1",
+  "profile_id": "R0-LOCAL-WIN11-INTEL12700K-HYPERV-001",
+  "status": "observation_only_with_caveats",
+  "qualification": false,
+  "captured_date": "2026-08-15",
+  "cpu": {
+    "vendor": "GenuineIntel",
+    "model_name": "12th Gen Intel(R) Core(TM) i7-12700K",
+    "cpuid_family": 6,
+    "cpuid_model": 151,
+    "cpuid_stepping": 2,
+    "sockets": 1,
+    "physical_cores": 12,
+    "logical_processors": 20,
+    "smt_or_hybrid_topology": "present_hybrid_details_unavailable",
+    "l2_cache_bytes_reported": 12582912,
+    "l3_cache_bytes_reported": 26214400,
+    "maximum_clock_mhz_reported": 3600,
+    "architecture": "x86_64"
+  },
+  "memory": {
+    "physical_bytes_reported": 34137300992,
+    "installed_module_bytes": 34359738368,
+    "module_count": 2,
+    "configured_clock_mhz": 3200,
+    "channel_topology": "unavailable"
+  },
+  "os": {
+    "family": "Windows 11 Pro",
+    "version": "10.0.26100",
+    "build": "26100",
+    "architecture": "x64"
+  },
+  "virtualization": {
+    "hypervisor_present": true,
+    "hypervisor_identity": "unavailable"
+  },
+  "firmware": {
+    "vendor": "American Megatrends International, LLC.",
+    "bios_version": "1.30",
+    "release_date": "2022-03-23",
+    "performance_profile": "unavailable"
+  },
+  "power": {
+    "scheme_id": "8c5e7fda-e8bf-4a96-9a85-a6e23a8c635c",
+    "scheme_name": "High performance",
+    "turbo_frequency_policy": "unavailable"
+  },
+  "process_policy": {
+    "priority": "Normal",
+    "affinity": "all_20_reported_logical_processors",
+    "worker_threads": 1,
+    "concurrent_workload_control": "best_effort_local_desktop"
+  },
+  "clock": {
+    "source": ".NET Stopwatch / Windows high-resolution performance counter",
+    "is_high_resolution": true,
+    "reported_frequency_hz": 10000000,
+    "per_run_overhead_calibration_required": true
+  },
+  "capture": {
+    "tools": ["PowerShell Get-CimInstance", "powercfg", ".NET Stopwatch"],
+    "expected_os_family_for_baseline_generation": "Windows",
+    "expected_logical_processors_for_baseline_generation": 20,
+    "sensitive_fields_omitted": ["hostname", "username", "serial numbers", "network identifiers", "processor identifier value"]
+  },
+  "limitations": [
+    "Hypervisor is present.",
+    "CPU frequency, temperature and background load are not sampled.",
+    "NUMA, microcode, memory channels and firmware performance settings are unavailable.",
+    "The machine is a shared local desktop without dedicated measurement scheduling.",
+    "This profile supports an observation-only baseline and no performance or realtime qualification."
+  ]
+}

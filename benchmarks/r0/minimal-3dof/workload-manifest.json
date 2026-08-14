@@ -1,0 +1,124 @@
+{
+  "schema_version": "gnczmkn.r0-benchmark-workload/1",
+  "workload_id": "PERF-R0-M3DOF-BATCH-001",
+  "version": 1,
+  "status": "executable_observation_only",
+  "task_id": "R0-PERF-001",
+  "decision_ref": "docs/adr/0011-r0-observation-only-performance-baseline.md",
+  "purpose": "Measure a correctness-gated standalone batch of fixture-local minimal 3DoF RK4 episodes without making a product runtime or realtime claim.",
+  "workload_source": "benchmarks/r0/minimal_3dof_benchmark.cpp",
+  "runner_ref": "tools/r0_performance_baseline.py",
+  "scientific_identity": {
+    "fixture_id": "REF-MINIMAL-3DOF-001",
+    "model_id": "MODEL-MINIMAL-3DOF-LINEAR-TRANSLATION-001",
+    "case_id": "CASE-MIN3D-LINEAR-DRAG-CONVERGENCE",
+    "cases_ref": "fixtures/ref-minimal-3dof/cases.json",
+    "oracle_ref": "oracles/ref-minimal-3dof/reference.json",
+    "independent_reference_ref": "tools/minimal_3dof_reference.py"
+  },
+  "episode": {
+    "dt_s": 0.05,
+    "duration_s": 4.0,
+    "steps_per_episode": 80,
+    "derivative_evaluations_per_step": 4,
+    "base_initial_position_m": [0.0, 0.0, 100.0],
+    "base_initial_velocity_mps": [10.0, -5.0, 20.0],
+    "acceleration_mps2": [1.0, 0.0, -9.80665],
+    "drag_rate_per_s": 0.2,
+    "episode_variation": {
+      "position_scale_m": 0.001,
+      "velocity_scale_mps": 0.0001,
+      "position_patterns": [[1, 23, 11], [7, 29, 14], [11, 31, 15]],
+      "velocity_patterns": [[13, 37, 18], [17, 41, 20], [19, 43, 21]]
+    }
+  },
+  "timing_boundary": {
+    "timed_stage": "rk4-batch-only",
+    "excluded": ["process-launch", "argument-parse", "report-encode", "file-write", "semantic-validation"],
+    "timer": "std::chrono::steady_clock",
+    "output_consumption": "All six final-state components enter a weighted semantic observable validated after the timed stage."
+  },
+  "workload_points": [
+    {"id": "smoke-1", "episodes": 1, "classification": "correctness_smoke"},
+    {"id": "batch-64", "episodes": 64, "classification": "scale_observation"},
+    {"id": "batch-1024", "episodes": 1024, "classification": "scale_observation"},
+    {"id": "batch-16384", "episodes": 16384, "classification": "largest_tested_observation"}
+  ],
+  "size_vector": {
+    "state_dimension_per_episode": 6,
+    "runtime_cells": 0,
+    "sessions": 0,
+    "worker_threads": 1,
+    "allocations_in_timed_loop_by_design": 0,
+    "capacity_claim": "tested_points_only",
+    "product_limit": null,
+    "harness_episode_input_range": [1, 1000000]
+  },
+  "correctness_comparator": {
+    "reference": "independent closed-form linear-drag trajectory",
+    "mean_position_absolute_m": 2e-8,
+    "mean_velocity_absolute_mps": 4e-9,
+    "weighted_observable_absolute": 3e-7,
+    "discrete_fields": "exact"
+  },
+  "determinism_targets": [
+    {
+      "level": "D0",
+      "status": "enforced_for_this_workload",
+      "variation": "debug/release or supported build profiles",
+      "numeric_comparator": "correctness_comparator",
+      "exact_comparator": ["identity", "episodes", "steps", "evaluation-count", "mutation-disposition"]
+    },
+    {
+      "level": "D1",
+      "status": "enforced_for_this_workload",
+      "variation": "fresh processes using the same binary, inputs and single-thread policy",
+      "numeric_comparator": "exact parsed semantic_result",
+      "minimum_fresh_processes": 3
+    },
+    {
+      "level": "D2",
+      "status": "target_pending",
+      "reason": "No cross-build artifact comparator currently combines an approved MSVC/GCC pair."
+    },
+    {
+      "level": "D3",
+      "status": "target_pending",
+      "reason": "CPU ISA, libm, floating environment, affinity and boot profile are not fixed for bitwise qualification."
+    }
+  ],
+  "measurement_profile": {
+    "id": "R0-M3DOF-OBSERVATION-001",
+    "budget_class": "observation_only",
+    "performance_thresholds": [],
+    "baseline_configuration": "release",
+    "correctness_configurations": ["debug", "release"],
+    "warmup_processes_per_point": 2,
+    "measured_processes_per_point": 9,
+    "verification_processes": 3,
+    "process_timeout_s": 30,
+    "clock_calibration_iterations": 20000,
+    "statistics": ["min", "max", "median", "mad", "p95", "mean", "population_stddev"],
+    "raw_sample_retention": true,
+    "outlier_policy": "retain_all_no_posthoc_deletion"
+  },
+  "baseline_hardware_profile_ref": "benchmarks/r0/minimal-3dof/hardware-profile-windows-intel-12700k.json",
+  "baseline_report_ref": "benchmarks/r0/minimal-3dof/baseline-windows-intel-12700k.json",
+  "mutation_checks": [
+    "skip-integrator-output-rejected",
+    "zero-episode-input-rejected",
+    "false-D2-claim-rejected",
+    "aggregate-statistic-tamper-rejected",
+    "sensitive-hardware-field-rejected"
+  ],
+  "not_claimed": [
+    "qualification of the locally observed Windows/MinGW GCC build",
+    "target Session or Compiler performance",
+    "R2 or R3 capacity",
+    "multi-Session throughput",
+    "cross-build D2",
+    "bitwise D3",
+    "performance regression threshold",
+    "soft or hard realtime qualification"
+  ]
+}

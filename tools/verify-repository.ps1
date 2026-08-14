@@ -261,6 +261,30 @@ if ($LASTEXITCODE -ne 0) {
     Add-Error "R0 source-boundary fitness failed: $($sourceBoundaryValidatorOutput -join [Environment]::NewLine)"
 }
 
+$pythonCommand = Get-Command python -ErrorAction SilentlyContinue
+if ($null -eq $pythonCommand) {
+    $pythonCommand = Get-Command python3 -ErrorAction SilentlyContinue
+}
+if ($null -eq $pythonCommand) {
+    Add-Error 'Python is required for the R0 performance baseline validator.'
+}
+else {
+    $performanceValidatorPath = Join-Path $PSScriptRoot 'r0_performance_baseline.py'
+    $performanceValidatorOutput = & $pythonCommand.Source `
+        -I `
+        -B `
+        $performanceValidatorPath `
+        --manifest (Join-Path $repoRoot 'benchmarks\r0\minimal-3dof\workload-manifest.json') `
+        --cases (Join-Path $repoRoot 'fixtures\ref-minimal-3dof\cases.json') `
+        --oracle (Join-Path $repoRoot 'oracles\ref-minimal-3dof\reference.json') `
+        --hardware-profile (Join-Path $repoRoot 'benchmarks\r0\minimal-3dof\hardware-profile-windows-intel-12700k.json') `
+        --baseline (Join-Path $repoRoot 'benchmarks\r0\minimal-3dof\baseline-windows-intel-12700k.json') `
+        --static-only 2>&1
+    if ($LASTEXITCODE -ne 0) {
+        Add-Error "R0 performance baseline conformance failed: $($performanceValidatorOutput -join [Environment]::NewLine)"
+    }
+}
+
 $legacyReproductionValidatorPath = Join-Path $PSScriptRoot 'validate-legacy-reproduction.ps1'
 $legacyReproductionValidatorOutput = & $powerShellHost -NoLogo -NoProfile -ExecutionPolicy Bypass -File $legacyReproductionValidatorPath -Quiet 2>&1
 if ($LASTEXITCODE -ne 0) {
@@ -295,6 +319,7 @@ Write-Host "Validated Markdown files: $($markdownFiles.Count)"
 Write-Host "Validated R0 schema contracts: 3"
 Write-Host "Validated R0 architecture baseline: 1"
 Write-Host "Validated R0 source boundaries: 1"
+Write-Host "Validated R0 performance baseline: 1"
 Write-Host "Validated R0 legacy reproduction: 1"
 Write-Host "Validated R0 scientific convention bundle: 1"
 Write-Host "Validated R0 license/provenance bundle: 1"

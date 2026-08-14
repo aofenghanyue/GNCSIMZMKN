@@ -10,6 +10,7 @@
 - `scientific_conventions_reference.py`：只使用 CPython 标准库计算 R0 单位、frame、时间与被动 Hamilton 四元数参考结果。
 - `validate-scientific-conventions.ps1`：校验 scientific convention fixture，运行 C++/Python 交叉验证、失败路径检查并核对科学结果。
 - `minimal_3dof_reference.py`：以 CPython `decimal` 闭式解生成 minimal 3DoF oracle，并按语义字段验证独立 C++17 RK4 probe 的轨迹、收敛、终止和失败结果。
+- `r0_performance_baseline.py`：运行或静态校验 observation-only minimal 3DoF batch benchmark，复算独立解析正确性、fresh-process D1、四个规模点、raw timing statistics、硬件/build caveat 与五条关键反例；D2/D3 和 wall-time gate 保持未启用。
 - `cavh_formula_reference.py`：以 80 位 CPython `decimal` 独立计算 fixture-local CAVH 抛物线包络、密度/Mach/`CL_star` 导数、Eq17/Eq18 全部中间量和 TDCT 指令，并交叉验证 C++17 probe 的收敛、显式失败与七条科学 mutation；逐式论文一致性保持未声明。
 - `yyz_6dof_core_reference.py`：以 60 位 CPython `decimal` 独立计算已接受的 fixture-local YYZ 刚体公式与解析轨迹，并验证 C++17 probe 的 intermediates、RK4 收敛、ExactGrid 终止、candidate 丢弃和输入域失败路径。
 - `yyz_force_moment_closure_reference.py`：以 60 位 CPython `decimal` 独立计算已接受的 fixture-local `FrozenInterval` 体轴力/矩闭合与解析短轨迹，并验证 C++17 probe 的逐来源力矩搬移、重力分离、贡献顺序等价、输入域失败和物理 mutation。

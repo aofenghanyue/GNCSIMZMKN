@@ -77,6 +77,13 @@ if(GNC_BUILD_TESTS)
     target_compile_features(gnc_minimal_3dof_probe PRIVATE cxx_std_17)
     gnc_enable_warnings(gnc_minimal_3dof_probe)
 
+    # R0 observation-only benchmark: isolated from product modules and Legacy.
+    add_executable(
+        gnc_minimal_3dof_benchmark
+        benchmarks/r0/minimal_3dof_benchmark.cpp)
+    target_compile_features(gnc_minimal_3dof_benchmark PRIVATE cxx_std_17)
+    gnc_enable_warnings(gnc_minimal_3dof_benchmark)
+
     # R0 CAVH scientific oracle: independent formula/guidance qualification.
     add_executable(
         gnc_cavh_formula_probe
@@ -246,6 +253,9 @@ if(GNC_BUILD_TESTS)
         NAME r0.minimal-3dof.probe
         COMMAND gnc_minimal_3dof_probe --self-check)
     add_test(
+        NAME r0.performance-minimal-3dof.probe
+        COMMAND gnc_minimal_3dof_benchmark --self-check)
+    add_test(
         NAME r0.cavh-formula.probe
         COMMAND gnc_cavh_formula_probe --self-check)
     add_test(
@@ -380,6 +390,28 @@ if(GNC_BUILD_TESTS)
             ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-minimal-3dof/reference.json
             --probe
             $<TARGET_FILE:gnc_minimal_3dof_probe>)
+    add_test(
+        NAME r0.performance-minimal-3dof.baseline
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/r0_performance_baseline.py
+            --manifest
+            ${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/r0/minimal-3dof/workload-manifest.json
+            --cases
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-minimal-3dof/cases.json
+            --oracle
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-minimal-3dof/reference.json
+            --hardware-profile
+            ${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/r0/minimal-3dof/hardware-profile-windows-intel-12700k.json
+            --baseline
+            ${CMAKE_CURRENT_SOURCE_DIR}/benchmarks/r0/minimal-3dof/baseline-windows-intel-12700k.json
+            --executable
+            $<TARGET_FILE:gnc_minimal_3dof_benchmark>
+            --configuration
+            $<IF:$<CONFIG:Debug>,debug,release>
+            --verify)
     add_test(
         NAME r0.cavh-formula.oracle
         COMMAND

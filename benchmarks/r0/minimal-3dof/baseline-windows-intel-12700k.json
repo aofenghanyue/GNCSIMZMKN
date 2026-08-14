@@ -1,0 +1,1383 @@
+{
+  "schema_version": "gnczmkn.r0-performance-baseline/1",
+  "baseline_id": "R0-PERF-M3DOF-WIN-INTEL12700K-OBS-001",
+  "task_id": "R0-PERF-001",
+  "status": "observed_with_caveats",
+  "budget_class": "observation_only",
+  "performance_thresholds": [],
+  "generated_utc": "2026-08-14T20:05:57+00:00",
+  "workload_id": "PERF-R0-M3DOF-BATCH-001",
+  "source_artifacts": [
+    {
+      "role": "workload-manifest",
+      "path": "benchmarks/r0/minimal-3dof/workload-manifest.json",
+      "sha256": "e7ae74b22e1180d4321d0c4c56fcffe634acb39164aede6c8a295d752f5aebe3"
+    },
+    {
+      "role": "benchmark-source",
+      "path": "benchmarks/r0/minimal_3dof_benchmark.cpp",
+      "sha256": "37444e54d8b8b4324c667fedb02a82e4d074414b7cf679f834e21d76fbf8457b"
+    },
+    {
+      "role": "benchmark-runner",
+      "path": "tools/r0_performance_baseline.py",
+      "sha256": "9c4f5e0896f57a458fbf8552caaad33d9b841a0c4d2672d20ab040340b132a4b"
+    },
+    {
+      "role": "scientific-cases",
+      "path": "fixtures/ref-minimal-3dof/cases.json",
+      "sha256": "5b033cb8c3984dc865736e8e67058dfdda7c084876117016777a17e8a7f5bd91"
+    },
+    {
+      "role": "scientific-oracle",
+      "path": "oracles/ref-minimal-3dof/reference.json",
+      "sha256": "294540e0c5f4d1bc9ed9317dc705ab4f30f3a9265762bec8f2ea777e4a684f67"
+    },
+    {
+      "role": "hardware-profile",
+      "path": "benchmarks/r0/minimal-3dof/hardware-profile-windows-intel-12700k.json",
+      "sha256": "f97a620c1eda268ed61efd8d493fd1e9d26a8533a1113fcd918b40a75923143d"
+    }
+  ],
+  "hardware_profile_id": "R0-LOCAL-WIN11-INTEL12700K-HYPERV-001",
+  "run_environment": {
+    "os_family": "Windows",
+    "os_release": "11",
+    "os_version": "10.0.26100",
+    "architecture": "AMD64",
+    "logical_processors_visible": 20,
+    "python_implementation": "CPython",
+    "python_version": "3.12.7",
+    "process_priority_policy": "unchanged",
+    "affinity_policy": "unchanged",
+    "worker_threads": 1,
+    "environment_validity": "valid_with_profile_caveats"
+  },
+  "clock_calibration": {
+    "clock": "python-perf_counter_ns",
+    "implementation": "QueryPerformanceCounter()",
+    "monotonic": true,
+    "adjustable": false,
+    "reported_resolution_s": 1e-07,
+    "iterations": 20000,
+    "minimum_nonzero_delta_ns": 100,
+    "median_positive_delta_ns": 100,
+    "positive_delta_count": 19991,
+    "subtracted_from_workload_samples": false
+  },
+  "build_profile": {
+    "configuration": "release",
+    "compiler_identity": "gcc-15.1.0",
+    "qualification": "unqualified_local_windows_mingw_observation",
+    "product_qualification": false,
+    "cplusplus_standard": "C++17",
+    "executable_name": "gnc_minimal_3dof_benchmark.exe",
+    "executable_bytes": 142389,
+    "executable_sha256": "f0ffe64d834416a24328a7fcf7a6ed60ea131e0902356d880c56dbdc84c27387",
+    "instrumentation": "benchmark steady_clock only"
+  },
+  "determinism": {
+    "D0": "passed_independent_analytic_tolerance",
+    "D1": "passed_exact_fresh_process_semantic_results",
+    "D2": "target_pending_cross_build_comparator",
+    "D3": "target_pending_fixed_platform_and_fenv"
+  },
+  "capacity": {
+    "claim": "tested_points_only",
+    "largest_tested_episodes": 16384,
+    "product_limit": null
+  },
+  "points": [
+    {
+      "point_id": "smoke-1",
+      "episodes": 1,
+      "warmup_sample_count": 2,
+      "measured_sample_count": 9,
+      "raw_samples": [
+        {
+          "sample_id": "smoke-1-warmup-01",
+          "warmup": true,
+          "workload_elapsed_ns": 1100,
+          "process_elapsed_ns": 7658000,
+          "semantic_result": {
+            "completed_episodes": 1,
+            "steps_per_episode": 80,
+            "completed_steps": 80,
+            "derivative_evaluations": 320,
+            "weight_sum": 1,
+            "mean_final_position_m": [
+              33.75081985699163,
+              -13.786282606672833,
+              93.9192743829715
+            ],
+            "mean_final_velocity_mps": [
+              7.24583602860167,
+              -2.247543478665431,
+              -18.015554876594305
+            ],
+            "weighted_observable": 253.7840044909966
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "smoke-1-warmup-02",
+          "warmup": true,
+          "workload_elapsed_ns": 1100,
+          "process_elapsed_ns": 6862100,
+          "semantic_result": {
+            "completed_episodes": 1,
+            "steps_per_episode": 80,
+            "completed_steps": 80,
+            "derivative_evaluations": 320,
+            "weight_sum": 1,
+            "mean_final_position_m": [
+              33.75081985699163,
+              -13.786282606672833,
+              93.9192743829715
+            ],
+            "mean_final_velocity_mps": [
+              7.24583602860167,
+              -2.247543478665431,
+              -18.015554876594305
+            ],
+            "weighted_observable": 253.7840044909966
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "smoke-1-measured-01",
+          "warmup": false,
+          "workload_elapsed_ns": 1000,
+          "process_elapsed_ns": 6978900,
+          "semantic_result": {
+            "completed_episodes": 1,
+            "steps_per_episode": 80,
+            "completed_steps": 80,
+            "derivative_evaluations": 320,
+            "weight_sum": 1,
+            "mean_final_position_m": [
+              33.75081985699163,
+              -13.786282606672833,
+              93.9192743829715
+            ],
+            "mean_final_velocity_mps": [
+              7.24583602860167,
+              -2.247543478665431,
+              -18.015554876594305
+            ],
+            "weighted_observable": 253.7840044909966
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "smoke-1-measured-02",
+          "warmup": false,
+          "workload_elapsed_ns": 1100,
+          "process_elapsed_ns": 7487100,
+          "semantic_result": {
+            "completed_episodes": 1,
+            "steps_per_episode": 80,
+            "completed_steps": 80,
+            "derivative_evaluations": 320,
+            "weight_sum": 1,
+            "mean_final_position_m": [
+              33.75081985699163,
+              -13.786282606672833,
+              93.9192743829715
+            ],
+            "mean_final_velocity_mps": [
+              7.24583602860167,
+              -2.247543478665431,
+              -18.015554876594305
+            ],
+            "weighted_observable": 253.7840044909966
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "smoke-1-measured-03",
+          "warmup": false,
+          "workload_elapsed_ns": 1100,
+          "process_elapsed_ns": 7218900,
+          "semantic_result": {
+            "completed_episodes": 1,
+            "steps_per_episode": 80,
+            "completed_steps": 80,
+            "derivative_evaluations": 320,
+            "weight_sum": 1,
+            "mean_final_position_m": [
+              33.75081985699163,
+              -13.786282606672833,
+              93.9192743829715
+            ],
+            "mean_final_velocity_mps": [
+              7.24583602860167,
+              -2.247543478665431,
+              -18.015554876594305
+            ],
+            "weighted_observable": 253.7840044909966
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "smoke-1-measured-04",
+          "warmup": false,
+          "workload_elapsed_ns": 1000,
+          "process_elapsed_ns": 7361700,
+          "semantic_result": {
+            "completed_episodes": 1,
+            "steps_per_episode": 80,
+            "completed_steps": 80,
+            "derivative_evaluations": 320,
+            "weight_sum": 1,
+            "mean_final_position_m": [
+              33.75081985699163,
+              -13.786282606672833,
+              93.9192743829715
+            ],
+            "mean_final_velocity_mps": [
+              7.24583602860167,
+              -2.247543478665431,
+              -18.015554876594305
+            ],
+            "weighted_observable": 253.7840044909966
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "smoke-1-measured-05",
+          "warmup": false,
+          "workload_elapsed_ns": 1100,
+          "process_elapsed_ns": 7401900,
+          "semantic_result": {
+            "completed_episodes": 1,
+            "steps_per_episode": 80,
+            "completed_steps": 80,
+            "derivative_evaluations": 320,
+            "weight_sum": 1,
+            "mean_final_position_m": [
+              33.75081985699163,
+              -13.786282606672833,
+              93.9192743829715
+            ],
+            "mean_final_velocity_mps": [
+              7.24583602860167,
+              -2.247543478665431,
+              -18.015554876594305
+            ],
+            "weighted_observable": 253.7840044909966
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "smoke-1-measured-06",
+          "warmup": false,
+          "workload_elapsed_ns": 1100,
+          "process_elapsed_ns": 6929400,
+          "semantic_result": {
+            "completed_episodes": 1,
+            "steps_per_episode": 80,
+            "completed_steps": 80,
+            "derivative_evaluations": 320,
+            "weight_sum": 1,
+            "mean_final_position_m": [
+              33.75081985699163,
+              -13.786282606672833,
+              93.9192743829715
+            ],
+            "mean_final_velocity_mps": [
+              7.24583602860167,
+              -2.247543478665431,
+              -18.015554876594305
+            ],
+            "weighted_observable": 253.7840044909966
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "smoke-1-measured-07",
+          "warmup": false,
+          "workload_elapsed_ns": 1100,
+          "process_elapsed_ns": 7195000,
+          "semantic_result": {
+            "completed_episodes": 1,
+            "steps_per_episode": 80,
+            "completed_steps": 80,
+            "derivative_evaluations": 320,
+            "weight_sum": 1,
+            "mean_final_position_m": [
+              33.75081985699163,
+              -13.786282606672833,
+              93.9192743829715
+            ],
+            "mean_final_velocity_mps": [
+              7.24583602860167,
+              -2.247543478665431,
+              -18.015554876594305
+            ],
+            "weighted_observable": 253.7840044909966
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "smoke-1-measured-08",
+          "warmup": false,
+          "workload_elapsed_ns": 1100,
+          "process_elapsed_ns": 6833100,
+          "semantic_result": {
+            "completed_episodes": 1,
+            "steps_per_episode": 80,
+            "completed_steps": 80,
+            "derivative_evaluations": 320,
+            "weight_sum": 1,
+            "mean_final_position_m": [
+              33.75081985699163,
+              -13.786282606672833,
+              93.9192743829715
+            ],
+            "mean_final_velocity_mps": [
+              7.24583602860167,
+              -2.247543478665431,
+              -18.015554876594305
+            ],
+            "weighted_observable": 253.7840044909966
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "smoke-1-measured-09",
+          "warmup": false,
+          "workload_elapsed_ns": 1100,
+          "process_elapsed_ns": 7244500,
+          "semantic_result": {
+            "completed_episodes": 1,
+            "steps_per_episode": 80,
+            "completed_steps": 80,
+            "derivative_evaluations": 320,
+            "weight_sum": 1,
+            "mean_final_position_m": [
+              33.75081985699163,
+              -13.786282606672833,
+              93.9192743829715
+            ],
+            "mean_final_velocity_mps": [
+              7.24583602860167,
+              -2.247543478665431,
+              -18.015554876594305
+            ],
+            "weighted_observable": 253.7840044909966
+          },
+          "status": "valid_with_profile_caveats"
+        }
+      ],
+      "statistics": {
+        "workload_elapsed_ns": {
+          "count": 9,
+          "min": 1000,
+          "max": 1100,
+          "median": 1100,
+          "mad": 0,
+          "p95": 1100.0,
+          "mean": 1077.7777777777778,
+          "population_stddev": 41.5739709641549
+        },
+        "process_elapsed_ns": {
+          "count": 9,
+          "min": 6833100,
+          "max": 7487100,
+          "median": 7218900,
+          "mad": 183000,
+          "p95": 7453020.0,
+          "mean": 7183388.888888889,
+          "population_stddev": 212378.38059277568
+        },
+        "steps_per_second": {
+          "count": 9,
+          "min": 72727272.72727273,
+          "max": 80000000.0,
+          "median": 72727272.72727273,
+          "mad": 0.0,
+          "p95": 80000000.0,
+          "mean": 74343434.34343435,
+          "population_stddev": 3023561.5246658083
+        }
+      },
+      "determinism": {
+        "requested": "D1",
+        "achieved": "D1",
+        "semantic_comparator": "exact parsed semantic_result"
+      }
+    },
+    {
+      "point_id": "batch-64",
+      "episodes": 64,
+      "warmup_sample_count": 2,
+      "measured_sample_count": 9,
+      "raw_samples": [
+        {
+          "sample_id": "batch-64-warmup-01",
+          "warmup": true,
+          "workload_elapsed_ns": 63000,
+          "process_elapsed_ns": 7216300,
+          "semantic_result": {
+            "completed_episodes": 64,
+            "steps_per_episode": 80,
+            "completed_steps": 5120,
+            "derivative_evaluations": 20480,
+            "weight_sum": 995,
+            "mean_final_position_m": [
+              33.7659437077903,
+              -13.76695682384139,
+              93.93985850254975
+            ],
+            "mean_final_velocity_mps": [
+              7.246623758441944,
+              -2.2466539477317222,
+              -18.014595138009938
+            ],
+            "weighted_observable": 253.99207918468858
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-64-warmup-02",
+          "warmup": true,
+          "workload_elapsed_ns": 63000,
+          "process_elapsed_ns": 9450700,
+          "semantic_result": {
+            "completed_episodes": 64,
+            "steps_per_episode": 80,
+            "completed_steps": 5120,
+            "derivative_evaluations": 20480,
+            "weight_sum": 995,
+            "mean_final_position_m": [
+              33.7659437077903,
+              -13.76695682384139,
+              93.93985850254975
+            ],
+            "mean_final_velocity_mps": [
+              7.246623758441944,
+              -2.2466539477317222,
+              -18.014595138009938
+            ],
+            "weighted_observable": 253.99207918468858
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-64-measured-01",
+          "warmup": false,
+          "workload_elapsed_ns": 64700,
+          "process_elapsed_ns": 8994000,
+          "semantic_result": {
+            "completed_episodes": 64,
+            "steps_per_episode": 80,
+            "completed_steps": 5120,
+            "derivative_evaluations": 20480,
+            "weight_sum": 995,
+            "mean_final_position_m": [
+              33.7659437077903,
+              -13.76695682384139,
+              93.93985850254975
+            ],
+            "mean_final_velocity_mps": [
+              7.246623758441944,
+              -2.2466539477317222,
+              -18.014595138009938
+            ],
+            "weighted_observable": 253.99207918468858
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-64-measured-02",
+          "warmup": false,
+          "workload_elapsed_ns": 64700,
+          "process_elapsed_ns": 8576500,
+          "semantic_result": {
+            "completed_episodes": 64,
+            "steps_per_episode": 80,
+            "completed_steps": 5120,
+            "derivative_evaluations": 20480,
+            "weight_sum": 995,
+            "mean_final_position_m": [
+              33.7659437077903,
+              -13.76695682384139,
+              93.93985850254975
+            ],
+            "mean_final_velocity_mps": [
+              7.246623758441944,
+              -2.2466539477317222,
+              -18.014595138009938
+            ],
+            "weighted_observable": 253.99207918468858
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-64-measured-03",
+          "warmup": false,
+          "workload_elapsed_ns": 64500,
+          "process_elapsed_ns": 7261800,
+          "semantic_result": {
+            "completed_episodes": 64,
+            "steps_per_episode": 80,
+            "completed_steps": 5120,
+            "derivative_evaluations": 20480,
+            "weight_sum": 995,
+            "mean_final_position_m": [
+              33.7659437077903,
+              -13.76695682384139,
+              93.93985850254975
+            ],
+            "mean_final_velocity_mps": [
+              7.246623758441944,
+              -2.2466539477317222,
+              -18.014595138009938
+            ],
+            "weighted_observable": 253.99207918468858
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-64-measured-04",
+          "warmup": false,
+          "workload_elapsed_ns": 64800,
+          "process_elapsed_ns": 7044200,
+          "semantic_result": {
+            "completed_episodes": 64,
+            "steps_per_episode": 80,
+            "completed_steps": 5120,
+            "derivative_evaluations": 20480,
+            "weight_sum": 995,
+            "mean_final_position_m": [
+              33.7659437077903,
+              -13.76695682384139,
+              93.93985850254975
+            ],
+            "mean_final_velocity_mps": [
+              7.246623758441944,
+              -2.2466539477317222,
+              -18.014595138009938
+            ],
+            "weighted_observable": 253.99207918468858
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-64-measured-05",
+          "warmup": false,
+          "workload_elapsed_ns": 64500,
+          "process_elapsed_ns": 6931200,
+          "semantic_result": {
+            "completed_episodes": 64,
+            "steps_per_episode": 80,
+            "completed_steps": 5120,
+            "derivative_evaluations": 20480,
+            "weight_sum": 995,
+            "mean_final_position_m": [
+              33.7659437077903,
+              -13.76695682384139,
+              93.93985850254975
+            ],
+            "mean_final_velocity_mps": [
+              7.246623758441944,
+              -2.2466539477317222,
+              -18.014595138009938
+            ],
+            "weighted_observable": 253.99207918468858
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-64-measured-06",
+          "warmup": false,
+          "workload_elapsed_ns": 64300,
+          "process_elapsed_ns": 8211900,
+          "semantic_result": {
+            "completed_episodes": 64,
+            "steps_per_episode": 80,
+            "completed_steps": 5120,
+            "derivative_evaluations": 20480,
+            "weight_sum": 995,
+            "mean_final_position_m": [
+              33.7659437077903,
+              -13.76695682384139,
+              93.93985850254975
+            ],
+            "mean_final_velocity_mps": [
+              7.246623758441944,
+              -2.2466539477317222,
+              -18.014595138009938
+            ],
+            "weighted_observable": 253.99207918468858
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-64-measured-07",
+          "warmup": false,
+          "workload_elapsed_ns": 64300,
+          "process_elapsed_ns": 8332400,
+          "semantic_result": {
+            "completed_episodes": 64,
+            "steps_per_episode": 80,
+            "completed_steps": 5120,
+            "derivative_evaluations": 20480,
+            "weight_sum": 995,
+            "mean_final_position_m": [
+              33.7659437077903,
+              -13.76695682384139,
+              93.93985850254975
+            ],
+            "mean_final_velocity_mps": [
+              7.246623758441944,
+              -2.2466539477317222,
+              -18.014595138009938
+            ],
+            "weighted_observable": 253.99207918468858
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-64-measured-08",
+          "warmup": false,
+          "workload_elapsed_ns": 64100,
+          "process_elapsed_ns": 8300900,
+          "semantic_result": {
+            "completed_episodes": 64,
+            "steps_per_episode": 80,
+            "completed_steps": 5120,
+            "derivative_evaluations": 20480,
+            "weight_sum": 995,
+            "mean_final_position_m": [
+              33.7659437077903,
+              -13.76695682384139,
+              93.93985850254975
+            ],
+            "mean_final_velocity_mps": [
+              7.246623758441944,
+              -2.2466539477317222,
+              -18.014595138009938
+            ],
+            "weighted_observable": 253.99207918468858
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-64-measured-09",
+          "warmup": false,
+          "workload_elapsed_ns": 64700,
+          "process_elapsed_ns": 7008700,
+          "semantic_result": {
+            "completed_episodes": 64,
+            "steps_per_episode": 80,
+            "completed_steps": 5120,
+            "derivative_evaluations": 20480,
+            "weight_sum": 995,
+            "mean_final_position_m": [
+              33.7659437077903,
+              -13.76695682384139,
+              93.93985850254975
+            ],
+            "mean_final_velocity_mps": [
+              7.246623758441944,
+              -2.2466539477317222,
+              -18.014595138009938
+            ],
+            "weighted_observable": 253.99207918468858
+          },
+          "status": "valid_with_profile_caveats"
+        }
+      ],
+      "statistics": {
+        "workload_elapsed_ns": {
+          "count": 9,
+          "min": 64100,
+          "max": 64800,
+          "median": 64500,
+          "mad": 200,
+          "p95": 64760.0,
+          "mean": 64511.11111111111,
+          "population_stddev": 223.330569358242
+        },
+        "process_elapsed_ns": {
+          "count": 9,
+          "min": 6931200,
+          "max": 8994000,
+          "median": 8211900,
+          "mad": 782100,
+          "p95": 8827000.0,
+          "mean": 7851288.888888889,
+          "population_stddev": 741678.838019147
+        },
+        "steps_per_second": {
+          "count": 9,
+          "min": 79012345.67901234,
+          "max": 79875195.00780031,
+          "median": 79379844.9612403,
+          "mad": 245378.19153396785,
+          "p95": 79775816.8491592,
+          "mean": 79367125.5712008,
+          "population_stddev": 275182.06661947817
+        }
+      },
+      "determinism": {
+        "requested": "D1",
+        "achieved": "D1",
+        "semantic_comparator": "exact parsed semantic_result"
+      }
+    },
+    {
+      "point_id": "batch-1024",
+      "episodes": 1024,
+      "warmup_sample_count": 2,
+      "measured_sample_count": 9,
+      "raw_samples": [
+        {
+          "sample_id": "batch-1024-warmup-01",
+          "warmup": true,
+          "workload_elapsed_ns": 1030400,
+          "process_elapsed_ns": 8318000,
+          "semantic_result": {
+            "completed_episodes": 1024,
+            "steps_per_episode": 80,
+            "completed_steps": 81920,
+            "derivative_evaluations": 327680,
+            "weight_sum": 16369,
+            "mean_final_position_m": [
+              33.76670391448373,
+              -13.76676720621868,
+              93.94003962935173
+            ],
+            "mean_final_velocity_mps": [
+              7.246643592103255,
+              -2.2466449962562622,
+              -18.014611636807867
+            ],
+            "weighted_observable": 253.994489702734
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-1024-warmup-02",
+          "warmup": true,
+          "workload_elapsed_ns": 1010700,
+          "process_elapsed_ns": 9554700,
+          "semantic_result": {
+            "completed_episodes": 1024,
+            "steps_per_episode": 80,
+            "completed_steps": 81920,
+            "derivative_evaluations": 327680,
+            "weight_sum": 16369,
+            "mean_final_position_m": [
+              33.76670391448373,
+              -13.76676720621868,
+              93.94003962935173
+            ],
+            "mean_final_velocity_mps": [
+              7.246643592103255,
+              -2.2466449962562622,
+              -18.014611636807867
+            ],
+            "weighted_observable": 253.994489702734
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-1024-measured-01",
+          "warmup": false,
+          "workload_elapsed_ns": 1020500,
+          "process_elapsed_ns": 8245200,
+          "semantic_result": {
+            "completed_episodes": 1024,
+            "steps_per_episode": 80,
+            "completed_steps": 81920,
+            "derivative_evaluations": 327680,
+            "weight_sum": 16369,
+            "mean_final_position_m": [
+              33.76670391448373,
+              -13.76676720621868,
+              93.94003962935173
+            ],
+            "mean_final_velocity_mps": [
+              7.246643592103255,
+              -2.2466449962562622,
+              -18.014611636807867
+            ],
+            "weighted_observable": 253.994489702734
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-1024-measured-02",
+          "warmup": false,
+          "workload_elapsed_ns": 1009400,
+          "process_elapsed_ns": 7864800,
+          "semantic_result": {
+            "completed_episodes": 1024,
+            "steps_per_episode": 80,
+            "completed_steps": 81920,
+            "derivative_evaluations": 327680,
+            "weight_sum": 16369,
+            "mean_final_position_m": [
+              33.76670391448373,
+              -13.76676720621868,
+              93.94003962935173
+            ],
+            "mean_final_velocity_mps": [
+              7.246643592103255,
+              -2.2466449962562622,
+              -18.014611636807867
+            ],
+            "weighted_observable": 253.994489702734
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-1024-measured-03",
+          "warmup": false,
+          "workload_elapsed_ns": 1007300,
+          "process_elapsed_ns": 7896600,
+          "semantic_result": {
+            "completed_episodes": 1024,
+            "steps_per_episode": 80,
+            "completed_steps": 81920,
+            "derivative_evaluations": 327680,
+            "weight_sum": 16369,
+            "mean_final_position_m": [
+              33.76670391448373,
+              -13.76676720621868,
+              93.94003962935173
+            ],
+            "mean_final_velocity_mps": [
+              7.246643592103255,
+              -2.2466449962562622,
+              -18.014611636807867
+            ],
+            "weighted_observable": 253.994489702734
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-1024-measured-04",
+          "warmup": false,
+          "workload_elapsed_ns": 1014700,
+          "process_elapsed_ns": 7746100,
+          "semantic_result": {
+            "completed_episodes": 1024,
+            "steps_per_episode": 80,
+            "completed_steps": 81920,
+            "derivative_evaluations": 327680,
+            "weight_sum": 16369,
+            "mean_final_position_m": [
+              33.76670391448373,
+              -13.76676720621868,
+              93.94003962935173
+            ],
+            "mean_final_velocity_mps": [
+              7.246643592103255,
+              -2.2466449962562622,
+              -18.014611636807867
+            ],
+            "weighted_observable": 253.994489702734
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-1024-measured-05",
+          "warmup": false,
+          "workload_elapsed_ns": 1023400,
+          "process_elapsed_ns": 7803500,
+          "semantic_result": {
+            "completed_episodes": 1024,
+            "steps_per_episode": 80,
+            "completed_steps": 81920,
+            "derivative_evaluations": 327680,
+            "weight_sum": 16369,
+            "mean_final_position_m": [
+              33.76670391448373,
+              -13.76676720621868,
+              93.94003962935173
+            ],
+            "mean_final_velocity_mps": [
+              7.246643592103255,
+              -2.2466449962562622,
+              -18.014611636807867
+            ],
+            "weighted_observable": 253.994489702734
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-1024-measured-06",
+          "warmup": false,
+          "workload_elapsed_ns": 1000700,
+          "process_elapsed_ns": 8526500,
+          "semantic_result": {
+            "completed_episodes": 1024,
+            "steps_per_episode": 80,
+            "completed_steps": 81920,
+            "derivative_evaluations": 327680,
+            "weight_sum": 16369,
+            "mean_final_position_m": [
+              33.76670391448373,
+              -13.76676720621868,
+              93.94003962935173
+            ],
+            "mean_final_velocity_mps": [
+              7.246643592103255,
+              -2.2466449962562622,
+              -18.014611636807867
+            ],
+            "weighted_observable": 253.994489702734
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-1024-measured-07",
+          "warmup": false,
+          "workload_elapsed_ns": 1002400,
+          "process_elapsed_ns": 9122200,
+          "semantic_result": {
+            "completed_episodes": 1024,
+            "steps_per_episode": 80,
+            "completed_steps": 81920,
+            "derivative_evaluations": 327680,
+            "weight_sum": 16369,
+            "mean_final_position_m": [
+              33.76670391448373,
+              -13.76676720621868,
+              93.94003962935173
+            ],
+            "mean_final_velocity_mps": [
+              7.246643592103255,
+              -2.2466449962562622,
+              -18.014611636807867
+            ],
+            "weighted_observable": 253.994489702734
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-1024-measured-08",
+          "warmup": false,
+          "workload_elapsed_ns": 1008300,
+          "process_elapsed_ns": 8312300,
+          "semantic_result": {
+            "completed_episodes": 1024,
+            "steps_per_episode": 80,
+            "completed_steps": 81920,
+            "derivative_evaluations": 327680,
+            "weight_sum": 16369,
+            "mean_final_position_m": [
+              33.76670391448373,
+              -13.76676720621868,
+              93.94003962935173
+            ],
+            "mean_final_velocity_mps": [
+              7.246643592103255,
+              -2.2466449962562622,
+              -18.014611636807867
+            ],
+            "weighted_observable": 253.994489702734
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-1024-measured-09",
+          "warmup": false,
+          "workload_elapsed_ns": 1000700,
+          "process_elapsed_ns": 8233400,
+          "semantic_result": {
+            "completed_episodes": 1024,
+            "steps_per_episode": 80,
+            "completed_steps": 81920,
+            "derivative_evaluations": 327680,
+            "weight_sum": 16369,
+            "mean_final_position_m": [
+              33.76670391448373,
+              -13.76676720621868,
+              93.94003962935173
+            ],
+            "mean_final_velocity_mps": [
+              7.246643592103255,
+              -2.2466449962562622,
+              -18.014611636807867
+            ],
+            "weighted_observable": 253.994489702734
+          },
+          "status": "valid_with_profile_caveats"
+        }
+      ],
+      "statistics": {
+        "workload_elapsed_ns": {
+          "count": 9,
+          "min": 1000700,
+          "max": 1023400,
+          "median": 1008300,
+          "mad": 6400,
+          "p95": 1022240.0,
+          "mean": 1009711.1111111111,
+          "population_stddev": 7834.601946131085
+        },
+        "process_elapsed_ns": {
+          "count": 9,
+          "min": 7746100,
+          "max": 9122200,
+          "median": 8233400,
+          "mad": 336800,
+          "p95": 8883920.0,
+          "mean": 8194511.111111111,
+          "population_stddev": 413682.90176157455
+        },
+        "steps_per_second": {
+          "count": 9,
+          "min": 80046902.481923,
+          "max": 81862696.1127211,
+          "median": 81245661.01358722,
+          "mad": 512439.3717226237,
+          "p95": 81862696.1127211,
+          "mean": 81136984.03570674,
+          "population_stddev": 627269.3815198704
+        }
+      },
+      "determinism": {
+        "requested": "D1",
+        "achieved": "D1",
+        "semantic_comparator": "exact parsed semantic_result"
+      }
+    },
+    {
+      "point_id": "batch-16384",
+      "episodes": 16384,
+      "warmup_sample_count": 2,
+      "measured_sample_count": 9,
+      "raw_samples": [
+        {
+          "sample_id": "batch-16384-warmup-01",
+          "warmup": true,
+          "workload_elapsed_ns": 16256200,
+          "process_elapsed_ns": 23858100,
+          "semantic_result": {
+            "completed_episodes": 16384,
+            "steps_per_episode": 80,
+            "completed_steps": 1310720,
+            "derivative_evaluations": 5242880,
+            "weight_sum": 262024,
+            "mean_final_position_m": [
+              33.76677176366079,
+              -13.766776250154383,
+              93.94005577076413
+            ],
+            "mean_final_velocity_mps": [
+              7.246644743947595,
+              -2.246644798797247,
+              -18.014611343361548
+            ],
+            "weighted_observable": 253.99486910866236
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-16384-warmup-02",
+          "warmup": true,
+          "workload_elapsed_ns": 15904600,
+          "process_elapsed_ns": 23645200,
+          "semantic_result": {
+            "completed_episodes": 16384,
+            "steps_per_episode": 80,
+            "completed_steps": 1310720,
+            "derivative_evaluations": 5242880,
+            "weight_sum": 262024,
+            "mean_final_position_m": [
+              33.76677176366079,
+              -13.766776250154383,
+              93.94005577076413
+            ],
+            "mean_final_velocity_mps": [
+              7.246644743947595,
+              -2.246644798797247,
+              -18.014611343361548
+            ],
+            "weighted_observable": 253.99486910866236
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-16384-measured-01",
+          "warmup": false,
+          "workload_elapsed_ns": 15968500,
+          "process_elapsed_ns": 24137400,
+          "semantic_result": {
+            "completed_episodes": 16384,
+            "steps_per_episode": 80,
+            "completed_steps": 1310720,
+            "derivative_evaluations": 5242880,
+            "weight_sum": 262024,
+            "mean_final_position_m": [
+              33.76677176366079,
+              -13.766776250154383,
+              93.94005577076413
+            ],
+            "mean_final_velocity_mps": [
+              7.246644743947595,
+              -2.246644798797247,
+              -18.014611343361548
+            ],
+            "weighted_observable": 253.99486910866236
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-16384-measured-02",
+          "warmup": false,
+          "workload_elapsed_ns": 16605300,
+          "process_elapsed_ns": 26684400,
+          "semantic_result": {
+            "completed_episodes": 16384,
+            "steps_per_episode": 80,
+            "completed_steps": 1310720,
+            "derivative_evaluations": 5242880,
+            "weight_sum": 262024,
+            "mean_final_position_m": [
+              33.76677176366079,
+              -13.766776250154383,
+              93.94005577076413
+            ],
+            "mean_final_velocity_mps": [
+              7.246644743947595,
+              -2.246644798797247,
+              -18.014611343361548
+            ],
+            "weighted_observable": 253.99486910866236
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-16384-measured-03",
+          "warmup": false,
+          "workload_elapsed_ns": 16534400,
+          "process_elapsed_ns": 25859000,
+          "semantic_result": {
+            "completed_episodes": 16384,
+            "steps_per_episode": 80,
+            "completed_steps": 1310720,
+            "derivative_evaluations": 5242880,
+            "weight_sum": 262024,
+            "mean_final_position_m": [
+              33.76677176366079,
+              -13.766776250154383,
+              93.94005577076413
+            ],
+            "mean_final_velocity_mps": [
+              7.246644743947595,
+              -2.246644798797247,
+              -18.014611343361548
+            ],
+            "weighted_observable": 253.99486910866236
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-16384-measured-04",
+          "warmup": false,
+          "workload_elapsed_ns": 16568300,
+          "process_elapsed_ns": 25206800,
+          "semantic_result": {
+            "completed_episodes": 16384,
+            "steps_per_episode": 80,
+            "completed_steps": 1310720,
+            "derivative_evaluations": 5242880,
+            "weight_sum": 262024,
+            "mean_final_position_m": [
+              33.76677176366079,
+              -13.766776250154383,
+              93.94005577076413
+            ],
+            "mean_final_velocity_mps": [
+              7.246644743947595,
+              -2.246644798797247,
+              -18.014611343361548
+            ],
+            "weighted_observable": 253.99486910866236
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-16384-measured-05",
+          "warmup": false,
+          "workload_elapsed_ns": 16424400,
+          "process_elapsed_ns": 24174300,
+          "semantic_result": {
+            "completed_episodes": 16384,
+            "steps_per_episode": 80,
+            "completed_steps": 1310720,
+            "derivative_evaluations": 5242880,
+            "weight_sum": 262024,
+            "mean_final_position_m": [
+              33.76677176366079,
+              -13.766776250154383,
+              93.94005577076413
+            ],
+            "mean_final_velocity_mps": [
+              7.246644743947595,
+              -2.246644798797247,
+              -18.014611343361548
+            ],
+            "weighted_observable": 253.99486910866236
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-16384-measured-06",
+          "warmup": false,
+          "workload_elapsed_ns": 16271300,
+          "process_elapsed_ns": 24415400,
+          "semantic_result": {
+            "completed_episodes": 16384,
+            "steps_per_episode": 80,
+            "completed_steps": 1310720,
+            "derivative_evaluations": 5242880,
+            "weight_sum": 262024,
+            "mean_final_position_m": [
+              33.76677176366079,
+              -13.766776250154383,
+              93.94005577076413
+            ],
+            "mean_final_velocity_mps": [
+              7.246644743947595,
+              -2.246644798797247,
+              -18.014611343361548
+            ],
+            "weighted_observable": 253.99486910866236
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-16384-measured-07",
+          "warmup": false,
+          "workload_elapsed_ns": 16266700,
+          "process_elapsed_ns": 23813200,
+          "semantic_result": {
+            "completed_episodes": 16384,
+            "steps_per_episode": 80,
+            "completed_steps": 1310720,
+            "derivative_evaluations": 5242880,
+            "weight_sum": 262024,
+            "mean_final_position_m": [
+              33.76677176366079,
+              -13.766776250154383,
+              93.94005577076413
+            ],
+            "mean_final_velocity_mps": [
+              7.246644743947595,
+              -2.246644798797247,
+              -18.014611343361548
+            ],
+            "weighted_observable": 253.99486910866236
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-16384-measured-08",
+          "warmup": false,
+          "workload_elapsed_ns": 16569700,
+          "process_elapsed_ns": 24118200,
+          "semantic_result": {
+            "completed_episodes": 16384,
+            "steps_per_episode": 80,
+            "completed_steps": 1310720,
+            "derivative_evaluations": 5242880,
+            "weight_sum": 262024,
+            "mean_final_position_m": [
+              33.76677176366079,
+              -13.766776250154383,
+              93.94005577076413
+            ],
+            "mean_final_velocity_mps": [
+              7.246644743947595,
+              -2.246644798797247,
+              -18.014611343361548
+            ],
+            "weighted_observable": 253.99486910866236
+          },
+          "status": "valid_with_profile_caveats"
+        },
+        {
+          "sample_id": "batch-16384-measured-09",
+          "warmup": false,
+          "workload_elapsed_ns": 18223800,
+          "process_elapsed_ns": 26646800,
+          "semantic_result": {
+            "completed_episodes": 16384,
+            "steps_per_episode": 80,
+            "completed_steps": 1310720,
+            "derivative_evaluations": 5242880,
+            "weight_sum": 262024,
+            "mean_final_position_m": [
+              33.76677176366079,
+              -13.766776250154383,
+              93.94005577076413
+            ],
+            "mean_final_velocity_mps": [
+              7.246644743947595,
+              -2.246644798797247,
+              -18.014611343361548
+            ],
+            "weighted_observable": 253.99486910866236
+          },
+          "status": "valid_with_profile_caveats"
+        }
+      ],
+      "statistics": {
+        "workload_elapsed_ns": {
+          "count": 9,
+          "min": 15968500,
+          "max": 18223800,
+          "median": 16534400,
+          "mad": 110000,
+          "p95": 17576400.0,
+          "mean": 16603600.0,
+          "population_stddev": 604761.1484434715
+        },
+        "process_elapsed_ns": {
+          "count": 9,
+          "min": 23813200,
+          "max": 26684400,
+          "median": 24415400,
+          "mad": 602200,
+          "p95": 26669360.0,
+          "mean": 25006166.666666668,
+          "population_stddev": 1068911.2051262464
+        },
+        "steps_per_second": {
+          "count": 9,
+          "min": 71923528.57252604,
+          "max": 82081598.14635062,
+          "median": 79272305.01257983,
+          "mad": 530914.5875273347,
+          "p95": 81479712.51331523,
+          "mean": 79039889.53504665,
+          "population_stddev": 2691688.613074346
+        }
+      },
+      "determinism": {
+        "requested": "D1",
+        "achieved": "D1",
+        "semantic_comparator": "exact parsed semantic_result"
+      }
+    }
+  ],
+  "limitations": [
+    "Hypervisor is present.",
+    "CPU frequency, temperature and background load are not sampled.",
+    "NUMA, microcode, memory channels and firmware performance settings are unavailable.",
+    "The machine is a shared local desktop without dedicated measurement scheduling.",
+    "This profile supports an observation-only baseline and no performance or realtime qualification.",
+    "The local Windows MinGW/GCC build is outside the supported product toolchain profiles and is retained only as harness observation evidence.",
+    "Elapsed distributions do not gate CI or a release.",
+    "The benchmark is a standalone R0 workload and does not measure target Session, Compiler or observation infrastructure.",
+    "D2, D3, multi-Session and realtime qualification were not executed."
+  ]
+}

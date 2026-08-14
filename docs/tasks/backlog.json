@@ -234,16 +234,16 @@
       "id": "R0-PERF-001",
       "stage": "R0",
       "title": "Define initial capacity, determinism and performance measurement profiles",
-      "status": "planned",
+      "status": "done",
       "priority": "P1",
       "size": "M",
       "owner_role": "runtime_numerics_lead",
       "assignee": null,
       "depends_on": ["R0-GOV-001", "R0-SCI-002"],
-      "deliverables": ["Benchmark manifest", "D0-D3 determinism targets", "baseline hardware profile"],
-      "acceptance": ["R2/R3 layout decisions have measurable workloads and budgets"],
-      "evidence": ["Baseline benchmark report"],
-      "architecture_refs": ["03 §20", "03 §23", "06 §25"]
+      "deliverables": ["Executable minimal 3DoF batch benchmark manifest", "Scoped D0-D3 determinism targets", "Sanitized observation-only hardware/build profile and raw-sample baseline"],
+      "acceptance": ["Four concrete scale points are correctness-gated and measurable; future R2/R3 layout decisions must add real product workload points before defining capacity or timing budgets"],
+      "evidence": ["benchmarks/r0/minimal-3dof/baseline-windows-intel-12700k.json", "CTest r0.performance-minimal-3dof.baseline", "Five direct benchmark/profile/statistics regressions"],
+      "architecture_refs": ["03 §20", "03 §23", "06 §16", "06 §18"]
     },
     {
       "id": "R0-GATE-001",
