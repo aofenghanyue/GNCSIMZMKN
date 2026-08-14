@@ -1,0 +1,282 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://internal.gnczmkn/schemas/scientific-context/1",
+  "title": "GNCZMKN R0 scientific context governance sidecar",
+  "description": "Governance-only context for scientific fixture claims, source scope, independence and comparison evidence.",
+  "x-maturity": "governance-evidence-no-runtime-consumer",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "context_id",
+    "maturity",
+    "review_state",
+    "subject",
+    "source_records",
+    "validity_domain",
+    "reference_lanes",
+    "comparison",
+    "provenance",
+    "authority",
+    "rights_effect",
+    "external_distribution",
+    "runtime_consumers"
+  ],
+  "properties": {
+    "schema_version": {"const": "gnczmkn.scientific-context/1"},
+    "context_id": {
+      "type": "string",
+      "pattern": "^SCI-CONTEXT-[A-Z0-9]+(?:-[A-Z0-9]+)*-[0-9]{3}$"
+    },
+    "maturity": {"const": "governance-evidence-no-runtime-consumer"},
+    "review_state": {
+      "enum": [
+        "registered-pending-scientific-acceptance",
+        "scientifically-accepted",
+        "retired"
+      ]
+    },
+    "subject": {
+      "type": "object",
+      "required": ["fixture_id", "claim_refs"],
+      "properties": {
+        "fixture_id": {
+          "type": "string",
+          "pattern": "^REF-[A-Z0-9]+(?:-[A-Z0-9]+)*-[0-9]{3}$"
+        },
+        "claim_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "pattern": "^FACT-[A-Z0-9][A-Z0-9_.-]*$"}
+        }
+      },
+      "additionalProperties": false
+    },
+    "source_records": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "source_id",
+          "kind",
+          "locator",
+          "version_or_date",
+          "availability",
+          "integrity",
+          "rights_inventory_refs"
+        ],
+        "properties": {
+          "source_id": {"type": "string", "pattern": "^[a-z][a-z0-9.-]*$"},
+          "kind": {
+            "enum": [
+              "normative-architecture",
+              "accepted-or-proposed-adr",
+              "fixture-input",
+              "external-scientific-source"
+            ]
+          },
+          "locator": {"type": "string", "minLength": 1},
+          "version_or_date": {"type": "string", "minLength": 1},
+          "availability": {
+            "enum": ["repository-tracked", "external-verified", "external-unavailable"]
+          },
+          "integrity": {
+            "type": "object",
+            "properties": {
+              "kind": {"const": "raw-bytes-sha256"},
+              "raw_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+              "byte_length": {"type": "integer"},
+              "normalized_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+              "canonicalizer": {"type": "string", "minLength": 1}
+            },
+            "additionalProperties": false
+          },
+          "rights_inventory_refs": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1}
+          }
+        },
+        "additionalProperties": false,
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "availability": {"enum": ["repository-tracked", "external-verified"]}
+              }
+            },
+            "then": {
+              "properties": {
+                "integrity": {
+                  "required": ["kind", "raw_sha256", "byte_length"]
+                }
+              }
+            }
+          },
+          {
+            "if": {
+              "properties": {
+                "integrity": {"required": ["normalized_sha256"]}
+              }
+            },
+            "then": {
+              "properties": {
+                "integrity": {
+                  "required": ["kind", "raw_sha256", "byte_length", "canonicalizer"]
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "validity_domain": {
+      "type": "object",
+      "required": ["purpose", "semantic_dimensions", "assumptions", "exclusions"],
+      "properties": {
+        "purpose": {"type": "string", "minLength": 1},
+        "semantic_dimensions": {
+          "type": "array",
+          "minItems": 3,
+          "maxItems": 3,
+          "items": {
+            "type": "object",
+            "required": ["id", "status", "statement"],
+            "properties": {
+              "id": {"enum": ["units", "frames", "time"]},
+              "status": {"enum": ["declared", "not-applicable"]},
+              "statement": {"type": "string", "minLength": 1}
+            },
+            "additionalProperties": false
+          }
+        },
+        "assumptions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        },
+        "exclusions": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      },
+      "additionalProperties": false
+    },
+    "reference_lanes": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": [
+          "lane_id",
+          "implementation_ref",
+          "result_ref",
+          "shared_input_refs",
+          "dependency_boundary",
+          "implementation_independence",
+          "scientific_source_independence",
+          "basis_refs"
+        ],
+        "properties": {
+          "lane_id": {"type": "string", "pattern": "^[a-z][a-z0-9.-]*$"},
+          "implementation_ref": {"type": "string", "minLength": 1},
+          "result_ref": {"type": "string", "minLength": 1},
+          "shared_input_refs": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1}
+          },
+          "dependency_boundary": {
+            "type": "object",
+            "required": [
+              "product_runtime_excluded",
+              "legacy_excluded",
+              "other_reference_lane_excluded",
+              "shared_inputs_disclosed"
+            ],
+            "properties": {
+              "product_runtime_excluded": {"const": true},
+              "legacy_excluded": {"const": true},
+              "other_reference_lane_excluded": {"const": true},
+              "shared_inputs_disclosed": {"const": true}
+            },
+            "additionalProperties": false
+          },
+          "implementation_independence": {
+            "enum": ["unreviewed", "confirmed", "rejected", "not-applicable"]
+          },
+          "scientific_source_independence": {
+            "enum": ["not-claimed", "confirmed", "rejected", "not-applicable"]
+          },
+          "basis_refs": {
+            "type": "array",
+            "minItems": 1,
+            "uniqueItems": true,
+            "items": {"type": "string", "minLength": 1}
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "comparison": {
+      "type": "object",
+      "required": ["expected_ref", "actual_report_ref", "comparator_ref", "tolerance_ref"],
+      "properties": {
+        "expected_ref": {"type": "string", "minLength": 1},
+        "actual_report_ref": {"type": "string", "minLength": 1},
+        "comparator_ref": {"type": "string", "minLength": 1},
+        "tolerance_ref": {"type": "string", "minLength": 1}
+      },
+      "additionalProperties": false
+    },
+    "provenance": {
+      "type": "object",
+      "required": ["rights_inventory_item_ref", "lineage_parent_item_refs"],
+      "properties": {
+        "rights_inventory_item_ref": {"type": "string", "minLength": 1},
+        "lineage_parent_item_refs": {
+          "type": "array",
+          "minItems": 1,
+          "uniqueItems": true,
+          "items": {"type": "string", "minLength": 1}
+        }
+      },
+      "additionalProperties": false
+    },
+    "authority": {
+      "type": "object",
+      "required": [
+        "owner_role",
+        "owner_actor_id",
+        "owner_task_path",
+        "reviewer_role",
+        "authorization_ref",
+        "decision_id"
+      ],
+      "properties": {
+        "owner_role": {"const": "scientific_authority"},
+        "owner_actor_id": {"type": "string", "minLength": 1},
+        "owner_task_path": {"type": "string", "minLength": 1},
+        "reviewer_role": {"const": "architecture_lead"},
+        "authorization_ref": {"type": "string", "minLength": 1},
+        "decision_id": {"const": "RECON-DEC-005"}
+      },
+      "additionalProperties": false
+    },
+    "rights_effect": {"const": "no-change"},
+    "external_distribution": {
+      "enum": [
+        "blocked-pending-accepted-adr",
+        "blocked-pending-rights-and-license-decision"
+      ]
+    },
+    "runtime_consumers": {"const": 0}
+  },
+  "additionalProperties": false
+}

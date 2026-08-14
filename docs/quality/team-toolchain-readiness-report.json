@@ -416,7 +416,7 @@
                          },
                          {
                              "path":  "docs/tasks/backlog.json",
-                             "sha256":  "20a6514e7ab890a80fd3798c5736f46d77665b5510740419d4d0368deeb81f41",
+                             "sha256":  "fdee43a36fabd6c3e6a1d993823ac89b4e6fbe67a486b5e49040f5dcf528425c",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {
@@ -446,7 +446,7 @@
                          },
                          {
                              "path":  ".github/workflows/ci.yml",
-                             "sha256":  "5338f9b37404a19a651e67766452ac125886aead1b711d8dcc93c1574008803c",
+                             "sha256":  "652da759c39ae6b2847bbe5f5518efdb5183170d1ed9ee76c5d2b4550d1c6bf2",
                              "hash_normalization":  "utf8-lf-no-bom"
                          },
                          {

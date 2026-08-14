@@ -10,7 +10,7 @@
 
 本策略约束项目工作流，不是许可证或法律意见。仓库存在、远端可访问、内部可读取、上游可下载、构建成功或报告已生成，都不能单独证明复制、修改、再分发或发布权限。
 
-在 Accepted ADR 选定仓库许可证前：项目空间内仅按现有访问授权处理；所有新的外部分享、push 到公共远端、release、附件发送、公开报告、数据集、容器、二进制和 archive 均关闭。
+在另行接受且明确选择仓库分发许可证的决定形成前：项目空间内仅按现有访问授权处理；所有新的外部分享、push 到公共远端、release、附件发送、公开报告、数据集、容器、二进制和 archive 均关闭。ADR-0008 的接受只会确认这项 fail-closed 策略，不会选择许可证。
 
 ## 2. 状态模型
 
@@ -24,7 +24,8 @@
 | `internal_handling` | `existing-access-only` | 仅在既有授权的项目空间处理，保留来源、分类和 lineage |
 |  | `evidence-only` | 只允许验证、比对与审查，不链接产品、不修改、不分享 |
 |  | `subject-to-upstream-terms` | 使用外部工具/依赖须遵守其上游条款 |
-| `external_distribution` | `blocked-pending-accepted-adr` | 等待仓库许可证和双角色批准 |
+| `external_distribution` | `blocked-pending-accepted-adr` | ADR-0008 处于 Proposed 时的冻结技术输入；接受切片中退出此状态 |
+|  | `blocked-pending-rights-and-license-decision` | fail-closed 策略已接受，权属与仓库分发许可证决定仍未闭合 |
 |  | `blocked-pending-item-review` | 单项权属/许可证/数据权限未闭合 |
 |  | `not-redistributed` | 仅执行外部安装，不进入项目分发包 |
 | `category` | `repository-governed-content`、`imported-design-source`、`fixture-oracle-and-generated-evidence`、`frozen-reference-archive`、`external-build-dependency`、`external-tool-bundle`、`external-validation-tools`、`external-ci-action` | R0 inventory 的封闭治理类别；新增类别必须先更新 policy、validator 和 failure evidence |
@@ -66,7 +67,9 @@
 
 生成内容不因“由工具生成”自动成为项目可分发材料。Artifact 必须引用所有 code/data/model/tool parent，并继承其中最严格的许可证、数据权限、分类、保密和导出限制。人工修订登记为新的 provenance event。
 
-R0 checker 对当前聚合 inventory 能证明的边界是：生成证据具有至少一个可解析、无重复、无环的 `lineage_parents`；category/classification 与 integrity identity 合法；只要上游权利未闭合，tracked 生成证据就保持 `blocked-*`。这些结构检查不能证明 parent 集合完备，也不能证明科学数据、fixture 或 oracle 的适用域、独立性与权威性。后者需要逐 artifact 的 scientific-context contract 和 Scientific Authority 审查；不得从 candidate 的虚拟签署或聚合条目推导 `independent_reference_confirmed=true`。
+R0 checker 对当前聚合 inventory 能证明的边界是：条目集合、顺序、词表与逐项完整语义投影符合冻结技术清单；本地来源和许可证证据解析为大小写精确、已跟踪、非空的普通文件；生成证据具有可解析、无重复、无环的 `lineage_parents`；category/classification 与 integrity identity 合法；上游权利未闭合时，tracked 生成证据保持 `blocked-*`。这些结构检查不能证明 parent 集合完备，也不能证明科学数据、fixture 或 oracle 的适用域、独立性与权威性。
+
+逐 artifact 科学上下文使用 `docs/governance/schemas/scientific-context.schema.json` 的 `gnczmkn.scientific-context/1` sidecar。sidecar 登记 claim、来源 raw identity、units/frames/time 适用域、实现依赖边界、implementation independence、scientific source independence、比较依据、权利条目和 lineage。首个实例由 scientific-conventions fixture 的 `required_artifacts` 与五个 `expected_facts[*].evidence_refs` 双向绑定。当前状态为 `registered-pending-scientific-acceptance`；只有所属 SCI task 的有权接受才能迁移为 `scientifically-accepted`。聚合 inventory、同源双实现一致或机器身份授权均不能推导科学来源独立性。
 
 ## 6. 外部导出门禁
 

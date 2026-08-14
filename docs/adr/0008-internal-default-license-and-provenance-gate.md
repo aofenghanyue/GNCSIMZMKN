@@ -12,17 +12,19 @@
 
 当前 R0 已产生源码、架构蓝图、fixture、oracle、Legacy archive 与验证报告，并在隔离复现中使用 Eigen 3.4.0 和 w64devkit 2.9.1。Eigen 3.4.0 上游声明其内容主要采用 MPL-2.0，部分文件采用 BSD 或 LGPL，实际 include 范围仍需逐文件复核。[Eigen 3.4.0 COPYING.README](https://gitlab.com/libeigen/eigen/-/raw/3.4.0/COPYING.README) w64devkit 顶层源码有自己的许可证，同时发布包捆绑 GCC、MinGW-w64、CMake、Ninja 等多项组件，并明确提示 runtime 的许可证义务，不能以一个表达式概括整个工具包。[w64devkit v2.9.1](https://github.com/skeeto/w64devkit/releases/tag/v2.9.1)
 
-R0-GOV-002 需要先建立 fail-closed 治理和可审计 inventory。最终仓库许可证会改变外部权利，按团队规则必须由 Product Owner 与 Architecture Lead 共同决定；当前两个角色均未指派，因此本 ADR 不选择 MIT、Apache-2.0、专有许可或其他分发方案。
+R0-GOV-002 需要先建立 fail-closed 治理和可审计 inventory。最终仓库许可证会改变外部权利，按团队规则必须由 Product Owner 与 Architecture Lead 共同决定。仓库所有者已通过 `docs/governance/r0-owner-authorization.json` 授权 `r0-po-agent` 与 `r0-architecture-agent` 承担本轮对应角色；该机器身份授权不包含权属、许可证或外部分发授权。本 ADR 的技术候选不选择 MIT、Apache-2.0、专有许可或其他分发方案。
 
 ## Decision
 
-在本 ADR 被有权角色接受并明确选择许可证前，仓库采用 `internal-default / external-blocked` 治理状态。该状态是项目工作流限制，不授予或撤销任何法定权利，也不改变上游 GitHub 仓库的既有可见性。
+本 ADR 的候选决定是接受 `internal-default / external-blocked` 治理状态，同时保持仓库分发许可证未选择。接受本 ADR 只确认 fail-closed 工作流；选择许可证仍需要另行形成明确的仓库分发许可证决定，并附权属、贡献边界、第三方兼容性和目标发布方式证据。该治理状态不授予或撤销任何法定权利，也不改变上游 GitHub 仓库的既有可见性。
 
 `docs/governance/provenance-inventory.json` 是 R0 治理证据，maturity 为 `governance-evidence-no-runtime-consumer`。每个代码、数据、archive、生成物或外部工具类别至少登记：稳定 identity、scope、owner role、purpose、精确来源、version/date、完整性策略、仓库承载方式、内部处理状态、外部分发状态、分类、许可证扫描结果、许可证结论、证据和 lineage parent。它不是 runtime 或公开 PackageManifest schema。
 
 许可证表达使用 SPDX 语义。已得出结论时使用 SPDX expression；自定义许可证只有在保存了完整许可证文本和稳定 `LicenseRef-*` 标识后才能使用。扫描未发现许可证信息记录为 `NONE`，无法或尚未得出许可证结论记录为 `NOASSERTION`。两者均不表示允许使用或分发。[SPDX license expressions](https://spdx.github.io/spdx-spec/v3.0.1/annexes/spdx-license-expressions/) [SPDX file information](https://spdx.github.io/spdx-spec/v2.2.2/file-information/)
 
-当前所有 inventory 项的 concluded expression 为 `NOASSERTION`。本仓库内容与研究证据的外部分发为 `blocked-pending-accepted-adr`；Legacy archive 为 `blocked-pending-item-review` 且保持 evidence-only；Eigen、w64devkit 和宿主验证工具链为 `not-redistributed`。工具可执行或依赖可下载不等于项目可以重新打包它们。
+当前所有 inventory 项的 concluded expression 为 `NOASSERTION`。技术候选仍保留 `blocked-pending-accepted-adr`，用于描述 ADR 处于 Proposed 时的冻结输入；最终接受切片会将 repository、blueprint 与 research evidence 原子迁移到 `blocked-pending-rights-and-license-decision`。Legacy archive 保持 `blocked-pending-item-review` 与 evidence-only；Eigen、w64devkit、宿主验证工具链和固定 CI action 保持 `not-redistributed`。工具可执行或依赖可下载不等于项目可以重新打包它们。
+
+逐 artifact 的科学适用域与独立性由 `gnczmkn.scientific-context/1` 治理 sidecar 承载。首个实例绑定 `REF-SCIENTIFIC-CONVENTIONS-001` 的五个事实、来源 raw hash、units/frames/time 适用域、两条参考实现 lane、比较输入和权利 lineage。它明确区分 implementation independence 与 scientific source independence；当前双实现只声明前者已确认，科学来源独立性保持 `not-claimed`。sidecar 的 maturity 为 `governance-evidence-no-runtime-consumer`，不修改三份已接受 Fixture/Oracle/PlanProof v1 schema，也不进入产品 runtime、公共 schema 或 PackageManifest。
 
 引入第三方内容前必须保存精确上游 URL、版本或日期、原始 archive/hash、版权与许可证文本、逐文件或逐组件范围、用途、目标依赖层、修改情况、兼容性判断、notice/source/attribution 义务、数据权限与分类。无法编辑的第三方文件可用外部 annotation 映射，但 annotation 不能创造许可证；REUSE 的逐文件 SPDX 方法作为后续实现候选。[REUSE Specification](https://reuse.software/spec/)
 
@@ -55,9 +57,10 @@ R0-GOV-002 需要先建立 fail-closed 治理和可审计 inventory。最终仓�
 - inventory 覆盖 repository、blueprint、research evidence、Legacy archive、Eigen、w64devkit、宿主验证工具链与固定 CI action；
 - validator 复核 Legacy hash、字节数、510 个 ZIP entries、391 个 file entries 和零 license signal；
 - validator 检查 required fields、唯一 identity、来源、状态 vocabulary、SPDX 结论与外部分发一致性；
-- in-memory mutation suite 拒绝重复 identity、缺失来源、`NOASSERTION` 外部分发、Legacy hash 漂移、错误许可证结论、无文本 `LicenseRef-*` 和 repository status 矛盾；
+- inventory mutation suite 以预期诊断拒绝 26 类反例，覆盖 identity/order/vocabulary、逐项完整语义投影、本地 tracked locator、`NOASSERTION` 外部分发、Legacy hash、许可证结论和 lineage；
+- scientific-context suite 以预期诊断拒绝 173 类 schema、严格 JSON、contract projection、manifest/fact binding、来源完整性、适用域、独立性、lineage、authority、状态原子性、门禁钩子、外部分发、runtime consumer 与 Git index/object 反例；
 - CTest、repository verification 和审查报告共同构成 gate evidence。
 
 ## Supersession rule
 
-Product Owner 与 Architecture Lead 在确认权属、贡献边界、第三方兼容性、数据权限和目标发布方式后，可以接受本 ADR 并补充明确许可证，或以新 ADR 替代。任何 repository license、贡献者协议、第三方分发、Legacy 分享、公开数据集或二进制发布变化都必须更新 inventory、policy、门禁与迁移/通知计划。
+Product Owner 与 Architecture Lead 可以共同接受本 ADR 所定义的 fail-closed 治理，同时继续保持仓库许可证未选择。未来选择 repository license、建立贡献者协议、允许第三方分发、分享 Legacy、公开数据集或发布二进制时，必须形成单独或取代性 ADR，并同步更新 inventory、policy、门禁与迁移/通知计划。

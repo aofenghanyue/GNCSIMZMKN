@@ -43,7 +43,7 @@
 | Task | Backlog | 已有可用证据 | 未闭合项 | Gate 资格 |
 | --- | --- | --- | --- | --- |
 | `R0-GOV-001` | `done` | 8/8 role pairs、ADR-0009、49 governance mutations、retained Hosted CI 与 task acceptance | 已闭合 | 合格 |
-| `R0-GOV-002` | `review` | provenance inventory、policy validator、14 个带预期诊断的 mutation | ADR-0008；Product Owner 决策；distribution license 未选；scientific-context authority 未闭合 | 不合格 |
+| `R0-GOV-002` | `review` | 8-item/8-NOASSERTION inventory；26 inventory mutations；`gnczmkn.scientific-context/1` first instance；173 context/governance mutations；runtime consumers=0 | 技术提交冻结；ADR-0008/RECON-DEC-005 disposition；commit-bound CI 与 task acceptance；distribution license 继续未选 | 不合格 |
 | `R0-ARCH-002` | `planned` | fitness coverage 设计和 20 个 mutation 设计 | production guards、positive/negative suite、CI integration | 不合格 |
 | `R0-LEG-002` | `planned` | 7 类 oracle capture 设计 | executable artifacts、tolerance、Preserve/Fix/Retire 审批 | 不合格 |
 | `R0-SCI-002` | `planned` | minimal 3DoF reference 设计 | executable independent trajectory/convergence/failure bundle | 不合格 |
@@ -56,19 +56,19 @@
 
 ## 本次审计锚点
 
-- 被审计实现 commit：`bfd735e38a0d3f84fbe19f0f93435522cbdf7d56`
-- backlog raw SHA-256：`8627b65f1d655f09043833eb23965c3bf72772e554eedc9e920429d131f3a06c`
+- 被审计实现基线：`dfedf278d53fa65706b8a884be1896a162d9e34a`；R0-GOV-002 技术候选仍待创建 commit
+- backlog raw SHA-256：`fdee43a36fabd6c3e6a1d993823ac89b4e6fbe67a486b5e49040f5dcf528425c`
 - 11 路线总览 raw SHA-256：`5ec5e82cbb3339027b58d3ad9b066c5a569b742cbffaf0dcb241cb85b8664dc9`
 - release gates raw SHA-256：`99fcaa4e387e90b233554d54d50ff8ace4575298524d20eac198d737aed7a22b`
 - gate template raw SHA-256：`143c656914b6ff577e0ad06a4f5613e5c81c596daf7dba031134f9fbf94cc2d9`
-- role assignments raw SHA-256：`4ede05482e214268cc7cf0dc139c17f0e92b9bf9e8c773b090ce83d6fe678f0e`
-- team/toolchain report raw SHA-256：`40d0ce185e49f2a63a74f05802a48462f9e75490fe2f2e825d37d4c3bcec4849`
-- architecture baseline raw SHA-256：`69cf9c4f26a15b62ecdb60364417bb066c89756924134612a3701471f10943e7`
-- terminology report raw SHA-256：`298f06e15eb7b52d37a9a6c0338222d2a6e88ec2991301a1680acb2b4e8527fc`
+- role assignments raw SHA-256：`35e0cf92b7756bc2c95becde44d9999e401d802b012d027ceeace5e391106e45`
+- team/toolchain report raw SHA-256：`6c74b8ab2ee1027acede3deb2c4d7147526fc72692e424c0baabc118bc856f8a`
+- architecture baseline raw SHA-256：`feae2b1b26417f25b563862a6c3e1cd91bc2b3482baa1a432ad4d459157e28e9`
+- terminology report raw SHA-256：`ca3760a089456bbc6a3aa7a8bd7e8a3813953d74625dec339210678dc18742ac`
 - oracle manifest raw SHA-256：`eade78296e7b102db4e2ca59aec503df8b2a63db1d2810851909a375bd64d0b8`
-- scientific cross-tool report raw SHA-256：`c121c74b546b2ad7722a6a5d90ee8ca0de028c4524fce624a3b95963138252c8`
-- license/provenance report raw SHA-256：`d47def50dd372ddf68a334917da4b93f070c582beac07b50db82e9abb97a1284`
-- hosted CI workflow raw SHA-256：`33a6afa5b2adfbcb4143b142fd56cff2ecb10e2625c2f9f79947fbd4e94198e2`
+- scientific cross-tool report raw SHA-256：`c4742e99ca6065bba5d5824f8f42399b20ce1961e232ad598e31eefd724cf43b`
+- license/provenance report：派生输出；其输入索引纳入本工作包，同一提交与外部 fileset disposition 绑定报告 bytes，避免循环哈希
+- hosted CI workflow raw SHA-256：`652da759c39ae6b2847bbe5f5518efdb5183170d1ed9ee76c5d2b4550d1c6bf2`
 
 这些 hash 固定准备审计读取的 raw bytes；它们不是 gate pass，也不能替代未来正式评审对 reviewed commit 的重新捕获。
 
@@ -196,6 +196,6 @@
 - 架构审查：已有 baseline/PlanProof schema 是部分技术证据；architecture fitness implementation、压力样本闭包和具名 Architecture Lead review 缺失，G0 未就绪。
 - 科学审查：只有 convention fixture 为 `executable`；minimal 3DoF、YYZ、CAVH 为 `specification_only`，Legacy oracles 为 `planned`，G1 未就绪。
 - 治理审查 historical baseline：2026-08-10 时 6 个 ADR 均为 Proposed、16 个 role slots 缺失、Hosted CI pending。
-- 2026-08-12 current amendment：直接依赖为 1 `review` + 6 `planned` + 2 `done`；required roles、ADR-0009、Hosted CI、ADR-0004/R0-SPEC-001 与 ADR-0005/R0-ARCH-001 已闭合。R0-GATE-001 继续 `planned` 且 assignee 为空，G0/G1 仍未进入正式评审。
+- 2026-08-12 current amendment：直接依赖为 1 `review` + 6 `planned` + 2 `done`；required roles、ADR-0009、Hosted CI、ADR-0004/R0-SPEC-001 与 ADR-0005/R0-ARCH-001 已闭合。R0-GOV-002 已形成 fail-closed policy 与 scientific-context 技术候选，正式 disposition 和 acceptance 尚未闭合。R0-GATE-001 继续 `planned` 且 assignee 为空，G0/G1 仍未进入正式评审。
 - 发布审查：没有新增 G0/G1 decision、waiver 或 R1 unlock；`project-manifest.current_gate` 保持 `R0`。
 - 边界审查：本切片只增加 work package 与 readiness audit，不修改产品、schema、CI、Legacy 或权威科学数据。

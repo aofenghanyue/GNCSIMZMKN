@@ -27,6 +27,10 @@
 - [ ] 模型权重、训练数据、字体、图片、地图、论文附录与 benchmark 数据均单独登记；
 - [ ] conversion/preparation 参数、工具、人工修订和输出 hash 已进入 lineage。
 - [ ] scientific claim 具有逐 artifact 的适用域、单位、frame、time、reference/oracle 与独立性依据；聚合 inventory 或同源实现输出不能替代 Scientific Authority 审查。
+- [ ] executable scientific fixture 由 `gnczmkn.scientific-context/1` sidecar 绑定，claim refs 与 manifest/fact evidence refs 双向闭合；
+- [ ] repository-tracked 科学来源记录 raw SHA-256 与 byte length；normalized hash 同时登记 raw hash 和 canonicalizer identity；
+- [ ] implementation independence 与 scientific source independence 分开记录，确认状态附依据，未确认项保留 `not-claimed`；
+- [ ] scientific-context 的权利条目、逐 artifact lineage 和外部分发状态与 provenance inventory 一致，且 runtime/public consumer 为零。
 
 ## Repository admission
 
@@ -39,7 +43,7 @@
 
 ## External export
 
-- [ ] Accepted repository license decision 与 Product Owner/Architecture Lead 均已记录；
+- [ ] 另行接受且明确选择 repository distribution license 的决定，以及 Product Owner/Architecture Lead 批准均已记录；
 - [ ] export manifest 逐文件闭合 owner、source、license、classification、integrity 和 lineage；
 - [ ] `NOASSERTION`、Legacy、过期 exception 和未审查 `LicenseRef-*` 项为零；
 - [ ] notices、许可证文本、source offer、relink material 和 attribution 已放入正确位置；

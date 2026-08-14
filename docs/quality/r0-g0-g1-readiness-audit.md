@@ -5,7 +5,7 @@
 - Audited implementation commit：`bfd735e38a0d3f84fbe19f0f93435522cbdf7d56`
 - Prepared by：Codex
 - Prepared on：2026-08-10
-- Current-state amendment：2026-08-12，through R0-SPEC-001 and R0-ARCH-001 commit-bound acceptance
+- Current-state amendment：2026-08-12，through R0-SPEC-001 and R0-ARCH-001 commit-bound acceptance plus the R0-GOV-002 technical candidate
 - Readiness verdict：`not_ready_for_authorized_review`
 - Official gate result：无；本文件不是 G0/G1 decision record
 - Current project gate：`R0`
@@ -79,27 +79,27 @@ G1 只有科学约定 bundle 达到 `executable`，且其技术 cross-tool compa
 
 | Input | SHA-256 |
 | --- | --- |
-| `docs/tasks/backlog.json` | `8627b65f1d655f09043833eb23965c3bf72772e554eedc9e920429d131f3a06c` |
+| `docs/tasks/backlog.json` | `fdee43a36fabd6c3e6a1d993823ac89b4e6fbe67a486b5e49040f5dcf528425c` |
 | `design-notes/.../11-roadmap-overview.md` | `5ec5e82cbb3339027b58d3ad9b066c5a569b742cbffaf0dcb241cb85b8664dc9` |
 | `docs/handoff/release-gates.md` | `99fcaa4e387e90b233554d54d50ff8ace4575298524d20eac198d737aed7a22b` |
 | `docs/quality/gate-decision-template.md` | `143c656914b6ff577e0ad06a4f5613e5c81c596daf7dba031134f9fbf94cc2d9` |
 | `docs/quality/gate-decisions/README.md` | `086e1147f6c16b7844df533ac6846065072338b60e35f22be85ffdef719287ab` |
 | `docs/tasks/README.md` | `082367084a54b50dcaa886596e0badc643e59222cf6ece425e4cf79d9cbce110` |
 | `project-manifest.json` | `eb8a1145d95c92396073a4a9ece7d5d41f84b2e286c0842331c1d9e8653ca5ad` |
-| `docs/team/role-assignments.json` | `4ede05482e214268cc7cf0dc139c17f0e92b9bf9e8c773b090ce83d6fe678f0e` |
-| `docs/quality/team-toolchain-readiness-report.json` | `40d0ce185e49f2a63a74f05802a48462f9e75490fe2f2e825d37d4c3bcec4849` |
-| `docs/architecture/architecture-baseline.json` | `69cf9c4f26a15b62ecdb60364417bb066c89756924134612a3701471f10943e7` |
-| `docs/quality/terminology-conformance-report.json` | `298f06e15eb7b52d37a9a6c0338222d2a6e88ec2991301a1680acb2b4e8527fc` |
+| `docs/team/role-assignments.json` | `35e0cf92b7756bc2c95becde44d9999e401d802b012d027ceeace5e391106e45` |
+| `docs/quality/team-toolchain-readiness-report.json` | `6c74b8ab2ee1027acede3deb2c4d7147526fc72692e424c0baabc118bc856f8a` |
+| `docs/architecture/architecture-baseline.json` | `feae2b1b26417f25b563862a6c3e1cd91bc2b3482baa1a432ad4d459157e28e9` |
+| `docs/quality/terminology-conformance-report.json` | `ca3760a089456bbc6a3aa7a8bd7e8a3813953d74625dec339210678dc18742ac` |
 | `oracles/oracle-manifest.json` | `eade78296e7b102db4e2ca59aec503df8b2a63db1d2810851909a375bd64d0b8` |
-| `REF-SCIENTIFIC-CONVENTIONS-001` manifest | `446d6700f3e7fc86ae4a6905586b471dea7bd1bec4b0c7a72e8c3777491026ef` |
+| `REF-SCIENTIFIC-CONVENTIONS-001` manifest | `8f3630ffd681b040ea7036df5fac7f3b48f0d0bb272adbc67a0d0f820eade864` |
 | `REF-MINIMAL-3DOF-001` manifest | `8e90bdefcf8d5250f22b147a061e7a5934c9618d08bc9f63e6407a32732f579a` |
-| `REF-YYZ-001` manifest | `69eb288d48714edcdc565268151e151cbb62a4e1a2f8644a45c000d659f5086f` |
+| `REF-YYZ-001` manifest | `c7cb22159abf8d0e12a6f365c496ce59f5ac34e0c424aec2879cb23989374425` |
 | `REF-CAVH-FORMULA-001` manifest | `d89f4e9517aeb0e6a7eebecf3191b37aef29a1a875a5e125f9db72007e891ac6` |
-| scientific conventions report | `c121c74b546b2ad7722a6a5d90ee8ca0de028c4524fce624a3b95963138252c8` |
-| license/provenance report | `d47def50dd372ddf68a334917da4b93f070c582beac07b50db82e9abb97a1284` |
-| `.github/workflows/ci.yml` | `33a6afa5b2adfbcb4143b142fd56cff2ecb10e2625c2f9f79947fbd4e94198e2` |
+| scientific conventions report | `c4742e99ca6065bba5d5824f8f42399b20ce1961e232ad598e31eefd724cf43b` |
+| license/provenance report | derived output；same-commit input closure and external fileset disposition bind its bytes |
+| `.github/workflows/ci.yml` | `652da759c39ae6b2847bbe5f5518efdb5183170d1ed9ee76c5d2b4550d1c6bf2` |
 
-正式评审必须针对新的 reviewed commit 重新计算全部 authority/evidence hash；不能把本表复制为永久真值。
+正式评审必须针对新的 reviewed commit 重新计算全部 authority/evidence hash；不能把本表复制为永久真值。license/provenance report 读取本审计状态，因此不在本表记录自身 raw hash；报告输入索引、同一提交和外部 fileset disposition 共同闭合该派生物，避免循环哈希。
 
 ## 4. R0 任务与实施状态
 
@@ -108,7 +108,7 @@ G1 只有科学约定 bundle 达到 `executable`，且其技术 cross-tool compa
 | Task | Owner role | Backlog / assignee | 当前切片 | 可验证事实 | 关闭前缺口 |
 | --- | --- | --- | --- | --- | --- |
 | `R0-GOV-001` | Product Owner | `done` / `r0-po-agent` | commit-bound acceptance | 8/8 role pairs、ADR-0009、受支持 Hosted CI 与 49 governance mutations 全部闭合 | 已闭合 |
-| `R0-GOV-002` | Product Owner | `review` / Codex | `2796dbc` + `7d43a64` | inventory bytes/8 `NOASSERTION` facts 不变；closed categories、generated lineage/restriction；14 mutations matched/rejected | ADR-0008、license/share authority decisions；scientific context remains `RECON-DEC-005` |
+| `R0-GOV-002` | Product Owner | `review` / `r0-po-agent`；reviewer `r0-validation-agent` | base `dfedf278` + staged technical candidate pending commit | inventory 8 items/8 `NOASSERTION`；26 inventory mutations；`gnczmkn.scientific-context/1` first instance and 173 context/governance mutations；runtime consumers=0 | freeze technical commit；ADR-0008 and `RECON-DEC-005` disposition；commit-bound CI and task acceptance；repository distribution license remains unselected |
 | `R0-ARCH-002` | Architecture Lead | `planned` / null | prep `f3b2bc1` | guard coverage、实施分层和 mutations 已设计 | production guard、test、CI evidence |
 | `R0-LEG-002` | Validation Lead | `planned` / null | prep `4c62bc2` | 7 类 capture/probe/comparator/disposition 已设计 | executable oracle artifact refs 全部缺失 |
 | `R0-SCI-002` | Model SDK Lead | `planned` / null | prep `4a610a0` | analytic/independent 3DoF bundle 设计 | source、expected trajectory、convergence/failure runs |

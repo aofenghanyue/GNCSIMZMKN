@@ -1,0 +1,197 @@
+{
+  "schema_version": "gnczmkn.scientific-context/1",
+  "context_id": "SCI-CONTEXT-SCIENTIFIC-CONVENTIONS-001",
+  "maturity": "governance-evidence-no-runtime-consumer",
+  "review_state": "registered-pending-scientific-acceptance",
+  "subject": {
+    "fixture_id": "REF-SCIENTIFIC-CONVENTIONS-001",
+    "claim_refs": [
+      "FACT-SCI-QUATERNION",
+      "FACT-SCI-UNIT",
+      "FACT-SCI-FRAME",
+      "FACT-SCI-TIME",
+      "FACT-SCI-CROSS-TOOL"
+    ]
+  },
+  "source_records": [
+    {
+      "source_id": "adr-0006",
+      "kind": "accepted-or-proposed-adr",
+      "locator": "docs/adr/0006-si-frame-and-simulation-time-conventions.md",
+      "version_or_date": "2026-08-10",
+      "availability": "repository-tracked",
+      "integrity": {
+        "kind": "raw-bytes-sha256",
+        "raw_sha256": "fcfc7bb337a7f692a388cdfaed6132833526731b8e1d0e2607d35e9339537a00",
+        "byte_length": 5363
+      },
+      "rights_inventory_refs": ["repository-default-content"]
+    },
+    {
+      "source_id": "adr-0007",
+      "kind": "accepted-or-proposed-adr",
+      "locator": "docs/adr/0007-passive-hamilton-quaternion-convention.md",
+      "version_or_date": "2026-08-10",
+      "availability": "repository-tracked",
+      "integrity": {
+        "kind": "raw-bytes-sha256",
+        "raw_sha256": "dcd80cdf7a20324a8755a3f0c91ece88546ed99da82b916e7e09a09d92f74263",
+        "byte_length": 5250
+      },
+      "rights_inventory_refs": ["repository-default-content"]
+    },
+    {
+      "source_id": "architecture-math",
+      "kind": "normative-architecture",
+      "locator": "design-notes/gnczmkn-architecture-roadmap/03-mathematics-and-numerical-foundation.md",
+      "version_or_date": "reviewed-tree",
+      "availability": "repository-tracked",
+      "integrity": {
+        "kind": "raw-bytes-sha256",
+        "raw_sha256": "190f42ed8b81c0221069987ecae124c8e6da04aa0fa799e67a05ae3e2cffbea8",
+        "byte_length": 38892
+      },
+      "rights_inventory_refs": ["architecture-blueprint"]
+    },
+    {
+      "source_id": "architecture-time",
+      "kind": "normative-architecture",
+      "locator": "design-notes/gnczmkn-architecture-roadmap/06-simulation-kernel-time-and-lifecycle.md",
+      "version_or_date": "reviewed-tree",
+      "availability": "repository-tracked",
+      "integrity": {
+        "kind": "raw-bytes-sha256",
+        "raw_sha256": "4325e5c71e5e758d42afb7cf2a8d50f0573c3ab0fbde4f06ec7ab2e738e92165",
+        "byte_length": 45314
+      },
+      "rights_inventory_refs": ["architecture-blueprint"]
+    },
+    {
+      "source_id": "conventions-input",
+      "kind": "fixture-input",
+      "locator": "fixtures/ref-scientific-conventions/conventions.json",
+      "version_or_date": "gnczmkn.scientific-conventions/1",
+      "availability": "repository-tracked",
+      "integrity": {
+        "kind": "raw-bytes-sha256",
+        "raw_sha256": "7fad08972da00b6998d750ea5e62e5deaa925b8c3eec444873fddbd4d169695c",
+        "byte_length": 5629
+      },
+      "rights_inventory_refs": ["r0-research-evidence"]
+    },
+    {
+      "source_id": "cases-input",
+      "kind": "fixture-input",
+      "locator": "fixtures/ref-scientific-conventions/cases.json",
+      "version_or_date": "gnczmkn.scientific-convention-cases/1",
+      "availability": "repository-tracked",
+      "integrity": {
+        "kind": "raw-bytes-sha256",
+        "raw_sha256": "e882877bbfbc6403f9d1498d753efdce5b66c1f54148e59b271ab5e0741cd8c6",
+        "byte_length": 4023
+      },
+      "rights_inventory_refs": ["r0-research-evidence"]
+    }
+  ],
+  "validity_domain": {
+    "purpose": "Fixture-level verification of SI, frame, simulation-time and passive Hamilton quaternion conventions.",
+    "semantic_dimensions": [
+      {
+        "id": "units",
+        "status": "declared",
+        "statement": "Runtime physical values use SI and radians; conversions occur only at declared boundaries."
+      },
+      {
+        "id": "frames",
+        "status": "declared",
+        "statement": "Column-vector passive R_to_from and q_to_from transforms use explicit frame direction and point/vector categories."
+      },
+      {
+        "id": "time",
+        "status": "declared",
+        "statement": "Fixed-step logical time derives from integer ticks and valid intervals use half-open semantics."
+      }
+    ],
+    "assumptions": [
+      "Inputs are finite unless a failure-path case explicitly tests non-finite handling.",
+      "C++ and CPython lanes consume the same reviewed fixture inputs and tolerances.",
+      "The sidecar describes Fixture evidence and does not select product API, ABI or storage types."
+    ],
+    "exclusions": [
+      "No target trajectory, aerodynamic model or mission-specific physical truth is qualified.",
+      "No Legacy output is used as an independent scientific source.",
+      "FinalPartialStep and cross-clock implicit conversion remain unsupported."
+    ]
+  },
+  "reference_lanes": [
+    {
+      "lane_id": "cpp17-property-spike",
+      "implementation_ref": "tests/scientific_conventions.cpp",
+      "result_ref": "docs/quality/scientific-conventions-cross-tool-report.json",
+      "shared_input_refs": [
+        "fixtures/ref-scientific-conventions/conventions.json",
+        "fixtures/ref-scientific-conventions/cases.json"
+      ],
+      "dependency_boundary": {
+        "product_runtime_excluded": true,
+        "legacy_excluded": true,
+        "other_reference_lane_excluded": true,
+        "shared_inputs_disclosed": true
+      },
+      "implementation_independence": "confirmed",
+      "scientific_source_independence": "not-claimed",
+      "basis_refs": [
+        "tests/scientific_conventions.cpp",
+        "tools/validate-scientific-conventions.ps1",
+        "docs/quality/scientific-conventions-cross-tool-report.json"
+      ]
+    },
+    {
+      "lane_id": "cpython-stdlib-reference",
+      "implementation_ref": "tools/scientific_conventions_reference.py",
+      "result_ref": "docs/quality/scientific-conventions-cross-tool-report.json",
+      "shared_input_refs": [
+        "fixtures/ref-scientific-conventions/conventions.json",
+        "fixtures/ref-scientific-conventions/cases.json"
+      ],
+      "dependency_boundary": {
+        "product_runtime_excluded": true,
+        "legacy_excluded": true,
+        "other_reference_lane_excluded": true,
+        "shared_inputs_disclosed": true
+      },
+      "implementation_independence": "confirmed",
+      "scientific_source_independence": "not-claimed",
+      "basis_refs": [
+        "tools/scientific_conventions_reference.py",
+        "tools/validate-scientific-conventions.ps1",
+        "docs/quality/scientific-conventions-cross-tool-report.json"
+      ]
+    }
+  ],
+  "comparison": {
+    "expected_ref": "fixtures/ref-scientific-conventions/cases.json",
+    "actual_report_ref": "docs/quality/scientific-conventions-cross-tool-report.json",
+    "comparator_ref": "tools/validate-scientific-conventions.ps1",
+    "tolerance_ref": "fixtures/ref-scientific-conventions/conventions.json"
+  },
+  "provenance": {
+    "rights_inventory_item_ref": "r0-research-evidence",
+    "lineage_parent_item_refs": [
+      "repository-default-content",
+      "architecture-blueprint",
+      "host-validation-toolchain"
+    ]
+  },
+  "authority": {
+    "owner_role": "scientific_authority",
+    "owner_actor_id": "r0-science-agent",
+    "owner_task_path": "/root/r0_science_agent",
+    "reviewer_role": "architecture_lead",
+    "authorization_ref": "docs/governance/r0-owner-authorization.json",
+    "decision_id": "RECON-DEC-005"
+  },
+  "rights_effect": "no-change",
+  "external_distribution": "blocked-pending-accepted-adr",
+  "runtime_consumers": 0
+}
