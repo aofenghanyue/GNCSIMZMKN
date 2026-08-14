@@ -1,7 +1,7 @@
 {
   "schema_version": "gnczmkn.fixture-manifest/1",
   "fixture_id": "REF-LEGACY-STOP-001",
-  "status": "capturing",
+  "status": "executable",
   "purpose": "Make the frozen Legacy record-before-termination boundary executable while keeping free-text reason and Legacy runtime surfaces outside the preserved fact.",
   "authority": "validation_lead",
   "provenance": {
@@ -70,7 +70,7 @@
     "Termination-before-record, row-not-visible-at-evaluation, missing terminal row, final-time advance and post-stop observation are rejected independently",
     "Swapping the two record-field events and dataset columns is accepted after stable identity/header mapping",
     "Changing Legacy free-text reason leaves semantic comparison unchanged",
-    "Preserve and Retire recommendations remain pending until the repository owner accepts the disposition choice"
+    "The accepted disposition preserves a terminal Observation for the stopping state before its RunOutcome while retiring Legacy reason text, ordering rules and runtime/CSV surfaces; typed termination identity remains pending"
   ],
   "open_tasks": [
     "R0-LEG-002"

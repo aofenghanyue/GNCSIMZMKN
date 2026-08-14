@@ -1,7 +1,7 @@
 # R0-LEG-002 Legacy 行为 oracle 捕获计划
 
 - 文档状态：Implementation tracking
-- 实现成熟度：`ORACLE-YYZ-PUBLISH-01`、`ORACLE-YYZ-PHASE-02`、`ORACLE-YYZ-SYNC-03`、`ORACLE-YYZ-GROUP-04` 与 `ORACLE-YYZ-CSV-05` 已达到 `executable`；`ORACLE-YYZ-STOP-06` 与 `ORACLE-SIMFLOW-07` 处于 `capturing`。七条均有可执行证据 bundle 和直接失败路径；待定处置仍阻断完整 G1 或 runtime migration pass evidence
+- 实现成熟度：`ORACLE-YYZ-PUBLISH-01`、`ORACLE-YYZ-PHASE-02`、`ORACLE-YYZ-SYNC-03`、`ORACLE-YYZ-GROUP-04`、`ORACLE-YYZ-CSV-05` 与 `ORACLE-YYZ-STOP-06` 已达到 `executable`；`ORACLE-SIMFLOW-07` 处于 `capturing`。七条均有可执行证据 bundle 和直接失败路径；待定处置仍阻断完整 G1 或 runtime migration pass evidence
 - 任务：`R0-LEG-002`（backlog 为 `in_progress`）
 - 日期：2026-08-14
 - Authority owner role：Validation Lead
@@ -57,7 +57,7 @@ canonical Legacy 捕获候选应优先复用 `R0-LEG-001` 已成功验证的 Win
 
 ### 3.1 当前切片的契约路由
 
-现有 `gnczmkn.oracle-manifest/1` 继续承担集合索引，只引用实际 artifact。七个切片使用各自 fixture-local `input.json` 与 `reference.json`，由当前 Python comparator 和 C++ probe 直接消费；每份 `reference.json` 对对应 `input.json` 原始 bytes 记录 SHA-256，并把事实级处置保存为枚举字段与独立 decision status。phase 与 continuous-group 切片另保存外部 Legacy capture harness 和两份原始 JSON trace；CSV、STOP 与 SimFlow 切片保存各自 raw dataset、trace 或 CLI lineage。publish、phase、同步提交与 continuous-group 切片的状态已接受，CSV、STOP 与 SimFlow 切片保持待定。
+现有 `gnczmkn.oracle-manifest/1` 继续承担集合索引，只引用实际 artifact。七个切片使用各自 fixture-local `input.json` 与 `reference.json`，由当前 Python comparator 和 C++ probe 直接消费；每份 `reference.json` 对对应 `input.json` 原始 bytes 记录 SHA-256，并把事实级处置保存为枚举字段与独立 decision status。phase 与 continuous-group 切片另保存外部 Legacy capture harness 和两份原始 JSON trace；CSV、STOP 与 SimFlow 切片保存各自 raw dataset、trace 或 CLI lineage。publish、phase、同步提交、continuous-group、CSV 与 STOP 切片的状态已接受，SimFlow 切片保持待定。
 
 这组 fixture-local JSON 不扩展公共 schema。后续出现第二个共享 consumer 或跨 bundle 合并需求时，再以窄 ADR 决定通用 sidecar 或 oracle schema revision。当前 `needs_owner_decision` 不能把 `R0-LEG-002` 或关联 oracle 标为完成。
 
@@ -83,7 +83,7 @@ canonical Legacy 捕获候选应优先复用 `R0-LEG-001` 已成功验证的 Win
 | `ORACLE-YYZ-SYNC-03` | mass'=−2、position'=mass 的两个独立连续系统，RK4，dt=1 | 最终 mass=8、position=10；源码先完成全部 pending candidate 再 setState | 已捕获 candidate-complete/commit journal、双跑输出和 early-commit 失败路径 | event partial order exact；种子 scalar 为 1e-12 | 已接受：Preserve 候选屏障与 committed-`t_k` 读取（ScientificInvariant）；Retire `pending_states`、setState 循环顺序与 Legacy 接口名称 |
 | `ORACLE-YYZ-GROUP-04` | mass'=−2、position'=candidate mass 的二元连续组，RK4，dt=1 | 最终 mass=8、position=9，当前断言 1e-12；拒绝未注册成员和重复 group ownership | 已捕获两份真实四阶段 candidate/derivative 与单次 group commit trace，并用 50 位 Decimal、独立 C++17 joint RK4、valid/invalid membership cases 复核；member identity 绑定允许声明与 packed storage 重排 | stage/event/membership identity exact；声明与 packing order 排除；种子 scalar 1e-12 只覆盖合成用例；YYZ trajectory tolerance 由 R0-SCI-003 冻结 | 已接受：Preserve 共享 candidate、单次 scope commit 与唯一 membership（DeclaredModelChoice）；Retire `IContinuousGroup`、group node 和手工 vector 分发 |
 | `ORACLE-YYZ-CSV-05` | constant-acceleration mission，dt=0.5/duration=1，record initial | rows: t0=(0,1000,vz=10)、t1=(0.5,1004.75,vz=9)、t2=(1,1009,vz=8)；time 1e-12、state 1e-9 | 已在固定 Legacy 环境捕获两份 byte-identical dataset；按 header 映射 fixture-local semantic field id，并以 50 位 Decimal、独立 C++17 probe、列置换、等值数值文本、未映射列变化和重复未映射表头复核 | field identity/row order exact；必要表头唯一；列序、有限 Decimal 等值文本和未映射列排除；种子 time 1e-12、state 1e-9；YYZ 字段 tolerance 由 R0-SCI-003 冻结 | 已接受：Preserve `t_k` 与 published-state boundary（ScientificInvariant）；Retire 列序、列名拼接、格式/目录 |
-| `ORACLE-YYZ-STOP-06` | t0 即满足的 altitude stop，record initial + flush every step | termination reason 为 `stop at t0`；header + 一行，row time=0；run 中 record 在 checkTermination 前 | 已捕获两份 byte-identical t0 dataset 与两份 semantic-identical trace；终止 evaluator 在返回 true 前读回已 flush 行；独立 Python/Decimal 与 C++17 timeline 覆盖五条独立失败路径、record-field event/dataset 列换序和 reason-text 等价路径 | event identity/multiplicity、step、row count 与 publish-record-termination-completion partial order exact；record-field event 顺序、dataset 列序和 free text 排除；种子 scalar 1e-12 | 待定：建议 Preserve 停止状态 Observation 先于对应 RunOutcome（DeclaredModelChoice）；Retire free-text reason、record-field iteration order、Legacy evaluator 与 logger/CSV surface；target artifacts 显式 pending |
+| `ORACLE-YYZ-STOP-06` | t0 即满足的 altitude stop，record initial + flush every step | termination reason 为 `stop at t0`；header + 一行，row time=0；run 中 record 在 checkTermination 前 | 已捕获两份 byte-identical t0 dataset 与两份 semantic-identical trace；终止 evaluator 在返回 true 前读回已 flush 行；独立 Python/Decimal 与 C++17 timeline 覆盖五条独立失败路径、record-field event/dataset 列换序和 reason-text 等价路径 | event identity/multiplicity、step、row count 与 publish-record-termination-completion partial order exact；record-field event 顺序、dataset 列序和 free text 排除；种子 scalar 1e-12 | 已接受：Preserve 停止状态 Observation 先于对应 RunOutcome（DeclaredModelChoice）；Retire free-text reason、record-field iteration order、Legacy evaluator 与 logger/CSV surface；target artifacts 与 typed termination identity 保持 pending |
 | `ORACLE-SIMFLOW-07` | base mission + 两行 variation matrix + numeric perturbation materializer | `hot` source case 被物化；effective mission 含 `engine.temp_level=2` 与 `aero.drag_bias=-0.03`；普通 `gnc_sim --config` 可重放 | 已在两个独立新工作目录运行 `--simflow`，把 effective mission 复制到 case 目录外，再从另外两个独立全新目录运行普通 `--config`；两份 effective mission、两份 summary 和四份 dataset 分别 byte-identical，并由独立 Python 物化器与 C++17 typed replay probe 复核；effective-mission JSON 重编码、requested-input 声明、case-source 列和 dataset 全列重排保持同一语义结果 | source row/input identity、命令与 row identity exact；dataset scalar 1e-12；input 声明顺序、case-source 列序、目录、numeric index、JSON 格式与 dataset CSV 列序排除；target CaseId 规则待定 | 待定：建议 Preserve 预运行物化与 ordinary compile/run replay（DeclaredModelChoice）；Retire `case_000001`、目录/index、不生成 case manifest、Legacy API 与 old Mission shape；deterministic target CaseId 为新契约 |
 
 ### 5.1 当前没有可自动批准的 Fix
@@ -143,5 +143,5 @@ raw trace 至少使用以下稳定概念字段；具体 schema 名称待第 3.1 
 - capture 仅发生于隔离 build workspace，产品 tree 与冻结 Legacy 零修改；
 - 七个切片分别包含与其语义边界直接对应的失败用例，并保留各自的正向等价路径；
 - target 尚不存在的对象显式为 pending，没有 vacuous pass；
-- `R0-LEG-001` 已完成，`R0-LEG-002` 保持 `in_progress`；publish、phase、同步提交、continuous-group 与 CSV 切片的处置已接受，STOP 与 SimFlow 切片仍显式待定；
+- `R0-LEG-001` 已完成，`R0-LEG-002` 保持 `in_progress`；publish、phase、同步提交、continuous-group、CSV 与 STOP 切片的处置已接受，SimFlow 切片仍显式待定；
 - UTF-8、Markdown links、repository verification 与 `git diff --check` 通过。

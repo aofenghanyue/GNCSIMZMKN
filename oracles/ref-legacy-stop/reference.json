@@ -104,24 +104,24 @@
     }
   ],
   "disposition_decision": {
-    "status": "needs_owner_decision",
+    "status": "accepted",
     "owner_role": "validation_lead",
     "facts": [
       {
         "fact_id": "FACT-STOP-RECORDED-STATE-PRECEDES-TERMINAL",
-        "recommended_disposition": "Preserve",
+        "disposition": "Preserve",
         "difference_reason": "DeclaredModelChoice",
         "target_mapping": "A terminal Observation for the stopping state precedes the corresponding RunOutcome"
       },
       {
         "fact_id": "FACT-STOP-LEGACY-REASON-TEXT",
-        "recommended_disposition": "Retire",
+        "disposition": "Retire",
         "difference_reason": "AccidentalStructure",
         "target_mapping": "Legacy free-text reason is display-only; target termination identity remains a pending typed contract"
       },
       {
         "fact_id": "FACT-STOP-LEGACY-SURFACE",
-        "recommended_disposition": "Retire",
+        "disposition": "Retire",
         "difference_reason": "AccidentalStructure",
         "target_mapping": "ITerminationEvaluator, evaluator priority/registration order, record-field iteration order and AutoDataLogger/CSV implementation surface"
       }

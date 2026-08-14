@@ -118,7 +118,7 @@
     {
       "id": "ORACLE-YYZ-STOP-06",
       "level": "mission",
-      "status": "capturing",
+      "status": "executable",
       "claim": "A stopping state is observed before the run reaches its terminal outcome.",
       "expected_facts": [
         "The t0 stopping state is recorded and visible before termination evaluation returns true.",
