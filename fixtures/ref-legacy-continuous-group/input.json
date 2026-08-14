@@ -24,7 +24,8 @@
       "position"
     ],
     "registered_members_required": true,
-    "unique_scope_ownership_required": true
+    "unique_scope_ownership_required": true,
+    "member_binding": "stable member identity; declaration and packed storage order are excluded from semantic equality"
   },
   "legacy_source": {
     "archive": {

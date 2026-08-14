@@ -5,8 +5,8 @@
   "case_id": "CASE-LEGACY-GROUP-CANDIDATE-CLOSURE",
   "input_identity": {
     "path": "fixtures/ref-legacy-continuous-group/input.json",
-    "bytes": 3553,
-    "sha256": "8661d2df199d75374c27db73d2d44df0ea7e9bb87cbdf64137586648e8880a72"
+    "bytes": 3675,
+    "sha256": "4b9b68a6393dcbcd9c7c9e11f9c9d6d440271976469363743df0a5e26a81ed0a"
   },
   "reference_method": {
     "implementation": "CPython standard library Decimal at 50 digits plus an independent C++17 joint-state RK4 probe",
@@ -114,6 +114,13 @@
       "id": "FAIL-GROUP-DUPLICATE-OWNERSHIP",
       "mutation": "Assign one continuous member to two scopes",
       "expected_status": "rejected"
+    }
+  ],
+  "equivalence_cases": [
+    {
+      "id": "PASS-GROUP-MEMBER-ORDER-REPACKED",
+      "mutation": "Reverse member declaration and packed storage order while binding candidate fields by stable member identity",
+      "expected_status": "accepted"
     }
   ],
   "disposition_decision": {

@@ -13,6 +13,8 @@ stage 4: t=1.0, mass=8,  position=9.0
 
 One group commit produces `mass=8` and `position=9`. The split snapshot control uses committed `t_k` mass for the entire position step and produces `position=10`, so the failure is directly observable.
 
+Member semantics are bound by the stable `mass` and `position` identities. Reversing declaration and packed storage order still produces the same four stages and final state; the oracle therefore does not preserve Legacy manual vector packing order.
+
 The bundle separates actual Legacy capture and target-independent checks:
 
 - [`legacy_capture.cpp`](legacy_capture.cpp) instruments the public Legacy group/test surface in a clean extraction workspace;

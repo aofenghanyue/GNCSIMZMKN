@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import copy
 from decimal import Decimal, getcontext
 import hashlib
 import json
@@ -33,6 +34,15 @@ def require(condition: bool, message: str) -> None:
 
 def decimal(value: object) -> Decimal:
     return Decimal(str(value))
+
+
+def canonical_member_ids(value: object, label: str) -> list[str]:
+    require(isinstance(value, list) and
+            all(isinstance(item, str) and item for item in value),
+            f"{label} member identities are invalid")
+    require(len(value) == len(set(value)),
+            f"{label} member identities contain a duplicate")
+    return sorted(value)
 
 
 def verify_file_identity(record: dict, repo_root: Path, label: str) -> bytes:
@@ -201,7 +211,8 @@ def validate_trace(trace: dict, expected: dict, analytic: dict,
             trace["rerun_index"] == rerun_index,
             "Legacy group trace identity differs")
     require(trace["scope_id"] == expected["scope_id"] and
-            trace["member_ids"] == expected["member_ids"],
+            canonical_member_ids(trace["member_ids"], "Legacy scope") ==
+            canonical_member_ids(expected["member_ids"], "Reference scope"),
             "Legacy scope or member identity differs")
 
     events = trace["events"]
@@ -244,8 +255,11 @@ def validate_trace(trace: dict, expected: dict, analytic: dict,
     require(normalization["excluded_top_level_fields"] == ["rerun_index"] and
             normalization["excluded_event_fields"] == [],
             "Trace normalization excludes unsupported fields")
-    return {key: value for key, value in trace.items()
-            if key != "rerun_index"}
+    normalized = copy.deepcopy(trace)
+    normalized.pop("rerun_index")
+    normalized["member_ids"] = canonical_member_ids(
+        normalized["member_ids"], "Normalized scope")
+    return normalized
 
 
 def compare_reference(expected: dict, analytic: dict,
@@ -347,6 +361,20 @@ def main() -> int:
             "Normalized Legacy group trace reruns differ")
     checks += 3 + 8 * len(analytic["stages"])
 
+    equivalence = oracle["equivalence_cases"]
+    require(len(equivalence) == 1 and
+            equivalence[0]["id"] ==
+            "PASS-GROUP-MEMBER-ORDER-REPACKED" and
+            equivalence[0]["expected_status"] == "accepted",
+            "Group equivalence-case definition differs")
+    reordered_trace = copy.deepcopy(traces[0])
+    reordered_trace["member_ids"].reverse()
+    require(validate_trace(
+                reordered_trace, expected, analytic, tolerance, 1) ==
+            normalized_first,
+            "Member declaration order changed group semantics")
+    checks += 3
+
     require(analytic["final_position_m"] !=
             analytic["split_snapshot_position_m"],
             "Group case does not distinguish joint and split closure")
@@ -372,7 +400,8 @@ def main() -> int:
             probe["status"] == "passed",
             "C++ group probe returned an unexpected identity or status")
     require(probe["scope_id"] == expected["scope_id"] and
-            probe["member_ids"] == expected["member_ids"],
+            canonical_member_ids(probe["member_ids"], "C++ scope") ==
+            canonical_member_ids(expected["member_ids"], "Reference scope"),
             "C++ scope or member identity differs")
     require(probe["events"] == normalized_first["events"] and
             probe["member_final"] == normalized_first["member_final"],
@@ -382,10 +411,11 @@ def main() -> int:
             analytic["split_snapshot_position_m"],
             "C++ commit count or split control differs")
     for flag in ("split_closure_rejected", "valid_membership_accepted",
-                 "unregistered_member_rejected",
-                 "duplicate_ownership_rejected"):
+                  "unregistered_member_rejected",
+                  "duplicate_ownership_rejected",
+                  "member_order_change_accepted"):
         require(probe[flag] is True, f"C++ probe did not enforce {flag}")
-    checks += 9
+    checks += 10
 
     decision = oracle["disposition_decision"]
     require(decision["status"] in {"needs_owner_decision", "accepted"},
@@ -408,6 +438,7 @@ def main() -> int:
         "final_position_m": str(analytic["final_position_m"]),
         "split_snapshot_position_m": str(
             analytic["split_snapshot_position_m"]),
+        "member_order_change_accepted": True,
         "disposition_status": decision["status"],
     }, separators=(",", ":")))
     return 0

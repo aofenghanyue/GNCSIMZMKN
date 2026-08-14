@@ -38,8 +38,8 @@
     },
     {
       "id": "FACT-GROUP-MEMBERSHIP",
-      "claim": "Every scope member must be registered and may belong to only one continuous scope.",
-      "tolerance_policy": "Valid, unregistered and duplicate-ownership outcomes are exact.",
+      "claim": "Every scope member must be registered, may belong to only one continuous scope and is bound by stable member identity independently of declaration or packed storage order.",
+      "tolerance_policy": "Membership identity plus valid, unregistered and duplicate-ownership outcomes are exact; declaration and packed storage order are excluded after identity binding.",
       "evidence_refs": [
         "fixtures/ref-legacy-continuous-group/legacy-run-1.json",
         "fixtures/ref-legacy-continuous-group/legacy-run-2.json",
@@ -74,6 +74,7 @@
     "Two raw Legacy captures normalize to one semantic stage and commit trace after excluding only rerun_index",
     "Independent 50-digit Decimal and C++17 joint-state RK4 implementations agree with every Legacy stage and final member value",
     "Rejects split snapshot closure, an unregistered member and duplicate scope ownership",
+    "Accepts member declaration and packed storage reordering after stable identity binding",
     "Preserve and Retire recommendations remain visibly pending until the repository owner accepts the disposition choice"
   ],
   "open_tasks": [

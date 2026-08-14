@@ -2,6 +2,7 @@
 #include <cmath>
 #include <cstddef>
 #include <iostream>
+#include <map>
 #include <set>
 #include <stdexcept>
 #include <string>
@@ -41,6 +42,7 @@ struct ProbeResult {
     bool valid_membership_accepted = false;
     bool unregistered_member_rejected = false;
     bool duplicate_ownership_rejected = false;
+    bool member_order_change_accepted = false;
 };
 
 void require(bool condition, const std::string& message) {
@@ -51,6 +53,19 @@ void require(bool condition, const std::string& message) {
 
 bool nearlyEqual(double lhs, double rhs) {
     return std::abs(lhs - rhs) <= kTolerance;
+}
+
+State bindPackedStateByMemberId(
+        const std::vector<std::pair<std::string, double>>& packed) {
+    std::map<std::string, double> by_id;
+    for (const auto& [member_id, value] : packed) {
+        require(by_id.emplace(member_id, value).second,
+                "packed state contains a duplicate member identity");
+    }
+    require(by_id.size() == 2 && by_id.count("mass") == 1 &&
+                by_id.count("position") == 1,
+            "packed state does not contain the declared members");
+    return {by_id.at("mass"), by_id.at("position")};
 }
 
 State addScaled(const State& state,
@@ -156,6 +171,29 @@ bool validTrace(const ProbeResult& result) {
            nearlyEqual(result.committed.position_m, 9.0);
 }
 
+bool sameStageSemantics(const std::vector<StageEvent>& lhs,
+                        const std::vector<StageEvent>& rhs) {
+    if (lhs.size() != rhs.size()) {
+        return false;
+    }
+    for (std::size_t index = 0; index < lhs.size(); ++index) {
+        if (lhs[index].sequence != rhs[index].sequence ||
+            lhs[index].rk_stage != rhs[index].rk_stage ||
+            !nearlyEqual(lhs[index].time_s, rhs[index].time_s) ||
+            !nearlyEqual(lhs[index].candidate.mass_kg,
+                         rhs[index].candidate.mass_kg) ||
+            !nearlyEqual(lhs[index].candidate.position_m,
+                         rhs[index].candidate.position_m) ||
+            !nearlyEqual(lhs[index].derivative.mass_rate_kg_per_s,
+                         rhs[index].derivative.mass_rate_kg_per_s) ||
+            !nearlyEqual(lhs[index].derivative.position_rate_mps,
+                         rhs[index].derivative.position_rate_mps)) {
+            return false;
+        }
+    }
+    return true;
+}
+
 ProbeResult runProbe() {
     ProbeResult result;
     const State initial{};
@@ -175,6 +213,17 @@ ProbeResult runProbe() {
         registered, {{"mass", "orphan"}});
     result.duplicate_ownership_rejected = !validMembership(
         registered, {{"mass"}, {"mass"}});
+
+    std::vector<StageEvent> repacked_stages;
+    const State repacked_initial = bindPackedStateByMemberId(
+        {{"position", 0.0}, {"mass", 10.0}});
+    const State repacked_final = jointRk4Step(
+        repacked_initial, 0.0, 1.0, repacked_stages);
+    result.member_order_change_accepted =
+        sameStageSemantics(result.stages, repacked_stages) &&
+        nearlyEqual(result.committed.mass_kg, repacked_final.mass_kg) &&
+        nearlyEqual(result.committed.position_m,
+                    repacked_final.position_m);
     return result;
 }
 
@@ -222,6 +271,8 @@ void writeJson(const ProbeResult& result) {
               << (result.unregistered_member_rejected ? "true" : "false")
               << ",\"duplicate_ownership_rejected\":"
               << (result.duplicate_ownership_rejected ? "true" : "false")
+              << ",\"member_order_change_accepted\":"
+              << (result.member_order_change_accepted ? "true" : "false")
               << "}\n";
 }
 
@@ -247,6 +298,8 @@ int main(int argc, char** argv) {
                 "unregistered scope member was accepted");
         require(result.duplicate_ownership_rejected,
                 "duplicate scope ownership was accepted");
+        require(result.member_order_change_accepted,
+                "member packing order changed group semantics");
         writeJson(result);
         return 0;
     } catch (const std::exception& error) {
