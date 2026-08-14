@@ -32,4 +32,4 @@ Run the executable checks through CTest:
 ctest --preset dev -R "r0.legacy-stop" --output-on-failure
 ```
 
-The comparison independently rejects termination-before-record, a row that is unavailable when evaluation returns, a missing terminal row and post-stop advancement. Legacy free-text reason changes are ignored. Target `Observation` and `RunOutcome` artifacts remain pending future-stage implementation. The bundle stays `capturing` until the repository owner accepts the recommended Preserve/Retire split.
+The comparison independently rejects termination-before-record, a row that is unavailable when evaluation returns, a missing terminal row, an advanced final time and an observation after the stopping boundary. Legacy free-text reason changes are ignored. Target `Observation` and `RunOutcome` artifacts remain pending future-stage implementation. The bundle stays `capturing` until the repository owner accepts the recommended Preserve/Retire split.

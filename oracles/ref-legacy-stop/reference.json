@@ -81,7 +81,12 @@
     },
     {
       "id": "FAIL-STOP-POST-STOP-ADVANCE",
-      "mutation": "Advance final_time to t1 and append a second dataset row after the satisfied t0 predicate",
+      "mutation": "Advance final_time to t1 while retaining only the canonical t0 terminal row",
+      "expected_status": "rejected"
+    },
+    {
+      "id": "FAIL-STOP-POST-STOP-OBSERVATION",
+      "mutation": "Append a t1 dataset row while final_time remains at the canonical t0 boundary",
       "expected_status": "rejected"
     }
   ],

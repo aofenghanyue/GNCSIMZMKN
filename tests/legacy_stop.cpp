@@ -38,7 +38,8 @@ struct ProbeResult {
     bool termination_before_record_rejected = false;
     bool row_not_visible_at_evaluation_rejected = false;
     bool missing_terminal_row_rejected = false;
-    bool post_stop_advance_rejected = false;
+    bool final_time_advance_rejected = false;
+    bool post_stop_observation_rejected = false;
     bool reason_text_change_accepted = false;
 };
 
@@ -123,10 +124,14 @@ ProbeResult runProbe() {
     missing_row.rows.clear();
     result.missing_terminal_row_rejected = !validTimeline(missing_row);
 
-    Timeline post_stop_advance = result.canonical;
-    post_stop_advance.rows.push_back({1.0, 1010.0, 10.0});
-    post_stop_advance.final_time_s = 1.0;
-    result.post_stop_advance_rejected = !validTimeline(post_stop_advance);
+    Timeline final_time_advance = result.canonical;
+    final_time_advance.final_time_s = 1.0;
+    result.final_time_advance_rejected = !validTimeline(final_time_advance);
+
+    Timeline post_stop_observation = result.canonical;
+    post_stop_observation.rows.push_back({1.0, 1010.0, 10.0});
+    result.post_stop_observation_rejected =
+        !validTimeline(post_stop_observation);
 
     Timeline changed_reason = result.canonical;
     changed_reason.reason_text = "different display text";
@@ -162,8 +167,10 @@ void writeJson(const ProbeResult& result) {
                       ? "true" : "false")
               << ",\"missing_terminal_row_rejected\":"
               << (result.missing_terminal_row_rejected ? "true" : "false")
-              << ",\"post_stop_advance_rejected\":"
-              << (result.post_stop_advance_rejected ? "true" : "false")
+              << ",\"final_time_advance_rejected\":"
+              << (result.final_time_advance_rejected ? "true" : "false")
+              << ",\"post_stop_observation_rejected\":"
+              << (result.post_stop_observation_rejected ? "true" : "false")
               << ",\"reason_text_change_accepted\":"
               << (result.reason_text_change_accepted ? "true" : "false")
               << "}\n";
@@ -187,8 +194,10 @@ int main(int argc, char** argv) {
                 "row-not-visible-at-evaluation mutation was accepted");
         require(result.missing_terminal_row_rejected,
                 "missing terminal row mutation was accepted");
-        require(result.post_stop_advance_rejected,
-                "post-stop advance mutation was accepted");
+        require(result.final_time_advance_rejected,
+                "final-time advance mutation was accepted");
+        require(result.post_stop_observation_rejected,
+                "post-stop observation mutation was accepted");
         require(result.reason_text_change_accepted,
                 "free-text reason changed semantic comparison");
         writeJson(result);
