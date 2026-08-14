@@ -1,0 +1,285 @@
+{
+  "schema_version": "gnczmkn.yyz-propulsion-response-reference/1",
+  "fixture_id": "REF-YYZ-PROPULSION-RESPONSE-001",
+  "oracle_id": "ORACLE-YYZ-PROPULSION-RESPONSE-001",
+  "model_id": "MODEL-YYZ-PROPULSION-RESPONSE-001",
+  "status": "executable",
+  "precision": {
+    "decimal_digits": 80
+  },
+  "input_identity": {
+    "path": "fixtures/ref-yyz-propulsion-response/cases.json",
+    "bytes": 8747,
+    "sha256": "bbc9915c081ff42532fde79814644e251d9e7c84e6b1e420abada7d762613e34"
+  },
+  "cases": {
+    "CASE-YYZ-PROPULSION-OFF-AXIS-CONSUMERS": {
+      "id": "CASE-YYZ-PROPULSION-OFF-AXIS-CONSUMERS",
+      "response": {
+        "model_id": "MODEL-YYZ-PROPULSION-RESPONSE-001",
+        "source_id": "propulsion.main",
+        "quality": "Valid",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "sample_tick": 20,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 8,
+        "valid_from_tick": 20,
+        "valid_until_tick": 25,
+        "force_B_N": [
+          "300",
+          "400",
+          "0"
+        ],
+        "r_CoM_to_application_B_m": [
+          "-0.5",
+          "0.25",
+          "0.1"
+        ],
+        "moment_at_application_B_Nm": [
+          "1",
+          "-2",
+          "3"
+        ],
+        "fuel_consumption_rate_kgps": "0.5"
+      },
+      "closure_consumer": {
+        "source_id": "propulsion.main",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "sample_tick": 20,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 8,
+        "force_B_N": [
+          "300",
+          "400",
+          "0"
+        ],
+        "moment_at_application_B_Nm": [
+          "1",
+          "-2",
+          "3"
+        ],
+        "lever_arm_moment_B_Nm": [
+          "-40",
+          "30",
+          "-275"
+        ],
+        "moment_about_CoM_B_Nm": [
+          "-39",
+          "28",
+          "-272"
+        ]
+      },
+      "mass_consumer": {
+        "mass_state_id": "mass.fixture.yyz.vehicle@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 8,
+        "valid_from_tick": 20,
+        "valid_until_tick": 25,
+        "interval_duration_s": "0.5",
+        "fuel_consumption_rate_kgps": "0.5",
+        "consumed_fuel_mass_kg": "0.25",
+        "mass_delta_kg": "-0.25",
+        "committed_mass_kg": "120",
+        "mass_candidate_kg": "119.75"
+      }
+    },
+    "CASE-YYZ-PROPULSION-THREE-DIMENSIONAL-WRENCH": {
+      "id": "CASE-YYZ-PROPULSION-THREE-DIMENSIONAL-WRENCH",
+      "response": {
+        "model_id": "MODEL-YYZ-PROPULSION-RESPONSE-001",
+        "source_id": "propulsion.main",
+        "quality": "Valid",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "sample_tick": 3,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 9,
+        "valid_from_tick": 3,
+        "valid_until_tick": 7,
+        "force_B_N": [
+          "40",
+          "0",
+          "30"
+        ],
+        "r_CoM_to_application_B_m": [
+          "0.2",
+          "-0.1",
+          "0.3"
+        ],
+        "moment_at_application_B_Nm": [
+          "-4",
+          "5",
+          "-6"
+        ],
+        "fuel_consumption_rate_kgps": "0"
+      },
+      "closure_consumer": {
+        "source_id": "propulsion.main",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "sample_tick": 3,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 9,
+        "force_B_N": [
+          "40",
+          "0",
+          "30"
+        ],
+        "moment_at_application_B_Nm": [
+          "-4",
+          "5",
+          "-6"
+        ],
+        "lever_arm_moment_B_Nm": [
+          "-3",
+          "6",
+          "4"
+        ],
+        "moment_about_CoM_B_Nm": [
+          "-7",
+          "11",
+          "-2"
+        ]
+      },
+      "mass_consumer": {
+        "mass_state_id": "mass.fixture.yyz.vehicle@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 9,
+        "valid_from_tick": 3,
+        "valid_until_tick": 7,
+        "interval_duration_s": "1",
+        "fuel_consumption_rate_kgps": "0",
+        "consumed_fuel_mass_kg": "0",
+        "mass_delta_kg": "0",
+        "committed_mass_kg": "10",
+        "mass_candidate_kg": "10"
+      }
+    },
+    "CASE-YYZ-PROPULSION-ZERO-RESPONSE": {
+      "id": "CASE-YYZ-PROPULSION-ZERO-RESPONSE",
+      "response": {
+        "model_id": "MODEL-YYZ-PROPULSION-RESPONSE-001",
+        "source_id": "propulsion.main",
+        "quality": "Valid",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "sample_tick": 100,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 10,
+        "valid_from_tick": 100,
+        "valid_until_tick": 101,
+        "force_B_N": [
+          "0",
+          "0",
+          "0"
+        ],
+        "r_CoM_to_application_B_m": [
+          "-2",
+          "3",
+          "-4"
+        ],
+        "moment_at_application_B_Nm": [
+          "0",
+          "0",
+          "0"
+        ],
+        "fuel_consumption_rate_kgps": "0"
+      },
+      "closure_consumer": {
+        "source_id": "propulsion.main",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "sample_tick": 100,
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 10,
+        "force_B_N": [
+          "0",
+          "0",
+          "0"
+        ],
+        "moment_at_application_B_Nm": [
+          "0",
+          "0",
+          "0"
+        ],
+        "lever_arm_moment_B_Nm": [
+          "0",
+          "0",
+          "0"
+        ],
+        "moment_about_CoM_B_Nm": [
+          "0",
+          "0",
+          "0"
+        ]
+      },
+      "mass_consumer": {
+        "mass_state_id": "mass.fixture.yyz.vehicle@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 10,
+        "valid_from_tick": 100,
+        "valid_until_tick": 101,
+        "interval_duration_s": "0.02",
+        "fuel_consumption_rate_kgps": "0",
+        "consumed_fuel_mass_kg": "0",
+        "mass_delta_kg": "0",
+        "committed_mass_kg": "5",
+        "mass_candidate_kg": "5"
+      }
+    }
+  },
+  "equivalence_results": [
+    {
+      "id": "EQUIV-YYZ-PROPULSION-MASS-INTERVAL-PARTITION",
+      "status": "passed",
+      "force_and_response_max_abs_difference": "0",
+      "application_wrench_max_abs_difference": "0",
+      "summed_consumed_fuel_mass_kg": "0.25",
+      "consumed_fuel_mass_difference_kg": "0",
+      "sequential_final_mass_candidate_kg": "119.75",
+      "final_mass_candidate_difference_kg": "0"
+    }
+  ],
+  "invalid_input_rejections": [
+    "INVALID-YYZ-PROPULSION-FRAME-MISMATCH",
+    "INVALID-YYZ-PROPULSION-CLOCK-MISMATCH",
+    "INVALID-YYZ-PROPULSION-SAMPLE-INTERVAL-MISMATCH",
+    "INVALID-YYZ-PROPULSION-REVISION",
+    "INVALID-YYZ-PROPULSION-NONPOSITIVE-DT",
+    "INVALID-YYZ-PROPULSION-NEGATIVE-THRUST",
+    "INVALID-YYZ-PROPULSION-NONUNIT-DIRECTION",
+    "INVALID-YYZ-PROPULSION-NONFINITE-MOMENT",
+    "INVALID-YYZ-PROPULSION-NEGATIVE-CONSUMPTION",
+    "INVALID-YYZ-PROPULSION-DEPLETED-MASS"
+  ],
+  "mutation_results": [
+    {
+      "id": "MUTATION-YYZ-PROPULSION-REVERSED-THRUST-DIRECTION",
+      "status": "rejected",
+      "max_abs_physical_difference": "800",
+      "observed_force_B_N": [
+        "-300",
+        "-400",
+        "0"
+      ]
+    },
+    {
+      "id": "MUTATION-YYZ-PROPULSION-PRETRANSPORTED-MOMENT",
+      "status": "rejected",
+      "max_abs_physical_difference": "275",
+      "observed_moment_at_application_B_Nm": [
+        "-39",
+        "28",
+        "-272"
+      ],
+      "observed_moment_about_CoM_B_Nm": [
+        "-79",
+        "58",
+        "-547"
+      ]
+    },
+    {
+      "id": "MUTATION-YYZ-PROPULSION-MASS-GAIN",
+      "status": "rejected",
+      "max_abs_physical_difference": "0.5",
+      "observed_mass_delta_kg": "0.25",
+      "observed_mass_candidate_kg": "120.25"
+    }
+  ]
+}

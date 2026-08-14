@@ -1,7 +1,7 @@
 # REF-YYZ-001 科学、行为与 target conformance bundle 设计
 
 - 文档状态：Implementation in progress
-- 实现成熟度：首个 fixture-local 刚体核心切片已达到 `executable`；完整 bundle 不得作为 G1、canonical YYZ model 或 Session pass evidence
+- 实现成熟度：多个 fixture-local 科学切片已达到 `executable`；完整 bundle 不得作为 G1、canonical YYZ model 或 Session pass evidence
 - 任务：`R0-SCI-003`（backlog 为 `in_progress`）
 - 日期：2026-08-10
 - Authority owner role：Scientific Authority
@@ -119,7 +119,7 @@ R0-LEG-001 的 YYZ 双跑观察为：
 
 `REF-YYZ-6DOF-CORE-001` 已实现并接受 fixture-local 惯性笛卡尔刚体核心：supplied uniform gravity、常正质量、常对称正定体轴惯量、质心处总力、质心总力矩、被动 Hamilton `q_I_B`、固定步长经典 RK4，以及每次导数求值前和提交前归一化。独立 60 位 Decimal reference 与 C++17 probe 覆盖公式 intermediates、解析匀速平移、解析主轴自旋、非主轴无外力矩高精度轨迹、姿态与角速度四阶收敛、转动能与角动量模守恒、ExactGrid 终止、阶段失败整候选丢弃和七类输入域拒绝。
 
-完整 `REF-YYZ-001` 仍缺 canonical mission 与资产、环境、气动、推进、制导控制、闭环轨迹、canonical terminal、pitch overshoot 指标和生产 tolerance report。当前 executable 仅在已接受的 fixture-local applicability domain 内提供科学事实，不能代表 00A 或 Legacy mission 的完整 YYZ 6DoF truth。
+完整 `REF-YYZ-001` 仍缺 canonical mission 与资产、Earth/atmosphere/wind、coefficient lookup 与适用域、engine/fuel 与完整 mass properties、制导控制、闭环轨迹、canonical terminal、pitch overshoot 指标和生产 tolerance report。当前 executable 仅在已接受的 fixture-local applicability domain 内提供科学事实，不能代表 00A 或 Legacy mission 的完整 YYZ 6DoF truth。
 
 ## 4. Scenario 冲突与 authority decision
 
@@ -270,8 +270,8 @@ R0-SCI-001 提供的 SI、frame、binary64、integer tick、ExactGrid 和 quater
 | Control | approved attitude/rate error → MomentCommand | reference/error terms、gain/feedforward、saturation | error representation、sequence/singularity、anti-windup |
 | Allocation | Moment/ForceCommand → ActuatorCommand | effectiveness matrix、solve residual、unclamped/clamped command | solver、limits、failure/reconfiguration policy |
 | Actuator | command + committed actuator state → sample/interval/candidate | lag target、rate-limit delta、position clamp | exact discretization/ODE、`dt=0` init、sample time |
-| Propulsion | command/config/state → force/moment/mass-flow interval | throttle/enable scale、application-point cross product、flow integral | engine dynamics、phase/config、fuel exhaustion |
-| Mass | committed mass/fuel + flow interval → MassProperties/candidate | consumed mass、dry clamp decision、CG/inertia | conservation model、scale semantics、domain failure |
+| Propulsion | supplied `T>=0`、unit `d_B`、application point、intrinsic moment 与正消耗率 → response + mass-flow interval | `F_B=T*d_B`、Closure-owned `r×F`、interval duration、consumed mass | command/throttle mapping、engine dynamics、phase/config、fuel exhaustion |
+| Mass | committed positive mass + positive-consumption interval → `m_candidate=m_committed-rate*duration` | duration、consumed mass、signed delta、candidate；非正 candidate 失败 | CG/inertia evolution、dry mass、fuel state、configuration semantics |
 | Aero | supplied coefficients + qbar/reference geometry → AeroResponse；完整路径后续再接 state/air/actuator/config + assets | `qbar*S`、`[-C_A,+C_Y,-C_N]`、`[b*C_l,cbar*C_m,b*C_n]`、aero reference point、transported CoM moment | coefficient lookup、interpolation/extrapolation、asset applicability、canonical geometry |
 | Closure | body-frame aero + prop + other force/moment responses → FormInput；`g^I` 保持独立惯性加速度 | each contribution by source/frame、application point、transported moment、total force/moment、configuration revision、validity interval | canonical response sources/application points、candidate/algebraic strategy |
 | Integration | committed state + frozen/approved interval model → candidate | every RK stage input/derivative/state/status | solver, stage guard, normalization/projection policy |
@@ -280,13 +280,15 @@ R0-SCI-001 提供的 SI、frame、binary64、integer tick、ExactGrid 和 quater
 
 表中的 equation 是审计起点，不是对未决模型的批准。若实际模型包含 rotating frame、variable inertia、Earth curvature、aero unsteadiness、engine dynamics 或 algebraic closure，必须由 owner 以明确方程替换/扩展，并增加 independent cases。
 
-`REF-YYZ-FORCE-MOMENT-CLOSURE-001` 已执行 fixture-local `FrozenInterval` 子集：每个贡献携带唯一 source identity、同一 body frame、configuration revision 与半开 validity interval，按 `M_CoM^B = M_application^B + r_CoM_to_application^B × F^B` 搬移并在 RK stages 内保持总量。Decimal 解析 reference 与独立 C++17 closure→rigid-core 路径交叉验证。Canonical aero、propulsion、mass、configuration 和 gravity model 仍待后续确定；variable mass/CoM/inertia、CandidateState 与 AlgebraicSolve 不在此切片范围内。
+`REF-YYZ-FORCE-MOMENT-CLOSURE-001` 已执行 fixture-local `FrozenInterval` 子集：每个贡献携带唯一 source identity、同一 body frame、configuration revision 与半开 validity interval，按 `M_CoM^B = M_application^B + r_CoM_to_application^B × F^B` 搬移并在 RK stages 内保持总量。Decimal 解析 reference 与独立 C++17 closure→rigid-core 路径交叉验证。Canonical response assets、完整 mass properties、configuration 和 gravity model 仍待后续确定；variable mass/CoM/inertia、CandidateState 与 AlgebraicSolve 不在此切片范围内。
 
 `REF-YYZ-AIR-DATA-KINEMATICS-001` 已执行 fixture-local supplied air-data 子集：同一边界的 Truth、WindQuery 与 AtmosphereQuery 携带显式 frame、clock 和 tick identity；右手体轴采用 `x-forward/y-right/z-down`；`q_I_B` 按被动 Hamilton 方向把惯性系相对风速转到体轴。`V>0` 且 `sqrt(u^2+w^2)>0`，zero-relative 与 pure-lateral 输入直接产生 domain error。Rearward flow 保持可计算，角度和声速分母均无 epsilon/floor。80 位 Decimal reference 与独立 C++17 probe 覆盖五个公式 case、两条等价性、九条失败和四条 Legacy 风格 mutation。Canonical atmosphere、wind、sensor、aero applicability 与产品 contract 仍待后续确定。
 
 `REF-YYZ-AERO-DIMENSIONALIZATION-001` 已执行 fixture-local supplied coefficient 子集：右手 `x-forward/y-right/z-down` 体轴下，`F_B=qbar*S_ref*[-C_A,C_Y,-C_N]`，`M_aero_ref_B=qbar*S_ref*[b_ref*C_l,c_ref*C_m,b_ref*C_n]`，并以 `r_CoM_to_aero_ref_B × F_B` 搬移到质心。输入要求有限非负动压、有限正参考面积/展长/弦长、有限系数和参考点，并要求 frame、clock、tick 与 configuration revision 同边界一致。80 位 Decimal reference 与独立 C++17 probe 覆盖三个公式 case、两个尺度等价变换、十条失败和三条 sign/scale/reference-vector mutation。Coefficient lookup、插值/外推、asset provenance/适用域、canonical 几何与产品 contract 仍待后续确定。
 
 `REF-YYZ-UNIFORM-ENVIRONMENT-001` 已执行 fixture-local supplied uniform environment 子集：pure query 接收有限惯性系位置、非负 tick、clock 与 configuration revision，返回位置/时间不变的 `gravity_I_mps2`、`airmass_velocity_I_mps`、`density_kgpm3` 和 `speed_of_sound_mps`。响应在同一 sample identity 进入已接受的 air-data `v_rel/qbar/Mach` 与 rigid-core `force_I/m+gravity_I` 关系。80 位 Decimal reference 与独立 C++17 probe 覆盖普通 consumer link、零密度/亚单位声速边界、position/tick 等价、严格输入域和 Legacy-style altitude density/gravity decay。Earth/geodetic/rotation、海拔模型、压力/温度/湿度、风廓线/阵风、canonical constants/assets 与产品 contract 仍待后续确定。
+
+`REF-YYZ-PROPULSION-RESPONSE-001` 已执行 fixture-local supplied propulsion response 子集：有限非负推力标量乘显式单位体轴方向形成 `F_B`；响应携带 `r_CoM_to_application_B` 与作用点固有力矩，Closure 独占 `r × F` 搬移。有限非负燃料消耗率在同一 clock/revision 的半开区间内积分，Mass consumer 以 `m_candidate=m_committed-rate*duration` 形成候选，非正候选直接产生 domain error。80 位 Decimal reference 与独立 C++17 probe 覆盖三个公式 case、区间分割等价、十条输入域失败，以及推力反向、预搬移力矩和质量增加 mutation。Command/throttle mapping、engine/fuel dynamics、dry-mass policy、完整 CG/inertia、canonical assets 与产品 contract 仍待后续确定。
 
 ### 7.3 Legacy 公式不可原样继承的地方
 

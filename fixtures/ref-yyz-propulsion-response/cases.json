@@ -1,0 +1,167 @@
+{
+  "schema_version": "gnczmkn.yyz-propulsion-response-cases/1",
+  "fixture_id": "REF-YYZ-PROPULSION-RESPONSE-001",
+  "oracle_id": "ORACLE-YYZ-PROPULSION-RESPONSE-001",
+  "model_choice": {
+    "status": "accepted",
+    "owner_role": "scientific_authority",
+    "accepted_scope": "Fixture-local supplied propulsion response with nonnegative thrust magnitude, an explicit unit body-frame direction, an application point, an intrinsic moment at that point, and a nonnegative fuel-consumption interval feeding the accepted Closure and sampled Mass consumers.",
+    "equations": [
+      "force_B = thrust_magnitude * thrust_direction_B_unit",
+      "lever_arm_moment_B = r_CoM_to_application_B x force_B",
+      "moment_about_CoM_B = intrinsic_moment_at_application_B + lever_arm_moment_B",
+      "interval_duration = (valid_until_tick - valid_from_tick) * base_dt",
+      "consumed_fuel_mass = fuel_consumption_rate * interval_duration",
+      "mass_delta = -consumed_fuel_mass",
+      "mass_candidate = committed_mass + mass_delta"
+    ],
+    "direction_policy": "Thrust magnitude is nonnegative. Direction is an explicit finite unit free vector expressed in the accepted x-forward/y-right/z-down body frame and uses the Error normalization policy.",
+    "moment_policy": "The response carries r_CoM_to_application_B and intrinsic moment_at_application_B. Closure alone transports the wrench to the center of mass.",
+    "mass_flow_policy": "fuel_consumption_rate_kgps is a nonnegative consumption magnitude. The sampled Mass consumer subtracts its exact interval integral and rejects a nonpositive candidate without a clamp.",
+    "temporal_policy": "PropulsionResponse is sampled at valid_from_tick and its MassFlowInterval is valid on the declared half-open tick interval in one clock domain and configuration revision.",
+    "excluded": [
+      "throttle or enable mapping, engine dynamics and phase logic",
+      "fuel state, dry-mass clamp, fuel exhaustion and ablation",
+      "canonical engine assets, configuration transitions and applicability",
+      "R1-R8 product contracts or runtime capability"
+    ]
+  },
+  "model": {
+    "model_id": "MODEL-YYZ-PROPULSION-RESPONSE-001",
+    "source_id": "propulsion.main",
+    "body_frame_id": "frame.fixture.yyz.body@1",
+    "body_axes": "right-handed x-forward/y-right/z-down",
+    "clock_domain": "clock.fixture.yyz.simulation@1",
+    "mass_state_id": "mass.fixture.yyz.vehicle@1",
+    "quality": "Valid",
+    "response_execution_form": "fixture-local-supplied-response",
+    "validity_domain": [
+      "all supplied and derived scalar values are finite",
+      "configuration_revision, sample_tick and valid_from_tick are nonnegative integers",
+      "valid_until_tick > valid_from_tick and sample_tick = valid_from_tick",
+      "base_dt_s > 0",
+      "thrust_magnitude_N >= 0",
+      "thrust_direction_B_unit has unit norm under the Error policy",
+      "fuel_consumption_rate_kgps >= 0",
+      "committed_mass_kg > 0 and mass_candidate_kg > 0",
+      "response, Closure contribution and Mass consumer identities agree"
+    ]
+  },
+  "tolerances": {
+    "formula_absolute": 2e-12,
+    "formula_relative": 2e-12,
+    "direction_norm_absolute": 1e-12,
+    "direction_norm_relative": 1e-12,
+    "stored_decimal_absolute": "1e-68"
+  },
+  "cases": [
+    {
+      "id": "CASE-YYZ-PROPULSION-OFF-AXIS-CONSUMERS",
+      "context": {
+        "source_id": "propulsion.main",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "sample_tick": 20,
+        "configuration_revision": 8,
+        "valid_from_tick": 20,
+        "valid_until_tick": 25,
+        "base_dt_s": 0.1
+      },
+      "supplied_response": {
+        "thrust_magnitude_N": 500.0,
+        "thrust_direction_B_unit": [0.6, 0.8, 0.0],
+        "r_CoM_to_application_B_m": [-0.5, 0.25, 0.1],
+        "intrinsic_moment_at_application_B_Nm": [1.0, -2.0, 3.0],
+        "fuel_consumption_rate_kgps": 0.5
+      },
+      "mass_consumer": {
+        "mass_state_id": "mass.fixture.yyz.vehicle@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 8,
+        "valid_from_tick": 20,
+        "valid_until_tick": 25,
+        "committed_mass_kg": 120.0
+      }
+    },
+    {
+      "id": "CASE-YYZ-PROPULSION-THREE-DIMENSIONAL-WRENCH",
+      "context": {
+        "source_id": "propulsion.main",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "sample_tick": 3,
+        "configuration_revision": 9,
+        "valid_from_tick": 3,
+        "valid_until_tick": 7,
+        "base_dt_s": 0.25
+      },
+      "supplied_response": {
+        "thrust_magnitude_N": 50.0,
+        "thrust_direction_B_unit": [0.8, 0.0, 0.6],
+        "r_CoM_to_application_B_m": [0.2, -0.1, 0.3],
+        "intrinsic_moment_at_application_B_Nm": [-4.0, 5.0, -6.0],
+        "fuel_consumption_rate_kgps": 0.0
+      },
+      "mass_consumer": {
+        "mass_state_id": "mass.fixture.yyz.vehicle@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 9,
+        "valid_from_tick": 3,
+        "valid_until_tick": 7,
+        "committed_mass_kg": 10.0
+      }
+    },
+    {
+      "id": "CASE-YYZ-PROPULSION-ZERO-RESPONSE",
+      "context": {
+        "source_id": "propulsion.main",
+        "body_frame_id": "frame.fixture.yyz.body@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "sample_tick": 100,
+        "configuration_revision": 10,
+        "valid_from_tick": 100,
+        "valid_until_tick": 101,
+        "base_dt_s": 0.02
+      },
+      "supplied_response": {
+        "thrust_magnitude_N": 0.0,
+        "thrust_direction_B_unit": [1.0, 0.0, 0.0],
+        "r_CoM_to_application_B_m": [-2.0, 3.0, -4.0],
+        "intrinsic_moment_at_application_B_Nm": [0.0, 0.0, 0.0],
+        "fuel_consumption_rate_kgps": 0.0
+      },
+      "mass_consumer": {
+        "mass_state_id": "mass.fixture.yyz.vehicle@1",
+        "clock_domain": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 10,
+        "valid_from_tick": 100,
+        "valid_until_tick": 101,
+        "committed_mass_kg": 5.0
+      }
+    }
+  ],
+  "equivalence_cases": [
+    {
+      "id": "EQUIV-YYZ-PROPULSION-MASS-INTERVAL-PARTITION",
+      "operation": "split the [20,25) response interval into [20,22) and [22,25), carrying the first mass candidate into the second interval",
+      "expected": "force and application-point wrench remain equal, while summed consumption and the sequential final mass candidate equal the unsplit interval"
+    }
+  ],
+  "invalid_input_cases": [
+    {"id": "INVALID-YYZ-PROPULSION-FRAME-MISMATCH", "mutation": "change the response body frame", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-PROPULSION-CLOCK-MISMATCH", "mutation": "change the response clock domain", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-PROPULSION-SAMPLE-INTERVAL-MISMATCH", "mutation": "make sample_tick differ from valid_from_tick", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-PROPULSION-REVISION", "mutation": "set configuration_revision below zero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-PROPULSION-NONPOSITIVE-DT", "mutation": "set base_dt_s to zero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-PROPULSION-NEGATIVE-THRUST", "mutation": "set thrust_magnitude_N below zero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-PROPULSION-NONUNIT-DIRECTION", "mutation": "set thrust_direction_B_unit to [2,0,0]", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-PROPULSION-NONFINITE-MOMENT", "mutation": "set one intrinsic moment component to positive infinity", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-PROPULSION-NEGATIVE-CONSUMPTION", "mutation": "set fuel_consumption_rate_kgps below zero", "expected_status": "input-domain-error"},
+    {"id": "INVALID-YYZ-PROPULSION-DEPLETED-MASS", "mutation": "set committed mass below the interval consumption so the candidate is nonpositive", "expected_status": "input-domain-error"}
+  ],
+  "mutation_cases": [
+    {"id": "MUTATION-YYZ-PROPULSION-REVERSED-THRUST-DIRECTION", "mutation": "compute force_B as -thrust_magnitude*thrust_direction_B_unit", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-PROPULSION-PRETRANSPORTED-MOMENT", "mutation": "put intrinsic_moment+r_CoM_to_application x force into the Closure moment_at_application field", "expected_status": "oracle-mismatch"},
+    {"id": "MUTATION-YYZ-PROPULSION-MASS-GAIN", "mutation": "add the positive fuel-consumption integral to committed mass", "expected_status": "oracle-mismatch"}
+  ]
+}
