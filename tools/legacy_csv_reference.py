@@ -152,7 +152,8 @@ def load_semantic_fields(case: dict, repo_root: Path) -> tuple[int, dict]:
             "allowed and excluded from semantic comparison" and
             policy["numeric_text_format"] ==
             "finite Decimal-equivalent forms accepted after parsing" and
-            policy["duplicate_headers"] == "rejected",
+            policy["duplicate_headers"] ==
+            "required duplicates rejected; unmapped duplicates ignored",
             "CSV encoding policy differs")
     return 12, by_id
 
@@ -164,8 +165,6 @@ def parse_csv_rows(raw: bytes) -> tuple[list[str], list[list[str]]]:
     require(len(rows) >= 2, "CSV dataset has no data rows")
     header = rows[0]
     require(all(header), "CSV dataset contains an empty header")
-    require(len(set(header)) == len(header),
-            "CSV dataset contains duplicate headers")
     require(all(len(row) == len(header) for row in rows[1:]),
             "CSV data row width differs from its header")
     return header, rows[1:]
@@ -173,25 +172,26 @@ def parse_csv_rows(raw: bytes) -> tuple[list[str], list[list[str]]]:
 
 def normalize_dataset(raw: bytes, fields_by_id: dict) -> list[dict]:
     header, encoded_rows = parse_csv_rows(raw)
-    index_by_name = {name: index for index, name in enumerate(header)}
     required_columns = {
         field_id: fields_by_id[field_id]["legacy_column"]
         for field_id in (TIME_FIELD_ID, ALTITUDE_FIELD_ID, VELOCITY_FIELD_ID)
     }
-    require(all(column in index_by_name
-                for column in required_columns.values()),
-            "CSV dataset is missing a required semantic column")
+    index_by_field = {}
+    for field_id, column in required_columns.items():
+        indices = [index for index, name in enumerate(header)
+                   if name == column]
+        require(len(indices) == 1,
+                f"CSV dataset must contain exactly one {column}")
+        index_by_field[field_id] = indices[0]
 
     result = []
     for sample_index, encoded in enumerate(encoded_rows):
         result.append({
             "sample_index": sample_index,
-            "sample_time_s": decimal(encoded[index_by_name[
-                required_columns[TIME_FIELD_ID]]]),
-            "altitude_m": decimal(encoded[index_by_name[
-                required_columns[ALTITUDE_FIELD_ID]]]),
-            "vertical_velocity_mps": decimal(encoded[index_by_name[
-                required_columns[VELOCITY_FIELD_ID]]]),
+            "sample_time_s": decimal(encoded[index_by_field[TIME_FIELD_ID]]),
+            "altitude_m": decimal(encoded[index_by_field[ALTITUDE_FIELD_ID]]),
+            "vertical_velocity_mps": decimal(
+                encoded[index_by_field[VELOCITY_FIELD_ID]]),
         })
     return result
 
@@ -306,6 +306,23 @@ def change_unmapped_column_values(raw: bytes,
             transformed[column_index] = (
                 f"ignored-{row_index}-{column_index}")
         writer.writerow(transformed)
+    return output.getvalue().encode("utf-8")
+
+
+def duplicate_unmapped_header(raw: bytes,
+                              required_columns: set[str]) -> bytes:
+    header, rows = parse_csv_rows(raw)
+    unmapped_name = next((name for name in header
+                          if name not in required_columns), None)
+    require(unmapped_name is not None,
+            "CSV mutation requires an unmapped column")
+    header.append(unmapped_name)
+    for row_index, row in enumerate(rows):
+        row.append(f"opaque-duplicate-{row_index}")
+    output = io.StringIO(newline="")
+    writer = csv.writer(output, lineterminator="\n")
+    writer.writerow(header)
+    writer.writerows(rows)
     return output.getvalue().encode("utf-8")
 
 
@@ -441,6 +458,7 @@ def main() -> int:
         "PASS-CSV-COLUMN-PERMUTED",
         "PASS-CSV-NUMERIC-TEXT-REFORMATTED",
         "PASS-CSV-UNMAPPED-COLUMNS-CHANGED",
+        "PASS-CSV-DUPLICATE-UNMAPPED-HEADER",
     } and all(entry["expected_status"] == "accepted"
               for entry in equivalence_by_id.values()),
             "CSV equivalence-case definitions differ")
@@ -461,7 +479,12 @@ def main() -> int:
         fields_by_id)
     require(unmapped_changed == normalized[0],
             "Unmapped CSV column data changed semantic data")
-    checks += 7
+    duplicate_unmapped = normalize_dataset(
+        duplicate_unmapped_header(datasets[0], required_columns),
+        fields_by_id)
+    require(duplicate_unmapped == normalized[0],
+            "Duplicate unmapped CSV header changed semantic data")
+    checks += 9
 
     failure_by_id = {entry["id"]: entry
                      for entry in oracle["failure_cases"]}
@@ -535,12 +558,13 @@ def main() -> int:
     for flag in (
             "column_permutation_accepted", "numeric_text_format_accepted",
             "unmapped_column_change_accepted",
+            "duplicate_unmapped_header_accepted",
             "non_finite_required_value_rejected",
             "missing_required_column_rejected", "missing_t0_rejected",
             "shifted_tk_rejected", "stale_published_state_rejected",
             "duplicate_required_header_rejected"):
         require(probe[flag] is True, f"C++ CSV probe did not enforce {flag}")
-    checks += 12
+    checks += 13
 
     decision = oracle["disposition_decision"]
     require(decision["status"] in {"needs_owner_decision", "accepted"},
@@ -561,6 +585,7 @@ def main() -> int:
         "semantic_column_permutation_equivalent": True,
         "semantic_numeric_text_equivalent": True,
         "semantic_unmapped_column_change_equivalent": True,
+        "semantic_duplicate_unmapped_header_equivalent": True,
         "row_count": len(analytic),
         "final_altitude_m": str(analytic[-1]["altitude_m"]),
         "final_vertical_velocity_mps": str(

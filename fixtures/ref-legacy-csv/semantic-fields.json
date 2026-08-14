@@ -33,6 +33,6 @@
     "column_order": "ignored after semantic mapping",
     "unmapped_columns": "allowed and excluded from semantic comparison",
     "numeric_text_format": "finite Decimal-equivalent forms accepted after parsing",
-    "duplicate_headers": "rejected"
+    "duplicate_headers": "required duplicates rejected; unmapped duplicates ignored"
   }
 }

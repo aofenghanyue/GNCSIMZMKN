@@ -99,7 +99,7 @@
       "claim": "Each recorded time identifies t_k and fields follow declared publish/update boundaries.",
       "expected_facts": [
         "The three rows identify t0=0, t1=0.5 s and t2=1 s and contain the state published at each boundary.",
-        "Header-based semantic mapping accepts column permutation, finite Decimal-equivalent text and arbitrary unmapped-column changes while rejecting missing rows or fields, shifted samples, stale state, non-finite values and duplicate required data."
+        "Header-based semantic mapping accepts column permutation, finite Decimal-equivalent text, arbitrary unmapped-column changes and duplicate unmapped headers while rejecting missing rows or fields, shifted samples, stale state, non-finite values and duplicate required data."
       ],
       "reference_kind": "raw Legacy CSV captures plus semantic field map and independent Decimal/C++17 references",
       "tolerance_policy": "exact semantic field identity and row order; Legacy seed time absolute tolerance 1e-12 and state absolute tolerance 1e-9; target YYZ field tolerances remain pending R0-SCI-003",

@@ -19,8 +19,8 @@
   },
   "semantic_fields": {
     "path": "fixtures/ref-legacy-csv/semantic-fields.json",
-    "bytes": 1250,
-    "sha256": "c3e35ec1fdd7ca86890a687b82a0fabcc17fe6b20fefd50b0d485d74072e2db9"
+    "bytes": 1299,
+    "sha256": "6858c228670c6fdc3198144be5a887f6ff4f0f6cc6eebd1ac611cd2cb95e610f"
   },
   "legacy_source": {
     "archive": {

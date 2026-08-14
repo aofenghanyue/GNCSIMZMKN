@@ -19,7 +19,7 @@ Fixture 是可复制、可校验、带 provenance 的规范实例。每个目录
 
 `ref-legacy-continuous-group` 已达到 `executable`，包含真实 Legacy 四阶段 joint-candidate trace、50 位 Decimal 与独立 C++17 RK4 reference，以及 split closure、未注册 member 和重复 scope ownership 失败用例；成员按稳定 identity 绑定，声明与 packed storage 重排保持语义等价。已接受的处置保留共享 candidate、单次 scope commit 和唯一 membership，并退出 Legacy group surface 与手工 vector packing。
 
-`ref-legacy-csv` 处于 `capturing`，包含两份真实 Legacy CSV capture、fixture-local 语义字段映射、50 位 Decimal 与独立 C++17 reference；按表头映射后允许列置换、有限 Decimal 等值文本和未映射列变化，并拒绝缺失 t0、缺失必要列、错位 `t_k`、陈旧发布态、非有限必要字段值和重复必要表头。
+`ref-legacy-csv` 处于 `capturing`，包含两份真实 Legacy CSV capture、fixture-local 语义字段映射、50 位 Decimal 与独立 C++17 reference；按表头映射后允许列置换、有限 Decimal 等值文本、未映射列变化及重复未映射表头，并拒绝缺失 t0、缺失必要列、错位 `t_k`、陈旧发布态、非有限必要字段值和重复必要表头。
 
 `ref-legacy-stop` 处于 `capturing`，包含两份真实 t0 dataset、两份 record/termination trace、独立 Python/Decimal reference 与 C++17 timeline probe；终止判定会在返回 `true` 前读回已 flush 的停止状态，两项 record-field 按稳定 identity 映射后允许换序，并分别拒绝提前终止、评估时行不可见、缺失终止行、终态时间推进和停止后额外观测。
 

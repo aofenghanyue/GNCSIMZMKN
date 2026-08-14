@@ -39,8 +39,8 @@
     },
     {
       "id": "FACT-CSV-ENCODING-INDEPENDENCE",
-      "claim": "Header-based semantic mapping produces the same dataset after column permutation, finite numeric text reformatting and arbitrary unmapped-column changes, and rejects missing or non-finite required values.",
-      "tolerance_policy": "Required field identities and presence are exact; column position, finite Decimal-equivalent text form and unmapped columns are excluded after mapping; missing mapped fields, NaN and infinities are rejected.",
+      "claim": "Header-based semantic mapping produces the same dataset after column permutation, finite numeric text reformatting, arbitrary unmapped-column changes and duplicate unmapped headers, and rejects missing or non-finite required values.",
+      "tolerance_policy": "Required field identities occur exactly once; column position, finite Decimal-equivalent text form and unmapped columns are excluded after mapping; missing or duplicate mapped fields, NaN and infinities are rejected.",
       "evidence_refs": [
         "fixtures/ref-legacy-csv/semantic-fields.json",
         "tests/legacy_csv.cpp",
@@ -74,7 +74,7 @@
     "Verifies frozen source, environment, harness, runtime-test, stored-dataset, and reconstructed raw-capture identities",
     "Two Legacy captures are byte-identical and normalize to the same three semantic rows",
     "Independent 50-digit Decimal and C++17 implementations agree with every semantic row",
-    "Column permutation, finite Decimal-equivalent text and unmapped-column changes are accepted after header mapping",
+    "Column permutation, finite Decimal-equivalent text, unmapped-column changes and duplicate unmapped headers are accepted after header mapping",
     "Missing t0, shifted t_k, stale published state, missing or non-finite required values, and duplicate required header are rejected",
     "Preserve and Retire recommendations remain visibly pending until the repository owner accepts the disposition choice"
   ],

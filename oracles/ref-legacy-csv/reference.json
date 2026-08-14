@@ -6,7 +6,7 @@
   "input_identity": {
     "path": "fixtures/ref-legacy-csv/input.json",
     "bytes": 4247,
-    "sha256": "3cff3ab7ed7f9bb5e2557af25ddc6c9b3e83b4c98b071281b83da181586206d4"
+    "sha256": "647113655ab36a6f67a7e9848afe1f497243eb0696e651430e5f630b74136ddd"
   },
   "reference_method": {
     "implementation": "CPython standard library csv and Decimal at 50 digits plus an independent C++17 header-mapped semantic probe",
@@ -51,7 +51,8 @@
       "column_permutation": "accepted",
       "unmapped_columns": "ignored after required semantic fields are mapped",
       "numeric_text_format": "finite Decimal-equivalent forms accepted after parsing",
-      "duplicate_required_header": "rejected"
+      "duplicate_required_header": "rejected",
+      "duplicate_unmapped_header": "accepted after required semantic fields are mapped"
     }
   },
   "tolerances": {
@@ -75,6 +76,11 @@
     {
       "id": "PASS-CSV-UNMAPPED-COLUMNS-CHANGED",
       "mutation": "Replace every unmapped column value with unrelated opaque text",
+      "expected_status": "accepted"
+    },
+    {
+      "id": "PASS-CSV-DUPLICATE-UNMAPPED-HEADER",
+      "mutation": "Add a second unmapped column with the same header and unrelated opaque values",
       "expected_status": "accepted"
     }
   ],

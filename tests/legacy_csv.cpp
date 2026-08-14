@@ -5,7 +5,6 @@
 #include <stdexcept>
 #include <string>
 #include <unordered_map>
-#include <unordered_set>
 #include <utility>
 #include <vector>
 
@@ -34,6 +33,7 @@ struct ProbeResult {
     bool column_permutation_accepted = false;
     bool numeric_text_format_accepted = false;
     bool unmapped_column_change_accepted = false;
+    bool duplicate_unmapped_header_accepted = false;
     bool non_finite_required_value_rejected = false;
     bool missing_required_column_rejected = false;
     bool missing_t0_rejected = false;
@@ -85,14 +85,18 @@ std::vector<SemanticRow> decodeByHeader(
     const std::vector<std::string>& header,
     const EncodedRows& encoded_rows) {
     std::unordered_map<std::string, std::size_t> index_by_name;
-    for (std::size_t index = 0; index < header.size(); ++index) {
-        require(index_by_name.emplace(header[index], index).second,
-                "encoded dataset contains a duplicate header");
-    }
     for (const char* required :
          {kTimeColumn, kAltitudeColumn, kVelocityColumn}) {
-        require(index_by_name.count(required) == 1,
-                std::string("encoded dataset is missing ") + required);
+        std::size_t match_count = 0;
+        for (std::size_t index = 0; index < header.size(); ++index) {
+            if (header[index] == required) {
+                index_by_name[required] = index;
+                ++match_count;
+            }
+        }
+        require(match_count == 1,
+                std::string("encoded dataset must contain exactly one ") +
+                    required);
     }
 
     std::vector<SemanticRow> result;
@@ -187,6 +191,20 @@ ProbeResult runProbe() {
     result.unmapped_column_change_accepted = sameRows(
         result.rows, decodeByHeader(canonical_header, changed_unmapped));
 
+    auto duplicate_unmapped_header = canonical_header;
+    duplicate_unmapped_header.push_back("unused.encoding");
+    auto duplicate_unmapped_encoded = canonical_encoded;
+    for (std::size_t row_index = 0;
+         row_index < duplicate_unmapped_encoded.size();
+         ++row_index) {
+        duplicate_unmapped_encoded[row_index].push_back(
+            "opaque-duplicate-" + std::to_string(row_index));
+    }
+    result.duplicate_unmapped_header_accepted = sameRows(
+        result.rows,
+        decodeByHeader(duplicate_unmapped_header,
+                       duplicate_unmapped_encoded));
+
     result.non_finite_required_value_rejected = true;
     const std::vector<std::pair<std::size_t, std::string>>
         non_finite_mutations{
@@ -264,6 +282,9 @@ void writeJson(const ProbeResult& result) {
               << (result.numeric_text_format_accepted ? "true" : "false")
               << ",\"unmapped_column_change_accepted\":"
               << (result.unmapped_column_change_accepted ? "true" : "false")
+              << ",\"duplicate_unmapped_header_accepted\":"
+              << (result.duplicate_unmapped_header_accepted ?
+                  "true" : "false")
               << ",\"non_finite_required_value_rejected\":"
               << (result.non_finite_required_value_rejected ? "true" : "false")
               << ",\"missing_required_column_rejected\":"
@@ -297,6 +318,8 @@ int main(int argc, char** argv) {
                 "equivalent numeric text changed semantic rows");
         require(result.unmapped_column_change_accepted,
                 "unmapped column data changed semantic rows");
+        require(result.duplicate_unmapped_header_accepted,
+                "duplicate unmapped header changed semantic rows");
         require(result.non_finite_required_value_rejected,
                 "non-finite required numeric value was accepted");
         require(result.missing_required_column_rejected,
