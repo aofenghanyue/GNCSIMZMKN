@@ -56,6 +56,7 @@ struct ProbeResult {
     bool replay_result_mismatch_rejected = false;
     bool input_declaration_order_accepted = false;
     bool case_source_column_order_accepted = false;
+    bool dataset_column_order_accepted = false;
     bool legacy_case_directory_change_accepted = false;
 };
 
@@ -117,6 +118,27 @@ bool sameRows(const std::vector<SemanticRow>& lhs,
     return true;
 }
 
+SemanticRow decodeSemanticRow(
+    const std::vector<std::pair<std::string, double>>& encoded_fields) {
+    std::map<std::string, double> by_field;
+    for (const auto& [field, value] : encoded_fields) {
+        require(by_field.emplace(field, value).second,
+                "encoded dataset contains a duplicate semantic field");
+    }
+    require(by_field.size() == 4 &&
+            by_field.count("sample_time_s") == 1 &&
+            by_field.count("altitude_m") == 1 &&
+            by_field.count("vertical_velocity_mps") == 1 &&
+            by_field.count("mass_kg") == 1,
+            "encoded dataset semantic fields differ");
+    return {
+        by_field.at("sample_time_s"),
+        by_field.at("altitude_m"),
+        by_field.at("vertical_velocity_mps"),
+        by_field.at("mass_kg"),
+    };
+}
+
 bool validOrdinaryReplay(const Mission& expected_mission,
                          const std::vector<SemanticRow>& expected_rows,
                          const Replay& replay) {
@@ -172,6 +194,15 @@ ProbeResult runProbe() {
     result.case_source_column_order_accepted = sameSemanticMission(
         result.effective_mission,
         materialize(base, reordered_case, requested_inputs, "case_000001"));
+
+    const std::vector<std::pair<std::string, double>> reordered_dataset{
+        {"mass_kg", 100.0},
+        {"vertical_velocity_mps", 0.0},
+        {"altitude_m", 1000.0},
+        {"sample_time_s", 0.0},
+    };
+    result.dataset_column_order_accepted = sameRows(
+        expected_rows, {decodeSemanticRow(reordered_dataset)});
 
     Mission missing_input = result.effective_mission;
     missing_input.perturbation_inputs.erase("aero.drag_bias");
@@ -240,6 +271,9 @@ void writeJson(const ProbeResult& result) {
               << ",\"case_source_column_order_accepted\":"
               << (result.case_source_column_order_accepted ?
                   "true" : "false")
+              << ",\"dataset_column_order_accepted\":"
+              << (result.dataset_column_order_accepted ?
+                  "true" : "false")
               << ",\"legacy_case_directory_change_accepted\":"
               << (result.legacy_case_directory_change_accepted
                       ? "true" : "false")
@@ -281,6 +315,8 @@ int main(int argc, char** argv) {
                 "input declaration order changed effective mission semantics");
         require(result.case_source_column_order_accepted,
                 "case-source column order changed effective mission semantics");
+        require(result.dataset_column_order_accepted,
+                "dataset column order changed replay semantics");
         require(result.legacy_case_directory_change_accepted,
                 "Legacy case directory changed semantic identity");
         writeJson(result);

@@ -122,6 +122,11 @@
       "id": "PASS-SIMFLOW-CASE-SOURCE-COLUMNS-REORDERED",
       "mutation": "Reverse the case_id and numeric field columns while preserving header-value identity",
       "expected_status": "accepted"
+    },
+    {
+      "id": "PASS-SIMFLOW-DATASET-COLUMNS-REORDERED",
+      "mutation": "Reverse every encoded dataset column while preserving header-value identity",
+      "expected_status": "accepted"
     }
   ],
   "disposition_decision": {
