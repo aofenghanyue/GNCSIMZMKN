@@ -41,6 +41,7 @@ struct ProbeResult {
     bool final_time_advance_rejected = false;
     bool post_stop_observation_rejected = false;
     bool reason_text_change_accepted = false;
+    bool record_field_order_change_accepted = false;
 };
 
 void require(bool condition, const std::string& message) {
@@ -85,8 +86,19 @@ bool validTimeline(const Timeline& timeline) {
             return false;
         }
     }
-    if (timeline.events[1].field_id != "altitude_m" ||
-        timeline.events[2].field_id != "vertical_velocity_mps") {
+    bool altitude_seen = false;
+    bool velocity_seen = false;
+    for (std::size_t index = 1; index <= 2; ++index) {
+        const std::string& field_id = timeline.events[index].field_id;
+        if (field_id == "altitude_m" && !altitude_seen) {
+            altitude_seen = true;
+        } else if (field_id == "vertical_velocity_mps" && !velocity_seen) {
+            velocity_seen = true;
+        } else {
+            return false;
+        }
+    }
+    if (!altitude_seen || !velocity_seen) {
         return false;
     }
     const Event& evaluation = timeline.events[3];
@@ -136,6 +148,12 @@ ProbeResult runProbe() {
     Timeline changed_reason = result.canonical;
     changed_reason.reason_text = "different display text";
     result.reason_text_change_accepted = validTimeline(changed_reason);
+
+    Timeline changed_record_order = result.canonical;
+    std::swap(changed_record_order.events[1],
+              changed_record_order.events[2]);
+    result.record_field_order_change_accepted =
+        validTimeline(changed_record_order);
     return result;
 }
 
@@ -173,6 +191,9 @@ void writeJson(const ProbeResult& result) {
               << (result.post_stop_observation_rejected ? "true" : "false")
               << ",\"reason_text_change_accepted\":"
               << (result.reason_text_change_accepted ? "true" : "false")
+              << ",\"record_field_order_change_accepted\":"
+              << (result.record_field_order_change_accepted
+                      ? "true" : "false")
               << "}\n";
 }
 
@@ -200,6 +221,8 @@ int main(int argc, char** argv) {
                 "post-stop observation mutation was accepted");
         require(result.reason_text_change_accepted,
                 "free-text reason changed semantic comparison");
+        require(result.record_field_order_change_accepted,
+                "record-field order changed semantic comparison");
         writeJson(result);
         return 0;
     } catch (const std::exception& error) {

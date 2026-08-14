@@ -10,13 +10,15 @@ altitude_m = 1000
 vertical_velocity_mps = 10
 ```
 
-The event order is exact:
+The preserved partial order is exact:
 
 ```text
-publish -> record altitude -> record vertical velocity
+publish -> record {altitude, vertical velocity} by stable field identity
         -> termination evaluation sees the flushed row
         -> Legacy run completes at t0
 ```
+
+The two record-field events may exchange relative order after mapping by `field_id`; both must remain between publish and termination evaluation.
 
 The bundle separates its evidence layers:
 
@@ -32,4 +34,4 @@ Run the executable checks through CTest:
 ctest --preset dev -R "r0.legacy-stop" --output-on-failure
 ```
 
-The comparison independently rejects termination-before-record, a row that is unavailable when evaluation returns, a missing terminal row, an advanced final time and an observation after the stopping boundary. Legacy free-text reason changes are ignored. Target `Observation` and `RunOutcome` artifacts remain pending future-stage implementation. The bundle stays `capturing` until the repository owner accepts the recommended Preserve/Retire split.
+The comparison independently rejects termination-before-record, a row that is unavailable when evaluation returns, a missing terminal row, an advanced final time and an observation after the stopping boundary. Swapping record-field order and changing Legacy free-text reason preserve semantic equivalence. Target `Observation` and `RunOutcome` artifacts remain pending future-stage implementation. The bundle stays `capturing` until the repository owner accepts the recommended Preserve/Retire split.

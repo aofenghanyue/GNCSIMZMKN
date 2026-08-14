@@ -21,7 +21,7 @@ Fixture 是可复制、可校验、带 provenance 的规范实例。每个目录
 
 `ref-legacy-csv` 处于 `capturing`，包含两份真实 Legacy CSV capture、fixture-local 语义字段映射、50 位 Decimal 与独立 C++17 reference；按表头映射后允许列置换、有限 Decimal 等值文本和未映射列变化，并拒绝缺失 t0、缺失必要列、错位 `t_k`、陈旧发布态、非有限必要字段值和重复必要表头。
 
-`ref-legacy-stop` 处于 `capturing`，包含两份真实 t0 dataset、两份 record/termination trace、独立 Python/Decimal reference 与 C++17 timeline probe；终止判定会在返回 `true` 前读回已 flush 的停止状态，并分别拒绝提前终止、评估时行不可见、缺失终止行、终态时间推进和停止后额外观测。
+`ref-legacy-stop` 处于 `capturing`，包含两份真实 t0 dataset、两份 record/termination trace、独立 Python/Decimal reference 与 C++17 timeline probe；终止判定会在返回 `true` 前读回已 flush 的停止状态，两项 record-field 按稳定 identity 映射后允许换序，并分别拒绝提前终止、评估时行不可见、缺失终止行、终态时间推进和停止后额外观测。
 
 `ref-legacy-simflow` 处于 `capturing`，包含固定 base mission、两行 variation matrix、两次真实 `--simflow` 捕获和两次普通 `--config` 重放；四份 dataset 与两份 effective mission 分别保持 byte-identical，独立 Python/C++17 reference 验证输入注入、普通任务重放、目录身份无关性和三条直接失败路径。
 

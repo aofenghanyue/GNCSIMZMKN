@@ -193,6 +193,8 @@ def expected_values(case: dict, oracle: dict) -> dict:
     require(expected["event_kinds"] == EXPECTED_EVENT_KINDS and
             expected["record_field_ids"] ==
             ["altitude_m", "vertical_velocity_mps"] and
+            expected["normalization"]["record_field_order"] ==
+            "ignored after field_id mapping" and
             expected_row["row_count"] == 1 and
             decimal(expected_row["sample_time_s"]) ==
             result["sample_time_s"] and
@@ -217,7 +219,16 @@ def validate_semantics(trace: dict, rows: list[dict], values: dict,
     require([event["sequence"] for event in events] == list(range(5)),
             f"{label} event sequence differs")
 
-    publish, altitude_read, velocity_read, evaluation, completion = events
+    publish = events[0]
+    record_events = events[1:3]
+    evaluation = events[3]
+    completion = events[4]
+    record_by_id = {event["field_id"]: event for event in record_events}
+    require(len(record_by_id) == 2 and set(record_by_id) == {
+                "altitude_m", "vertical_velocity_mps"},
+            f"{label} record field identity differs")
+    altitude_read = record_by_id["altitude_m"]
+    velocity_read = record_by_id["vertical_velocity_mps"]
     require(publish["step"] == 0 and
             altitude_read["step"] == 0 and
             velocity_read["step"] == 0 and
@@ -230,9 +241,6 @@ def validate_semantics(trace: dict, rows: list[dict], values: dict,
     compare_decimal(publish["vertical_velocity_mps"],
                     values["vertical_velocity_mps"], state_tolerance,
                     f"{label} published velocity")
-    require(altitude_read["field_id"] == "altitude_m" and
-            velocity_read["field_id"] == "vertical_velocity_mps",
-            f"{label} record field identity differs")
     compare_decimal(altitude_read["sample_time_s"],
                     values["sample_time_s"], time_tolerance,
                     f"{label} altitude read time")
@@ -407,12 +415,14 @@ def main() -> int:
             "A STOP semantic failure mutation was accepted")
     checks += 6
 
-    equivalence = oracle["equivalence_cases"]
-    require(equivalence == [{
-        "id": "PASS-STOP-REASON-TEXT-CHANGED",
-        "mutation": "Replace the Legacy free-text reason while keeping the semantic timeline unchanged",
-        "expected_status": "accepted",
-    }], "STOP equivalence-case definition differs")
+    equivalence_by_id = {entry["id"]: entry
+                         for entry in oracle["equivalence_cases"]}
+    require(set(equivalence_by_id) == {
+        "PASS-STOP-REASON-TEXT-CHANGED",
+        "PASS-STOP-RECORD-FIELD-ORDER-CHANGED",
+    } and all(entry["expected_status"] == "accepted"
+              for entry in equivalence_by_id.values()),
+            "STOP equivalence-case definitions differ")
     changed_reason = copy.deepcopy(traces[0])
     changed_reason["events"][4]["termination_reason_text"] = (
         "different display text")
@@ -421,7 +431,16 @@ def main() -> int:
                        "Reason-text equivalence")
     require(normalized_trace(changed_reason, normalization) == normalized[0],
             "Legacy free-text reason changed semantic normalization")
-    checks += 3
+
+    changed_record_order = copy.deepcopy(traces[0])
+    events = changed_record_order["events"]
+    events[1], events[2] = events[2], events[1]
+    for sequence, event in enumerate(events):
+        event["sequence"] = sequence
+    validate_semantics(changed_record_order, rows[0], values,
+                       time_tolerance, state_tolerance,
+                       "Record-field-order equivalence")
+    checks += 4
 
     first_stdout, probe = run_probe(arguments.probe)
     second_stdout, second_probe = run_probe(arguments.probe)
@@ -449,9 +468,10 @@ def main() -> int:
             "missing_terminal_row_rejected",
             "final_time_advance_rejected",
             "post_stop_observation_rejected",
-            "reason_text_change_accepted"):
+            "reason_text_change_accepted",
+            "record_field_order_change_accepted"):
         require(probe[flag] is True, f"C++ STOP probe did not enforce {flag}")
-    checks += 14
+    checks += 15
 
     decision = oracle["disposition_decision"]
     require(decision["status"] in {"needs_owner_decision", "accepted"},
@@ -478,6 +498,7 @@ def main() -> int:
         },
         "final_time_s": str(values["final_time_s"]),
         "reason_text_ignored": True,
+        "record_field_order_change_accepted": True,
         "disposition_status": decision["status"],
     }, separators=(",", ":")))
     return 0

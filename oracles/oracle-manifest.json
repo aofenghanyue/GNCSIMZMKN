@@ -125,7 +125,7 @@
         "The run completes at the same boundary with one row and no post-stop advance."
       ],
       "reference_kind": "raw Legacy dataset and event trace plus independent semantic timeline",
-      "tolerance_policy": "exact event identity/order/multiplicity, step and row count; frozen scalar absolute tolerance 1e-12; free-text reason excluded",
+      "tolerance_policy": "exact event identity/multiplicity, step, row count and publish-record-termination-completion partial order; record-field relative order and free-text reason excluded; frozen scalar absolute tolerance 1e-12",
       "source_refs": ["reference/legacy/source-manifest.json", "design-notes/gnczmkn-architecture-roadmap/00a-yyz-end-to-end-walkthrough.md#10-旧行为-oracle-怎样保护迁移"],
       "artifact_refs": [
         "fixtures/ref-legacy-stop/input.json",
