@@ -2,7 +2,7 @@
 
 - 更新日期：2026-08-14
 - 当前 gate：`R0`
-- 产品状态：可构建空骨架；尚无仿真生产能力
+- 产品状态：可构建空骨架与 R0 独立科学 probe；尚无仿真生产能力
 - 当前分支：`codex/r0-governance-reset`
 - 分支基线：`origin/main@dfedf27`
 
@@ -25,6 +25,7 @@
 - R0 fixture、oracle 与 PlanProofRecord schema 及其直接正反例。
 - 术语、模块依赖和 Legacy ownership 的派生架构基线。
 - C++ 与 Python 交叉执行的科学约定检查。
+- minimal 3DoF 高精度解析轨迹、独立 C++17 RK4 probe、收敛、终止与失败检查。
 - Legacy 只读快照、复现证据和 provenance 边界。
 - Windows/MSVC 与 Ubuntu/GCC 的 CI workflow。
 
@@ -36,13 +37,14 @@
 - `R0-GOV-001`、`R0-ARCH-001`、`R0-SPEC-001` 保留为技术基线完成项。
 - `R0-GOV-002` 回到 `planned`，等待真实权利与分发输入。
 - `R0-LEG-001`、`R0-SCI-001` 保持 `review`，当前无活动 assignee。
+- `R0-SCI-002` 保持 `planned`，已有可执行候选 bundle；`R0-SCI-001` 科学约定接受后才能进入活动状态并闭合验证。
 - 其余 R0 任务保持 `planned`。
 
 ## 下一条开发主线
 
-1. 用现有自动测试对 `R0-SCI-001` 做一次窄复核，只保留需要仓库所有者确认的科学选择。
-2. 随后实现 `R0-SCI-002` minimal 3DoF 可执行 oracle bundle，包括独立参考、收敛检查和失败用例。
-3. 每个切片完成后再选择下一项，避免同时展开 gate、性能、YYZ、CAVH 和架构治理。
+1. 由仓库所有者决定是否接受 ADR-0006 与 ADR-0007 的当前科学约定。
+2. 接受后闭合 `R0-SCI-001`，复验并完成 `R0-SCI-002` minimal 3DoF bundle。
+3. 完成该切片后再选择下一项，避免同时展开 gate、性能、YYZ、CAVH 和架构治理。
 
 ## 保留与恢复
 

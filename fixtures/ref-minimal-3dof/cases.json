@@ -1,0 +1,81 @@
+{
+  "schema_version": "gnczmkn.minimal-3dof-cases/1",
+  "fixture_id": "REF-MINIMAL-3DOF-001",
+  "model": {
+    "model_id": "MODEL-MINIMAL-3DOF-LINEAR-TRANSLATION-001",
+    "frame_id": "frame.fixture.minimal3dof.inertial@1",
+    "time_origin_s": 0.0,
+    "state_equations": ["dr_dt = v", "dv_dt = acceleration - drag_rate * v"],
+    "state_fields": [
+      {"id": "position", "unit": "m", "geometry": "point"},
+      {"id": "velocity", "unit": "m/s", "geometry": "free_vector"}
+    ],
+    "input_fields": [
+      {"id": "acceleration", "unit": "m/s^2", "geometry": "free_vector"},
+      {"id": "drag_rate", "unit": "1/s", "geometry": "scalar"}
+    ]
+  },
+  "tolerances": {
+    "position_absolute_m": 1e-12,
+    "position_relative": 1e-12,
+    "velocity_absolute_mps": 1e-12,
+    "velocity_relative": 1e-12,
+    "time_absolute_s": 1e-14,
+    "minimum_observed_order": 3.8,
+    "finest_position_error_max_m": 1.1e-8,
+    "finest_velocity_error_max_mps": 2.2e-9
+  },
+  "cases": [
+    {
+      "id": "CASE-MIN3D-CONSTANT-ACCELERATION",
+      "kind": "trajectory",
+      "initial_position_m": [100.0, -50.0, 1000.0],
+      "initial_velocity_mps": [20.0, 5.0, 10.0],
+      "acceleration_mps2": [0.5, -1.0, -9.80665],
+      "drag_rate_per_s": 0.0,
+      "dt_s": 0.5,
+      "duration_s": 2.0
+    },
+    {
+      "id": "CASE-MIN3D-LINEAR-DRAG-CONVERGENCE",
+      "kind": "convergence",
+      "initial_position_m": [0.0, 0.0, 100.0],
+      "initial_velocity_mps": [10.0, -5.0, 20.0],
+      "acceleration_mps2": [1.0, 0.0, -9.80665],
+      "drag_rate_per_s": 0.2,
+      "duration_s": 4.0,
+      "dt_ladder_s": [0.8, 0.4, 0.2, 0.1, 0.05],
+      "reference_trajectory_dt_s": 0.8
+    },
+    {
+      "id": "CASE-MIN3D-EXACT-GRID-TERMINATION",
+      "kind": "termination",
+      "initial_position_m": [0.0, 0.0, 10.0],
+      "initial_velocity_mps": [1.0, 0.0, -2.0],
+      "acceleration_mps2": [0.0, 0.0, 0.0],
+      "drag_rate_per_s": 0.0,
+      "dt_s": 0.5,
+      "maximum_duration_s": 10.0,
+      "terminal_predicate": {"field": "position.z", "operator": "<=", "value_m": 0.0}
+    },
+    {
+      "id": "CASE-MIN3D-RK-STAGE-DOMAIN-FAILURE",
+      "kind": "stage_domain_failure",
+      "initial_position_m": [0.0, 0.0, 0.0],
+      "initial_velocity_mps": [1.0, 0.0, 0.0],
+      "acceleration_mps2": [0.0, 0.0, 0.0],
+      "drag_rate_per_s": 0.0,
+      "dt_s": 0.5,
+      "maximum_duration_s": 1.5,
+      "evaluation_time_strictly_less_than_s": 0.75,
+      "expected_failure_stage": "k2"
+    }
+  ],
+  "invalid_input_cases": [
+    {"id": "INVALID-MIN3D-ZERO-DT", "expected_status": "input-domain-error"},
+    {"id": "INVALID-MIN3D-NEGATIVE-DURATION", "expected_status": "input-domain-error"},
+    {"id": "INVALID-MIN3D-NON-GRID-DURATION", "expected_status": "input-domain-error"},
+    {"id": "INVALID-MIN3D-NEGATIVE-DRAG", "expected_status": "input-domain-error"},
+    {"id": "INVALID-MIN3D-NONFINITE-STATE", "expected_status": "input-domain-error"}
+  ]
+}

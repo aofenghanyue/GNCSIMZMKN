@@ -182,7 +182,7 @@
       "depends_on": ["R0-SCI-001", "R0-SPEC-001"],
       "deliverables": ["Initial conditions", "analytic or independent trajectory", "termination and convergence cases"],
       "acceptance": ["Reference runs are independent of legacy node count and CSV column order"],
-      "evidence": ["ref-minimal-3dof bundle"],
+      "evidence": ["fixtures/ref-minimal-3dof, oracles/ref-minimal-3dof and r0.minimal-3dof CTest"],
       "architecture_refs": ["11 §5.3", "03 §22"]
     },
     {

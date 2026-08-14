@@ -1,26 +1,73 @@
 {
   "schema_version": "gnczmkn.fixture-manifest/1",
   "fixture_id": "REF-MINIMAL-3DOF-001",
-  "status": "specification_only",
-  "purpose": "Provide an analytic or independently computed fixed-step dynamics reference.",
+  "status": "executable",
+  "purpose": "Provide an independent analytic trajectory and fixed-step RK4 oracle for a fixture-local three-axis translational model.",
   "authority": "scientific_authority",
   "provenance": {
-    "source_refs": ["design-notes/gnczmkn-architecture-roadmap/11-roadmap-overview.md#53-退出门-g1科学-oracle-可用"],
-    "notes": "The analytic or independent reference source is selected by R0-SCI-002."
+    "source_refs": [
+      "design-notes/gnczmkn-architecture-roadmap/11-roadmap-overview.md#53-退出门-g1科学-oracle-可用",
+      "design-notes/gnczmkn-architecture-roadmap/03-mathematics-and-numerical-foundation.md#22-验证体系",
+      "docs/adr/0006-si-frame-and-simulation-time-conventions.md"
+    ],
+    "notes": "The model, cases and tolerances are fixture-local. The analytic reference uses CPython decimal closed forms; the C++17 probe independently implements classical RK4 and commit-on-success bookkeeping."
   },
   "expected_facts": [
     {
       "id": "FACT-3DOF-TRAJECTORY",
-      "claim": "The fixed-step trajectory agrees with an analytic or independently computed reference.",
-      "tolerance_policy": "State-specific absolute and relative tolerances to be frozen by R0-SCI-002."
+      "claim": "Declared initial conditions produce the stored high-precision constant-acceleration and linear-drag trajectories.",
+      "tolerance_policy": "Position and velocity use separate absolute-plus-relative tolerances from cases.json; tick and semantic identities are exact.",
+      "evidence_refs": [
+        "fixtures/ref-minimal-3dof/cases.json",
+        "oracles/ref-minimal-3dof/reference.json",
+        "tools/minimal_3dof_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-3DOF-CONVERGENCE",
+      "claim": "Classical fixed-step RK4 converges toward the independent linear-drag solution at fourth order.",
+      "tolerance_policy": "Position and velocity endpoint errors must strictly decrease; every adjacent observed order is at least 3.8 and finest-grid limits come from cases.json.",
+      "evidence_refs": [
+        "fixtures/ref-minimal-3dof/cases.json",
+        "oracles/ref-minimal-3dof/reference.json",
+        "tests/minimal_3dof.cpp",
+        "tools/minimal_3dof_reference.py"
+      ]
+    },
+    {
+      "id": "FACT-3DOF-TERMINATION",
+      "claim": "The altitude predicate first becomes true at committed tick 10 and the trajectory ends on that tick.",
+      "tolerance_policy": "Predicate, first-satisfied tick and trajectory length are exact; state values use their declared field tolerances.",
+      "evidence_refs": [
+        "fixtures/ref-minimal-3dof/cases.json",
+        "oracles/ref-minimal-3dof/reference.json",
+        "tests/minimal_3dof.cpp"
+      ]
     },
     {
       "id": "FACT-3DOF-FAILURE",
-      "claim": "A declared numerical failure case terminates with no unreported candidate state.",
-      "tolerance_policy": "Exact status, tick and committed-state identity."
+      "claim": "A k2 evaluation-domain failure discards the candidate and preserves committed tick 1 and its state.",
+      "tolerance_policy": "Failure code, stage, evaluation time, candidate disposition and committed tick are exact; committed state values use field tolerances.",
+      "evidence_refs": [
+        "fixtures/ref-minimal-3dof/cases.json",
+        "oracles/ref-minimal-3dof/reference.json",
+        "tests/minimal_3dof.cpp",
+        "tools/minimal_3dof_reference.py"
+      ]
     }
   ],
-  "required_artifacts": ["mission source", "initial state", "analytic or independent trajectory", "termination facts", "dt convergence report", "tolerance policy"],
-  "acceptance": ["Independent of legacy class names and output column ordering", "Covers normal and numerical failure paths"],
+  "required_artifacts": [
+    "fixtures/ref-minimal-3dof/README.md",
+    "fixtures/ref-minimal-3dof/cases.json",
+    "oracles/ref-minimal-3dof/reference.json",
+    "tests/minimal_3dof.cpp",
+    "tools/minimal_3dof_reference.py",
+    "CMakeLists.txt"
+  ],
+  "acceptance": [
+    "Contains explicit initial conditions, independent analytic trajectories, convergence, committed-tick termination and numerical failure checks",
+    "Addresses results by semantic case and quantity identity without Legacy node names or CSV column order",
+    "C++ and Python implementations remain isolated from product and Legacy code"
+  ],
   "open_tasks": ["R0-SCI-002"]
 }

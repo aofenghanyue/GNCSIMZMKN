@@ -70,11 +70,21 @@ if(GNC_BUILD_TESTS)
     target_compile_features(gnc_scientific_conventions PRIVATE cxx_std_17)
     gnc_enable_warnings(gnc_scientific_conventions)
 
+    # R0 scientific oracle probe: fixture-local and isolated from product code.
+    add_executable(
+        gnc_minimal_3dof_probe
+        tests/minimal_3dof.cpp)
+    target_compile_features(gnc_minimal_3dof_probe PRIVATE cxx_std_17)
+    gnc_enable_warnings(gnc_minimal_3dof_probe)
+
     add_test(NAME skeleton.library COMMAND gnc_skeleton_smoke)
     add_test(NAME skeleton.cli COMMAND gnc_sim --self-check)
     add_test(
         NAME r0.scientific-conventions.properties
         COMMAND gnc_scientific_conventions --self-check)
+    add_test(
+        NAME r0.minimal-3dof.probe
+        COMMAND gnc_minimal_3dof_probe --self-check)
 
     find_program(GNC_POWERSHELL_EXECUTABLE NAMES pwsh powershell)
     if(NOT GNC_POWERSHELL_EXECUTABLE)
@@ -126,4 +136,17 @@ if(GNC_BUILD_TESTS)
             -CppExecutable $<TARGET_FILE:gnc_scientific_conventions>
             -PythonExecutable ${Python3_EXECUTABLE}
             -Quiet)
+    add_test(
+        NAME r0.minimal-3dof.oracle
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/minimal_3dof_reference.py
+            --cases
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-minimal-3dof/cases.json
+            --oracle
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-minimal-3dof/reference.json
+            --probe
+            $<TARGET_FILE:gnc_minimal_3dof_probe>)
 endif()
