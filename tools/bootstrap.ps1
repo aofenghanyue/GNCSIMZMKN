@@ -1,7 +1,8 @@
 [CmdletBinding()]
 param(
     [ValidateSet('dev', 'release')]
-    [string]$Preset = 'dev'
+    [string]$Preset = 'dev',
+    [string]$EigenArchive
 )
 
 Set-StrictMode -Version Latest
@@ -11,7 +12,18 @@ $repoRoot = (Resolve-Path (Join-Path $PSScriptRoot '..')).Path
 
 Push-Location $repoRoot
 try {
-    & cmake --preset $Preset
+    if ([string]::IsNullOrWhiteSpace($EigenArchive)) {
+        $eigenPrefix = & (Join-Path $PSScriptRoot 'install-eigen.ps1') `
+            -DownloadIfMissing
+    }
+    else {
+        $eigenPrefix = & (Join-Path $PSScriptRoot 'install-eigen.ps1') `
+            -ArchivePath $EigenArchive
+    }
+    if ($LASTEXITCODE -ne 0) { throw "Eigen setup failed with exit code $LASTEXITCODE." }
+    $eigenConfig = Join-Path $eigenPrefix 'share/eigen3/cmake'
+
+    & cmake --preset $Preset "-DEigen3_DIR=$eigenConfig"
     if ($LASTEXITCODE -ne 0) { throw "CMake configure failed with exit code $LASTEXITCODE." }
 
     & cmake --build --preset $Preset

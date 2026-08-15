@@ -18,7 +18,7 @@ public origin 已经形成持续的互联网访问入口。仓库所有者当前
 
 当前 Git 跟踪内容可完整划分为三类：仓库源码/文档/fixture/oracle、导入的架构蓝图、`reference/legacy/`。冻结 Legacy ZIP 的来源身份和 SHA-256 已固定，实时扫描仍未发现许可证命名文件或强许可证文本信号；该扫描只表达检测事实，不提供使用或再分发许可。
 
-当前 greenfield C++ target 没有产品第三方库。R0 验证使用宿主 Python、PowerShell、CMake 和编译器；固定 CI 使用 `actions/checkout`；隔离 Legacy 复现另用 Eigen 3.4.0 与 w64devkit 2.9.1。它们都在仓库外执行，没有进入当前项目分发包。Eigen 3.4.0 上游说明其主体采用 MPL-2.0，部分文件采用 BSD 或 LGPL；w64devkit 说明生成的 Windows binary 可能携带 runtime 许可义务，因此未来二进制分发必须按实际链接内容复核。[Eigen 3.4.0 COPYING.README](https://gitlab.com/libeigen/eigen/-/raw/3.4.0/COPYING.README) [w64devkit v2.9.1 licensing](https://github.com/skeeto/w64devkit/tree/v2.9.1#licenses)
+R1 Foundation 依据 ADR-0012 使用仓库外安装的 Eigen 3.4.0 header-only 构建依赖。R0 验证使用宿主 Python、PowerShell、CMake 和编译器；固定 CI 使用 `actions/checkout`；隔离 Legacy 复现另用 Eigen 3.4.0 与 w64devkit 2.9.1。依赖源码与安装目录都不进入当前 Git 跟踪内容。Eigen 3.4.0 上游说明其主体采用 MPL-2.0，部分文件采用 BSD 或 LGPL；w64devkit 说明生成的 Windows binary 可能携带 runtime 许可义务，因此未来二进制分发必须按实际链接内容复核。[Eigen 3.4.0 COPYING.README](https://gitlab.com/libeigen/eigen/-/raw/3.4.0/COPYING.README) [w64devkit v2.9.1 licensing](https://github.com/skeeto/w64devkit/tree/v2.9.1#licenses)
 
 旧版 ADR 引入双角色批准、不可变回执、报告哈希锁和大量治理 mutation。ADR-0010 已撤销这类执行方式。本修订只保留会影响实际分发边界的检查。
 
@@ -31,7 +31,7 @@ public origin 已经形成持续的互联网访问入口。仓库所有者当前
 3. 实现智能体可以继续本地实现、测试和提交。push、merge、tag、release 以及远端设置变更仍需用户明确授权。
 4. `external_distribution: blocked` 专指 public GitHub collaboration 之外、由本项目主动形成的 release、源码/二进制 bundle、数据集、报告附件或 Legacy archive 分发。该字段不否认已经存在的 public GitHub 访问和 fork。
 5. Legacy 保持只读、evidence-only，不进入 release 或独立分发候选，直到权属和许可证据闭合。现有 public repository 中的 Legacy 路径属于已接受的公开暴露事实，不形成权利清结论。
-6. Eigen、w64devkit、宿主工具链和 CI action 只按已记录用途在仓库外执行。任何 vendoring、runtime bundling 或二进制发布都需要新的直接复核。
+6. Eigen、w64devkit、宿主工具链和 CI action 只按已记录用途在仓库外执行。Eigen 3.4.0 可以按 ADR-0012 参与 Foundation 本地与 CI 构建；任何 vendoring、runtime bundling 或二进制发布都需要新的直接复核。
 7. fixture、oracle、benchmark 和报告继续记录来源。上游权利待确认时，派生内容不能进入独立 release 或平台外分发候选。
 8. 通过 issue、fork 或 pull request 形成的第三方贡献可以用于当前 GitHub 协同；实际合并贡献并纳入未来许可或 release 候选时，需要确认贡献者对相应内容的权利。当前不新增 CLA、DCO 或回执机制。
 9. SPDX `NONE` 表示文件内未发现许可证信息；`NOASSERTION` 表示尚未形成结论。两者都不提供通用分发许可。[SPDX File Information](https://spdx.github.io/spdx-spec/v2.2.2/file-information/)

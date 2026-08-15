@@ -369,6 +369,9 @@ function ConvertFrom-DependencySources {
 
     $moduleSet = [System.Collections.Generic.HashSet[string]]::new([System.StringComparer]::Ordinal)
     foreach ($moduleName in $cmakeModules) { [void]$moduleSet.Add($moduleName) }
+    $allowedExternalTarget = 'Eigen3::Eigen'
+    $requiredEigenPackagePattern =
+        '(?m)^\s*find_package\s*\(\s*Eigen3\s+3\.4\.0\s+EXACT\s+CONFIG\s+REQUIRED\s*\)\s*$'
     $cmakeEdges = [System.Collections.Generic.List[object]]::new()
     foreach ($match in [regex]::Matches(
             $CMakeText,
@@ -381,6 +384,13 @@ function ConvertFrom-DependencySources {
             throw "CMake module '$source' must declare dependencies with INTERFACE visibility."
         }
         foreach ($dependencyToken in @($tokens | Select-Object -Skip 2)) {
+            if ($source -ceq 'foundation' -and
+                [string]$dependencyToken -ceq $allowedExternalTarget) {
+                if ($CMakeText -notmatch $requiredEigenPackagePattern) {
+                    throw "CMake module 'foundation' requires an exact Eigen 3.4.0 package declaration."
+                }
+                continue
+            }
             if ([string]$dependencyToken -notmatch '^[A-Za-z_][A-Za-z0-9_]*$') {
                 throw "CMake module '$source' uses unsupported dependency syntax '$dependencyToken'."
             }

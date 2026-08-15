@@ -19,7 +19,8 @@
 ## 构建与验证
 
 ```powershell
-cmake --preset dev
+./tools/install-eigen.ps1 -DownloadIfMissing
+cmake --preset dev "-DEigen3_DIR=build/dependencies/eigen-3.4.0/install/share/eigen3/cmake"
 cmake --build --preset dev
 ctest --preset dev
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/verify-repository.ps1
@@ -30,6 +31,8 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/verify-repository.ps1
 ```powershell
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/bootstrap.ps1
 ```
+
+离线环境可以向 `install-eigen.ps1 -ArchivePath` 或 `bootstrap.ps1 -EigenArchive` 提供已下载的 Eigen 3.4.0 官方 ZIP；脚本会核对固定字节数与 SHA-256。
 
 当前 CLI 只证明 composition root、编译器和测试工具链可工作：
 

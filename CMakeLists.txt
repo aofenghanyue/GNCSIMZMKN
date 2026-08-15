@@ -11,6 +11,8 @@ option(GNC_WARNINGS_AS_ERRORS "Treat compiler warnings as errors" OFF)
 
 include(cmake/GncWarnings.cmake)
 
+find_package(Eigen3 3.4.0 EXACT CONFIG REQUIRED)
+
 add_library(gnc_build_options INTERFACE)
 target_compile_features(gnc_build_options INTERFACE cxx_std_17)
 target_include_directories(
@@ -25,6 +27,7 @@ function(gnc_add_interface_module target)
 endfunction()
 
 gnc_add_interface_module(foundation)
+target_link_libraries(foundation INTERFACE Eigen3::Eigen)
 gnc_add_interface_module(contracts)
 target_link_libraries(contracts INTERFACE foundation)
 
@@ -81,6 +84,12 @@ if(GNC_BUILD_TESTS)
         tests/foundation_root.cpp)
     target_link_libraries(gnc_foundation_root_probe PRIVATE foundation)
     gnc_enable_warnings(gnc_foundation_root_probe)
+
+    add_executable(
+        gnc_foundation_spd_solve_probe
+        tests/foundation_spd_solve.cpp)
+    target_link_libraries(gnc_foundation_spd_solve_probe PRIVATE foundation)
+    gnc_enable_warnings(gnc_foundation_spd_solve_probe)
 
     # R0 validation spike: intentionally isolated from product modules and Legacy.
     add_executable(
@@ -275,6 +284,9 @@ if(GNC_BUILD_TESTS)
         NAME r1.foundation-root.probe
         COMMAND gnc_foundation_root_probe --self-check)
     add_test(
+        NAME r1.foundation-spd-solve.probe
+        COMMAND gnc_foundation_spd_solve_probe --self-check)
+    add_test(
         NAME r0.scientific-conventions.properties
         COMMAND gnc_scientific_conventions --self-check)
     add_test(
@@ -466,6 +478,19 @@ if(GNC_BUILD_TESTS)
             ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-cavh-formula/reference.json
             --probe
             $<TARGET_FILE:gnc_foundation_root_probe>)
+    add_test(
+        NAME r1.foundation-spd-solve.oracle
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/validate-foundation-spd-solve.py
+            --cases
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-yyz-mass-properties/cases.json
+            --oracle
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-mass-properties/reference.json
+            --probe
+            $<TARGET_FILE:gnc_foundation_spd_solve_probe>)
     add_test(
         NAME r0.performance-minimal-3dof.baseline
         COMMAND

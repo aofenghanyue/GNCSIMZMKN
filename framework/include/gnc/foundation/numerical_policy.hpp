@@ -17,13 +17,20 @@ struct NumericalPolicy {
     double absolute_tolerance = 1.0e-12;
     double relative_tolerance = 1.0e-9;
     FiniteCheck finite_check = FiniteCheck::EveryStage;
+    double zero_tolerance = 1.0e-14;
+    double condition_limit = 1.0e12;
 };
 
 [[nodiscard]] inline bool valid_numerical_policy(
     const NumericalPolicy& policy) noexcept {
     if (!std::isfinite(policy.absolute_tolerance) ||
         !std::isfinite(policy.relative_tolerance) ||
+        !std::isfinite(policy.zero_tolerance) ||
+        !std::isfinite(policy.condition_limit) ||
         policy.absolute_tolerance < 0.0 || policy.relative_tolerance < 0.0) {
+        return false;
+    }
+    if (policy.zero_tolerance < 0.0 || policy.condition_limit <= 0.0) {
         return false;
     }
     switch (policy.finite_check) {

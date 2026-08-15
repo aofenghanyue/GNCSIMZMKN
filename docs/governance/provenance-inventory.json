@@ -91,6 +91,27 @@
       "distribution_effect": "not-redistributed"
     },
     {
+      "id": "eigen-3.4.0-foundation-build",
+      "use_scope": "R1-foundation-canonical-storage-and-linear-algebra-build",
+      "version": "3.4.0",
+      "bundled": false,
+      "source_refs": [
+        "https://gitlab.com/libeigen/eigen/-/releases/3.4.0",
+        "docs/adr/0012-eigen-3.4-canonical-numeric-storage.md",
+        "tools/install-eigen.ps1"
+      ],
+      "integrity": {
+        "sha256": "eba3f3d414d2f8cba2919c78ec6daab08fc71ba2ba4ae502b7e5d4d99fc02cda",
+        "bytes": 3704940
+      },
+      "cmake_packages": ["Eigen3"],
+      "license_evidence_refs": [
+        "https://gitlab.com/libeigen/eigen/-/raw/3.4.0/COPYING.README"
+      ],
+      "license_conclusion": "NOASSERTION",
+      "distribution_effect": "external build input; no tracked vendoring or runtime bundle"
+    },
+    {
       "id": "w64devkit-2.9.1-legacy-reproduction",
       "use_scope": "legacy-reproduction-only",
       "version": "2.9.1",

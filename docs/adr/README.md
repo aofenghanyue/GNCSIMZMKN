@@ -19,3 +19,4 @@ ADR 记录已经收窄到实现层的关键选择，并连接需求、架构分�
 - [0009 Accountable roles and candidate toolchain](0009-accountable-roles-and-candidate-toolchain.md)
 - [0010 Lean delivery and owner-controlled decisions](0010-lean-delivery-and-owner-controlled-decisions.md)
 - [0011 R0 observation-only performance and determinism seed](0011-r0-observation-only-performance-baseline.md)
+- [0012 Eigen 3.4.0 canonical numeric storage](0012-eigen-3.4-canonical-numeric-storage.md)

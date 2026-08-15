@@ -25,7 +25,7 @@
 - R0 fixture、oracle 与 PlanProofRecord schema 及其直接正反例。
 - 术语、模块依赖和 Legacy ownership 的派生架构基线。
 - production C/C++ include、逻辑 source root、唯一 source owner、package/project 边界和 Legacy 源码/CMake 禁入守卫。
-- 全量 Git 跟踪文件分发范围、实际 CMake/CI 外部输入、需审查 binary/archive 和 Legacy license-signal 的直接验证器。
+- 全量 Git 跟踪文件分发范围、实际 CMake/CI 外部输入、需审查 binary/archive 和 Legacy license-signal 的直接验证器；R1 Foundation 的 Eigen 3.4.0 外部构建输入已登记。
 - observation-only minimal 3DoF batch benchmark、四个 concrete scale points、fresh-process D1、sanitized hardware/build profile 和 44 条 raw timing samples。
 - C++ 与 Python 交叉执行的科学约定检查。
 - minimal 3DoF 高精度解析轨迹、独立 C++17 RK4 probe、收敛、终止与失败检查。
@@ -38,7 +38,7 @@
 
 - Bootstrap 四项任务保持 `done`。
 - `R0-GOV-001`、`R0-ARCH-001`、`R0-SPEC-001` 保留为技术基线完成项。
-- `R0-GOV-002` 已完成；仓库所有者接受 G1“public GitHub collaboration、platform rights only、当前无通用 repository license”的范围，并要求 origin 保持 public 用于与 `zbyandmoon` 协同。全部 Git 跟踪文件都唯一落入 repository content、architecture blueprint 或 Legacy reference 三个真实范围；当前 CMake 只发现已登记的 `Python3` 验证依赖，CI 只发现固定 commit 的 `actions/checkout`，唯一跟踪 binary/archive 为 Legacy ZIP。Legacy 实时扫描未发现 license-named entry 或强许可证文本信号。四条直接失败用例拒绝把平台协同扩大为通用外发、Legacy 独立外发、未登记 binary vendoring 和下载式 CMake 依赖。`-RequireExternalReady` 继续以退出码 2 阻断 release 和平台外分发；public origin 与当前协同范围一致。
+- `R0-GOV-002` 已完成；仓库所有者接受 G1“public GitHub collaboration、platform rights only、当前无通用 repository license”的范围，并要求 origin 保持 public 用于与 `zbyandmoon` 协同。全部 Git 跟踪文件都唯一落入 repository content、architecture blueprint 或 Legacy reference 三个真实范围；当前 CMake 发现已登记的 `Python3` 验证依赖和 Eigen 3.4.0 Foundation 构建依赖，CI 只发现固定 commit 的 `actions/checkout`，唯一跟踪 binary/archive 为 Legacy ZIP。Legacy 实时扫描未发现 license-named entry 或强许可证文本信号。四条直接失败用例拒绝把平台协同扩大为通用外发、Legacy 独立外发、未登记 binary vendoring 和下载式 CMake 依赖。`-RequireExternalReady` 继续以退出码 2 阻断 release 和平台外分发；public origin 与当前协同范围一致。
 - `R0-LEG-001` 已完成；固定归档与工具链的干净复跑保持 27/27 测试、五条 CSV 基线和源码指纹一致。
 - `R0-LEG-002` 已完成；七条 oracle 均达到 `executable`。仓库所有者已接受只读 publish、`t_k` truth 刷新、固定宏阶段顺序、candidate barrier、committed-`t_k` 读取、共享 RK candidate、单次 scope commit、唯一 identity-bound membership、CSV `t_k`/published-state 边界、停止状态 Observation 先于 RunOutcome、SimFlow 预运行自包含任务物化与 ordinary compile/run replay，并接受对应 Legacy 实现形状退出的逐事实处置。
 - `R0-SCI-001` 已由仓库所有者接受并完成。
@@ -51,8 +51,8 @@
 
 ## 下一条开发主线
 
-1. `R1-FND-001` 已形成首批产品路径：NumericalStatus、NumericalOutcome、NumericalPolicy、fixed-step RK4、准备后严格域三线性查表和 bracketed scalar bisection。minimal 3DoF、YYZ 查表与 CAVH 抛物线阻力极值的独立高精度 oracle 直接回归产品实现。
-2. 下一切片继续完成 Foundation 当前消费者需要的数值能力；规范动态线性代数存储、矩阵分解、多变量/局部求根和自适应积分仍待实现。`R1-CTR-001` 保持 `ready`，其余 R1 任务继续服从 backlog 依赖。
+1. `R1-FND-001` 已形成首批产品路径：NumericalStatus、NumericalOutcome、NumericalPolicy、Eigen 3.4.0 规范数值存储、fixed-step RK4、准备后严格域三线性查表、bracketed scalar bisection 和固定 `3×3` SPD Cholesky 求解。minimal 3DoF、YYZ 查表、CAVH 抛物线阻力极值与 YYZ 完整惯量刚体 consumer 的独立高精度 oracle 直接回归产品实现。
+2. 下一切片继续完成 Foundation 当前消费者需要的数值能力；QuaternionStorage、动态矩阵分解、多变量/局部求根和自适应积分仍待实现。`R1-CTR-001` 保持 `ready`，其余 R1 任务继续服从 backlog 依赖。
 
 ## 保留与恢复
 

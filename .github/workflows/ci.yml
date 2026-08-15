@@ -43,11 +43,15 @@ jobs:
             ninja --version
             git --version
           }
+      - name: Install pinned Eigen build dependency
+        shell: pwsh
+        run: ./tools/install-eigen.ps1 -DownloadIfMissing
       - name: Configure Ubuntu candidate
         if: runner.os == 'Linux'
         run: >-
           cmake -S . -B build/ci -G Ninja
           -DCMAKE_BUILD_TYPE=Release
+          -DEigen3_DIR="${{ github.workspace }}/build/dependencies/eigen-3.4.0/install/share/eigen3/cmake"
           -DGNC_BUILD_TESTS=ON
           -DGNC_WARNINGS_AS_ERRORS=ON
       - name: Configure Windows candidate
@@ -55,6 +59,7 @@ jobs:
         run: >-
           cmake -S . -B build/ci
           -G "Visual Studio 18 2026" -A x64
+          -DEigen3_DIR="${{ github.workspace }}/build/dependencies/eigen-3.4.0/install/share/eigen3/cmake"
           -DGNC_BUILD_TESTS=ON
           -DGNC_WARNINGS_AS_ERRORS=ON
       - name: Record configured compiler identity

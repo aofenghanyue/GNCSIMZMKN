@@ -273,7 +273,7 @@
       "depends_on": ["R0-GATE-001"],
       "deliverables": ["Foundation numeric library", "policy/result contracts", "math verification suite"],
       "acceptance": ["Core algorithms share typed outcome and pass property/convergence tests"],
-      "evidence": ["framework/include/gnc/foundation/numerical_outcome.hpp and numerical_policy.hpp", "framework/include/gnc/foundation/fixed_rk4.hpp, trilinear_table.hpp and bracketed_root.hpp", "r1.foundation-numerics.probe and r1.foundation-numerics.oracle", "r1.foundation-trilinear.probe and r1.foundation-trilinear.oracle", "r1.foundation-root.probe and r1.foundation-root.oracle"],
+      "evidence": ["framework/include/gnc/foundation/numerical_outcome.hpp and numerical_policy.hpp", "framework/include/gnc/foundation/linear_algebra.hpp, fixed_rk4.hpp, trilinear_table.hpp, bracketed_root.hpp and spd_cholesky_3x3.hpp", "r1.foundation-numerics.probe and r1.foundation-numerics.oracle", "r1.foundation-trilinear.probe and r1.foundation-trilinear.oracle", "r1.foundation-root.probe and r1.foundation-root.oracle", "r1.foundation-spd-solve.probe and r1.foundation-spd-solve.oracle"],
       "architecture_refs": ["03"]
     },
     {

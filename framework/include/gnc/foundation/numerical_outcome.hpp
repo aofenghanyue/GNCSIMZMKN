@@ -89,6 +89,7 @@ enum class NumericalFlag : std::uint32_t {
     Normalized = 1U << 0U,
     Clamped = 1U << 1U,
     FallbackUsed = 1U << 2U,
+    Symmetrized = 1U << 3U,
 };
 
 using NumericalFlags = std::uint32_t;
