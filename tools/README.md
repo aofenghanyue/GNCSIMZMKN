@@ -27,8 +27,8 @@
 - `legacy_csv_reference.py`：核对冻结 Legacy logger/sink 来源、capture harness 和两份 CSV，以 50 位 `decimal`、fixture-local 语义字段映射与独立 C++17 probe 验证 `t_k` 行、发布态字段、四条编码等价路径和六条直接失败路径；重复未映射表头不会改变语义 dataset。
 - `legacy_stop_reference.py`：核对冻结 Legacy 终止、logger/sink 来源、capture harness、两份 t0 dataset 与事件 trace，以 `decimal` 和独立 C++17 timeline 验证停止状态先记录、同边界终止、record-field 换序等价、五条独立失败路径及 free-text reason 语义无关性。
 - `legacy_simflow_reference.py`：核对冻结 Legacy SimFlow 来源、环境、运行测试、capture harness、两份 effective mission 和四份 dataset，独立完成按字段 identity 的 matrix row 物化与 dataset 映射，并与 C++17 typed probe 交叉验证 effective-mission JSON 重编码、requested-input 声明、case-source 列和 dataset 列重排、普通 `--config` 重放、独立全新工作目录、case 目录外输入和五条直接失败路径。
-- `validate-license-provenance.ps1`：核对已接受的内部 G1 范围、全部 Git 跟踪文件的分发范围、需审查 binary/archive、实际 CMake/CI 外部输入和 Legacy archive 身份；默认确认内部工作区事实并报告外部分发 blockers，`-RequireExternalReady` 直接拒绝当前内部范围下的外发。
-- `validate-r0-gate-readiness.ps1`：直接核对 R0 gate 的九个依赖任务、G0 架构检查、Legacy oracle、科学约定、minimal 3DoF、YYZ、CAVH 和零未解释差异；默认验证技术输入并呈现已知 public fork，`-RequireDecisionReady` 在 public origin 尚未改为 private 时返回退出码 2。
+- `validate-license-provenance.ps1`：核对已接受的 public GitHub collaboration / platform-rights-only G1 范围、全部 Git 跟踪文件的分发范围、需审查 binary/archive、实际 CMake/CI 外部输入和 Legacy archive 身份；默认确认 GitHub 协同边界并报告 general external distribution blockers，`-RequireExternalReady` 直接拒绝当前范围下的 release 或平台外分发。
+- `validate-r0-gate-readiness.ps1`：直接核对 R0 gate 的九个依赖任务、G0 架构检查、Legacy oracle、科学约定、minimal 3DoF、YYZ、CAVH、零未解释差异和已接受的 public origin disposition；`-RequireDecisionReady` 在这些技术输入一致时通过，最终 gate 结论仍由仓库所有者作出。
 - `validate-team-toolchain.ps1`：校验角色双人复核、科学/架构独立性、候选工具链矩阵、preset/CI 固定配置、治理阻塞与故障注入。
 - `extract-legacy-reference.ps1`：校验并解包只读 legacy archive 到忽略目录。
 

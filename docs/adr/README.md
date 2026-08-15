@@ -15,7 +15,7 @@ ADR 记录已经收窄到实现层的关键选择，并连接需求、架构分�
 - [0005 Derived architecture baseline and authority index](0005-derived-architecture-baseline.md)
 - [0006 SI, frame and simulation-time conventions](0006-si-frame-and-simulation-time-conventions.md)
 - [0007 Passive Hamilton quaternion convention](0007-passive-hamilton-quaternion-convention.md)
-- [0008 Internal-development G1 distribution boundary](0008-internal-default-license-and-provenance-gate.md)
+- [0008 Public GitHub collaboration with platform-scoped rights](0008-internal-default-license-and-provenance-gate.md)
 - [0009 Accountable roles and candidate toolchain](0009-accountable-roles-and-candidate-toolchain.md)
 - [0010 Lean delivery and owner-controlled decisions](0010-lean-delivery-and-owner-controlled-decisions.md)
 - [0011 R0 observation-only performance and determinism seed](0011-r0-observation-only-performance-baseline.md)

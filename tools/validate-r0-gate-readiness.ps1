@@ -205,16 +205,20 @@ function Test-GateInputs(
     $repository = Get-Field $ProvenanceInventory 'repository'
     if ((Get-Field $repository 'owner_decision') -ne 'accepted' -or
         (Get-Field $repository 'g1_scope') -ne
-            'internal-development-no-new-external-distribution' -or
+            'public-github-collaboration-platform-rights-only' -or
+        (Get-Field $repository 'license_conclusion') -ne 'NOASSERTION' -or
+        (Get-Field $repository 'github_collaboration') -ne
+            'allowed-under-platform-terms' -or
         (Get-Field $repository 'external_distribution') -ne 'blocked') {
-        $issues.Add('Accepted internal-development G1 distribution boundary is inconsistent.')
+        $issues.Add('Accepted public GitHub collaboration G1 boundary is inconsistent.')
     }
     $publicExposure = Get-Field $repository 'existing_public_exposure'
     $originVisibility = [string](Get-Field $publicExposure 'origin_visibility')
+    $originDisposition = [string](Get-Field $publicExposure 'owner_disposition')
     $knownPublicForks = @(Get-Field $publicExposure 'known_public_forks')
-    if ($originVisibility -ne 'private' -or
-        (Get-Field $publicExposure 'owner_disposition') -ne 'resolved') {
-        $blockers.Add('public-origin-private-transition-required')
+    if ($originVisibility -ne 'public' -or
+        $originDisposition -ne 'intentional-public-collaboration') {
+        $issues.Add('Public GitHub collaboration scope requires an intentional public origin.')
     }
 
     return [pscustomobject][ordered]@{
@@ -236,7 +240,9 @@ function Test-GateInputs(
             cavh_mutations_rejected = @($cavhMutations | Where-Object {
                     (Get-Field $_ 'status') -eq 'rejected'
                 }).Count
+            github_collaboration = [string](Get-Field $repository 'github_collaboration')
             origin_visibility = $originVisibility
+            origin_disposition = $originDisposition
             known_public_forks = $knownPublicForks.Count
         }
     }

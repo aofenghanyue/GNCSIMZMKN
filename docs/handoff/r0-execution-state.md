@@ -38,7 +38,7 @@
 
 - Bootstrap 四项任务保持 `done`。
 - `R0-GOV-001`、`R0-ARCH-001`、`R0-SPEC-001` 保留为技术基线完成项。
-- `R0-GOV-002` 已完成；仓库所有者接受 G1“仅内部开发、停止新增外部分发”的范围。全部 Git 跟踪文件都唯一落入 repository content、architecture blueprint 或 Legacy reference 三个真实范围；当前 CMake 只发现已登记的 `Python3` 验证依赖，CI 只发现固定 commit 的 `actions/checkout`，唯一跟踪 binary/archive 为 Legacy ZIP。Legacy 实时扫描未发现 license-named entry 或强许可证文本信号。四条直接失败用例拒绝内部范围绕过、Legacy 外发、未登记 binary vendoring 和下载式 CMake 依赖。`-RequireExternalReady` 按已接受范围返回退出码 2；当前 public origin 仍需仓库所有者单独授权处置。
+- `R0-GOV-002` 已完成；仓库所有者接受 G1“public GitHub collaboration、platform rights only、当前无通用 repository license”的范围，并要求 origin 保持 public 用于与 `zbyandmoon` 协同。全部 Git 跟踪文件都唯一落入 repository content、architecture blueprint 或 Legacy reference 三个真实范围；当前 CMake 只发现已登记的 `Python3` 验证依赖，CI 只发现固定 commit 的 `actions/checkout`，唯一跟踪 binary/archive 为 Legacy ZIP。Legacy 实时扫描未发现 license-named entry 或强许可证文本信号。四条直接失败用例拒绝把平台协同扩大为通用外发、Legacy 独立外发、未登记 binary vendoring 和下载式 CMake 依赖。`-RequireExternalReady` 继续以退出码 2 阻断 release 和平台外分发；public origin 与当前协同范围一致。
 - `R0-LEG-001` 已完成；固定归档与工具链的干净复跑保持 27/27 测试、五条 CSV 基线和源码指纹一致。
 - `R0-LEG-002` 已完成；七条 oracle 均达到 `executable`。仓库所有者已接受只读 publish、`t_k` truth 刷新、固定宏阶段顺序、candidate barrier、committed-`t_k` 读取、共享 RK candidate、单次 scope commit、唯一 identity-bound membership、CSV `t_k`/published-state 边界、停止状态 Observation 先于 RunOutcome、SimFlow 预运行自包含任务物化与 ordinary compile/run replay，并接受对应 Legacy 实现形状退出的逐事实处置。
 - `R0-SCI-001` 已由仓库所有者接受并完成。
@@ -47,11 +47,11 @@
 - `R0-SCI-004` 已完成；仓库所有者接受 `MODEL-CAVH-LEGACY-TRANSCRIBED-FORMULA-001` 作为 fixture-local qualification identity。`REF-CAVH-FORMULA-001` 已固定论文 citation metadata 与 source-access boundary、七条科学假设、两个解析抛物线包络案例、指数密度/Mach/`CL_star` 导数及收敛梯、三组 Eq17/Eq18 全中间量案例、四组 TDCT 符号与饱和案例、十一条显式失败和七条 scientific mutation。Eq17 导数退化返回 `derivative-degenerate` 且 fallback 为 `forbidden`；公式分母奇异返回 `formula-singularity`，不再沿用 Legacy 的静默 Eq18 fallback 或 signed denominator clamp。80 位 Decimal 与独立 C++17 probe 在 Debug/Release 交叉通过。论文逐式一致性、digitized aero、closed-loop 性能和产品 guidance contract 保持未声明。
 - `R0-ARCH-002` 已完成；`validate-source-boundaries.ps1` 从 ADR-0003 和 authority registry 投影 source policy，扫描 production C/C++ include、runtime Legacy path 与 CMake。当前仓库正向 inventory 通过；同一 evaluator 拒绝重复 source owner、Kernel→Compiler dot-segment include、Adapter→Kernel、package→Compiler、framework→user、未知内部模块、Legacy path/API 和 Legacy CMake 八个反例。既有 architecture baseline 的十五个反例继续覆盖 shared-symbol/Legacy ownership、DAG 与 CMake edge。没有 runtime artifact 的 state/descriptor/transaction 语义保持 awaiting-artifact。
 - `R0-PERF-001` 已完成；`PERF-R0-M3DOF-BATCH-001` 在一个独立 C++17 executable 中运行 1、64、1024 和 16384 episodes，每 episode 为 80 个 fixed RK4 steps。80 位 Decimal comparator 先验证解析正确性，三个 fresh process 的 parsed semantic result 达到当前 workload-scoped D1；D2/D3 保持 pending。2026-08-15 的 observation-only baseline 保存两个 warm-up 与九个 measured process/point，共 44 条 raw samples。最大点 `batch-16384` 的本机 median 为 `16,534,400 ns`，p95 为 `17,576,400 ns`，median throughput 约 `79.27 million steps/s`。硬件为 Intel i7-12700K / 20 logical processors / 32 GiB / Hyper-V；当前 binary 为未进入产品支持 profile 的 Windows MinGW `gcc-15.1.0`，结果不构成 performance threshold、产品 toolchain 或 realtime 资格。
-- `R0-GOV-002` 已完成。`R0-GATE-001` 的 executable preflight 已实现：九个依赖任务、九条 G0 架构检查、七条 Legacy behavior oracle、科学约定、minimal 3DoF、YYZ 和 CAVH 技术输入全部通过，未解释 YYZ 差异为零；同一 evaluator 拒绝依赖未完成、架构不符合、Legacy oracle 不可执行和 YYZ 差异未闭合四个反例。Debug 与 Release 均完成配置、构建和 57/57 CTest，repository verification 通过。只读 GitHub 查询确认 origin 仍为 `PUBLIC`，并存在 `zbyandmoon/GNCSIMZMKN` 公开 fork；GitHub 会在 origin 变为 private 后让该 fork 保持公开并进入分离网络。任务受 origin 范围不一致阻塞，最终阶段门决定仍由仓库所有者作出。
+- `R0-GOV-002` 已完成。`R0-GATE-001` 的 executable preflight 已实现：九个依赖任务、九条 G0 架构检查、七条 Legacy behavior oracle、科学约定、minimal 3DoF、YYZ 和 CAVH 技术输入全部通过，未解释 YYZ 差异为零；同一 evaluator 拒绝依赖未完成、架构不符合、Legacy oracle 不可执行和 YYZ 差异未闭合四个反例。Debug 与 Release 均完成配置、构建和 57/57 CTest，repository verification 通过。只读 GitHub 查询确认 origin 与 `zbyandmoon/GNCSIMZMKN` fork 都是 `PUBLIC`；仓库所有者已接受该协同边界。`-RequireDecisionReady` 当前无技术 blocker，任务进入 `review`，最终阶段门决定仍由仓库所有者作出。
 
 ## 下一条开发主线
 
-1. 仓库所有者在知悉既有 public fork 将继续公开的前提下，授权将 origin 改为 private；完成可见性复核后立即重新运行 decision-readiness 检查，并提交 G0/G1 gate 的单一 owner 选择。
+1. 仓库所有者根据 executable preflight 作出 G0/G1 的单一选择；推荐 `Passed`，并只解锁 R1 的 `R1-FND-001` 与 `R1-CTR-001` 起始切片。public GitHub collaboration 保持，release、二进制和平台外分发继续关闭。
 2. 产品 schema、loader、Compiler、Session、durable evidence 与 R1～R8 runtime 能力继续保持锁定，直到 R0 gate 决定闭合。
 
 ## 保留与恢复

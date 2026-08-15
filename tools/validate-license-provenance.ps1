@@ -126,13 +126,15 @@ function Test-InventoryObject(
     $repository = Get-Field $Inventory 'repository'
     foreach ($field in @(
             'owner_decision', 'g1_scope', 'license_conclusion',
-            'external_distribution', 'origin_remote', 'existing_public_exposure')) {
+            'github_collaboration', 'external_distribution', 'origin_remote',
+            'existing_public_exposure')) {
         if (-not (Test-HasField $repository $field)) {
             $issues.Add("Repository distribution state is missing '$field'.")
         }
     }
     $ownerDecision = [string](Get-Field $repository 'owner_decision')
     $g1Scope = [string](Get-Field $repository 'g1_scope')
+    $githubCollaboration = [string](Get-Field $repository 'github_collaboration')
     $repositoryDistribution = [string](Get-Field $repository 'external_distribution')
     if ($ownerDecision -notin @('pending', 'accepted')) {
         $issues.Add("Repository owner decision has unsupported value '$ownerDecision'.")
@@ -144,13 +146,28 @@ function Test-InventoryObject(
         $issues.Add('A root distribution license appeared while the repository owner decision is pending.')
     }
     if ($ownerDecision -eq 'accepted' -and
-        $g1Scope -ne 'internal-development-no-new-external-distribution') {
+        $g1Scope -ne 'public-github-collaboration-platform-rights-only') {
         $issues.Add("Accepted G1 scope has unsupported value '$g1Scope'.")
     }
     if ($ownerDecision -eq 'accepted' -and
-        $g1Scope -eq 'internal-development-no-new-external-distribution' -and
+        $g1Scope -eq 'public-github-collaboration-platform-rights-only' -and
+        $githubCollaboration -ne 'allowed-under-platform-terms') {
+        $issues.Add('Accepted public GitHub collaboration scope must allow collaboration under platform terms.')
+    }
+    if ($ownerDecision -eq 'accepted' -and
+        $g1Scope -eq 'public-github-collaboration-platform-rights-only' -and
         $repositoryDistribution -ne 'blocked') {
-        $issues.Add('Repository external distribution must remain blocked under the accepted internal-only G1 scope.')
+        $issues.Add('Public GitHub collaboration scope does not authorize general external distribution.')
+    }
+    if ($ownerDecision -eq 'accepted' -and
+        $g1Scope -eq 'public-github-collaboration-platform-rights-only' -and
+        [string](Get-Field $repository 'license_conclusion') -ne 'NOASSERTION') {
+        $issues.Add('Platform-rights-only G1 scope requires the repository license conclusion to remain NOASSERTION.')
+    }
+    if ($ownerDecision -eq 'accepted' -and
+        $g1Scope -eq 'public-github-collaboration-platform-rights-only' -and
+        $RootLicenseFiles.Count -gt 0) {
+        $issues.Add('A root distribution license appeared under the platform-rights-only G1 scope.')
     }
     if ($repositoryDistribution -eq 'allowed' -and $RootLicenseFiles.Count -eq 0) {
         $issues.Add('Repository external distribution is allowed without a root license file.')
@@ -171,11 +188,14 @@ function Test-InventoryObject(
     if ($originVisibility -notin @('public', 'private')) {
         $issues.Add("Origin visibility has unsupported value '$originVisibility'.")
     }
-    if ($originDisposition -notin @('private-transition-pending', 'resolved')) {
+    if ($originDisposition -ne 'intentional-public-collaboration') {
         $issues.Add("Origin disposition has unsupported value '$originDisposition'.")
     }
-    if ($originDisposition -eq 'resolved' -and $originVisibility -ne 'private') {
-        $issues.Add('Public origin disposition cannot be resolved before the origin is private.')
+    if ($ownerDecision -eq 'accepted' -and
+        $g1Scope -eq 'public-github-collaboration-platform-rights-only' -and
+        ($originVisibility -ne 'public' -or
+            $originDisposition -ne 'intentional-public-collaboration')) {
+        $issues.Add('Accepted public GitHub collaboration scope requires an intentional public origin.')
     }
 
     $scopes = @(Get-Field $Inventory 'tracked_scopes')
@@ -361,15 +381,11 @@ function Get-ExternalBlockers([object]$Inventory) {
         $blockers.Add('repository-owner-distribution-decision-pending')
     }
     if ((Get-Field $repository 'g1_scope') -eq
-        'internal-development-no-new-external-distribution') {
-        $blockers.Add('g1-scope-internal-only')
+        'public-github-collaboration-platform-rights-only') {
+        $blockers.Add('g1-scope-platform-rights-only')
     }
     if ((Get-Field $repository 'external_distribution') -ne 'allowed') {
         $blockers.Add('repository-distribution-blocked')
-    }
-    $publicExposure = Get-Field $repository 'existing_public_exposure'
-    if ((Get-Field $publicExposure 'owner_disposition') -ne 'resolved') {
-        $blockers.Add('public-origin-private-transition-required')
     }
     foreach ($scope in @(Get-Field $Inventory 'tracked_scopes')) {
         if ((Get-Field $scope 'external_distribution') -ne 'allowed') {
@@ -535,8 +551,8 @@ try {
     $candidate = Copy-JsonObject $inventory
     $candidate.repository.external_distribution = 'allowed'
     Invoke-NegativeCase `
-        'internal-scope-bypass' `
-        'accepted internal-only G1 scope' `
+        'platform-scope-general-distribution-bypass' `
+        'public GitHub collaboration scope does not authorize general external distribution' `
         $candidate `
         $trackedFiles `
         $cmakeTexts.ToArray() `
@@ -589,12 +605,12 @@ try {
     $summary = [pscustomobject][ordered]@{
         task_id = 'R0-GOV-002'
         validation = if ($errors.Count -eq 0) { 'passed' } else { 'failed' }
-        internal_workspace = [ordered]@{
+        tracked_repository = [ordered]@{
             ready = $errors.Count -eq 0
             tracked_files = $trackedFiles.Count
             scope_coverage = @($scopeCounts)
         }
-        external_distribution = [ordered]@{
+        general_external_distribution = [ordered]@{
             ready = $errors.Count -eq 0 -and $externalBlockers.Count -eq 0
             blockers = $externalBlockers
         }
@@ -626,7 +642,7 @@ try {
             $summary | ConvertTo-Json -Depth 10
         }
         elseif (-not $Quiet) {
-            Write-Host 'External distribution is blocked:'
+            Write-Host 'General external distribution is blocked:'
             foreach ($blocker in $externalBlockers) {
                 Write-Host " - $blocker"
             }
@@ -640,7 +656,7 @@ try {
     elseif (-not $Quiet) {
         Write-Host 'License/provenance validation passed.'
         Write-Host "Tracked scope coverage: $($trackedFiles.Count)/$($trackedFiles.Count)"
-        Write-Host "External distribution: blocked by $($externalBlockers.Count) unresolved item(s)"
+        Write-Host "General external distribution: blocked by $($externalBlockers.Count) unresolved item(s)"
         Write-Host "Negative cases rejected: $(@($negativeResults | Where-Object { $_.rejected }).Count)/$($negativeResults.Count)"
     }
 }

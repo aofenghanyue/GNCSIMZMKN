@@ -1,6 +1,6 @@
 # 许可证与来源策略
 
-- 状态：R0 accepted，G1 仅内部开发
+- 状态：R0 accepted，G1 public GitHub collaboration / platform rights only
 - 决策记录：ADR-0008
 - 适用范围：当前仓库内容、架构蓝图、fixture/oracle/benchmark、Legacy reference，以及构建和验证实际调用的外部输入
 
@@ -8,16 +8,18 @@
 
 ## 当前边界
 
-| 范围 | 当前处理 | 外部分发 | 后续扩大分发的前置条件 |
+| 范围 | 当前处理 | GitHub public collaboration | release / 平台外分发 |
 | --- | --- | --- | --- |
-| 仓库源码、文档、fixture、oracle、benchmark | 当前授权工作区内开发和验证 | blocked | 仓库所有者修改 G1 范围，并确认权属和许可证路线 |
-| `design-notes/` 架构蓝图 | 当前授权工作区内使用 | blocked | 作者/权利来源和可许可范围闭合 |
-| `reference/legacy/` | read-only、evidence-only | blocked | 逐项权属和许可证据闭合；任何候选包仍需显式排除或批准 |
-| Eigen 与 w64devkit | 仅隔离 Legacy 复现 | not redistributed | 进入产品或分发包时按实际文件/runtime 复核 |
-| 宿主 Python、PowerShell、CMake、编译器 | 构建与验证时就地执行 | not redistributed | bundling、容器、runtime 或安装包进入交付时复核 |
-| `actions/checkout` | 固定 commit 的 CI 调用 | not redistributed | workflow 依赖变化时同步外部输入记录 |
+| 仓库源码、文档、fixture、oracle、benchmark | 本地开发、验证及 public origin 协同 | allowed under GitHub platform terms | blocked；需仓库所有者选择许可并确认候选权属 |
+| `design-notes/` 架构蓝图 | public origin 中的现有架构输入 | owner-accepted existing exposure | blocked；作者/权利来源和可许可范围仍需闭合 |
+| `reference/legacy/` | read-only、evidence-only，当前随仓库公开 | owner-accepted existing exposure | blocked；逐项权属和许可证据闭合后仍需单独决定 |
+| Eigen 与 w64devkit | 仅隔离 Legacy 复现 | not bundled | 进入产品或分发包时按实际文件/runtime 复核 |
+| 宿主 Python、PowerShell、CMake、编译器 | 构建与验证时就地执行 | not bundled | bundling、容器、runtime 或安装包进入交付时复核 |
+| `actions/checkout` | 固定 commit 的 CI 调用 | workflow reference only | workflow 依赖变化时同步外部输入记录 |
 
-origin 当前公开可见，与已接受的内部开发范围不一致；`zbyandmoon/GNCSIMZMKN` 是已存在的公开 fork。仓库所有者需要单独授权把 origin 改为 private。GitHub 会让该 fork 保持公开并与 origin 分离，因此 private transition 只停止所有者控制范围内的后续公开访问和 push。本地验证不会把公开可见性推导为分发许可证，也不会自行改变远端状态。
+origin 保持 public，用于与 `zbyandmoon` 通过 fork、issue、review 和 pull request 协同；`zbyandmoon/GNCSIMZMKN` 是已存在的公开 fork。GitHub 平台条款允许 public repository 的平台内查看和 fork 等功能。仓库当前没有通用分发许可证，public visibility 也不表示已完成 repository content、蓝图或 Legacy 的权利清结论。实现智能体不会自行改变远端状态，也不会在缺少明确授权时 push、merge、tag 或发布 release。
+
+本策略中的 `external_distribution: blocked` 只描述 public GitHub collaboration 之外的主动交付渠道，例如 release、源码或二进制 bundle、数据集、报告附件和 Legacy archive。该状态不会隐藏或否认 public origin 与已存在 fork 的实际公开访问。
 
 ## 新内容和依赖
 
@@ -41,9 +43,9 @@ origin 当前公开可见，与已接受的内部开发范围不一致；`zbyand
 
 ## 外部分发
 
-当前 G1 停止新增外部分发。实现智能体不向公开远端 push，不发布 release，不发送公开附件或数据，也不改变远端可见性。
+当前 G1 允许 public GitHub collaboration。实现智能体可以创建本地提交；push、merge、tag、release、公开附件和其他远端变更都需要用户明确授权。
 
-仓库所有者未来若扩大分发范围，需要先明确文件范围和交付形式。候选中每个第三方或受限项都需要具有适用于该交付形式的权利结论和所需 notices。Legacy 与 `NOASSERTION` 项默认阻断候选。
+仓库所有者未来若增加 release 或平台外分发，需要先明确文件范围和交付形式。候选中每个第三方或受限项都需要具有适用于该交付形式的权利结论和所需 notices。Legacy 与 `NOASSERTION` 项默认阻断候选。实际合并第三方贡献并把它纳入未来许可或 release 候选时，需要确认贡献者对相应内容的权利；当前协同范围不新增 CLA、DCO 或验收回执。
 
 ## 直接验证
 
@@ -51,7 +53,7 @@ origin 当前公开可见，与已接受的内部开发范围不一致；`zbyand
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate-license-provenance.ps1
 ```
 
-该命令核对已接受的内部范围、全部 Git 跟踪文件的范围覆盖、需审查 binary/archive、真实 CMake/CI 外部输入、Legacy archive 身份与许可证信号，并运行四个关键失败用例。
+该命令核对已接受的 public GitHub collaboration 范围、全部 Git 跟踪文件的范围覆盖、需审查 binary/archive、真实 CMake/CI 外部输入、Legacy archive 身份与许可证信号，并运行四个关键失败用例。
 
 显式检查外部分发就绪状态：
 
@@ -59,4 +61,4 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate-license-prove
 powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate-license-provenance.ps1 -RequireExternalReady
 ```
 
-已接受的内部 G1 范围会使该命令返回退出码 2。未来只有仓库所有者修改范围并闭合候选权利后，该检查才允许通过。
+已接受的 platform-rights-only G1 范围会使该命令返回退出码 2。这个返回值只阻断 release 和平台外分发，不阻断当前 GitHub 协同。未来只有仓库所有者修改范围并闭合候选权利后，该检查才允许通过。

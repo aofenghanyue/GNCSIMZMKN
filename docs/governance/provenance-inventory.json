@@ -4,8 +4,9 @@
   "maturity": "r0-gate-input-no-runtime-consumer",
   "repository": {
     "owner_decision": "accepted",
-    "g1_scope": "internal-development-no-new-external-distribution",
+    "g1_scope": "public-github-collaboration-platform-rights-only",
     "license_conclusion": "NOASSERTION",
+    "github_collaboration": "allowed-under-platform-terms",
     "external_distribution": "blocked",
     "origin_remote": "https://github.com/aofenghanyue/GNCSIMZMKN.git",
     "existing_public_exposure": {
@@ -17,10 +18,10 @@
           "repository": "zbyandmoon/GNCSIMZMKN",
           "evidence_url": "https://github.com/zbyandmoon/GNCSIMZMKN",
           "visibility": "public",
-          "private_transition_effect": "remains-public-detached-network"
+          "collaboration_role": "known-public-fork"
         }
       ],
-      "owner_disposition": "private-transition-pending"
+      "owner_disposition": "intentional-public-collaboration"
     }
   },
   "tracked_scopes": [
@@ -28,8 +29,8 @@
       "id": "repository-content",
       "include_prefixes": [""],
       "exclude_prefixes": ["design-notes/", "reference/legacy/"],
-      "handling": "existing-authorized-workspace",
-      "rights_status": "internal-use-authorized-external-rights-pending",
+      "handling": "public-github-collaboration",
+      "rights_status": "owner-authorized-public-collaboration-general-rights-pending",
       "license_conclusion": "NOASSERTION",
       "external_distribution": "blocked",
       "source_refs": ["project-manifest.json", "LICENSE-STATUS.md"],
@@ -39,7 +40,7 @@
       "id": "architecture-blueprint",
       "include_prefixes": ["design-notes/"],
       "exclude_prefixes": [],
-      "handling": "existing-authorized-workspace",
+      "handling": "public-github-existing-exposure",
       "rights_status": "authorship-and-licensing-evidence-pending",
       "license_conclusion": "NOASSERTION",
       "external_distribution": "blocked",
