@@ -210,8 +210,11 @@ function Test-GateInputs(
         $issues.Add('Accepted internal-development G1 distribution boundary is inconsistent.')
     }
     $publicExposure = Get-Field $repository 'existing_public_exposure'
-    if ((Get-Field $publicExposure 'owner_disposition') -ne 'resolved') {
-        $blockers.Add('public-origin-remediation-required')
+    $originVisibility = [string](Get-Field $publicExposure 'origin_visibility')
+    $knownPublicForks = @(Get-Field $publicExposure 'known_public_forks')
+    if ($originVisibility -ne 'private' -or
+        (Get-Field $publicExposure 'owner_disposition') -ne 'resolved') {
+        $blockers.Add('public-origin-private-transition-required')
     }
 
     return [pscustomobject][ordered]@{
@@ -233,6 +236,8 @@ function Test-GateInputs(
             cavh_mutations_rejected = @($cavhMutations | Where-Object {
                     (Get-Field $_ 'status') -eq 'rejected'
                 }).Count
+            origin_visibility = $originVisibility
+            known_public_forks = $knownPublicForks.Count
         }
     }
 }

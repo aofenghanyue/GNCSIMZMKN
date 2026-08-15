@@ -17,7 +17,7 @@
 | 宿主 Python、PowerShell、CMake、编译器 | 构建与验证时就地执行 | not redistributed | bundling、容器、runtime 或安装包进入交付时复核 |
 | `actions/checkout` | 固定 commit 的 CI 调用 | not redistributed | workflow 依赖变化时同步外部输入记录 |
 
-origin 当前公开可见，与已接受的内部开发范围不一致。仓库所有者需要单独授权远端可见性处置；本地验证不会把公开可见性推导为分发许可证，也不会自行改变远端状态。
+origin 当前公开可见，与已接受的内部开发范围不一致；`zbyandmoon/GNCSIMZMKN` 是已存在的公开 fork。仓库所有者需要单独授权把 origin 改为 private。GitHub 会让该 fork 保持公开并与 origin 分离，因此 private transition 只停止所有者控制范围内的后续公开访问和 push。本地验证不会把公开可见性推导为分发许可证，也不会自行改变远端状态。
 
 ## 新内容和依赖
 

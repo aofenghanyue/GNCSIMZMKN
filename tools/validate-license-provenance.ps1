@@ -160,6 +160,24 @@ function Test-InventoryObject(
         $issues.Add('Repository external distribution is allowed without a license conclusion.')
     }
 
+    $publicExposure = Get-Field $repository 'existing_public_exposure'
+    foreach ($field in @('origin_visibility', 'owner_disposition')) {
+        if (-not (Test-HasField $publicExposure $field)) {
+            $issues.Add("Existing public exposure is missing '$field'.")
+        }
+    }
+    $originVisibility = [string](Get-Field $publicExposure 'origin_visibility')
+    $originDisposition = [string](Get-Field $publicExposure 'owner_disposition')
+    if ($originVisibility -notin @('public', 'private')) {
+        $issues.Add("Origin visibility has unsupported value '$originVisibility'.")
+    }
+    if ($originDisposition -notin @('private-transition-pending', 'resolved')) {
+        $issues.Add("Origin disposition has unsupported value '$originDisposition'.")
+    }
+    if ($originDisposition -eq 'resolved' -and $originVisibility -ne 'private') {
+        $issues.Add('Public origin disposition cannot be resolved before the origin is private.')
+    }
+
     $scopes = @(Get-Field $Inventory 'tracked_scopes')
     if ($scopes.Count -eq 0) {
         $issues.Add('Distribution inventory has no tracked scopes.')
@@ -351,7 +369,7 @@ function Get-ExternalBlockers([object]$Inventory) {
     }
     $publicExposure = Get-Field $repository 'existing_public_exposure'
     if ((Get-Field $publicExposure 'owner_disposition') -ne 'resolved') {
-        $blockers.Add('existing-public-origin-remediation-required')
+        $blockers.Add('public-origin-private-transition-required')
     }
     foreach ($scope in @(Get-Field $Inventory 'tracked_scopes')) {
         if ((Get-Field $scope 'external_distribution') -ne 'allowed') {

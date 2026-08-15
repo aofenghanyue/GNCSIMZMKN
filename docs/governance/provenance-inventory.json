@@ -10,8 +10,17 @@
     "origin_remote": "https://github.com/aofenghanyue/GNCSIMZMKN.git",
     "existing_public_exposure": {
       "observed_on": "2026-08-15",
+      "origin_visibility": "public",
       "evidence_url": "https://github.com/aofenghanyue/GNCSIMZMKN",
-      "owner_disposition": "remediation-required"
+      "known_public_forks": [
+        {
+          "repository": "zbyandmoon/GNCSIMZMKN",
+          "evidence_url": "https://github.com/zbyandmoon/GNCSIMZMKN",
+          "visibility": "public",
+          "private_transition_effect": "remains-public-detached-network"
+        }
+      ],
+      "owner_disposition": "private-transition-pending"
     }
   },
   "tracked_scopes": [

@@ -257,7 +257,7 @@
       "depends_on": ["R0-GOV-001", "R0-GOV-002", "R0-ARCH-002", "R0-LEG-002", "R0-SCI-002", "R0-SCI-003", "R0-SCI-004", "R0-SPEC-001", "R0-PERF-001"],
       "deliverables": ["Executable G0/G1 readiness preflight", "Owner G0/G1 decision", "Explicit R1 task unlock"],
       "acceptance": ["All blocking gaps are closed or explicitly rejected; unexplained scientific differences are zero"],
-      "evidence": ["tools/validate-r0-gate-readiness.ps1 reports 9/9 dependencies, 9/9 architecture checks, 7/7 Legacy behavior oracles and zero unexplained YYZ fields", "Four direct failure cases reject incomplete dependencies, nonconformant architecture, non-executable Legacy oracle and unresolved YYZ difference", "Debug and Release configure/build plus 57/57 CTest and repository verification pass", "Read-only gh query confirms aofenghanyue/GNCSIMZMKN visibility is PUBLIC; owner authorization is required before remediation"],
+      "evidence": ["tools/validate-r0-gate-readiness.ps1 reports 9/9 dependencies, 9/9 architecture checks, 7/7 Legacy behavior oracles and zero unexplained YYZ fields", "Four direct failure cases reject incomplete dependencies, nonconformant architecture, non-executable Legacy oracle and unresolved YYZ difference", "Debug and Release configure/build plus 57/57 CTest and repository verification pass", "Read-only GitHub queries confirm the origin is PUBLIC and zbyandmoon/GNCSIMZMKN is an existing PUBLIC fork; changing the origin to private requires owner authorization and will leave that fork public in a detached network"],
       "architecture_refs": ["11 §5", "docs/handoff/release-gates.md"]
     },
 

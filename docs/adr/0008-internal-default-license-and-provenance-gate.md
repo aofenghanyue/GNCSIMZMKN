@@ -12,7 +12,9 @@
 
 仓库根目录没有分发许可证。GitHub 的许可证说明指出，无许可证仓库仍受默认版权规则约束；公开仓库用户同时具有 GitHub 服务条款提供的查看和 fork 权限。仓库级许可证与平台访问权限需要分开判断。[GitHub licensing a repository](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository)
 
-2026-08-15 的只读核对确认 origin `https://github.com/aofenghanyue/GNCSIMZMKN.git` 当前公开可见。现有公开暴露已经发生，后续本地策略无法撤回既有副本。公开 origin 与内部开发范围存在冲突，远端可见性变更仍需仓库所有者单独授权。
+2026-08-15 的只读核对确认 origin `https://github.com/aofenghanyue/GNCSIMZMKN.git` 当前公开可见，并已有公开 fork `https://github.com/zbyandmoon/GNCSIMZMKN`。当前身份对该 fork 只有读取权限。GitHub 说明，public repository 改为 private 后，既有 public fork 会保持公开并进入分离的 repository network。[GitHub repository visibility](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/managing-repository-settings/setting-repository-visibility) [GitHub fork visibility effects](https://docs.github.com/en/pull-requests/collaborating-with-pull-requests/working-with-forks/what-happens-to-forks-when-a-repository-is-deleted-or-changes-visibility)
+
+现有公开暴露已经发生，后续本地策略无法撤回既有副本。把 origin 改为 private 可以停止所有者控制范围内的后续公开 push 和匿名访问入口；公开 fork 仍会作为既有副本继续存在。远端可见性变更仍需仓库所有者单独授权。
 
 当前 Git 跟踪内容可完整划分为三类：仓库源码/文档/fixture/oracle、导入的架构蓝图、`reference/legacy/`。冻结 Legacy ZIP 的来源身份和 SHA-256 已固定，实时扫描仍未发现许可证命名文件或强许可证文本信号；该扫描只表达检测事实，不提供使用或再分发许可。
 
@@ -30,13 +32,13 @@
 4. Legacy 保持只读、evidence-only，并从任何未来外部分发候选中单独排除，直到权属和许可证据闭合。
 5. Eigen、w64devkit、宿主工具链和 CI action 只按已记录用途在仓库外执行。任何 vendoring、runtime bundling 或二进制发布都需要新的直接复核。
 6. fixture、oracle、benchmark 和报告继续记录来源。上游权利待确认时，派生内容继承外部分发阻断。
-7. public origin 需要后续处置。实现智能体在获得远端可见性变更的明确授权前，只记录这一阻断，不改变远端状态。
+7. public origin 需要改为 private，以停止所有者控制范围内的后续外发。实现智能体在获得远端可见性变更的明确授权前，只记录这一阻断，不改变远端状态。已存在的 public fork 属于无法从 origin 侧追回的既有公开副本，并会在 private transition 后保持公开、与 origin 分离。
 8. SPDX `NONE` 表示文件内未发现许可证信息；`NOASSERTION` 表示尚未形成结论。两者都不提供分发许可。[SPDX File Information](https://spdx.github.io/spdx-spec/v2.2.2/file-information/)
 
 ## Consequences
 
 - R0-GOV-002 的内部/外部处理规则已经闭合，可以作为 G0/G1 gate 输入。
-- 当前 public origin 的可见性与已接受范围不一致，在远端处置完成前阻断内部范围的一致性检查。
+- 当前 public origin 的可见性与已接受范围不一致，在远端处置完成前阻断内部范围的一致性检查。现有 public fork 不会随 origin 变为 private；它作为已发生公开暴露的持续限制记录。
 - 当前 G1 不需要选择公开分发许可证。未来若扩大为公开或受限外发，仓库所有者需要以窄 ADR 修改本决定，并逐项闭合仓库权属、Legacy、蓝图、贡献权属、第三方 notices 和实际二进制 runtime。
 - 本决定不推进 R1～R8，也不替代仓库所有者的阶段门决定。
 
