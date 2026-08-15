@@ -3,15 +3,15 @@
   "task_id": "R0-GOV-002",
   "maturity": "r0-gate-input-no-runtime-consumer",
   "repository": {
-    "owner_decision": "pending",
-    "recommended_g1_scope": "internal-development-no-new-external-distribution",
+    "owner_decision": "accepted",
+    "g1_scope": "internal-development-no-new-external-distribution",
     "license_conclusion": "NOASSERTION",
     "external_distribution": "blocked",
     "origin_remote": "https://github.com/aofenghanyue/GNCSIMZMKN.git",
     "existing_public_exposure": {
       "observed_on": "2026-08-15",
       "evidence_url": "https://github.com/aofenghanyue/GNCSIMZMKN",
-      "owner_disposition": "pending"
+      "owner_disposition": "remediation-required"
     }
   },
   "tracked_scopes": [
@@ -20,7 +20,7 @@
       "include_prefixes": [""],
       "exclude_prefixes": ["design-notes/", "reference/legacy/"],
       "handling": "existing-authorized-workspace",
-      "rights_status": "repository-owner-decision-pending",
+      "rights_status": "internal-use-authorized-external-rights-pending",
       "license_conclusion": "NOASSERTION",
       "external_distribution": "blocked",
       "source_refs": ["project-manifest.json", "LICENSE-STATUS.md"],

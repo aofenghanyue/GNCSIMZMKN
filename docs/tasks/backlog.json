@@ -84,15 +84,15 @@
       "id": "R0-GOV-002",
       "stage": "R0",
       "title": "Decide repository, dependency and data licensing policy",
-      "status": "blocked",
+      "status": "done",
       "priority": "P0",
       "size": "M",
       "owner_role": "product_owner",
       "assignee": null,
       "depends_on": ["B0-VER-001"],
-      "deliverables": ["Decision-ready License ADR", "Executable tracked-scope, dependency, archive and provenance validator", "Minimal third-party and data provenance policy"],
+      "deliverables": ["Accepted internal-development License ADR", "Executable tracked-scope, dependency, archive and provenance validator", "Minimal third-party and data provenance policy"],
       "acceptance": ["Internal and external sharing rules are explicit for code, assets and archives"],
-      "evidence": ["tools/validate-license-provenance.ps1", "Complete tracked-file scope coverage and direct external-readiness rejection", "Four key failure cases", "Owner decision still required for G1 distribution scope"],
+      "evidence": ["ADR-0008 accepted internal-development scope", "tools/validate-license-provenance.ps1 covers 398/398 tracked files and directly rejects external readiness", "Four key failures reject internal-scope bypass, Legacy external distribution, unreviewed binary vendoring and CMake dependency download"],
       "architecture_refs": ["03 §4", "05 §3", "08 §11–§12", "08 §21"]
     },
     {

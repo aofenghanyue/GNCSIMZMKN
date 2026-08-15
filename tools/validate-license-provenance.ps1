@@ -125,19 +125,32 @@ function Test-InventoryObject(
 
     $repository = Get-Field $Inventory 'repository'
     foreach ($field in @(
-            'owner_decision', 'recommended_g1_scope', 'license_conclusion',
+            'owner_decision', 'g1_scope', 'license_conclusion',
             'external_distribution', 'origin_remote', 'existing_public_exposure')) {
         if (-not (Test-HasField $repository $field)) {
             $issues.Add("Repository distribution state is missing '$field'.")
         }
     }
     $ownerDecision = [string](Get-Field $repository 'owner_decision')
+    $g1Scope = [string](Get-Field $repository 'g1_scope')
     $repositoryDistribution = [string](Get-Field $repository 'external_distribution')
+    if ($ownerDecision -notin @('pending', 'accepted')) {
+        $issues.Add("Repository owner decision has unsupported value '$ownerDecision'.")
+    }
     if ($ownerDecision -eq 'pending' -and $repositoryDistribution -ne 'blocked') {
         $issues.Add('Repository external distribution cannot be allowed while the owner decision is pending.')
     }
     if ($ownerDecision -eq 'pending' -and $RootLicenseFiles.Count -gt 0) {
         $issues.Add('A root distribution license appeared while the repository owner decision is pending.')
+    }
+    if ($ownerDecision -eq 'accepted' -and
+        $g1Scope -ne 'internal-development-no-new-external-distribution') {
+        $issues.Add("Accepted G1 scope has unsupported value '$g1Scope'.")
+    }
+    if ($ownerDecision -eq 'accepted' -and
+        $g1Scope -eq 'internal-development-no-new-external-distribution' -and
+        $repositoryDistribution -ne 'blocked') {
+        $issues.Add('Repository external distribution must remain blocked under the accepted internal-only G1 scope.')
     }
     if ($repositoryDistribution -eq 'allowed' -and $RootLicenseFiles.Count -eq 0) {
         $issues.Add('Repository external distribution is allowed without a root license file.')
@@ -329,12 +342,16 @@ function Get-ExternalBlockers([object]$Inventory) {
     if ((Get-Field $repository 'owner_decision') -ne 'accepted') {
         $blockers.Add('repository-owner-distribution-decision-pending')
     }
+    if ((Get-Field $repository 'g1_scope') -eq
+        'internal-development-no-new-external-distribution') {
+        $blockers.Add('g1-scope-internal-only')
+    }
     if ((Get-Field $repository 'external_distribution') -ne 'allowed') {
         $blockers.Add('repository-distribution-blocked')
     }
     $publicExposure = Get-Field $repository 'existing_public_exposure'
     if ((Get-Field $publicExposure 'owner_disposition') -ne 'resolved') {
-        $blockers.Add('existing-public-origin-disposition-pending')
+        $blockers.Add('existing-public-origin-remediation-required')
     }
     foreach ($scope in @(Get-Field $Inventory 'tracked_scopes')) {
         if ((Get-Field $scope 'external_distribution') -ne 'allowed') {
@@ -500,8 +517,8 @@ try {
     $candidate = Copy-JsonObject $inventory
     $candidate.repository.external_distribution = 'allowed'
     Invoke-NegativeCase `
-        'owner-decision-bypass' `
-        'owner decision is pending' `
+        'internal-scope-bypass' `
+        'accepted internal-only G1 scope' `
         $candidate `
         $trackedFiles `
         $cmakeTexts.ToArray() `

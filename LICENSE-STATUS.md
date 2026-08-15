@@ -2,9 +2,9 @@
 
 No repository distribution license has been selected. This notice is not a license grant.
 
-The GitHub origin was observed as public on 2026-08-15. Public visibility and GitHub's view/fork permissions do not supply a general repository distribution license; the repository owner still needs to decide the intended G1 distribution scope. See [GitHub's repository licensing guidance](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository).
+On 2026-08-15, the repository owner accepted an internal-development-only G1 scope with no new external distribution. The GitHub origin was observed as public on the same date. Public visibility and GitHub's view/fork permissions do not supply a general repository distribution license. The public origin requires separate owner-authorized remediation. See [GitHub's repository licensing guidance](https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/licensing-a-repository).
 
-Current implementation and validation may continue inside the already-authorized workspace. The implementation agent will not push, publish a release, send a public bundle, or change remote visibility without explicit authority.
+Current implementation and validation may continue inside the already-authorized workspace. The implementation agent will not push to a public remote, publish a release, send a public bundle, or change remote visibility without explicit authority.
 
 External distribution remains blocked for repository content, imported architecture blueprints, fixtures, oracles, benchmarks, reports, and binaries. The frozen Legacy reference remains read-only, evidence-only, and excluded from any external candidate until ownership and license evidence are resolved.
 
