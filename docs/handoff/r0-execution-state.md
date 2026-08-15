@@ -47,17 +47,19 @@
 - `R0-SCI-004` 已完成；仓库所有者接受 `MODEL-CAVH-LEGACY-TRANSCRIBED-FORMULA-001` 作为 fixture-local qualification identity。`REF-CAVH-FORMULA-001` 已固定论文 citation metadata 与 source-access boundary、七条科学假设、两个解析抛物线包络案例、指数密度/Mach/`CL_star` 导数及收敛梯、三组 Eq17/Eq18 全中间量案例、四组 TDCT 符号与饱和案例、十一条显式失败和七条 scientific mutation。Eq17 导数退化返回 `derivative-degenerate` 且 fallback 为 `forbidden`；公式分母奇异返回 `formula-singularity`，不再沿用 Legacy 的静默 Eq18 fallback 或 signed denominator clamp。80 位 Decimal 与独立 C++17 probe 在 Debug/Release 交叉通过。论文逐式一致性、digitized aero、closed-loop 性能和产品 guidance contract 保持未声明。
 - `R0-ARCH-002` 已完成；`validate-source-boundaries.ps1` 从 ADR-0003 和 authority registry 投影 source policy，扫描 production C/C++ include、runtime Legacy path 与 CMake。当前仓库正向 inventory 通过；同一 evaluator 拒绝重复 source owner、Kernel→Compiler dot-segment include、Adapter→Kernel、package→Compiler、framework→user、未知内部模块、Legacy path/API 和 Legacy CMake 八个反例。既有 architecture baseline 的十五个反例继续覆盖 shared-symbol/Legacy ownership、DAG 与 CMake edge。没有 runtime artifact 的 state/descriptor/transaction 语义保持 awaiting-artifact。
 - `R0-PERF-001` 已完成；`PERF-R0-M3DOF-BATCH-001` 在一个独立 C++17 executable 中运行 1、64、1024 和 16384 episodes，每 episode 为 80 个 fixed RK4 steps。80 位 Decimal comparator 先验证解析正确性，三个 fresh process 的 parsed semantic result 达到当前 workload-scoped D1；D2/D3 保持 pending。2026-08-15 的 observation-only baseline 保存两个 warm-up 与九个 measured process/point，共 44 条 raw samples。最大点 `batch-16384` 的本机 median 为 `16,534,400 ns`，p95 为 `17,576,400 ns`，median throughput 约 `79.27 million steps/s`。硬件为 Intel i7-12700K / 20 logical processors / 32 GiB / Hyper-V；当前 binary 为未进入产品支持 profile 的 Windows MinGW `gcc-15.1.0`，结果不构成 performance threshold、产品 toolchain 或 realtime 资格。
-- `R0-GATE-001` 已完成。仓库所有者于 2026-08-15 接受 G0/G1 `Passed`：九个依赖任务、九条 G0 架构检查、七条 Legacy behavior oracle、科学约定、minimal 3DoF、YYZ 和 CAVH 技术输入全部通过，未解释 YYZ 差异为零；Debug 与 Release 均完成配置、构建和 57/57 CTest，repository verification 通过。当前 gate 已推进到 R1，只解锁 `R1-FND-001` 与 `R1-CTR-001`。
+- `R0-GATE-001` 已完成。仓库所有者于 2026-08-15 接受 G0/G1 `Passed`：九个依赖任务、九条 G0 架构检查、七条 Legacy behavior oracle、科学约定、minimal 3DoF、YYZ 和 CAVH 技术输入全部通过，未解释 YYZ 差异为零；Debug 与 Release 均完成配置、构建和 57/57 CTest，repository verification 通过。当前 gate 已推进到 R1。仓库所有者随后授权在 R1 内按可执行研究切片重排顺序，首个 YYZ 产品纵向切片可直接复用已闭合的 R0 科学输入；R2 及后续阶段继续锁定。
 
 ## 下一条开发主线
 
-1. `R1-FND-001` 已形成首批产品路径：NumericalStatus、NumericalOutcome、NumericalPolicy、Eigen 3.4.0 规范数值存储、fixed-step RK4、准备后严格域三线性查表、bracketed scalar bisection、有限域 local Newton、尺度化标量中心差分、显式前向/后向三点二阶单边差分、固定 `3×3` SPD Cholesky 求解，以及 ADR-0007 被动 Hamilton `QuaternionStorage` 纯算法。minimal 3DoF、YYZ 查表与完整惯量刚体、CAVH 抛物线阻力极值、科学约定和 YYZ 姿态导数/principal-spin 的独立高精度 oracle 直接回归产品实现；CAVH local Newton 以 38 个初值样本固定两个 polar 的局部收敛域和渐近二次收敛。CAVH 数值微分已覆盖 density、Mach 与 `CL_star` 的内部中心差分，以及有限域上下端点共六条显式单边收敛梯；binary64 舍入转折由 80 位 Decimal reference 独立区分。
-2. 下一切片审查 `R1-FND-001` 的当前 consumer 与验收闭包。动态矩阵分解、多变量求根、复步或多变量 Jacobian 和自适应积分仍缺少当前 consumer 或已复现回归。四元数的 frame/time 领域包装归属 `R1-CTR-001`；该任务保持 `ready`，其余 R1 任务继续服从 backlog 依赖。
+1. `R1-FND-001` 的首批已提交能力已冻结，consumer-relevant 配置、构建及 numerics/trilinear/SPD/quaternion probe 与 oracle 通过。任务现为 `review`，等待仓库所有者决定最终完成状态；动态矩阵分解、多变量求根、自适应积分和其他无当前 consumer 的数学能力继续留在范围外。
+2. `R1-YYZ-001` 已形成首个产品纵向切片。`framework/include/gnc/contracts/sample_context.hpp` 提供实际调用使用的 provisional frame、clock、simulation instant、half-open validity 与 quality；`packages/yyz-rigid-step` 提供 typed rigid state/environment/mass/supplied-wrench 输入、immutable `PreparedRigidStepModel` 和纯 `RigidStepKernel`。kernel 直接调用 Foundation strict trilinear、passive Hamilton quaternion、fixed `3×3` SPD Cholesky 与 fixed RK4，返回 `[tick 0,tick 1]` 的未提交 candidate。`r1.yyz-rigid-step.probe` 已覆盖旋转方向、内部点、闭区间边界、越界、完整惯量和 frame/time/quality/mass/inertia/non-finite/RK4-stage 失败；`r1.yyz-rigid-step.oracle` 已按原容差匹配 `ORACLE-YYZ-FROZEN-INTERVAL-001`。
+3. 当前 package 只支持三轴静态气动表、区间内保持的环境/质量属性和 supplied body wrench。推进模型、燃耗/质量 commit、控制面与速率导数、跨区间 owner commit、Compiler、Session、Artifact、Workflow 和前端尚未进入产品路径。下一条推荐纵向切片是把质量燃耗 candidate 与 rigid candidate 组成两段 typed atomic-boundary 示例，继续复用现有 `REF-YYZ-TWO-INTERVAL-MASS-COMMIT-001`。
 
 ## 保留与恢复
 
 旧工作没有丢失：
 
+- 单边差分成果已作为独立提交保留在当前分支历史中，当前 YYZ 切片没有继续扩写；需要真实 consumer 时可从该提交恢复和复核。
 - 原工作分支：`codex/r0-gov-002`
 - 原分支上已推送提交保持不动
 - 未提交的 staged patch 已保存为 stash，说明包含 `pre-governance-reset staged patch a02807de`

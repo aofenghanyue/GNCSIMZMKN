@@ -54,6 +54,18 @@ target_link_libraries(
 gnc_add_interface_module(adapters)
 target_link_libraries(adapters INTERFACE foundation contracts application)
 
+add_library(
+    yyz_rigid_step
+    STATIC
+        packages/yyz-rigid-step/src/rigid_step.cpp)
+target_include_directories(
+    yyz_rigid_step
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/packages/yyz-rigid-step/include>)
+target_link_libraries(yyz_rigid_step PUBLIC foundation contracts)
+gnc_enable_warnings(yyz_rigid_step)
+add_library(gnc::yyz_rigid_step ALIAS yyz_rigid_step)
+
 add_executable(gnc_sim apps/cli/main.cpp)
 target_link_libraries(gnc_sim PRIVATE adapters)
 gnc_enable_warnings(gnc_sim)
@@ -117,6 +129,14 @@ if(GNC_BUILD_TESTS)
         tests/foundation_quaternion.cpp)
     target_link_libraries(gnc_foundation_quaternion_probe PRIVATE foundation)
     gnc_enable_warnings(gnc_foundation_quaternion_probe)
+
+    # R1 YYZ product slice: prepared aero query through rigid RK4 candidate.
+    add_executable(
+        gnc_yyz_rigid_step_product_probe
+        tests/yyz_product_rigid_step.cpp)
+    target_link_libraries(
+        gnc_yyz_rigid_step_product_probe PRIVATE yyz_rigid_step)
+    gnc_enable_warnings(gnc_yyz_rigid_step_product_probe)
 
     # R0 validation spike: intentionally isolated from product modules and Legacy.
     add_executable(
@@ -327,6 +347,9 @@ if(GNC_BUILD_TESTS)
         NAME r1.foundation-quaternion.probe
         COMMAND gnc_foundation_quaternion_probe --self-check)
     add_test(
+        NAME r1.yyz-rigid-step.probe
+        COMMAND gnc_yyz_rigid_step_product_probe --self-check)
+    add_test(
         NAME r0.scientific-conventions.properties
         COMMAND gnc_scientific_conventions --self-check)
     add_test(
@@ -455,6 +478,19 @@ if(GNC_BUILD_TESTS)
             -File ${CMAKE_CURRENT_SOURCE_DIR}/tools/validate-r0-gate-readiness.ps1
             -Quiet)
     find_package(Python3 3.8 REQUIRED COMPONENTS Interpreter)
+    add_test(
+        NAME r1.yyz-rigid-step.oracle
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/validate-yyz-rigid-step-product.py
+            --cases
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-yyz-frozen-interval/cases.json
+            --oracle
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-frozen-interval/reference.json
+            --probe
+            $<TARGET_FILE:gnc_yyz_rigid_step_product_probe>)
     add_test(
         NAME r0.scientific-conventions.cross-tool
         COMMAND

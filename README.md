@@ -5,8 +5,8 @@
 ## 当前交付状态
 
 - 当前 gate：`R1`；G0/G1 已由仓库所有者判定 `Passed`。
-- 允许开展：`R1-FND-001` 数值基础与 `R1-CTR-001` 稳定领域契约。
-- 暂缓开展：其余 R1 任务服从 backlog 依赖；R2～R8 在对应 gate 前保持锁定。
+- 允许开展：`R1-FND-001` 收敛复核、`R1-CTR-001` consumer-driven 契约，以及仓库所有者授权重排的首个 YYZ 产品纵向切片。
+- 暂缓开展：未被当前纵向调用消费的 R1 平台能力；R2～R8 在对应 gate 前保持锁定。
 - 旧 GNCZMKN 只作为只读行为与科学参照，不进入任何生产 target、include path 或运行依赖。
 
 ## 新成员从这里开始
@@ -39,6 +39,12 @@ powershell -NoProfile -ExecutionPolicy Bypass -File tools/bootstrap.ps1
 ```powershell
 build/dev/gnc_sim --version
 build/dev/gnc_sim --self-check
+```
+
+首个 YYZ 产品入口已能独立计算一步 candidate：
+
+```powershell
+build/dev/gnc_yyz_rigid_step_product_probe --self-check
 ```
 
 ## 仓库地图
