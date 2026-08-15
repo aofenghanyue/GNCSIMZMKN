@@ -91,6 +91,12 @@ if(GNC_BUILD_TESTS)
     target_link_libraries(gnc_foundation_spd_solve_probe PRIVATE foundation)
     gnc_enable_warnings(gnc_foundation_spd_solve_probe)
 
+    add_executable(
+        gnc_foundation_quaternion_probe
+        tests/foundation_quaternion.cpp)
+    target_link_libraries(gnc_foundation_quaternion_probe PRIVATE foundation)
+    gnc_enable_warnings(gnc_foundation_quaternion_probe)
+
     # R0 validation spike: intentionally isolated from product modules and Legacy.
     add_executable(
         gnc_scientific_conventions
@@ -286,6 +292,9 @@ if(GNC_BUILD_TESTS)
     add_test(
         NAME r1.foundation-spd-solve.probe
         COMMAND gnc_foundation_spd_solve_probe --self-check)
+    add_test(
+        NAME r1.foundation-quaternion.probe
+        COMMAND gnc_foundation_quaternion_probe --self-check)
     add_test(
         NAME r0.scientific-conventions.properties
         COMMAND gnc_scientific_conventions --self-check)
@@ -491,6 +500,23 @@ if(GNC_BUILD_TESTS)
             ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-mass-properties/reference.json
             --probe
             $<TARGET_FILE:gnc_foundation_spd_solve_probe>)
+    add_test(
+        NAME r1.foundation-quaternion.oracle
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/validate-foundation-quaternion.py
+            --convention-cases
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-scientific-conventions/cases.json
+            --convention-profile
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-scientific-conventions/conventions.json
+            --yyz-cases
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-yyz-6dof-core/cases.json
+            --yyz-oracle
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-6dof-core/reference.json
+            --probe
+            $<TARGET_FILE:gnc_foundation_quaternion_probe>)
     add_test(
         NAME r0.performance-minimal-3dof.baseline
         COMMAND

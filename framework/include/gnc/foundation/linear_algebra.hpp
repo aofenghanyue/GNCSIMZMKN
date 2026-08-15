@@ -1,6 +1,9 @@
 #pragma once
 
 #include <Eigen/Core>
+#include <Eigen/Geometry>
+
+#include <type_traits>
 
 namespace gnc::foundation {
 
@@ -12,6 +15,7 @@ using Vec3 = Eigen::Vector3d;
 using Mat3 = Eigen::Matrix3d;
 using Vector = Eigen::VectorXd;
 using Matrix = Eigen::MatrixXd;
+using QuaternionStorage = Eigen::Quaterniond;
 
 static_assert(Vec3::RowsAtCompileTime == 3 &&
                   Vec3::ColsAtCompileTime == 1,
@@ -19,5 +23,8 @@ static_assert(Vec3::RowsAtCompileTime == 3 &&
 static_assert(Mat3::RowsAtCompileTime == 3 &&
                   Mat3::ColsAtCompileTime == 3,
               "Mat3 must be a fixed 3x3 matrix");
+static_assert(
+    std::is_same<typename QuaternionStorage::Scalar, double>::value,
+    "QuaternionStorage must use binary64 coefficients");
 
 } // namespace gnc::foundation
