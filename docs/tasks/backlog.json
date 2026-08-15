@@ -1,6 +1,6 @@
 {
   "schema_version": "gnczmkn.task-backlog/1",
-  "current_gate": "R0",
+  "current_gate": "R1",
   "updated_at": "2026-08-15",
   "status_values": ["planned", "ready", "in_progress", "blocked", "review", "done"],
   "tasks": [
@@ -249,7 +249,7 @@
       "id": "R0-GATE-001",
       "stage": "R0",
       "title": "Conduct the G0 and G1 architecture/science gate",
-      "status": "review",
+      "status": "done",
       "priority": "P0",
       "size": "M",
       "owner_role": "product_owner",
@@ -257,7 +257,7 @@
       "depends_on": ["R0-GOV-001", "R0-GOV-002", "R0-ARCH-002", "R0-LEG-002", "R0-SCI-002", "R0-SCI-003", "R0-SCI-004", "R0-SPEC-001", "R0-PERF-001"],
       "deliverables": ["Executable G0/G1 readiness preflight", "Owner G0/G1 decision", "Explicit R1 task unlock"],
       "acceptance": ["All blocking gaps are closed or explicitly rejected; unexplained scientific differences are zero"],
-      "evidence": ["tools/validate-r0-gate-readiness.ps1 reports 9/9 dependencies, 9/9 architecture checks, 7/7 Legacy behavior oracles and zero unexplained YYZ fields", "Four direct failure cases reject incomplete dependencies, nonconformant architecture, non-executable Legacy oracle and unresolved YYZ difference", "Debug and Release configure/build plus 57/57 CTest and repository verification pass", "Repository owner accepts the PUBLIC origin and existing PUBLIC zbyandmoon/GNCSIMZMKN fork as the GitHub collaboration boundary; decision-readiness has no remaining technical blocker and the final G0/G1 conclusion remains pending owner review"],
+      "evidence": ["tools/validate-r0-gate-readiness.ps1 reports 9/9 dependencies, 9/9 architecture checks, 7/7 Legacy behavior oracles and zero unexplained YYZ fields", "Four direct failure cases reject incomplete dependencies, nonconformant architecture, non-executable Legacy oracle and unresolved YYZ difference", "Debug and Release configure/build plus 57/57 CTest and repository verification pass", "Repository owner accepted G0/G1 Passed on 2026-08-15; docs/quality/gate-decisions/G0-G1-2026-08-15-passed.md records the result and explicit R1 unlock"],
       "architecture_refs": ["11 §5", "docs/handoff/release-gates.md"]
     },
 
@@ -265,22 +265,22 @@
       "id": "R1-FND-001",
       "stage": "R1",
       "title": "Implement canonical numeric storage, policy and NumericalOutcome",
-      "status": "planned",
+      "status": "in_progress",
       "priority": "P0",
       "size": "XL",
       "owner_role": "runtime_numerics_lead",
-      "assignee": null,
+      "assignee": "codex",
       "depends_on": ["R0-GATE-001"],
       "deliverables": ["Foundation numeric library", "policy/result contracts", "math verification suite"],
       "acceptance": ["Core algorithms share typed outcome and pass property/convergence tests"],
-      "evidence": ["Foundation test report"],
+      "evidence": ["framework/include/gnc/foundation/numerical_outcome.hpp and numerical_policy.hpp", "framework/include/gnc/foundation/fixed_rk4.hpp and trilinear_table.hpp", "r1.foundation-numerics.probe and r1.foundation-numerics.oracle", "r1.foundation-trilinear.probe and r1.foundation-trilinear.oracle"],
       "architecture_refs": ["03"]
     },
     {
       "id": "R1-CTR-001",
       "stage": "R1",
       "title": "Implement stable domain, time, quality and diagnostic contracts",
-      "status": "planned",
+      "status": "ready",
       "priority": "P0",
       "size": "XL",
       "owner_role": "model_sdk_lead",

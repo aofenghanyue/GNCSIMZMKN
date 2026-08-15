@@ -63,6 +63,19 @@ if(GNC_BUILD_TESTS)
     target_link_libraries(gnc_skeleton_smoke PRIVATE foundation)
     gnc_enable_warnings(gnc_skeleton_smoke)
 
+    # R1 Foundation product slice: typed outcomes, RK4 and strict trilinear lookup.
+    add_executable(
+        gnc_foundation_numerics_probe
+        tests/foundation_numerics.cpp)
+    target_link_libraries(gnc_foundation_numerics_probe PRIVATE foundation)
+    gnc_enable_warnings(gnc_foundation_numerics_probe)
+
+    add_executable(
+        gnc_foundation_trilinear_probe
+        tests/foundation_trilinear.cpp)
+    target_link_libraries(gnc_foundation_trilinear_probe PRIVATE foundation)
+    gnc_enable_warnings(gnc_foundation_trilinear_probe)
+
     # R0 validation spike: intentionally isolated from product modules and Legacy.
     add_executable(
         gnc_scientific_conventions
@@ -247,6 +260,12 @@ if(GNC_BUILD_TESTS)
     add_test(NAME skeleton.library COMMAND gnc_skeleton_smoke)
     add_test(NAME skeleton.cli COMMAND gnc_sim --self-check)
     add_test(
+        NAME r1.foundation-numerics.probe
+        COMMAND gnc_foundation_numerics_probe --self-check)
+    add_test(
+        NAME r1.foundation-trilinear.probe
+        COMMAND gnc_foundation_trilinear_probe --self-check)
+    add_test(
         NAME r0.scientific-conventions.properties
         COMMAND gnc_scientific_conventions --self-check)
     add_test(
@@ -399,6 +418,32 @@ if(GNC_BUILD_TESTS)
             ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-minimal-3dof/reference.json
             --probe
             $<TARGET_FILE:gnc_minimal_3dof_probe>)
+    add_test(
+        NAME r1.foundation-numerics.oracle
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/validate-foundation-numerics.py
+            --cases
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-minimal-3dof/cases.json
+            --oracle
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-minimal-3dof/reference.json
+            --probe
+            $<TARGET_FILE:gnc_foundation_numerics_probe>)
+    add_test(
+        NAME r1.foundation-trilinear.oracle
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/validate-foundation-trilinear.py
+            --cases
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-yyz-aero-lookup/cases.json
+            --oracle
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-aero-lookup/reference.json
+            --probe
+            $<TARGET_FILE:gnc_foundation_trilinear_probe>)
     add_test(
         NAME r0.performance-minimal-3dof.baseline
         COMMAND

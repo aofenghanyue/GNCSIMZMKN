@@ -1,22 +1,22 @@
 # GNCZMKN Next
 
-这是 GNCZMKN 大型目标架构的 greenfield 实现仓库。仓库当前处于 `0.0.0-bootstrap`：只提供可构建空骨架、目标架构、遗留参照、任务系统和阶段门，尚未实现仿真能力。
+这是 GNCZMKN 大型目标架构的 greenfield 实现仓库。仓库版本仍为 `0.0.0-bootstrap`；R0 科学基线已经闭合，当前从 Foundation 与 Contracts 开始 R1 产品实现，尚未形成仿真运行能力。
 
 ## 当前交付状态
 
-- 当前 gate：`R0`；Bootstrap 门禁已经通过。
-- 允许开展：R0 科学基线、术语与契约、架构守卫、reference fixture。
-- 暂缓开展：R1～R8 产品实现；对应任务在 R0 gate 通过后逐阶段解锁。
+- 当前 gate：`R1`；G0/G1 已由仓库所有者判定 `Passed`。
+- 允许开展：`R1-FND-001` 数值基础与 `R1-CTR-001` 稳定领域契约。
+- 暂缓开展：其余 R1 任务服从 backlog 依赖；R2～R8 在对应 gate 前保持锁定。
 - 旧 GNCZMKN 只作为只读行为与科学参照，不进入任何生产 target、include path 或运行依赖。
 
 ## 新成员从这里开始
 
-1. 阅读 [R0 当前执行状态](docs/handoff/r0-execution-state.md)。
-2. 查看 [任务台账](docs/tasks/backlog.json) 与 [R0 推荐开发顺序](docs/tasks/first-wave.md)。
+1. 阅读 [当前执行状态](docs/handoff/r0-execution-state.md)。
+2. 查看 [任务台账](docs/tasks/backlog.json)。
 3. 阅读当前任务直接引用的 ADR、架构分册和测试。
 4. 需要项目边界背景时再阅读 [交接总览](docs/handoff/README.md)。
 
-## 构建空骨架
+## 构建与验证
 
 ```powershell
 cmake --preset dev

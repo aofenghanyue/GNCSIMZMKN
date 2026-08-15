@@ -6,7 +6,7 @@
 int main() {
     if (gnc::foundation::kProjectName.empty() ||
         gnc::foundation::kVersion.empty() ||
-        gnc::foundation::kCurrentGate != "R0") {
+        gnc::foundation::kCurrentGate != "R1") {
         std::cerr << "bootstrap metadata is invalid\n";
         return EXIT_FAILURE;
     }

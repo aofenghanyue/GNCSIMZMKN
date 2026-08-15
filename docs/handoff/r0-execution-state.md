@@ -1,8 +1,8 @@
-# R0 当前执行状态
+# R1 当前执行状态
 
 - 更新日期：2026-08-15
-- 当前 gate：`R0`
-- 产品状态：可构建空骨架、R0 独立科学/性能 probe 与 executable source-boundary guard；尚无仿真生产能力
+- 当前 gate：`R1`
+- 产品状态：R0 独立科学/性能 probe 与 executable source-boundary guard 已闭合；Foundation 与 Contracts 起始任务已解锁，尚无仿真运行能力
 - 当前分支：`codex/r0-governance-reset`
 - 分支基线：`origin/main@dfedf27`
 
@@ -47,12 +47,12 @@
 - `R0-SCI-004` 已完成；仓库所有者接受 `MODEL-CAVH-LEGACY-TRANSCRIBED-FORMULA-001` 作为 fixture-local qualification identity。`REF-CAVH-FORMULA-001` 已固定论文 citation metadata 与 source-access boundary、七条科学假设、两个解析抛物线包络案例、指数密度/Mach/`CL_star` 导数及收敛梯、三组 Eq17/Eq18 全中间量案例、四组 TDCT 符号与饱和案例、十一条显式失败和七条 scientific mutation。Eq17 导数退化返回 `derivative-degenerate` 且 fallback 为 `forbidden`；公式分母奇异返回 `formula-singularity`，不再沿用 Legacy 的静默 Eq18 fallback 或 signed denominator clamp。80 位 Decimal 与独立 C++17 probe 在 Debug/Release 交叉通过。论文逐式一致性、digitized aero、closed-loop 性能和产品 guidance contract 保持未声明。
 - `R0-ARCH-002` 已完成；`validate-source-boundaries.ps1` 从 ADR-0003 和 authority registry 投影 source policy，扫描 production C/C++ include、runtime Legacy path 与 CMake。当前仓库正向 inventory 通过；同一 evaluator 拒绝重复 source owner、Kernel→Compiler dot-segment include、Adapter→Kernel、package→Compiler、framework→user、未知内部模块、Legacy path/API 和 Legacy CMake 八个反例。既有 architecture baseline 的十五个反例继续覆盖 shared-symbol/Legacy ownership、DAG 与 CMake edge。没有 runtime artifact 的 state/descriptor/transaction 语义保持 awaiting-artifact。
 - `R0-PERF-001` 已完成；`PERF-R0-M3DOF-BATCH-001` 在一个独立 C++17 executable 中运行 1、64、1024 和 16384 episodes，每 episode 为 80 个 fixed RK4 steps。80 位 Decimal comparator 先验证解析正确性，三个 fresh process 的 parsed semantic result 达到当前 workload-scoped D1；D2/D3 保持 pending。2026-08-15 的 observation-only baseline 保存两个 warm-up 与九个 measured process/point，共 44 条 raw samples。最大点 `batch-16384` 的本机 median 为 `16,534,400 ns`，p95 为 `17,576,400 ns`，median throughput 约 `79.27 million steps/s`。硬件为 Intel i7-12700K / 20 logical processors / 32 GiB / Hyper-V；当前 binary 为未进入产品支持 profile 的 Windows MinGW `gcc-15.1.0`，结果不构成 performance threshold、产品 toolchain 或 realtime 资格。
-- `R0-GOV-002` 已完成。`R0-GATE-001` 的 executable preflight 已实现：九个依赖任务、九条 G0 架构检查、七条 Legacy behavior oracle、科学约定、minimal 3DoF、YYZ 和 CAVH 技术输入全部通过，未解释 YYZ 差异为零；同一 evaluator 拒绝依赖未完成、架构不符合、Legacy oracle 不可执行和 YYZ 差异未闭合四个反例。Debug 与 Release 均完成配置、构建和 57/57 CTest，repository verification 通过。只读 GitHub 查询确认 origin 与 `zbyandmoon/GNCSIMZMKN` fork 都是 `PUBLIC`；仓库所有者已接受该协同边界。`-RequireDecisionReady` 当前无技术 blocker，任务进入 `review`，最终阶段门决定仍由仓库所有者作出。
+- `R0-GATE-001` 已完成。仓库所有者于 2026-08-15 接受 G0/G1 `Passed`：九个依赖任务、九条 G0 架构检查、七条 Legacy behavior oracle、科学约定、minimal 3DoF、YYZ 和 CAVH 技术输入全部通过，未解释 YYZ 差异为零；Debug 与 Release 均完成配置、构建和 57/57 CTest，repository verification 通过。当前 gate 已推进到 R1，只解锁 `R1-FND-001` 与 `R1-CTR-001`。
 
 ## 下一条开发主线
 
-1. 仓库所有者根据 executable preflight 作出 G0/G1 的单一选择；推荐 `Passed`，并只解锁 R1 的 `R1-FND-001` 与 `R1-CTR-001` 起始切片。public GitHub collaboration 保持，release、二进制和平台外分发继续关闭。
-2. 产品 schema、loader、Compiler、Session、durable evidence 与 R1～R8 runtime 能力继续保持锁定，直到 R0 gate 决定闭合。
+1. `R1-FND-001` 已形成首批产品路径：NumericalStatus、NumericalOutcome、NumericalPolicy、fixed-step RK4 和准备后严格域三线性查表。minimal 3DoF 的 50 位解析/收敛 oracle 与 YYZ 查表的 80 位 Decimal oracle 直接回归产品实现。
+2. 下一切片继续完成 Foundation 当前消费者需要的数值能力；规范动态线性代数存储、矩阵分解、求根和自适应积分仍待实现。`R1-CTR-001` 保持 `ready`，其余 R1 任务继续服从 backlog 依赖。
 
 ## 保留与恢复
 
