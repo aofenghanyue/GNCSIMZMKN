@@ -16,12 +16,14 @@
 - `trilinear_table.hpp`：借用调用方持有的只读三轴表，准备阶段验证有限严格递增轴、网格形状和有限输出；查询阶段按 `x-major/y-middle/z-fastest` 布局执行闭区间严格域三线性插值，越界时返回无值 `OutOfRange`；
 - `bracketed_root.hpp`：连续标量函数的闭区间二分求根；接受异号 bracket 或精确端点，按残差/自变量容差停止，并在 `NoBracket`、`MaxIterations` 与 `ToleranceUnreachable` 结果中保留最后 bracket 证据；
 - `local_newton_root.hpp`：消费函数值与解析导数的有限域局部 Newton 求根；不要求异号 bracket，显式报告初值、最后步长、局部收敛、导数退化、越域、迭代耗尽和浮点步长不可达；
+- `scaled_central_difference.hpp`：有限域标量中心差分；按 `max(|x|, nominal_scale) × relative_step` 选择步长，使用实际可表示的两侧采样间距，并报告归一化步长、输出消减比和浮点步长不对称度；
 - `spd_cholesky_3x3.hpp`：固定 `3×3` 对称正定 Cholesky 求解；显式验证 finite、对称、正定、近奇异和条件上限，并报告 rank、分解方法、无穷范数残差与 1-范数条件估计；
 - `r1.foundation-numerics.oracle`：以 R0 minimal 3DoF 的 50 位解析 oracle 检查轨迹、四阶收敛、终止和 stage failure；
 - `r1.foundation-trilinear.oracle`：以 R0 YYZ 气动查表的 80 位 Decimal oracle 检查内部点、端点、上边界、准备失败和严格越界失败；
 - `r1.foundation-root.oracle`：把 R0 CAVH 抛物线阻力极值导数作为真实 consumer，与解析 `alpha_star_rad` 和 80 位 Decimal reference 比较，同时检查二分收敛、无括区间、迭代耗尽、非有限函数值及浮点容差不可达。
 - `r1.foundation-local-root.oracle`：以同一 CAVH 极值导数和解析二阶导数验证局部 Newton；38 个初值样本直接形成两个 polar 的收敛域，代表轨迹检查渐近二次收敛，并覆盖 step tolerance、callback flag 传播和关键失败。
+- `r1.foundation-differentiation.oracle`：直接重放 CAVH density、Mach 与 `CL_star` 的三组中心差分阶梯；80 位 Decimal 对照同时证明二阶截断区、极小步长下的双精度舍入转折、尺度选择和定义域失败。
 - `r1.foundation-spd-solve.oracle`：把 R0 YYZ 完整惯量张量和刚体转动方程作为真实 consumer，与 80 位 Decimal Cholesky reference 比较，同时检查缩放不变性、products-of-inertia mutation、近对称投影、奇异/非正定/病态和非有限输入。
 - `r1.foundation-quaternion.oracle`：复用 R0 科学约定与 YYZ 6DoF oracle，以 80 位 Decimal 独立公式检查九条固定语义、耦合力旋转与姿态导数，并直接验证 256 组性质样本、principal-spin 五级 RK4 四阶收敛、归一化标志和关键失败。
 
-`PreparedTrilinearTableView` 不拥有轴或表格内存；调用方需保证其只读存储覆盖准备结果及全部查询的生命周期。当前标量求根提供保守 bisection 与有限域 local Newton 两个明确入口；Newton 依赖调用方提供解析导数，不含 line search、自动 fallback、数值微分或多变量求解。当前矩阵求解只覆盖固定 `3×3` SPD 问题；动态矩阵分解、其他维度或策略的插值和自适应积分尚未进入当前切片。Foundation 四元数只承载数值存储和纯算法；frame/time 类型归属 R1 Contracts，Euler 转换仍要求调用方提供完整 profile metadata。
+`PreparedTrilinearTableView` 不拥有轴或表格内存；调用方需保证其只读存储覆盖准备结果及全部查询的生命周期。当前标量求根提供保守 bisection 与有限域 local Newton 两个明确入口；Newton 依赖调用方提供解析导数，不会自动接入数值差分，也不含 line search、自动 fallback 或多变量求解。当前数值微分只覆盖有限域标量中心差分，风险字段属于可解释指标，不充当误差上界；forward、complex-step、Jacobian 和自适应步长仍待直接 consumer。当前矩阵求解只覆盖固定 `3×3` SPD 问题；动态矩阵分解、其他维度或策略的插值和自适应积分尚未进入当前切片。Foundation 四元数只承载数值存储和纯算法；frame/time 类型归属 R1 Contracts，Euler 转换仍要求调用方提供完整 profile metadata。
