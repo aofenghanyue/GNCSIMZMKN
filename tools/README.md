@@ -13,6 +13,7 @@
 - `validate-foundation-numerics.py`：使用既有 minimal 3DoF fixture 与 50 位解析 oracle 验证 R1 Foundation 产品 RK4 的轨迹、四阶收敛、committed-tick 终止、typed stage failure、finite-check 和绝对加相对容差结果。
 - `validate-foundation-trilinear.py`：以 80 位 `decimal` 从既有 YYZ 气动查表 fixture 独立重算三线性结果，核对已存 oracle，并验证 R1 Foundation 产品路径的闭区间端点、严格越界和准备阶段失败。
 - `validate-foundation-root.py`：从既有 CAVH 抛物线阻力 fixture 以 80 位 `decimal` 独立计算解析极值和导数，验证 R1 bracketed bisection 的根、残差、括区间收敛、端点、极值有限区间及 typed 失败结果。
+- `validate-foundation-one-sided-differentiation.py`：从既有 CAVH fixture 与高精度 oracle 锚点独立重算密度、Mach–高度和 `CL_star` 的上下边界单边导数，验证显式方向、实际浮点间距、二阶收敛、舍入转折、风险量与 typed 失败结果。
 - `r0_performance_baseline.py`：运行或静态校验 observation-only minimal 3DoF batch benchmark，复算独立解析正确性、fresh-process D1、四个规模点、raw timing statistics、硬件/build caveat 与五条关键反例；D2/D3 和 wall-time gate 保持未启用。
 - `cavh_formula_reference.py`：以 80 位 CPython `decimal` 独立计算 fixture-local CAVH 抛物线包络、密度/Mach/`CL_star` 导数、Eq17/Eq18 全部中间量和 TDCT 指令，并交叉验证 C++17 probe 的收敛、显式失败与七条科学 mutation；逐式论文一致性保持未声明。
 - `yyz_6dof_core_reference.py`：以 60 位 CPython `decimal` 独立计算已接受的 fixture-local YYZ 刚体公式与解析轨迹，并验证 C++17 probe 的 intermediates、RK4 收敛、ExactGrid 终止、candidate 丢弃和输入域失败路径。

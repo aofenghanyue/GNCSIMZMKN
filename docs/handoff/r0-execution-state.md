@@ -51,8 +51,8 @@
 
 ## 下一条开发主线
 
-1. `R1-FND-001` 已形成首批产品路径：NumericalStatus、NumericalOutcome、NumericalPolicy、Eigen 3.4.0 规范数值存储、fixed-step RK4、准备后严格域三线性查表、bracketed scalar bisection、有限域 local Newton、尺度化标量中心差分、固定 `3×3` SPD Cholesky 求解，以及 ADR-0007 被动 Hamilton `QuaternionStorage` 纯算法。minimal 3DoF、YYZ 查表与完整惯量刚体、CAVH 抛物线阻力极值、科学约定和 YYZ 姿态导数/principal-spin 的独立高精度 oracle 直接回归产品实现；CAVH local Newton 以 38 个初值样本固定两个 polar 的局部收敛域和渐近二次收敛，CAVH 数值微分以 density、Mach 与 `CL_star` 阶梯固定二阶截断区和双精度舍入转折。
-2. 下一切片继续完成 Foundation 当前消费者需要的数值能力；动态矩阵分解、多变量求根、其他微分 stencil 和自适应积分仍待实现。四元数的 frame/time 领域包装归属 `R1-CTR-001`；该任务保持 `ready`，其余 R1 任务继续服从 backlog 依赖。
+1. `R1-FND-001` 已形成首批产品路径：NumericalStatus、NumericalOutcome、NumericalPolicy、Eigen 3.4.0 规范数值存储、fixed-step RK4、准备后严格域三线性查表、bracketed scalar bisection、有限域 local Newton、尺度化标量中心差分、显式前向/后向三点二阶单边差分、固定 `3×3` SPD Cholesky 求解，以及 ADR-0007 被动 Hamilton `QuaternionStorage` 纯算法。minimal 3DoF、YYZ 查表与完整惯量刚体、CAVH 抛物线阻力极值、科学约定和 YYZ 姿态导数/principal-spin 的独立高精度 oracle 直接回归产品实现；CAVH local Newton 以 38 个初值样本固定两个 polar 的局部收敛域和渐近二次收敛。CAVH 数值微分已覆盖 density、Mach 与 `CL_star` 的内部中心差分，以及有限域上下端点共六条显式单边收敛梯；binary64 舍入转折由 80 位 Decimal reference 独立区分。
+2. 下一切片审查 `R1-FND-001` 的当前 consumer 与验收闭包。动态矩阵分解、多变量求根、复步或多变量 Jacobian 和自适应积分仍缺少当前 consumer 或已复现回归。四元数的 frame/time 领域包装归属 `R1-CTR-001`；该任务保持 `ready`，其余 R1 任务继续服从 backlog 依赖。
 
 ## 保留与恢复
 

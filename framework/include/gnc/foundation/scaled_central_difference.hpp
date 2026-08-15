@@ -14,25 +14,34 @@ inline constexpr AlgorithmIdentity kScaledCentralDifferenceIdentity{
     "gnc.foundation.differentiation.scaled-central@1", "1.0.0"};
 
 // binary64 epsilon^(1/3): a scale heuristic for a second-order stencil.
-inline constexpr double kDefaultCentralDifferenceRelativeStep =
+inline constexpr double kDefaultSecondOrderDifferenceRelativeStep =
     6.0554544523933429e-6;
+inline constexpr double kDefaultCentralDifferenceRelativeStep =
+    kDefaultSecondOrderDifferenceRelativeStep;
 
 struct DifferentiationDomain {
     double lower = 0.0;
     double upper = 0.0;
 };
 
-struct ScaledCentralDifferencePolicy {
+struct ScaledDifferencePolicy {
     double argument_scale = 1.0;
-    double relative_step = kDefaultCentralDifferenceRelativeStep;
+    double relative_step = kDefaultSecondOrderDifferenceRelativeStep;
 };
 
-[[nodiscard]] inline bool valid_scaled_central_difference_policy(
-    const ScaledCentralDifferencePolicy& policy) noexcept {
+using ScaledCentralDifferencePolicy = ScaledDifferencePolicy;
+
+[[nodiscard]] inline bool valid_scaled_difference_policy(
+    const ScaledDifferencePolicy& policy) noexcept {
     return std::isfinite(policy.argument_scale) &&
            policy.argument_scale > 0.0 &&
            std::isfinite(policy.relative_step) &&
            policy.relative_step > 0.0;
+}
+
+[[nodiscard]] inline bool valid_scaled_central_difference_policy(
+    const ScaledCentralDifferencePolicy& policy) noexcept {
+    return valid_scaled_difference_policy(policy);
 }
 
 struct CentralDifferenceRiskIndicators {
