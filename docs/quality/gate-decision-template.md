@@ -2,24 +2,22 @@
 
 - Date:
 - Result: `Passed | Conditional | Failed`
-- Reviewed commit:
-- Reviewers:
 - Current gate before decision:
 - Gate unlocked after decision:
 
-## Required evidence
+## Executable result
 
-| Evidence | Ref/hash | Result | Notes |
+| Check | Command or direct evidence | Result | Current limitation |
 | --- | --- | --- | --- |
 
 ## Scientific differences
 
-列出分类、批准记录和未解释项。未解释项必须为零才能通过科学 gate。
+列出分类和未解释项数量。未解释项必须为零才能通过科学 gate。
 
-## Waivers
+## Current limitations
 
-列出 scope、期限、风险接受人和关闭任务。
+只列出仍会限制已解锁范围的技术、科学、许可或产品边界。
 
-## Decision
+## Owner decision
 
 记录可交付能力、仍受限能力和后续任务解锁范围。

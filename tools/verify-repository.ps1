@@ -51,6 +51,7 @@ $requiredPaths = @(
     'docs/governance/provenance-inventory.json',
     'docs/governance/toolchain-support-matrix.json',
     'docs/quality/provenance-review-checklist.md',
+    'tools/validate-r0-gate-readiness.ps1',
     'specs/r0-schema-contract-lock.json',
     'reference/legacy/source-manifest.json',
     'reference/legacy/legacy-source.zip',
@@ -302,6 +303,12 @@ if ($LASTEXITCODE -ne 0) {
     Add-Error "R0 license/provenance evidence failed: $($licenseProvenanceValidatorOutput -join [Environment]::NewLine)"
 }
 
+$gateReadinessValidatorPath = Join-Path $PSScriptRoot 'validate-r0-gate-readiness.ps1'
+$gateReadinessValidatorOutput = & $powerShellHost -NoLogo -NoProfile -ExecutionPolicy Bypass -File $gateReadinessValidatorPath -Quiet 2>&1
+if ($LASTEXITCODE -ne 0) {
+    Add-Error "R0 gate technical input validation failed: $($gateReadinessValidatorOutput -join [Environment]::NewLine)"
+}
+
 if ($errors.Count -gt 0) {
     Write-Host "Repository verification failed with $($errors.Count) issue(s):"
     foreach ($errorMessage in $errors) {
@@ -322,3 +329,4 @@ Write-Host "Validated R0 performance baseline: 1"
 Write-Host "Validated R0 legacy reproduction: 1"
 Write-Host "Validated R0 scientific convention bundle: 1"
 Write-Host "Validated R0 license/provenance bundle: 1"
+Write-Host "Validated R0 gate technical inputs: 1"

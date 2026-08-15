@@ -19,14 +19,17 @@
 
 ## Gate 决策记录
 
-每次 gate 评审需要在 `docs/quality/gate-decisions/` 新增一份记录，包含：
+每次 gate 先运行当前阶段的 executable preflight、相关 CTest 和 repository verification。preflight 只判断技术输入与显式 blocker，不代替 owner 作出阶段门结论。
 
-- 评审范围和 commit；
-- 必需证据及 hash；
-- 未完成项和 waiver；
-- 科学差异分类；
-- 性能与确定性结果；
-- 批准人；
-- `Passed`、`Conditional` 或 `Failed` 结论。
+仓库所有者作出决定后，在 `docs/quality/gate-decisions/` 保存一份最小记录，包含 gate 范围、实际运行结果、未解释科学差异数量、当前限制、`Passed`/`Conditional`/`Failed` 结论和明确解锁范围。记录不复制 CI 输出，不生成机器互签或验收回执。
 
 `Conditional` 不能解锁会消费缺失契约的后续阶段。
+
+R0 直接检查：
+
+```powershell
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate-r0-gate-readiness.ps1
+powershell -NoProfile -ExecutionPolicy Bypass -File tools/validate-r0-gate-readiness.ps1 -RequireDecisionReady
+```
+
+第一条核对技术输入；第二条在 owner 决定前检查仍需处置的真实 blocker。

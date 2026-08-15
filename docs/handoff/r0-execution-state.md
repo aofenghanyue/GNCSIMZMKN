@@ -47,11 +47,11 @@
 - `R0-SCI-004` 已完成；仓库所有者接受 `MODEL-CAVH-LEGACY-TRANSCRIBED-FORMULA-001` 作为 fixture-local qualification identity。`REF-CAVH-FORMULA-001` 已固定论文 citation metadata 与 source-access boundary、七条科学假设、两个解析抛物线包络案例、指数密度/Mach/`CL_star` 导数及收敛梯、三组 Eq17/Eq18 全中间量案例、四组 TDCT 符号与饱和案例、十一条显式失败和七条 scientific mutation。Eq17 导数退化返回 `derivative-degenerate` 且 fallback 为 `forbidden`；公式分母奇异返回 `formula-singularity`，不再沿用 Legacy 的静默 Eq18 fallback 或 signed denominator clamp。80 位 Decimal 与独立 C++17 probe 在 Debug/Release 交叉通过。论文逐式一致性、digitized aero、closed-loop 性能和产品 guidance contract 保持未声明。
 - `R0-ARCH-002` 已完成；`validate-source-boundaries.ps1` 从 ADR-0003 和 authority registry 投影 source policy，扫描 production C/C++ include、runtime Legacy path 与 CMake。当前仓库正向 inventory 通过；同一 evaluator 拒绝重复 source owner、Kernel→Compiler dot-segment include、Adapter→Kernel、package→Compiler、framework→user、未知内部模块、Legacy path/API 和 Legacy CMake 八个反例。既有 architecture baseline 的十五个反例继续覆盖 shared-symbol/Legacy ownership、DAG 与 CMake edge。没有 runtime artifact 的 state/descriptor/transaction 语义保持 awaiting-artifact。
 - `R0-PERF-001` 已完成；`PERF-R0-M3DOF-BATCH-001` 在一个独立 C++17 executable 中运行 1、64、1024 和 16384 episodes，每 episode 为 80 个 fixed RK4 steps。80 位 Decimal comparator 先验证解析正确性，三个 fresh process 的 parsed semantic result 达到当前 workload-scoped D1；D2/D3 保持 pending。2026-08-15 的 observation-only baseline 保存两个 warm-up 与九个 measured process/point，共 44 条 raw samples。最大点 `batch-16384` 的本机 median 为 `16,534,400 ns`，p95 为 `17,576,400 ns`，median throughput 约 `79.27 million steps/s`。硬件为 Intel i7-12700K / 20 logical processors / 32 GiB / Hyper-V；当前 binary 为未进入产品支持 profile 的 Windows MinGW `gcc-15.1.0`，结果不构成 performance threshold、产品 toolchain 或 realtime 资格。
-- `R0-GOV-002` 已完成，`R0-GATE-001` 保持 `planned`；gate 的直接就绪检查进入当前主线，public origin 范围不一致和最终阶段门决定仍由仓库所有者处置。
+- `R0-GOV-002` 已完成。`R0-GATE-001` 的 executable preflight 已实现：九个依赖任务、九条 G0 架构检查、七条 Legacy behavior oracle、科学约定、minimal 3DoF、YYZ 和 CAVH 技术输入全部通过，未解释 YYZ 差异为零；同一 evaluator 拒绝依赖未完成、架构不符合、Legacy oracle 不可执行和 YYZ 差异未闭合四个反例。Debug 与 Release 均完成配置、构建和 57/57 CTest，repository verification 通过。只读 `gh` 查询确认 `aofenghanyue/GNCSIMZMKN` 仍为 `PUBLIC`；任务受该范围不一致阻塞，最终阶段门决定仍由仓库所有者作出。
 
 ## 下一条开发主线
 
-1. 运行 G0/G1 gate 前的最后直接就绪检查，继续完成不依赖所有者决定的验证；public origin 可见性变更需要仓库所有者单独授权。
+1. 仓库所有者授权将 public origin 改为 private；完成可见性复核后立即重新运行 decision-readiness 检查，并提交 G0/G1 gate 的单一 owner 选择。
 2. 产品 schema、loader、Compiler、Session、durable evidence 与 R1～R8 runtime 能力继续保持锁定，直到 R0 gate 决定闭合。
 
 ## 保留与恢复

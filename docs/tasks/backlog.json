@@ -92,7 +92,7 @@
       "depends_on": ["B0-VER-001"],
       "deliverables": ["Accepted internal-development License ADR", "Executable tracked-scope, dependency, archive and provenance validator", "Minimal third-party and data provenance policy"],
       "acceptance": ["Internal and external sharing rules are explicit for code, assets and archives"],
-      "evidence": ["ADR-0008 accepted internal-development scope", "tools/validate-license-provenance.ps1 covers 398/398 tracked files and directly rejects external readiness", "Four key failures reject internal-scope bypass, Legacy external distribution, unreviewed binary vendoring and CMake dependency download"],
+      "evidence": ["ADR-0008 accepted internal-development scope", "tools/validate-license-provenance.ps1 provides complete tracked-file scope coverage and directly rejects external readiness", "Four key failures reject internal-scope bypass, Legacy external distribution, unreviewed binary vendoring and CMake dependency download"],
       "architecture_refs": ["03 §4", "05 §3", "08 §11–§12", "08 §21"]
     },
     {
@@ -249,15 +249,15 @@
       "id": "R0-GATE-001",
       "stage": "R0",
       "title": "Conduct the G0 and G1 architecture/science gate",
-      "status": "planned",
+      "status": "blocked",
       "priority": "P0",
       "size": "M",
       "owner_role": "product_owner",
       "assignee": null,
       "depends_on": ["R0-GOV-001", "R0-GOV-002", "R0-ARCH-002", "R0-LEG-002", "R0-SCI-002", "R0-SCI-003", "R0-SCI-004", "R0-SPEC-001", "R0-PERF-001"],
-      "deliverables": ["G0 decision", "G1 decision", "Approved R1 task unlock"],
+      "deliverables": ["Executable G0/G1 readiness preflight", "Owner G0/G1 decision", "Explicit R1 task unlock"],
       "acceptance": ["All blocking gaps are closed or explicitly rejected; unexplained scientific differences are zero"],
-      "evidence": ["Signed gate decision records"],
+      "evidence": ["tools/validate-r0-gate-readiness.ps1 reports 9/9 dependencies, 9/9 architecture checks, 7/7 Legacy behavior oracles and zero unexplained YYZ fields", "Four direct failure cases reject incomplete dependencies, nonconformant architecture, non-executable Legacy oracle and unresolved YYZ difference", "Debug and Release configure/build plus 57/57 CTest and repository verification pass", "Read-only gh query confirms aofenghanyue/GNCSIMZMKN visibility is PUBLIC; owner authorization is required before remediation"],
       "architecture_refs": ["11 §5", "docs/handoff/release-gates.md"]
     },
 
