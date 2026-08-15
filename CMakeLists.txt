@@ -86,6 +86,12 @@ if(GNC_BUILD_TESTS)
     gnc_enable_warnings(gnc_foundation_root_probe)
 
     add_executable(
+        gnc_foundation_local_root_probe
+        tests/foundation_local_root.cpp)
+    target_link_libraries(gnc_foundation_local_root_probe PRIVATE foundation)
+    gnc_enable_warnings(gnc_foundation_local_root_probe)
+
+    add_executable(
         gnc_foundation_spd_solve_probe
         tests/foundation_spd_solve.cpp)
     target_link_libraries(gnc_foundation_spd_solve_probe PRIVATE foundation)
@@ -290,6 +296,9 @@ if(GNC_BUILD_TESTS)
         NAME r1.foundation-root.probe
         COMMAND gnc_foundation_root_probe --self-check)
     add_test(
+        NAME r1.foundation-local-root.probe
+        COMMAND gnc_foundation_local_root_probe --self-check)
+    add_test(
         NAME r1.foundation-spd-solve.probe
         COMMAND gnc_foundation_spd_solve_probe --self-check)
     add_test(
@@ -487,6 +496,19 @@ if(GNC_BUILD_TESTS)
             ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-cavh-formula/reference.json
             --probe
             $<TARGET_FILE:gnc_foundation_root_probe>)
+    add_test(
+        NAME r1.foundation-local-root.oracle
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/validate-foundation-local-root.py
+            --cases
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-cavh-formula/cases.json
+            --oracle
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-cavh-formula/reference.json
+            --probe
+            $<TARGET_FILE:gnc_foundation_local_root_probe>)
     add_test(
         NAME r1.foundation-spd-solve.oracle
         COMMAND
