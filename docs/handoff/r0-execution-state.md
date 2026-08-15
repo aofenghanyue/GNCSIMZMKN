@@ -51,8 +51,8 @@
 
 ## 下一条开发主线
 
-1. `R1-FND-001` 已形成首批产品路径：NumericalStatus、NumericalOutcome、NumericalPolicy、fixed-step RK4 和准备后严格域三线性查表。minimal 3DoF 的 50 位解析/收敛 oracle 与 YYZ 查表的 80 位 Decimal oracle 直接回归产品实现。
-2. 下一切片继续完成 Foundation 当前消费者需要的数值能力；规范动态线性代数存储、矩阵分解、求根和自适应积分仍待实现。`R1-CTR-001` 保持 `ready`，其余 R1 任务继续服从 backlog 依赖。
+1. `R1-FND-001` 已形成首批产品路径：NumericalStatus、NumericalOutcome、NumericalPolicy、fixed-step RK4、准备后严格域三线性查表和 bracketed scalar bisection。minimal 3DoF、YYZ 查表与 CAVH 抛物线阻力极值的独立高精度 oracle 直接回归产品实现。
+2. 下一切片继续完成 Foundation 当前消费者需要的数值能力；规范动态线性代数存储、矩阵分解、多变量/局部求根和自适应积分仍待实现。`R1-CTR-001` 保持 `ready`，其余 R1 任务继续服从 backlog 依赖。
 
 ## 保留与恢复
 

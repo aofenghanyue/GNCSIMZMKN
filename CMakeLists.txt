@@ -63,7 +63,7 @@ if(GNC_BUILD_TESTS)
     target_link_libraries(gnc_skeleton_smoke PRIVATE foundation)
     gnc_enable_warnings(gnc_skeleton_smoke)
 
-    # R1 Foundation product slice: typed outcomes, RK4 and strict trilinear lookup.
+    # R1 Foundation product slice: typed outcomes, RK4, interpolation and roots.
     add_executable(
         gnc_foundation_numerics_probe
         tests/foundation_numerics.cpp)
@@ -75,6 +75,12 @@ if(GNC_BUILD_TESTS)
         tests/foundation_trilinear.cpp)
     target_link_libraries(gnc_foundation_trilinear_probe PRIVATE foundation)
     gnc_enable_warnings(gnc_foundation_trilinear_probe)
+
+    add_executable(
+        gnc_foundation_root_probe
+        tests/foundation_root.cpp)
+    target_link_libraries(gnc_foundation_root_probe PRIVATE foundation)
+    gnc_enable_warnings(gnc_foundation_root_probe)
 
     # R0 validation spike: intentionally isolated from product modules and Legacy.
     add_executable(
@@ -266,6 +272,9 @@ if(GNC_BUILD_TESTS)
         NAME r1.foundation-trilinear.probe
         COMMAND gnc_foundation_trilinear_probe --self-check)
     add_test(
+        NAME r1.foundation-root.probe
+        COMMAND gnc_foundation_root_probe --self-check)
+    add_test(
         NAME r0.scientific-conventions.properties
         COMMAND gnc_scientific_conventions --self-check)
     add_test(
@@ -444,6 +453,19 @@ if(GNC_BUILD_TESTS)
             ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-aero-lookup/reference.json
             --probe
             $<TARGET_FILE:gnc_foundation_trilinear_probe>)
+    add_test(
+        NAME r1.foundation-root.oracle
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/validate-foundation-root.py
+            --cases
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-cavh-formula/cases.json
+            --oracle
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-cavh-formula/reference.json
+            --probe
+            $<TARGET_FILE:gnc_foundation_root_probe>)
     add_test(
         NAME r0.performance-minimal-3dof.baseline
         COMMAND

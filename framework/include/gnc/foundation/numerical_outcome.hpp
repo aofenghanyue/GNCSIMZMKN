@@ -122,6 +122,8 @@ struct NumericalEvidence {
     std::optional<double> residual_norm;
     std::optional<double> condition_estimate;
     std::optional<double> last_step;
+    std::optional<double> last_bracket_lower;
+    std::optional<double> last_bracket_upper;
     AlgorithmIdentity algorithm{};
     std::string_view detail;
 };
