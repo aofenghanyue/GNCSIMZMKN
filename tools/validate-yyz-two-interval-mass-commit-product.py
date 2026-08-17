@@ -39,6 +39,8 @@ MISSION_PRODUCT_MODEL_ID = \
     "gnc.package.yyz.controlled-propelled-rigid-mass-step.experimental@1"
 MISSION_TWO_INTERVAL_PRODUCT_MODEL_ID = \
     "gnc.package.yyz.two-interval-controlled-propelled-commit.experimental@1"
+MISSION_RESULT_PRODUCT_MODEL_ID = \
+    "gnc.package.yyz.committed-mission-result.experimental@1"
 MISSION_CASE_ID = "CASE-YYZ-MISSION-COMPOSITION-BASELINE"
 CASE_ID = "CASE-YYZ-TWO-INTERVAL-MASS-COMMIT-TRAJECTORY"
 DIRECT_CHECKS = {
@@ -73,6 +75,12 @@ MISSION_TWO_INTERVAL_DIRECT_CHECKS = {
     "mission-next-interval-recomputes-feedback",
     "mission-two-interval-terminal-oracle-anchors",
     "mission-controlled-interval-gap-rejection",
+}
+MISSION_RESULT_DIRECT_CHECKS = {
+    "mission-result-committed-sample-metrics",
+    "mission-result-inclusive-priority-decision",
+    "mission-result-terminal-committed-boundary",
+    "mission-result-three-invalid-input-rejections",
 }
 
 PROPULSION_RESPONSE_VECTOR_FIELDS = (
@@ -283,7 +291,7 @@ def verify(cases_path: Path, oracle_path: Path, probe_path: Path) -> dict:
     require(first_stdout == second_stdout and probe == second_probe,
             "product probe reruns differ")
     require(probe["schema_version"] ==
-            "gnczmkn.yyz-two-interval-mass-commit-product-probe/4" and
+            "gnczmkn.yyz-two-interval-mass-commit-product-probe/5" and
             probe["product_model_id"] == PRODUCT_MODEL_ID and
             probe["mass_model_id"] == PRODUCT_MASS_MODEL_ID and
             probe["contract_id"] == CONTRACT_ID and
@@ -618,6 +626,100 @@ def verify(cases_path: Path, oracle_path: Path, probe_path: Path) -> dict:
             maximum_two_interval_orientation_error,
             state_attitude_error)
 
+    mission_result = probe["mission_result"]
+    reference_result = mission_reference["mission_result"]
+    require(mission_result["product_model_id"] ==
+            MISSION_RESULT_PRODUCT_MODEL_ID and
+            mission_result["source_fixture_id"] == MISSION_FIXTURE_ID and
+            mission_result["source_oracle_id"] == MISSION_ORACLE_ID and
+            mission_result["reference_model_id"] ==
+            MISSION_REFERENCE_MODEL_ID and
+            MISSION_RESULT_PRODUCT_MODEL_ID != MISSION_REFERENCE_MODEL_ID,
+            "mission result product identity differs")
+    require(set(mission_result["direct_checks"]) ==
+            MISSION_RESULT_DIRECT_CHECKS and
+            len(mission_result["direct_checks"]) ==
+            len(MISSION_RESULT_DIRECT_CHECKS),
+            "mission result direct-check coverage differs")
+    require(mission_result["status"] ==
+            reference_result["final_status"] and
+            mission_result["initial_tick"] ==
+            reference_result["initial_tick"] and
+            mission_result["final_tick"] ==
+            reference_result["final_tick"],
+            "mission result status or ticks differ")
+    maximum_mission_result_error = compare_number(
+        mission_result["final_time_s"], reference_result["final_time_s"],
+        mission_absolute, mission_relative,
+        "mission_result.final_time_s")
+    observed_termination = mission_result["termination"]
+    reference_termination = reference_result["termination"]
+    require(observed_termination["action"] ==
+            reference_termination["action"] and
+            observed_termination["reason_code"] ==
+            reference_termination["reason_code"] and
+            observed_termination["priority"] ==
+            reference_termination["priority"],
+            "mission result termination identity differs")
+    maximum_mission_result_error = max(
+        maximum_mission_result_error,
+        compare_number(
+            observed_termination["trigger_time_s"],
+            reference_termination["trigger_time_s"],
+            mission_absolute, mission_relative,
+            "mission_result.termination.trigger_time_s"))
+    observed_metrics = mission_result["metrics"]
+    reference_metrics = reference_result["metrics"]
+    for field in (
+            "duration_s", "downrange_m", "vertical_displacement_m",
+            "remaining_mass_kg", "consumed_mass_kg",
+            "terminal_speed_mps", "peak_speed_mps",
+            "maximum_downrange_m", "minimum_remaining_mass_kg"):
+        maximum_mission_result_error = max(
+            maximum_mission_result_error,
+            compare_number(
+                observed_metrics[field], reference_metrics[field],
+                mission_absolute, mission_relative,
+                f"mission_result.metrics.{field}"))
+    for field in (
+            "evaluated_sample_count", "peak_speed_tick",
+            "maximum_downrange_tick", "minimum_remaining_mass_tick"):
+        require(observed_metrics[field] == reference_metrics[field],
+                f"mission_result.metrics.{field} differs")
+    terminal_sample = mission_result["terminal_sample"]
+    terminal_observation = mission_reference["terminal_observation"]
+    require(terminal_sample["tick"] ==
+            terminal_observation["sample_tick"],
+            "mission result terminal sample tick differs")
+    maximum_mission_result_error = max(
+        maximum_mission_result_error,
+        compare_number(
+            terminal_sample["committed_mass_kg"],
+            terminal_observation["fields"]["committed_mass_kg"],
+            mission_absolute, mission_relative,
+            "mission_result.terminal_sample.committed_mass_kg"))
+    observed_predicates = {
+        entry["predicate_id"]: entry
+        for entry in mission_result["terminal_predicates"]
+    }
+    reference_predicates = {
+        entry["predicate_id"]: entry
+        for entry in mission_reference["evaluation_trace"][-1]
+            ["predicate_results"]
+    }
+    require(set(observed_predicates) == set(reference_predicates),
+            "mission result terminal predicate identities differ")
+    for predicate_id, observed in observed_predicates.items():
+        reference = reference_predicates[predicate_id]
+        require(observed["met"] == reference["met"],
+                f"mission result predicate {predicate_id} differs")
+        maximum_mission_result_error = max(
+            maximum_mission_result_error,
+            compare_number(
+                observed["observed"], reference["observed"],
+                mission_absolute, mission_relative,
+                f"mission_result.predicates.{predicate_id}.observed"))
+
     expected = oracle["cases"][CASE_ID]
     actual = probe["accepted"]
     absolute = decimal(cases["tolerances"]["formula_absolute"])
@@ -750,6 +852,12 @@ def verify(cases_path: Path, oracle_path: Path, probe_path: Path) -> dict:
             str(maximum_two_interval_orientation_error),
         "mission_two_interval_direct_checks_passed":
             len(mission_two_interval["direct_checks"]),
+        "mission_result_product_model_id":
+            MISSION_RESULT_PRODUCT_MODEL_ID,
+        "mission_result_maximum_numeric_error":
+            str(maximum_mission_result_error),
+        "mission_result_direct_checks_passed":
+            len(mission_result["direct_checks"]),
     }
 
 

@@ -47,7 +47,7 @@ build/dev/gnc_sim --self-check
 build/dev/gnc_yyz_rigid_step_product_probe --self-check
 ```
 
-第二个 YYZ 产品入口把两段刚体推进与标量燃耗连接到 typed atomic boundary，并已加入 typed supplied-propulsion definition/input。推进响应同时产生带 `CoM→作用点` 几何的 body wrench 与 `MassFlowIntervalInput`；适配器读取已提交质心位置后进入既有 rigid/mass atomic consumer，结果匹配 `REF-YYZ-PROPULSION-RESPONSE-001`：
+第二个 YYZ 产品入口现已覆盖 committed observation、限幅 altitude/pitch guidance、pitch-moment controller、当前周期理想力矩执行、typed propulsion、连续两次 rigid/mass atomic commit，以及从三份 committed samples 生成的最小 mission result。推进力与控制纯力偶经同一个 supplied-wrench consumer 闭合，tick 1 提交后会重新读取刚体状态和 `99.95 kg` 质量；最终 tick 2 结果匹配 `REF-YYZ-MISSION-COMPOSITION-001`，同时保留 `REF-YYZ-PROPULSION-RESPONSE-001` 和既有 atomic-boundary 回归：
 
 ```powershell
 build/dev/gnc_yyz_two_interval_mass_commit_product_probe --self-check

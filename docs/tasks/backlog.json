@@ -385,7 +385,7 @@
       "id": "R1-YYZ-003",
       "stage": "R1",
       "title": "Feed a typed supplied-propulsion response into the rigid/mass atomic boundary",
-      "status": "review",
+      "status": "done",
       "priority": "P0",
       "size": "M",
       "owner_role": "model_sdk_lead",
@@ -393,8 +393,23 @@
       "depends_on": ["R1-YYZ-002", "R0-SCI-003"],
       "deliverables": ["Typed supplied-propulsion definition and interval input", "Body wrench and MassFlowIntervalInput response", "Executable rigid/mass atomic-boundary consumer and independent oracle comparison"],
       "acceptance": ["The product preserves the accepted body-frame thrust, CoM-to-application geometry, intrinsic moment and nonnegative mass-flow semantics; rigid Closure transports the wrench exactly once; the scalar mass consumer integrates the half-open interval; and a one-tick product response reaches the existing atomic rigid/mass boundary without Session or control-plane capability"],
-      "evidence": ["packages/yyz-rigid-step/include/yyz/mass_commit.hpp and src/mass_commit.cpp implement SuppliedPropulsionKernel plus PropelledFrozenRigidMassStepKernel, with committed MassState as the sole source of body-origin-to-CoM geometry", "r1.yyz-two-interval-mass-commit.probe covers all three REF-YYZ-PROPULSION-RESPONSE-001 formula cases, interval partition equivalence, ten invalid inputs and a real off-axis atomic-boundary consumer", "r1.yyz-two-interval-mass-commit.oracle reuses ORACLE-YYZ-PROPULSION-RESPONSE-001 and reports a maximum propulsion numeric error of 7e-15; the consumer closes [-39,28,-272] N*m once and produces a 119.95 kg candidate"],
+      "evidence": ["packages/yyz-rigid-step/include/yyz/mass_commit.hpp and src/mass_commit.cpp implement SuppliedPropulsionKernel plus PropelledFrozenRigidMassStepKernel, with committed MassState as the sole source of body-origin-to-CoM geometry", "r1.yyz-two-interval-mass-commit.probe covers all three REF-YYZ-PROPULSION-RESPONSE-001 formula cases, interval partition equivalence, ten invalid inputs and a real off-axis atomic-boundary consumer", "r1.yyz-two-interval-mass-commit.oracle reuses ORACLE-YYZ-PROPULSION-RESPONSE-001 and reports a maximum propulsion numeric error of 7e-15; the consumer closes [-39,28,-272] N*m once and produces a 119.95 kg candidate", "Repository owner accepted commit 738f4dc on 2026-08-17"],
       "architecture_refs": ["14 §16", "14 §18.1", "15 §8", "15 §19"]
+    },
+    {
+      "id": "R1-YYZ-004",
+      "stage": "R1",
+      "title": "Close a typed committed-feedback YYZ mission product batch",
+      "status": "review",
+      "priority": "P0",
+      "size": "L",
+      "owner_role": "model_sdk_lead",
+      "assignee": null,
+      "depends_on": ["R1-YYZ-003", "R0-SCI-003"],
+      "deliverables": ["Typed committed observation, guidance, controller and ideal body-moment actuation chain", "Two controlled propulsion intervals through consecutive atomic rigid/mass commits", "Minimal package-level mission metrics, predicate decision and terminal committed result"],
+      "acceptance": ["The product reads only the current committed rigid/mass boundary, holds current-cycle ideal actuation over the following interval, recomputes the next interval from the newly committed pair, and derives a terminal mission result from committed samples while remaining below Session, Workflow, Compiler and persistence boundaries"],
+      "evidence": ["Commit 8e2b512 implements committed observation, bounded altitude/pitch guidance, pitch-moment control, current-cycle unit-gain ideal actuation and the real propulsion/rigid/mass atomic consumer", "Commit 39dceee implements two consecutive controlled-propelled intervals whose second observation and integration mass come from the first complete atomic commit", "CommittedMissionResultKernel derives terminal and extreme metrics from three committed boundaries, applies inclusive predicates with priority and returns the selected terminal boundary", "r1.yyz-two-interval-mass-commit.probe covers control timing/sign/limits, two-interval feedback, atomic commit continuity, mission decision/metrics and direct failure paths", "r1.yyz-two-interval-mass-commit.oracle reuses ORACLE-YYZ-MISSION-COMPOSITION-001; control/two-interval maximum numeric error is about 4.62e-14 and mission-result maximum numeric error is about 5.08e-14"],
+      "architecture_refs": ["14 §16–§18", "15 §3–§8", "15 §20"]
     },
     {
       "id": "R1-GATE-001",

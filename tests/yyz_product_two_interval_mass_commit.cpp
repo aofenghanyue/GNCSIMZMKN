@@ -246,6 +246,51 @@ ControlledPropelledRigidMassStepDefinition mission_control_definition() {
     return definition;
 }
 
+CommittedMissionResultDefinition mission_result_definition() {
+    CommittedMissionResultDefinition definition;
+    definition.model_id =
+        std::string(kCommittedMissionResultModelIdentity);
+    definition.model_version = "0.1.0";
+    definition.subject = "vehicle.fixture.yyz@1";
+    definition.inertial_frame =
+        FrameIdentity{std::string(kInertialFrame)};
+    definition.body_frame = FrameIdentity{std::string(kBodyFrame)};
+    definition.clock_domain = ClockDomainIdentity{std::string(kClock)};
+    definition.mass_state_id = std::string(kMassStateId);
+    definition.configuration_revision = 11;
+    definition.numerical_policy = fixture_numerical_policy();
+    definition.predicates = {{
+        {
+            "downrange-goal",
+            MissionMetric::DownrangeMeters,
+            MissionRelation::GreaterThanOrEqual,
+            20.0,
+            MissionAction::Complete,
+            "downrange-goal",
+            200,
+        },
+        {
+            "duration-limit",
+            MissionMetric::DurationSeconds,
+            MissionRelation::GreaterThanOrEqual,
+            0.2,
+            MissionAction::Complete,
+            "duration-complete",
+            100,
+        },
+        {
+            "remaining-mass-floor",
+            MissionMetric::RemainingMassKilograms,
+            MissionRelation::LessThanOrEqual,
+            99.85,
+            MissionAction::Abort,
+            "remaining-mass-floor",
+            300,
+        },
+    }};
+    return definition;
+}
+
 [[nodiscard]] SimulationInstant instant_at(std::int64_t tick,
                                            double base_dt_seconds) {
     return {tick, base_dt_seconds * static_cast<double>(tick)};
@@ -1010,12 +1055,113 @@ run_mission_two_interval_probe() {
     return {accepted, std::move(checks)};
 }
 
+struct MissionResultProbeBundle {
+    CommittedMissionResultOutput accepted;
+    std::vector<std::string> direct_checks;
+};
+
+[[nodiscard]] MissionResultProbeBundle run_mission_result_probe(
+    const TwoIntervalControlledPropelledCommitOutput& trajectory) {
+    CommittedMissionResultInput input;
+    input.committed_samples = {
+        mission_boundary(0),
+        trajectory.intervals[0].closing_commit,
+        trajectory.intervals[1].closing_commit,
+    };
+    const CommittedMissionResultDefinition definition =
+        mission_result_definition();
+    const auto accepted_outcome =
+        CommittedMissionResultKernel::evaluate(definition, input);
+    const auto& accepted = require_value(
+        accepted_outcome, "committed mission result evaluation failed");
+
+    const auto& terminal = accepted.metrics.terminal;
+    require(accepted.status == MissionResultStatus::Completed &&
+                accepted.initial_tick == 0 && accepted.final_tick == 2 &&
+                near(accepted.final_time_seconds, 0.2) &&
+                accepted.metrics.evaluated_sample_count == 3U &&
+                near(terminal.duration_seconds, 0.2) &&
+                near(terminal.downrange_meters,
+                     21.981798901675346) &&
+                near(terminal.vertical_displacement_meters,
+                     -0.1937251362702962) &&
+                near(terminal.remaining_mass_kilograms, 99.9) &&
+                near(terminal.consumed_mass_kilograms, 0.1) &&
+                near(terminal.speed_meters_per_second,
+                     109.84183032040381),
+            "committed mission metric anchors differ");
+    std::vector<std::string> checks{
+        "mission-result-committed-sample-metrics"};
+
+    require(accepted.termination.action == MissionAction::Complete &&
+                accepted.termination.reason_code == "downrange-goal" &&
+                accepted.termination.priority == 200 &&
+                near(accepted.termination.trigger_time_seconds, 0.2) &&
+                accepted.terminal_predicates[0].predicate_id ==
+                    "downrange-goal" &&
+                accepted.terminal_predicates[0].met &&
+                accepted.terminal_predicates[1].predicate_id ==
+                    "duration-limit" &&
+                accepted.terminal_predicates[1].met &&
+                accepted.terminal_predicates[2].predicate_id ==
+                    "remaining-mass-floor" &&
+                !accepted.terminal_predicates[2].met,
+            "mission predicate priority decision differs");
+    checks.emplace_back("mission-result-inclusive-priority-decision");
+
+    require(near(accepted.metrics.peak_speed_meters_per_second, 110.0) &&
+                accepted.metrics.peak_speed_tick == 0 &&
+                near(accepted.metrics.maximum_downrange_meters,
+                     terminal.downrange_meters) &&
+                accepted.metrics.maximum_downrange_tick == 2 &&
+                near(accepted.metrics.minimum_remaining_mass_kilograms,
+                     99.9) &&
+                accepted.metrics.minimum_remaining_mass_tick == 2 &&
+                accepted.terminal_boundary.rigid_context.sample_time.tick ==
+                    trajectory.terminal_boundary.rigid_context.sample_time
+                        .tick &&
+                near(accepted.terminal_boundary.rigid_state.position.value,
+                     trajectory.terminal_boundary.rigid_state.position.value) &&
+                near(accepted.terminal_boundary.mass_state.mass_kilograms,
+                     trajectory.terminal_boundary.mass_state.mass_kilograms),
+            "mission summary or terminal committed identity differs");
+    checks.emplace_back("mission-result-terminal-committed-boundary");
+
+    CommittedMissionResultDefinition no_terminal = definition;
+    no_terminal.predicates[0].threshold = 1000.0;
+    no_terminal.predicates[1].threshold = 10.0;
+    no_terminal.predicates[2].threshold = 0.0;
+    expect_failure(CommittedMissionResultKernel::evaluate(
+                       no_terminal, input),
+                   NumericalStatus::DomainError,
+                   "mission without terminal predicate survived");
+    CommittedMissionResultInput noncontiguous = input;
+    noncontiguous.committed_samples[1].rigid_context.sample_time =
+        SimulationInstant{3, 0.3};
+    noncontiguous.committed_samples[1].mass_state.context.sample_time =
+        SimulationInstant{3, 0.3};
+    expect_failure(CommittedMissionResultKernel::evaluate(
+                       definition, noncontiguous),
+                   NumericalStatus::DomainError,
+                   "noncontiguous committed sample survived");
+    CommittedMissionResultDefinition duplicate = definition;
+    duplicate.predicates[1].predicate_id =
+        duplicate.predicates[0].predicate_id;
+    expect_failure(CommittedMissionResultKernel::evaluate(
+                       duplicate, input),
+                   NumericalStatus::DomainError,
+                   "duplicate mission predicate survived");
+    checks.emplace_back("mission-result-three-invalid-input-rejections");
+    return {accepted, std::move(checks)};
+}
+
 struct ProbeBundle {
     TwoIntervalMassCommitOutput accepted;
     std::vector<std::string> direct_checks;
     PropulsionProbeBundle propulsion;
     MissionControlProbeBundle mission_control;
     MissionTwoIntervalProbeBundle mission_two_interval;
+    MissionResultProbeBundle mission_result;
 };
 
 ProbeBundle run_probe() {
@@ -1168,9 +1314,12 @@ ProbeBundle run_probe() {
         run_mission_control_probe();
     MissionTwoIntervalProbeBundle mission_two_interval =
         run_mission_two_interval_probe();
+    MissionResultProbeBundle mission_result = run_mission_result_probe(
+        mission_two_interval.accepted);
     return {accepted, std::move(checks), std::move(propulsion),
             std::move(mission_control),
-            std::move(mission_two_interval)};
+            std::move(mission_two_interval),
+            std::move(mission_result)};
 }
 
 void write_number(double value) {
@@ -1541,10 +1690,95 @@ void write_mission_two_interval(
     std::cout << "]}";
 }
 
+[[nodiscard]] std::string_view mission_action_text(MissionAction action) {
+    return action == MissionAction::Complete ? "Complete" : "Abort";
+}
+
+[[nodiscard]] std::string_view mission_status_text(
+    MissionResultStatus status) {
+    return status == MissionResultStatus::Completed ? "Completed" :
+                                                      "Aborted";
+}
+
+void write_mission_result(const MissionResultProbeBundle& mission) {
+    const auto& value = mission.accepted;
+    const auto& summary = value.metrics;
+    const auto& terminal = summary.terminal;
+    std::cout << "{\"product_model_id\":\""
+              << kCommittedMissionResultModelIdentity
+              << "\",\"source_fixture_id\":\"" << kMissionFixtureId
+              << "\",\"source_oracle_id\":\"" << kMissionOracleId
+              << "\",\"reference_model_id\":\""
+              << kMissionReferenceModelId << "\",\"status\":\""
+              << mission_status_text(value.status)
+              << "\",\"initial_tick\":" << value.initial_tick
+              << ",\"final_tick\":" << value.final_tick
+              << ",\"final_time_s\":";
+    write_number(value.final_time_seconds);
+    std::cout << ",\"termination\":{\"action\":\""
+              << mission_action_text(value.termination.action)
+              << "\",\"reason_code\":\""
+              << value.termination.reason_code
+              << "\",\"trigger_time_s\":";
+    write_number(value.termination.trigger_time_seconds);
+    std::cout << ",\"priority\":" << value.termination.priority
+              << "},\"metrics\":{\"evaluated_sample_count\":"
+              << summary.evaluated_sample_count
+              << ",\"duration_s\":";
+    write_number(terminal.duration_seconds);
+    std::cout << ",\"downrange_m\":";
+    write_number(terminal.downrange_meters);
+    std::cout << ",\"vertical_displacement_m\":";
+    write_number(terminal.vertical_displacement_meters);
+    std::cout << ",\"remaining_mass_kg\":";
+    write_number(terminal.remaining_mass_kilograms);
+    std::cout << ",\"consumed_mass_kg\":";
+    write_number(terminal.consumed_mass_kilograms);
+    std::cout << ",\"terminal_speed_mps\":";
+    write_number(terminal.speed_meters_per_second);
+    std::cout << ",\"peak_speed_mps\":";
+    write_number(summary.peak_speed_meters_per_second);
+    std::cout << ",\"peak_speed_tick\":" << summary.peak_speed_tick
+              << ",\"maximum_downrange_m\":";
+    write_number(summary.maximum_downrange_meters);
+    std::cout << ",\"maximum_downrange_tick\":"
+              << summary.maximum_downrange_tick
+              << ",\"minimum_remaining_mass_kg\":";
+    write_number(summary.minimum_remaining_mass_kilograms);
+    std::cout << ",\"minimum_remaining_mass_tick\":"
+              << summary.minimum_remaining_mass_tick
+              << "},\"terminal_sample\":{\"tick\":"
+              << value.terminal_boundary.rigid_context.sample_time.tick
+              << ",\"committed_mass_kg\":";
+    write_number(value.terminal_boundary.mass_state.mass_kilograms);
+    std::cout << "},\"terminal_predicates\":[";
+    for (std::size_t index = 0U;
+         index < value.terminal_predicates.size(); ++index) {
+        if (index != 0U) {
+            std::cout << ',';
+        }
+        const auto& predicate = value.terminal_predicates[index];
+        std::cout << "{\"predicate_id\":\"" << predicate.predicate_id
+                  << "\",\"observed\":";
+        write_number(predicate.observed);
+        std::cout << ",\"met\":" << (predicate.met ? "true" : "false")
+                  << '}';
+    }
+    std::cout << "],\"direct_checks\":[";
+    for (std::size_t index = 0U;
+         index < mission.direct_checks.size(); ++index) {
+        if (index != 0U) {
+            std::cout << ',';
+        }
+        std::cout << '\"' << mission.direct_checks[index] << '\"';
+    }
+    std::cout << "]}";
+}
+
 void write_json(const ProbeBundle& bundle) {
     const auto& terminal = bundle.accepted.terminal_boundary;
     std::cout << std::setprecision(17)
-              << "{\"schema_version\":\"gnczmkn.yyz-two-interval-mass-commit-product-probe/4\""
+              << "{\"schema_version\":\"gnczmkn.yyz-two-interval-mass-commit-product-probe/5\""
               << ",\"product_model_id\":\""
               << kTwoIntervalMassCommitModelIdentity
               << "\",\"mass_model_id\":\""
@@ -1585,6 +1819,8 @@ void write_json(const ProbeBundle& bundle) {
     write_mission_control(bundle.mission_control);
     std::cout << ",\"mission_two_interval\":";
     write_mission_two_interval(bundle.mission_two_interval);
+    std::cout << ",\"mission_result\":";
+    write_mission_result(bundle.mission_result);
     std::cout << "}\n";
 }
 

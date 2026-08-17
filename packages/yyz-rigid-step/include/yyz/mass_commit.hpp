@@ -32,6 +32,8 @@ inline constexpr std::string_view
 inline constexpr std::string_view
     kTwoIntervalControlledPropelledCommitModelIdentity =
         "gnc.package.yyz.two-interval-controlled-propelled-commit.experimental@1";
+inline constexpr std::string_view kCommittedMissionResultModelIdentity =
+    "gnc.package.yyz.committed-mission-result.experimental@1";
 
 inline constexpr gnc::foundation::AlgorithmIdentity
     kScalarBurnMassKernelIdentity{
@@ -66,6 +68,9 @@ inline constexpr gnc::foundation::AlgorithmIdentity
     kTwoIntervalControlledPropelledCommitKernelIdentity{
         "gnc.package.yyz.rigid-mass.two-interval-controlled-propelled.kernel@1",
         "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kCommittedMissionResultKernelIdentity{
+        "gnc.package.yyz.committed-mission-result.kernel@1", "0.1.0"};
 
 struct ScalarBurnMassDefinition {
     std::string model_id;
@@ -375,6 +380,109 @@ class TwoIntervalControlledPropelledCommitKernel {
             const SuppliedPropulsionDefinition& propulsion_definition,
             const ControlledPropelledRigidMassStepDefinition& definition,
             const TwoIntervalControlledPropelledCommitInput& input);
+};
+
+enum class MissionMetric : std::uint8_t {
+    DurationSeconds,
+    DownrangeMeters,
+    RemainingMassKilograms,
+};
+
+enum class MissionRelation : std::uint8_t {
+    LessThanOrEqual,
+    GreaterThanOrEqual,
+};
+
+enum class MissionAction : std::uint8_t {
+    Complete,
+    Abort,
+};
+
+enum class MissionResultStatus : std::uint8_t {
+    Completed,
+    Aborted,
+};
+
+struct MissionTerminationPredicate {
+    std::string predicate_id;
+    MissionMetric metric = MissionMetric::DurationSeconds;
+    MissionRelation relation = MissionRelation::GreaterThanOrEqual;
+    double threshold = 0.0;
+    MissionAction action = MissionAction::Complete;
+    std::string reason_code;
+    std::int64_t priority = 0;
+};
+
+struct CommittedMissionResultDefinition {
+    std::string model_id;
+    std::string model_version;
+    std::string subject;
+    gnc::contracts::FrameIdentity inertial_frame;
+    gnc::contracts::FrameIdentity body_frame;
+    gnc::contracts::ClockDomainIdentity clock_domain;
+    std::string mass_state_id;
+    std::int64_t configuration_revision = 0;
+    gnc::foundation::NumericalPolicy numerical_policy;
+    std::array<MissionTerminationPredicate, 3U> predicates;
+};
+
+struct MissionMetrics {
+    double duration_seconds = 0.0;
+    double downrange_meters = 0.0;
+    double vertical_displacement_meters = 0.0;
+    double remaining_mass_kilograms = 0.0;
+    double consumed_mass_kilograms = 0.0;
+    double speed_meters_per_second = 0.0;
+};
+
+struct MissionPredicateEvaluation {
+    std::string predicate_id;
+    double observed = 0.0;
+    bool met = false;
+    MissionAction action = MissionAction::Complete;
+    std::string reason_code;
+    std::int64_t priority = 0;
+};
+
+struct MissionDecision {
+    MissionAction action = MissionAction::Complete;
+    std::string reason_code;
+    double trigger_time_seconds = 0.0;
+    std::int64_t priority = 0;
+};
+
+struct MissionMetricSummary {
+    std::size_t evaluated_sample_count = 0U;
+    MissionMetrics terminal;
+    double peak_speed_meters_per_second = 0.0;
+    std::int64_t peak_speed_tick = 0;
+    double maximum_downrange_meters = 0.0;
+    std::int64_t maximum_downrange_tick = 0;
+    double minimum_remaining_mass_kilograms = 0.0;
+    std::int64_t minimum_remaining_mass_tick = 0;
+};
+
+struct CommittedMissionResultInput {
+    std::array<CommittedRigidMassBoundary, 3U> committed_samples;
+};
+
+struct CommittedMissionResultOutput {
+    MissionResultStatus status = MissionResultStatus::Completed;
+    std::int64_t initial_tick = 0;
+    std::int64_t final_tick = 0;
+    double final_time_seconds = 0.0;
+    MissionDecision termination;
+    MissionMetricSummary metrics;
+    std::array<MissionPredicateEvaluation, 3U> terminal_predicates;
+    CommittedRigidMassBoundary terminal_boundary;
+};
+
+class CommittedMissionResultKernel {
+  public:
+    [[nodiscard]] static gnc::foundation::NumericalOutcome<
+        CommittedMissionResultOutput>
+        evaluate(const CommittedMissionResultDefinition& definition,
+                 const CommittedMissionResultInput& input);
 };
 
 struct TwoIntervalMassCommitInput {
