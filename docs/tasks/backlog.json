@@ -288,7 +288,7 @@
       "depends_on": ["R0-GATE-001"],
       "deliverables": ["Versioned contracts", "compatibility rules", "serialization fixtures"],
       "acceptance": ["High-risk ports express unit, frame, sample/effective time and quality"],
-      "evidence": ["framework/include/gnc/contracts/sample_context.hpp is the provisional frame/clock/sample/effective-time/quality contract consumed by packages/yyz-rigid-step", "Broader compatibility and serialization work remains open until a second consumer exists"],
+      "evidence": ["framework/include/gnc/contracts/sample_context.hpp is the provisional frame/clock/sample/effective-time/quality contract consumed independently by packages/yyz-rigid-step and packages/cavh-formula", "Both product packages reject frame, clock, sample-time, configuration-revision and data-quality mismatches through NumericalOutcome", "Compatibility rules and serialization fixtures remain open because no serialization consumer exists"],
       "architecture_refs": ["04", "07"]
     },
     {
@@ -400,7 +400,7 @@
       "id": "R1-YYZ-004",
       "stage": "R1",
       "title": "Close a typed committed-feedback YYZ mission product batch",
-      "status": "review",
+      "status": "done",
       "priority": "P0",
       "size": "L",
       "owner_role": "model_sdk_lead",
@@ -408,8 +408,23 @@
       "depends_on": ["R1-YYZ-003", "R0-SCI-003"],
       "deliverables": ["Typed committed observation, guidance, controller and ideal body-moment actuation chain", "Two controlled propulsion intervals through consecutive atomic rigid/mass commits", "Minimal package-level mission metrics, predicate decision and terminal committed result"],
       "acceptance": ["The product reads only the current committed rigid/mass boundary, holds current-cycle ideal actuation over the following interval, recomputes the next interval from the newly committed pair, and derives a terminal mission result from committed samples while remaining below Session, Workflow, Compiler and persistence boundaries"],
-      "evidence": ["Commit 8e2b512 implements committed observation, bounded altitude/pitch guidance, pitch-moment control, current-cycle unit-gain ideal actuation and the real propulsion/rigid/mass atomic consumer", "Commit 39dceee implements two consecutive controlled-propelled intervals whose second observation and integration mass come from the first complete atomic commit", "CommittedMissionResultKernel derives terminal and extreme metrics from three committed boundaries, applies inclusive predicates with priority and returns the selected terminal boundary", "r1.yyz-two-interval-mass-commit.probe covers control timing/sign/limits, two-interval feedback, atomic commit continuity, mission decision/metrics and direct failure paths", "r1.yyz-two-interval-mass-commit.oracle reuses ORACLE-YYZ-MISSION-COMPOSITION-001; control/two-interval maximum numeric error is about 4.62e-14 and mission-result maximum numeric error is about 5.08e-14"],
+      "evidence": ["Commit 8e2b512 implements committed observation, bounded altitude/pitch guidance, pitch-moment control, current-cycle unit-gain ideal actuation and the real propulsion/rigid/mass atomic consumer", "Commit 39dceee implements two consecutive controlled-propelled intervals whose second observation and integration mass come from the first complete atomic commit", "Commit dede13a implements CommittedMissionResultKernel, which derives terminal and extreme metrics from three committed boundaries, applies inclusive predicates with priority and returns the selected terminal boundary", "r1.yyz-two-interval-mass-commit.probe covers control timing/sign/limits, two-interval feedback, atomic commit continuity, mission decision/metrics and direct failure paths", "r1.yyz-two-interval-mass-commit.oracle reuses ORACLE-YYZ-MISSION-COMPOSITION-001; control/two-interval maximum numeric error is about 4.62e-14 and mission-result maximum numeric error is about 5.08e-14", "Repository owner accepted commits 8e2b512, 39dceee and dede13a on 2026-08-17"],
       "architecture_refs": ["14 §16–§18", "15 §3–§8", "15 §20"]
+    },
+    {
+      "id": "R1-CAVH-001",
+      "stage": "R1",
+      "title": "Migrate accepted CAVH formulas into an independent typed product kernel",
+      "status": "review",
+      "priority": "P0",
+      "size": "M",
+      "owner_role": "model_sdk_lead",
+      "assignee": null,
+      "depends_on": ["R0-SCI-004", "R1-FND-001"],
+      "deliverables": ["Typed CAVH formula Definition/Input/Output and immutable prepared model", "Analytic parabolic envelope plus Eq17, Eq18 and TDCT product kernel", "Single executable product probe and direct comparison with the existing R0 oracle"],
+      "acceptance": ["The independent package consumes Foundation NumericalOutcome/NumericalPolicy and Contracts SampleContext, preserves the accepted formula domains and forbidden Eq17 fallback, feeds typed gamma-reference output into TDCT, and remains below the product-level guidance command, Session, Compiler, Workflow and persistence boundaries"],
+      "evidence": ["packages/cavh-formula implements product identity gnc.package.cavh.formula.legacy-transcribed.experimental@1, prepared definition validation, analytic envelope, immutable Eq17/Eq18 evaluation and TDCT saturation evidence", "r1.cavh-formula.probe covers accepted envelopes/equations/TDCT, a real typed formula-to-TDCT consumer, all eleven accepted scientific failures, SampleContext failures and explicit absence of Eq17 fallback", "r1.cavh-formula.oracle reuses REF-CAVH-FORMULA-001 and ORACLE-CAVH-FORMULA-001; maximum gamma error is about 2.80e-18 rad and maximum TDCT error is 6e-17 rad", "R0-SCI-004 excludes product contracts and closed-loop guidance, so final command frame/time/ownership mapping remains an owner choice"],
+      "architecture_refs": ["09 §16", "15 §10"]
     },
     {
       "id": "R1-GATE-001",

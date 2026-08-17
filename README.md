@@ -5,7 +5,7 @@
 ## 当前交付状态
 
 - 当前 gate：`R1`；G0/G1 已由仓库所有者判定 `Passed`。
-- 允许开展：`R1-FND-001` 收敛复核、`R1-CTR-001` consumer-driven 契约，以及仓库所有者授权的 consumer-driven YYZ 产品纵向切片。
+- 允许开展：`R1-FND-001` 已闭合成果、`R1-CTR-001` consumer-driven 契约，以及仓库所有者授权的 YYZ 与 CAVH 产品纵向切片。
 - 暂缓开展：未被当前纵向调用消费的 R1 平台能力；R2～R8 在对应 gate 前保持锁定。
 - 旧 GNCZMKN 只作为只读行为与科学参照，不进入任何生产 target、include path 或运行依赖。
 
@@ -52,6 +52,14 @@ build/dev/gnc_yyz_rigid_step_product_probe --self-check
 ```powershell
 build/dev/gnc_yyz_two_interval_mass_commit_product_probe --self-check
 ```
+
+首个 CAVH 产品入口从 typed definition、显式 operating point 与 `SampleContext` 计算解析抛物线包络，按 immutable equation identity 执行 Eq17 或 Eq18，再把 typed gamma reference 直接交给 TDCT。它复用 `ORACLE-CAVH-FORMULA-001` 比较三组方程与四组 TDCT 结果，并拒绝包络域错误、公式奇异、Eq17 导数退化、非法 TDCT 和上下文不一致：
+
+```powershell
+build/dev/gnc_cavh_formula_product_probe --self-check
+```
+
+当前 CAVH 输出止于 TDCT 公式阶段的限幅 alpha；产品级 guidance command 的 frame、时间与 ownership 映射仍待仓库所有者选择。
 
 ## 仓库地图
 

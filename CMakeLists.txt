@@ -67,6 +67,18 @@ target_link_libraries(yyz_rigid_step PUBLIC foundation contracts)
 gnc_enable_warnings(yyz_rigid_step)
 add_library(gnc::yyz_rigid_step ALIAS yyz_rigid_step)
 
+add_library(
+    cavh_formula
+    STATIC
+        packages/cavh-formula/src/formula.cpp)
+target_include_directories(
+    cavh_formula
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/packages/cavh-formula/include>)
+target_link_libraries(cavh_formula PUBLIC foundation contracts)
+gnc_enable_warnings(cavh_formula)
+add_library(gnc::cavh_formula ALIAS cavh_formula)
+
 add_executable(gnc_sim apps/cli/main.cpp)
 target_link_libraries(gnc_sim PRIVATE adapters)
 gnc_enable_warnings(gnc_sim)
@@ -148,6 +160,14 @@ if(GNC_BUILD_TESTS)
         PRIVATE yyz_rigid_step)
     gnc_enable_warnings(
         gnc_yyz_two_interval_mass_commit_product_probe)
+
+    # R1 CAVH product slice: typed envelope, Eq17/Eq18 and TDCT formulas.
+    add_executable(
+        gnc_cavh_formula_product_probe
+        tests/cavh_formula_product.cpp)
+    target_link_libraries(
+        gnc_cavh_formula_product_probe PRIVATE cavh_formula)
+    gnc_enable_warnings(gnc_cavh_formula_product_probe)
 
     # R0 validation spike: intentionally isolated from product modules and Legacy.
     add_executable(
@@ -364,6 +384,9 @@ if(GNC_BUILD_TESTS)
         NAME r1.yyz-two-interval-mass-commit.probe
         COMMAND gnc_yyz_two_interval_mass_commit_product_probe --self-check)
     add_test(
+        NAME r1.cavh-formula.probe
+        COMMAND gnc_cavh_formula_product_probe --self-check)
+    add_test(
         NAME r0.scientific-conventions.properties
         COMMAND gnc_scientific_conventions --self-check)
     add_test(
@@ -518,6 +541,19 @@ if(GNC_BUILD_TESTS)
             ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-two-interval-mass-commit/reference.json
             --probe
             $<TARGET_FILE:gnc_yyz_two_interval_mass_commit_product_probe>)
+    add_test(
+        NAME r1.cavh-formula.oracle
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/validate-cavh-formula-product.py
+            --cases
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-cavh-formula/cases.json
+            --oracle
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-cavh-formula/reference.json
+            --probe
+            $<TARGET_FILE:gnc_cavh_formula_product_probe>)
     add_test(
         NAME r0.scientific-conventions.cross-tool
         COMMAND

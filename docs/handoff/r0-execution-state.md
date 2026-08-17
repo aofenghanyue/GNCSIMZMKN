@@ -2,7 +2,7 @@
 
 - 更新日期：2026-08-17
 - 当前 gate：`R1`
-- 产品状态：R0 独立科学/性能 probe 与 executable source-boundary guard 已闭合；R1 Foundation、首个 YYZ 刚体切片、两段刚体/标量燃耗 atomic boundary 和 typed propulsion 切片已完成；committed feedback 到最小 mission result 的产品批次进入 review，尚无 Session 仿真运行能力
+- 产品状态：R0 独立科学/性能 probe 与 executable source-boundary guard 已闭合；R1 Foundation 与四个 YYZ 产品切片已完成；独立 CAVH 公式产品 kernel 进入 review，尚无产品级 guidance command 或 Session 仿真运行能力
 - 当前分支：`codex/r0-governance-reset`
 - 分支基线：`origin/main@dfedf27`
 
@@ -51,13 +51,15 @@
 - `R1-FND-001` 与 `R1-YYZ-001` 已由仓库所有者于 2026-08-17 接受并完成。Foundation 当前交付集保持冻结；首个 YYZ 产品 kernel 已从 typed committed rigid state、环境、质量属性、immutable 气动表和 supplied wrench 产生 tick 1 RK4 candidate，并匹配 `ORACLE-YYZ-FROZEN-INTERVAL-001`。
 - `R1-YYZ-002` 已由仓库所有者于 2026-08-17 接受提交 `ee0a0e4` 并完成。`ScalarBurnMassKernel` 以 committed `MassState` 和 typed `MassFlowIntervalInput` 生成 constant-geometry candidate；`FrozenRigidMassStepKernel` 只在刚体与质量两项成功后返回 `AtomicRigidMassCandidate`；`TwoIntervalMassCommitKernel` 令 interval 1 读取 interval 0 的完整 closing boundary。独立 comparator 与 `ORACLE-YYZ-TWO-INTERVAL-MASS-COMMIT-001` 的最大数值差为 `1e-14`，姿态差为零。
 - `R1-YYZ-003` 已由仓库所有者于 2026-08-17 接受提交 `738f4dc` 并完成。`SuppliedPropulsionKernel` 从 definition/input 产生带 `CoM→作用点` 几何和作用点本征力矩的 body wrench，同时产生 `MassFlowIntervalInput`；`PropelledFrozenRigidMassStepKernel` 从 committed `MassState` 取得 body-origin-to-CoM 几何后接入既有 rigid/mass atomic consumer。三组公式案例、区间分割等价和十组无效输入均匹配 `ORACLE-YYZ-PROPULSION-RESPONSE-001`，最大数值差为 `7e-15`；偏心推力 consumer 只搬移一次力矩并生成 `119.95 kg` candidate。
-- `R1-YYZ-004` 已形成三段可运行产品能力并进入 review。提交 `8e2b512` 将当前 committed rigid observation 依次送入 altitude/pitch guidance、pitch-moment controller、unit-gain ideal body-moment actuator、typed propulsion 和既有 rigid/mass atomic consumer；提交 `39dceee` 令第二个区间只读取 tick 1 新提交的刚体状态与质量并完整重算控制、推进、气动、刚体和燃耗；批次闭合切片从三份 committed boundaries 计算 duration、downrange、vertical displacement、remaining/consumed mass、speed 与极值，按 inclusive predicate 和优先级在 tick 2 选择 `downrange-goal`，返回绑定终端 committed boundary 的 `Completed` 结果。产品 probe 直接复用 `ORACLE-YYZ-MISSION-COMPOSITION-001`；控制链与两区间轨迹最大数值差约 `4.62e-14`，mission result 最大数值差约 `5.08e-14`。
+- `R1-YYZ-004` 已由仓库所有者于 2026-08-17 接受提交 `8e2b512`、`39dceee` 与 `dede13a` 并完成。当前 committed rigid observation 依次进入 altitude/pitch guidance、pitch-moment controller、unit-gain ideal body-moment actuator、typed propulsion 和既有 rigid/mass atomic consumer；第二个区间只读取 tick 1 新提交的刚体状态与质量并完整重算控制、推进、气动、刚体和燃耗；`CommittedMissionResultKernel` 从三份 committed boundaries 计算指标并按 inclusive predicate 和优先级选择绑定 tick 2 terminal boundary 的 `Completed` 结果。产品 probe 直接复用 `ORACLE-YYZ-MISSION-COMPOSITION-001`；控制链与两区间轨迹最大数值差约 `4.62e-14`，mission result 最大数值差约 `5.08e-14`。
+- `R1-CAVH-001` 已形成独立 typed 产品切片并进入 review。`PreparedCavhFormulaModel` 固定 product model identity、frame/clock/revision、包络参数、Eq17/Eq18 identity、科学阈值和 TDCT 限幅；`CavhFormulaKernel` 从显式 operating point 计算解析包络与 gamma reference，再把 typed 输出直接交给 TDCT。单一 probe 覆盖三组方程、四组 TDCT、十一条既有科学失败、`SampleContext` 拒绝和真实 formula-to-TDCT consumer；comparator 直接复用 `ORACLE-CAVH-FORMULA-001`，gamma 最大误差约 `2.80e-18 rad`，TDCT 最大误差为 `6e-17 rad`。产品 identity 与 R0 reference identity 分离；Eq17 导数退化返回无值 `IllConditioned`，不携带 `FallbackUsed`。
+- `R1-CTR-001` 保持 `ready`。`SampleContext` 现有 YYZ 与 CAVH 两个独立产品 consumer，共同验证 frame、clock、sample time、configuration revision 和 data quality；兼容规则与序列化 fixture 继续等待真实 serialization consumer。
 
 ## 下一条开发主线
 
-1. `R1-FND-001`、`R1-YYZ-001`、`R1-YYZ-002` 与 `R1-YYZ-003` 已完成。动态矩阵分解、多变量求根、自适应积分和其他无当前 consumer 的数学能力继续留在范围外。
-2. `R1-YYZ-004` 当前为 `review`。产品入口 `gnc_yyz_two_interval_mass_commit_product_probe` 同时执行既有 atomic-boundary/propulsion 回归、committed control 链、连续两区间反馈和 committed-sample mission result；独立 comparator 直接复用 R0 fixture/oracle，产品 model identity 与 reference identity 保持分离。
-3. 当前能力均为 package 内纯值组合，没有 mutable store、epoch、Session rollback、terminal observation sealing 或持久化语义。下一步只进行 `R1-YYZ-004` 的仓库所有者复核；Compiler、Session、Artifact、Workflow、前端与 R2 及后续能力继续锁定。
+1. `R1-FND-001` 与 `R1-YYZ-001`～`R1-YYZ-004` 已完成。动态矩阵分解、多变量求根、自适应积分和其他无当前 consumer 的数学能力继续留在范围外。
+2. `R1-CAVH-001` 当前为 `review`。产品入口 `gnc_cavh_formula_product_probe` 复用 R0 fixture/oracle 验证抛物线包络、Eq17、Eq18、TDCT、适用域、forbidden fallback 和 typed formula consumer。
+3. R0 科学证据明确排除了产品 contract 与 closed-loop guidance。下一步需要仓库所有者选择 TDCT 限幅 alpha 到产品级 guidance command 的 frame、sample/effective time 与 owner 映射；该选择闭合前保持公式产品边界。Compiler、Session、Artifact、Workflow、前端与 R2 及后续能力继续锁定。
 
 ## 保留与恢复
 
