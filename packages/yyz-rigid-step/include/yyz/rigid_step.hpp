@@ -6,6 +6,7 @@
 #include "gnc/foundation/numerical_policy.hpp"
 #include "gnc/foundation/passive_quaternion.hpp"
 #include "gnc/foundation/trilinear_table.hpp"
+#include "gnc/model_sdk/model_metadata.hpp"
 
 #include <array>
 #include <cstddef>
@@ -152,12 +153,9 @@ struct AerodynamicTableDefinition {
 };
 
 struct RigidStepModelDefinition {
-    std::string model_id;
-    std::string model_version;
+    gnc::model_sdk::ModelDefinitionMetadata metadata;
     gnc::contracts::FrameIdentity inertial_frame;
     gnc::contracts::FrameIdentity body_frame;
-    gnc::contracts::ClockDomainIdentity clock_domain;
-    std::int64_t configuration_revision = 0;
     RigidStepAlgorithmDefinition algorithm;
     AerodynamicTableDefinition aerodynamics;
 };
@@ -171,14 +169,18 @@ class PreparedRigidStepModel {
         default;
 
     [[nodiscard]] const RigidStepModelDefinition& definition() const noexcept;
+    [[nodiscard]] const gnc::model_sdk::PreparedModelMetadata& metadata()
+        const noexcept;
 
   private:
     PreparedRigidStepModel(
         std::shared_ptr<const RigidStepModelDefinition> definition,
-        gnc::foundation::PreparedTrilinearTableView<6U> table) noexcept;
+        gnc::foundation::PreparedTrilinearTableView<6U> table,
+        gnc::model_sdk::PreparedModelMetadata metadata) noexcept;
 
     std::shared_ptr<const RigidStepModelDefinition> definition_;
     gnc::foundation::PreparedTrilinearTableView<6U> table_;
+    gnc::model_sdk::PreparedModelMetadata metadata_;
 
     friend gnc::foundation::NumericalOutcome<PreparedRigidStepModel>
     prepare_rigid_step_model(RigidStepModelDefinition definition);

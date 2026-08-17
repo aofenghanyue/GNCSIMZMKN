@@ -94,12 +94,15 @@ QuaternionPolicy fixture_quaternion_policy() {
 
 RigidStepModelDefinition fixture_definition() {
     RigidStepModelDefinition definition;
-    definition.model_id = std::string(kRigidStepModelIdentity);
-    definition.model_version = "0.1.0";
+    definition.metadata = {
+        std::string(kRigidStepModelIdentity),
+        "0.1.0",
+        gnc::model_sdk::ModelExecutionForm::Closure,
+        ClockDomainIdentity{std::string(kClock)},
+        11,
+    };
     definition.inertial_frame = FrameIdentity{std::string(kInertialFrame)};
     definition.body_frame = FrameIdentity{std::string(kBodyFrame)};
-    definition.clock_domain = ClockDomainIdentity{std::string(kClock)};
-    definition.configuration_revision = 11;
     definition.algorithm.fixed_step_seconds = 0.1;
     definition.algorithm.numerical_policy = fixture_numerical_policy();
     definition.algorithm.attitude_evaluation_policy =
@@ -201,6 +204,7 @@ void expect_failure(const NumericalOutcome<Value>& outcome,
 }
 
 struct ProbeBundle {
+    gnc::model_sdk::PreparedModelMetadata metadata;
     RigidStepOutput accepted;
     std::vector<std::string> direct_checks;
 };
@@ -210,6 +214,19 @@ ProbeBundle run_probe() {
         prepare_rigid_step_model(fixture_definition());
     const PreparedRigidStepModel& prepared = require_value(
         prepared_outcome, "YYZ product model preparation failed");
+    const auto& prepared_metadata = prepared.metadata();
+    require(prepared_metadata.definition.model_id ==
+                kRigidStepModelIdentity &&
+                prepared_metadata.definition.model_version == "0.1.0" &&
+                prepared_metadata.definition.execution_form ==
+                    gnc::model_sdk::ModelExecutionForm::Closure &&
+                prepared_metadata.definition.clock_domain.id == kClock &&
+                prepared_metadata.definition.configuration_revision == 11 &&
+                prepared_metadata.preparation_algorithm_id ==
+                    kRigidStepPreparationIdentity.id &&
+                prepared_metadata.preparation_algorithm_version ==
+                    kRigidStepPreparationIdentity.version,
+            "YYZ prepared-model metadata differs");
     const RigidStepInput accepted_input = fixture_input();
     const auto accepted_outcome =
         RigidStepKernel::evaluate(prepared, accepted_input);
@@ -238,7 +255,19 @@ ProbeBundle run_probe() {
                      Vec3{109.90544117647059, 0.0, -0.980665}),
             "YYZ product accepted result differs from oracle anchors");
 
-    std::vector<std::string> checks{"accepted-oracle-anchors"};
+    std::vector<std::string> checks{
+        "prepared-model-metadata", "accepted-oracle-anchors"};
+
+    const auto repeated_outcome =
+        RigidStepKernel::evaluate(prepared, accepted_input);
+    const auto& repeated = require_value(
+        repeated_outcome, "YYZ repeated independent evaluation failed");
+    require(near(repeated.candidate.state.position.value,
+                 accepted.candidate.state.position.value) &&
+                near(repeated.candidate.state.velocity.value,
+                     accepted.candidate.state.velocity.value),
+            "YYZ prepared model evaluation is not deterministic");
+    checks.emplace_back("deterministic-independent-evaluation");
 
     RigidStepInput rotated = accepted_input;
     const double root_half = std::sqrt(0.5);
@@ -339,6 +368,21 @@ ProbeBundle run_probe() {
                    "invalid prepared table survived");
     checks.emplace_back("table-preparation-rejection");
 
+    RigidStepModelDefinition invalid_metadata = fixture_definition();
+    invalid_metadata.metadata.execution_form =
+        gnc::model_sdk::ModelExecutionForm::Unspecified;
+    const auto invalid_metadata_outcome =
+        prepare_rigid_step_model(std::move(invalid_metadata));
+    require(!invalid_metadata_outcome.has_value() &&
+                invalid_metadata_outcome.status() ==
+                    NumericalStatus::DomainError &&
+                invalid_metadata_outcome.evidence().algorithm.id ==
+                    gnc::model_sdk::kModelMetadataPreparationIdentity.id &&
+                invalid_metadata_outcome.evidence().detail ==
+                    "model-execution-form",
+            "YYZ invalid framework model metadata prepared");
+    checks.emplace_back("model-metadata-rejection");
+
     RigidStepInput full_inertia = accepted_input;
     Mat3 coupled_inertia;
     coupled_inertia << 4.0, 1.0, 0.0,
@@ -371,7 +415,7 @@ ProbeBundle run_probe() {
                    "RK4 stage failure retained a candidate");
     checks.emplace_back("rk4-stage-discards-candidate");
 
-    return {accepted, std::move(checks)};
+    return {prepared_metadata, accepted, std::move(checks)};
 }
 
 void write_number(double value) {
@@ -420,7 +464,23 @@ void write_json(const ProbeBundle& bundle) {
               << "\",\"contract_id\":\"" << kRigidStepContractIdentity
               << "\",\"source_fixture_id\":\"" << kFixtureId
               << "\",\"source_oracle_id\":\"" << kOracleId
-              << "\",\"status\":\"passed\",\"accepted\":{";
+              << "\",\"status\":\"passed\",\"prepared_model\":{"
+              << "\"model_id\":\""
+              << bundle.metadata.definition.model_id
+              << "\",\"model_version\":\""
+              << bundle.metadata.definition.model_version
+              << "\",\"execution_form\":\""
+              << gnc::model_sdk::to_string(
+                     bundle.metadata.definition.execution_form)
+              << "\",\"clock_domain_id\":\""
+              << bundle.metadata.definition.clock_domain.id
+              << "\",\"configuration_revision\":"
+              << bundle.metadata.definition.configuration_revision
+              << ",\"preparation_algorithm_id\":\""
+              << bundle.metadata.preparation_algorithm_id
+              << "\",\"preparation_algorithm_version\":\""
+              << bundle.metadata.preparation_algorithm_version
+              << "\"},\"accepted\":{";
     std::cout << "\"air_data\":{\"velocity_relative_I_mps\":";
     write_vec3(output.air_data.velocity_relative_inertial.value);
     std::cout << ",\"velocity_relative_B_mps\":";

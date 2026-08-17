@@ -63,7 +63,7 @@ target_include_directories(
     yyz_rigid_step
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/packages/yyz-rigid-step/include>)
-target_link_libraries(yyz_rigid_step PUBLIC foundation contracts)
+target_link_libraries(yyz_rigid_step PUBLIC foundation contracts model_sdk)
 gnc_enable_warnings(yyz_rigid_step)
 add_library(gnc::yyz_rigid_step ALIAS yyz_rigid_step)
 
@@ -75,7 +75,7 @@ target_include_directories(
     cavh_formula
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/packages/cavh-formula/include>)
-target_link_libraries(cavh_formula PUBLIC foundation contracts)
+target_link_libraries(cavh_formula PUBLIC foundation contracts model_sdk)
 gnc_enable_warnings(cavh_formula)
 add_library(gnc::cavh_formula ALIAS cavh_formula)
 
@@ -515,6 +515,17 @@ if(GNC_BUILD_TESTS)
             -File ${CMAKE_CURRENT_SOURCE_DIR}/tools/validate-r0-gate-readiness.ps1
             -Quiet)
     find_package(Python3 3.8 REQUIRED COMPONENTS Interpreter)
+    add_test(
+        NAME r1.model-sdk-prepared-model.conformance
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/validate-model-sdk-prepared-models.py
+            --yyz-probe
+            $<TARGET_FILE:gnc_yyz_rigid_step_product_probe>
+            --cavh-probe
+            $<TARGET_FILE:gnc_cavh_formula_product_probe>)
     add_test(
         NAME r1.yyz-rigid-step.oracle
         COMMAND

@@ -64,12 +64,12 @@ template <typename Value>
     const CavhFormulaDefinition& definition,
     const SampleContext& context) noexcept {
     if (context.frame != definition.navigation_frame ||
-        context.clock_domain != definition.clock_domain) {
+        context.clock_domain != definition.metadata.clock_domain) {
         return ValidationFailure{NumericalStatus::DomainError,
                                  "sample-frame-or-clock"};
     }
     if (context.configuration_revision !=
-            definition.configuration_revision ||
+            definition.metadata.configuration_revision ||
         context.quality != DataQuality::Valid) {
         return ValidationFailure{NumericalStatus::DomainError,
                                  "sample-revision-or-quality"};
@@ -206,12 +206,18 @@ validate_operating_point_common(
 } // namespace
 
 PreparedCavhFormulaModel::PreparedCavhFormulaModel(
-    std::shared_ptr<const CavhFormulaDefinition> definition) noexcept
-    : definition_(std::move(definition)) {}
+    std::shared_ptr<const CavhFormulaDefinition> definition,
+    gnc::model_sdk::PreparedModelMetadata metadata) noexcept
+    : definition_(std::move(definition)), metadata_(std::move(metadata)) {}
 
 const CavhFormulaDefinition& PreparedCavhFormulaModel::definition()
     const noexcept {
     return *definition_;
+}
+
+const gnc::model_sdk::PreparedModelMetadata&
+PreparedCavhFormulaModel::metadata() const noexcept {
+    return metadata_;
 }
 
 NumericalOutcome<PreparedCavhFormulaModel> prepare_cavh_formula_model(
@@ -223,11 +229,18 @@ NumericalOutcome<PreparedCavhFormulaModel> prepare_cavh_formula_model(
             product_evidence(kCavhFormulaPreparationIdentity, detail));
     };
 
-    if (definition.model_id != kCavhFormulaModelIdentity ||
-        definition.model_version.empty() ||
+    auto metadata = gnc::model_sdk::prepare_model_metadata(
+        definition.metadata, kCavhFormulaPreparationIdentity);
+    if (!metadata.has_value()) {
+        return NumericalOutcome<PreparedCavhFormulaModel>::failure(
+            metadata.status(), metadata.evidence());
+    }
+
+    if (definition.metadata.model_id != kCavhFormulaModelIdentity ||
+        definition.metadata.execution_form !=
+            gnc::model_sdk::ModelExecutionForm::PureQuery ||
         definition.navigation_frame.id.empty() ||
-        definition.clock_domain.id.empty() ||
-        definition.configuration_revision < 0) {
+        definition.metadata.clock_domain.id.empty()) {
         return failure(NumericalStatus::DomainError,
                        "definition-identity");
     }
@@ -236,10 +249,10 @@ NumericalOutcome<PreparedCavhFormulaModel> prepare_cavh_formula_model(
             definition.algorithm.numerical_policy) ||
         !finite({definition.algorithm.denominator_minimum_absolute,
                  definition.algorithm
-                     .derivative_minimum_absolute_per_meter_per_second}) ||
+                     .derivative_minimum_absolute_seconds_per_meter}) ||
         definition.algorithm.denominator_minimum_absolute <= 0.0 ||
         definition.algorithm
-                .derivative_minimum_absolute_per_meter_per_second <=
+                .derivative_minimum_absolute_seconds_per_meter <=
             0.0) {
         return failure(NumericalStatus::DomainError,
                        "definition-algorithm");
@@ -273,7 +286,8 @@ NumericalOutcome<PreparedCavhFormulaModel> prepare_cavh_formula_model(
         NumericalStatus::Success,
         PreparedCavhFormulaModel{
             std::make_shared<const CavhFormulaDefinition>(
-                std::move(definition))},
+                std::move(definition)),
+            std::move(metadata.value())},
         product_evidence(kCavhFormulaPreparationIdentity, "prepared", 0U,
                          1U));
 }
@@ -395,7 +409,7 @@ CavhFormulaKernel::evaluate_gamma_reference(
             point.mach_speed_partial_seconds_per_meter;
         if (std::abs(values.dcl_vertical_dspeed_seconds_per_meter) <=
             definition.algorithm
-                .derivative_minimum_absolute_per_meter_per_second) {
+                .derivative_minimum_absolute_seconds_per_meter) {
             return product_failure<GammaReferenceOutput>(
                 kCavhGammaReferenceIdentity,
                 NumericalStatus::IllConditioned,

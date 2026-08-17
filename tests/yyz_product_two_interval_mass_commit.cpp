@@ -124,12 +124,15 @@ NumericalPolicy propulsion_numerical_policy() {
 
 RigidStepModelDefinition fixture_rigid_definition() {
     RigidStepModelDefinition definition;
-    definition.model_id = std::string(kRigidStepModelIdentity);
-    definition.model_version = "0.2.0";
+    definition.metadata = {
+        std::string(kRigidStepModelIdentity),
+        "0.2.0",
+        gnc::model_sdk::ModelExecutionForm::Closure,
+        ClockDomainIdentity{std::string(kClock)},
+        11,
+    };
     definition.inertial_frame = FrameIdentity{std::string(kInertialFrame)};
     definition.body_frame = FrameIdentity{std::string(kBodyFrame)};
-    definition.clock_domain = ClockDomainIdentity{std::string(kClock)};
-    definition.configuration_revision = 11;
     definition.algorithm.fixed_step_seconds = 0.1;
     definition.algorithm.numerical_policy = fixture_numerical_policy();
     definition.algorithm.attitude_evaluation_policy =
@@ -174,7 +177,7 @@ SuppliedPropulsionDefinition fixture_propulsion_definition() {
 
 RigidStepModelDefinition mission_rigid_definition() {
     RigidStepModelDefinition definition = fixture_rigid_definition();
-    definition.model_version = "0.3.0";
+    definition.metadata.model_version = "0.3.0";
     auto& aero = definition.aerodynamics;
     aero.source_id = "aero.body";
     aero.table_id = "aero-table.fixture.yyz.multiaffine@1";

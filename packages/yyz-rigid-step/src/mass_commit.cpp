@@ -603,21 +603,21 @@ FrozenRigidMassStepKernel::evaluate(
     if (!valid_sample_at(
             opening_boundary.rigid_context,
             rigid_definition.inertial_frame,
-            rigid_definition.clock_domain,
+            rigid_definition.metadata.clock_domain,
             interval.context.interval_start,
-            rigid_definition.configuration_revision, policy) ||
+            rigid_definition.metadata.configuration_revision, policy) ||
         !valid_sample_at(
             opening_boundary.mass_state.context,
             rigid_definition.body_frame,
-            rigid_definition.clock_domain,
+            rigid_definition.metadata.clock_domain,
             interval.context.interval_start,
-            rigid_definition.configuration_revision, policy) ||
+            rigid_definition.metadata.configuration_revision, policy) ||
         !valid_interval_at(
             interval.mass_flow.context, rigid_definition.body_frame,
-            rigid_definition.clock_domain,
+            rigid_definition.metadata.clock_domain,
             interval.context.interval_start,
             interval.context.interval_end,
-            rigid_definition.configuration_revision, policy) ||
+            rigid_definition.metadata.configuration_revision, policy) ||
         opening_boundary.mass_state.mass_state_id !=
             mass_definition.mass_state_id ||
         interval.mass_flow.mass_state_id != mass_definition.mass_state_id) {
@@ -785,20 +785,20 @@ ControlledPropelledRigidMassStepKernel::evaluate(
         definition.controller.body_frame != rigid_definition.body_frame ||
         definition.actuator.body_frame != rigid_definition.body_frame ||
         definition.guidance.clock_domain !=
-            rigid_definition.clock_domain ||
+            rigid_definition.metadata.clock_domain ||
         definition.controller.clock_domain !=
-            rigid_definition.clock_domain ||
+            rigid_definition.metadata.clock_domain ||
         definition.actuator.clock_domain !=
-            rigid_definition.clock_domain ||
+            rigid_definition.metadata.clock_domain ||
         definition.guidance.configuration_revision !=
-            rigid_definition.configuration_revision ||
+            rigid_definition.metadata.configuration_revision ||
         definition.controller.configuration_revision !=
-            rigid_definition.configuration_revision ||
+            rigid_definition.metadata.configuration_revision ||
         definition.actuator.configuration_revision !=
-            rigid_definition.configuration_revision ||
+            rigid_definition.metadata.configuration_revision ||
         propulsion_definition.body_frame != rigid_definition.body_frame ||
         propulsion_definition.clock_domain !=
-            rigid_definition.clock_domain) {
+            rigid_definition.metadata.clock_domain) {
         return mass_commit_failure<
             ControlledPropelledRigidMassStepOutput>(
                 kControlledPropelledRigidMassStepKernelIdentity,

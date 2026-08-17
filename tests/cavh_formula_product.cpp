@@ -102,17 +102,20 @@ CavhFormulaDefinition fixture_definition(
     ParabolicEnvelopeDefinition envelope = constant_polar(),
     double tdct_gain = 3.0) {
     CavhFormulaDefinition definition;
-    definition.model_id = std::string(kCavhFormulaModelIdentity);
-    definition.model_version = "0.1.0";
+    definition.metadata = {
+        std::string(kCavhFormulaModelIdentity),
+        "0.1.0",
+        gnc::model_sdk::ModelExecutionForm::PureQuery,
+        ClockDomainIdentity{std::string(kClock)},
+        4,
+    };
     definition.navigation_frame =
         FrameIdentity{std::string(kNavigationFrame)};
-    definition.clock_domain = ClockDomainIdentity{std::string(kClock)};
-    definition.configuration_revision = 4;
     definition.envelope = envelope;
     definition.algorithm.equation = equation;
     definition.algorithm.denominator_minimum_absolute = 1.0e-12;
     definition.algorithm
-        .derivative_minimum_absolute_per_meter_per_second = 1.0e-12;
+        .derivative_minimum_absolute_seconds_per_meter = 1.0e-12;
     definition.algorithm.numerical_policy = fixture_policy();
     definition.tdct = {tdct_gain, 0.1, 0.4};
     return definition;
@@ -169,6 +172,7 @@ struct TdctCase {
 };
 
 struct ProbeBundle {
+    gnc::model_sdk::PreparedModelMetadata metadata;
     CavhEnvelopeOutput constant_envelope;
     CavhEnvelopeOutput mach_envelope;
     std::vector<EquationCase> equations;
@@ -187,6 +191,20 @@ ProbeBundle run_probe() {
 
     const auto eq18_model = prepared(fixture_definition(
         GammaReferenceEquation::Eq18MachIndependent));
+    const auto& prepared_metadata = eq18_model.metadata();
+    require(prepared_metadata.definition.model_id ==
+                kCavhFormulaModelIdentity &&
+                prepared_metadata.definition.model_version == "0.1.0" &&
+                prepared_metadata.definition.execution_form ==
+                    gnc::model_sdk::ModelExecutionForm::PureQuery &&
+                prepared_metadata.definition.clock_domain.id == kClock &&
+                prepared_metadata.definition.configuration_revision == 4 &&
+                prepared_metadata.preparation_algorithm_id ==
+                    kCavhFormulaPreparationIdentity.id &&
+                prepared_metadata.preparation_algorithm_version ==
+                    kCavhFormulaPreparationIdentity.version,
+            "CAVH prepared-model metadata differs");
+    checks.emplace_back("prepared-model-metadata");
     const auto eq18_unbanked = CavhFormulaKernel::evaluate_gamma_reference(
         eq18_model, fixture_input(0.0));
     const auto& eq18_unbanked_value = require_value(
@@ -201,6 +219,15 @@ ProbeBundle run_probe() {
                 near(eq18_unbanked_value.envelope.dcl_star_dmach, 0.0),
             "constant-polar envelope differs from the accepted oracle");
     checks.emplace_back("envelope-accepted");
+
+    const auto repeated_eq18 =
+        CavhFormulaKernel::evaluate_gamma_reference(
+            eq18_model, fixture_input(0.0));
+    require(repeated_eq18.has_value() &&
+                near(repeated_eq18.value().gamma_reference_radians,
+                     eq18_unbanked_value.gamma_reference_radians),
+            "CAVH prepared model evaluation is not deterministic");
+    checks.emplace_back("deterministic-independent-evaluation");
 
     const auto eq18_banked = CavhFormulaKernel::evaluate_gamma_reference(
         eq18_model, fixture_input(kPi / 3.0));
@@ -317,11 +344,26 @@ ProbeBundle run_probe() {
 
     CavhFormulaDefinition invalid_definition = fixture_definition(
         GammaReferenceEquation::Eq18MachIndependent);
-    invalid_definition.model_id = std::string(kReferenceModelId);
+    invalid_definition.metadata.model_id = std::string(kReferenceModelId);
     expect_failure(prepare_cavh_formula_model(invalid_definition),
                    NumericalStatus::DomainError, "definition-identity",
                    "reference model identity prepared as a product model");
     checks.emplace_back("definition-identity-rejection");
+
+    CavhFormulaDefinition invalid_metadata = fixture_definition(
+        GammaReferenceEquation::Eq18MachIndependent);
+    invalid_metadata.metadata.clock_domain.id.clear();
+    const auto invalid_metadata_outcome =
+        prepare_cavh_formula_model(std::move(invalid_metadata));
+    require(!invalid_metadata_outcome.has_value() &&
+                invalid_metadata_outcome.status() ==
+                    NumericalStatus::DomainError &&
+                invalid_metadata_outcome.evidence().algorithm.id ==
+                    gnc::model_sdk::kModelMetadataPreparationIdentity.id &&
+                invalid_metadata_outcome.evidence().detail ==
+                    "model-context-policy",
+            "CAVH invalid framework model metadata prepared");
+    checks.emplace_back("model-metadata-rejection");
 
     CavhFormulaInput invalid_context = fixture_input(0.0);
     invalid_context.context.frame.id = "frame.other";
@@ -460,6 +502,7 @@ ProbeBundle run_probe() {
     checks.emplace_back("composite-discards-failed-reference");
 
     return {
+        prepared_metadata,
         eq18_unbanked_value.envelope,
         eq17_value.envelope,
         {{"CASE-CAVH-EQ18-UNBANKED", eq18_unbanked_value},
@@ -552,7 +595,23 @@ void write_json(const ProbeBundle& bundle) {
               << "\",\"contract_id\":\"" << kCavhFormulaContractIdentity
               << "\",\"source_fixture_id\":\"" << kFixtureId
               << "\",\"source_oracle_id\":\"" << kOracleId
-              << "\",\"status\":\"passed\",\"envelope_cases\":{";
+              << "\",\"status\":\"passed\",\"prepared_model\":{"
+              << "\"model_id\":\""
+              << bundle.metadata.definition.model_id
+              << "\",\"model_version\":\""
+              << bundle.metadata.definition.model_version
+              << "\",\"execution_form\":\""
+              << gnc::model_sdk::to_string(
+                     bundle.metadata.definition.execution_form)
+              << "\",\"clock_domain_id\":\""
+              << bundle.metadata.definition.clock_domain.id
+              << "\",\"configuration_revision\":"
+              << bundle.metadata.definition.configuration_revision
+              << ",\"preparation_algorithm_id\":\""
+              << bundle.metadata.preparation_algorithm_id
+              << "\",\"preparation_algorithm_version\":\""
+              << bundle.metadata.preparation_algorithm_version
+              << "\"},\"envelope_cases\":{";
     std::cout << "\"CASE-CAVH-ENVELOPE-CONSTANT-POLAR\":";
     write_envelope(bundle.constant_envelope);
     std::cout << ",\"CASE-CAVH-ENVELOPE-MACH-DEPENDENT\":";

@@ -20,7 +20,9 @@ PRODUCT_MODEL_ID = "gnc.package.yyz.rigid-step.frozen-interval.experimental@1"
 CONTRACT_ID = "gnc.package.yyz.rigid-step.contract.experimental@1"
 CASE_ID = "CASE-YYZ-FROZEN-INTERVAL-COMPOSED-TRAJECTORY"
 DIRECT_CHECKS = {
+    "prepared-model-metadata",
     "accepted-oracle-anchors",
+    "deterministic-independent-evaluation",
     "passive-frame-direction",
     "inclusive-table-boundary",
     "strict-table-domain",
@@ -32,6 +34,7 @@ DIRECT_CHECKS = {
     "quaternion-rejection",
     "nonfinite-rejection",
     "table-preparation-rejection",
+    "model-metadata-rejection",
     "full-inertia-derivative",
     "rk4-stage-discards-candidate",
 }

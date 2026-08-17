@@ -3,6 +3,7 @@
 #include "gnc/contracts/sample_context.hpp"
 #include "gnc/foundation/numerical_outcome.hpp"
 #include "gnc/foundation/numerical_policy.hpp"
+#include "gnc/model_sdk/model_metadata.hpp"
 
 #include <cstdint>
 #include <memory>
@@ -77,7 +78,7 @@ struct CavhFormulaAlgorithmDefinition {
     GammaReferenceEquation equation =
         GammaReferenceEquation::Eq18MachIndependent;
     double denominator_minimum_absolute = 0.0;
-    double derivative_minimum_absolute_per_meter_per_second = 0.0;
+    double derivative_minimum_absolute_seconds_per_meter = 0.0;
     gnc::foundation::NumericalPolicy numerical_policy;
 };
 
@@ -88,11 +89,8 @@ struct TdctFormulaDefinition {
 };
 
 struct CavhFormulaDefinition {
-    std::string model_id;
-    std::string model_version;
+    gnc::model_sdk::ModelDefinitionMetadata metadata;
     gnc::contracts::FrameIdentity navigation_frame;
-    gnc::contracts::ClockDomainIdentity clock_domain;
-    std::int64_t configuration_revision = 0;
     ParabolicEnvelopeDefinition envelope;
     CavhFormulaAlgorithmDefinition algorithm;
     TdctFormulaDefinition tdct;
@@ -108,12 +106,16 @@ class PreparedCavhFormulaModel {
         PreparedCavhFormulaModel&&) noexcept = default;
 
     [[nodiscard]] const CavhFormulaDefinition& definition() const noexcept;
+    [[nodiscard]] const gnc::model_sdk::PreparedModelMetadata& metadata()
+        const noexcept;
 
   private:
     explicit PreparedCavhFormulaModel(
-        std::shared_ptr<const CavhFormulaDefinition> definition) noexcept;
+        std::shared_ptr<const CavhFormulaDefinition> definition,
+        gnc::model_sdk::PreparedModelMetadata metadata) noexcept;
 
     std::shared_ptr<const CavhFormulaDefinition> definition_;
+    gnc::model_sdk::PreparedModelMetadata metadata_;
 
     friend gnc::foundation::NumericalOutcome<PreparedCavhFormulaModel>
     prepare_cavh_formula_model(CavhFormulaDefinition definition);

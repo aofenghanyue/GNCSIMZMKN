@@ -142,11 +142,12 @@ template <typename Value>
     const auto& step = input.context;
     if (step.inertial_frame != definition.inertial_frame ||
         step.body_frame != definition.body_frame ||
-        step.clock_domain != definition.clock_domain) {
+        step.clock_domain != definition.metadata.clock_domain) {
         return ValidationFailure{NumericalStatus::DomainError,
                                  "step-frame-or-clock"};
     }
-    if (step.configuration_revision != definition.configuration_revision ||
+    if (step.configuration_revision !=
+            definition.metadata.configuration_revision ||
         step.quality != DataQuality::Valid) {
         return ValidationFailure{NumericalStatus::DomainError,
                                  "step-revision-or-quality"};
@@ -172,8 +173,8 @@ template <typename Value>
     }
     if (!valid_sample_context(
             input.environment.context, definition.inertial_frame,
-            definition.clock_domain, step.interval_start,
-            definition.configuration_revision, policy)) {
+            definition.metadata.clock_domain, step.interval_start,
+            definition.metadata.configuration_revision, policy)) {
         return ValidationFailure{NumericalStatus::DomainError,
                                  "environment-context"};
     }
@@ -488,12 +489,19 @@ template <typename Value>
 
 PreparedRigidStepModel::PreparedRigidStepModel(
     std::shared_ptr<const RigidStepModelDefinition> definition,
-    PreparedTrilinearTableView<6U> table) noexcept
-    : definition_(std::move(definition)), table_(std::move(table)) {}
+    PreparedTrilinearTableView<6U> table,
+    gnc::model_sdk::PreparedModelMetadata metadata) noexcept
+    : definition_(std::move(definition)), table_(std::move(table)),
+      metadata_(std::move(metadata)) {}
 
 const RigidStepModelDefinition& PreparedRigidStepModel::definition()
     const noexcept {
     return *definition_;
+}
+
+const gnc::model_sdk::PreparedModelMetadata&
+PreparedRigidStepModel::metadata() const noexcept {
+    return metadata_;
 }
 
 NumericalOutcome<PreparedRigidStepModel> prepare_rigid_step_model(
@@ -504,13 +512,19 @@ NumericalOutcome<PreparedRigidStepModel> prepare_rigid_step_model(
             product_evidence(kRigidStepPreparationIdentity, detail));
     };
 
-    if (definition.model_id != kRigidStepModelIdentity ||
-        definition.model_version.empty() ||
+    auto metadata = gnc::model_sdk::prepare_model_metadata(
+        definition.metadata, kRigidStepPreparationIdentity);
+    if (!metadata.has_value()) {
+        return NumericalOutcome<PreparedRigidStepModel>::failure(
+            metadata.status(), metadata.evidence());
+    }
+
+    if (definition.metadata.model_id != kRigidStepModelIdentity ||
+        definition.metadata.execution_form !=
+            gnc::model_sdk::ModelExecutionForm::Closure ||
         definition.inertial_frame.id.empty() ||
         definition.body_frame.id.empty() ||
         definition.inertial_frame == definition.body_frame ||
-        definition.clock_domain.id.empty() ||
-        definition.configuration_revision < 0 ||
         definition.aerodynamics.source_id.empty() ||
         definition.aerodynamics.table_id.empty() ||
         definition.aerodynamics.configuration_id.empty()) {
@@ -540,7 +554,8 @@ NumericalOutcome<PreparedRigidStepModel> prepare_rigid_step_model(
     }
 
     auto owned_definition =
-        std::make_shared<RigidStepModelDefinition>(std::move(definition));
+        std::make_shared<const RigidStepModelDefinition>(
+            std::move(definition));
     const auto& owned_aero = owned_definition->aerodynamics;
     gnc::foundation::TrilinearTableView<6U> view;
     view.x_axis = {owned_aero.mach_axis.data(),
@@ -566,7 +581,8 @@ NumericalOutcome<PreparedRigidStepModel> prepare_rigid_step_model(
     evidence.detail = "prepared-aero-table";
     return NumericalOutcome<PreparedRigidStepModel>::with_value(
         table.status(),
-        PreparedRigidStepModel{std::move(owned_definition), table.value()},
+        PreparedRigidStepModel{std::move(owned_definition), table.value(),
+                               std::move(metadata.value())},
         evidence);
 }
 

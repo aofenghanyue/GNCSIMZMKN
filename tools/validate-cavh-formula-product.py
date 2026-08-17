@@ -20,7 +20,9 @@ PRODUCT_MODEL_ID = (
 CONTRACT_ID = "gnc.package.cavh.formula.contract.experimental@1"
 DIRECT_CHECKS = {
     "product-reference-identity",
+    "prepared-model-metadata",
     "envelope-accepted",
+    "deterministic-independent-evaluation",
     "eq18-accepted",
     "eq18-ignores-unused-derivatives",
     "eq17-accepted",
@@ -28,6 +30,7 @@ DIRECT_CHECKS = {
     "tdct-clamp-evidence",
     "typed-formula-tdct-consumer",
     "definition-identity-rejection",
+    "model-metadata-rejection",
     "sample-context-rejection",
     "envelope-domain-rejection",
     "envelope-alpha-domain-rejection",
