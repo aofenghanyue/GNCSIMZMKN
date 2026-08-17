@@ -24,6 +24,13 @@ PRODUCT_MASS_MODEL_ID = \
     "gnc.package.yyz.mass.scalar-burn-constant-geometry.experimental@1"
 CONTRACT_ID = \
     "gnc.package.yyz.rigid-mass-boundary.contract.experimental@1"
+PROPULSION_FIXTURE_ID = "REF-YYZ-PROPULSION-RESPONSE-001"
+PROPULSION_ORACLE_ID = "ORACLE-YYZ-PROPULSION-RESPONSE-001"
+PROPULSION_REFERENCE_MODEL_ID = "MODEL-YYZ-PROPULSION-RESPONSE-001"
+PROPULSION_PRODUCT_MODEL_ID = \
+    "gnc.package.yyz.propulsion-response.supplied.experimental@1"
+PROPULSION_CONTRACT_ID = \
+    "gnc.package.yyz.propulsion-response.contract.experimental@1"
 CASE_ID = "CASE-YYZ-TWO-INTERVAL-MASS-COMMIT-TRAJECTORY"
 DIRECT_CHECKS = {
     "interval-zero-committed-mass-and-hidden-candidate",
@@ -38,6 +45,32 @@ DIRECT_CHECKS = {
     "atomic-discard-on-rigid-failure",
     "contiguous-boundary-rejection",
 }
+PROPULSION_DIRECT_CHECKS = {
+    "propulsion-three-oracle-cases",
+    "propulsion-interval-partition-equivalence",
+    "propulsion-ten-invalid-input-rejections",
+    "propulsion-to-atomic-boundary-single-transport",
+}
+
+PROPULSION_RESPONSE_VECTOR_FIELDS = (
+    "force_B_N",
+    "r_CoM_to_application_B_m",
+    "moment_at_application_B_Nm",
+)
+PROPULSION_CLOSURE_VECTOR_FIELDS = (
+    "force_B_N",
+    "moment_at_application_B_Nm",
+    "lever_arm_moment_B_Nm",
+    "moment_about_CoM_B_Nm",
+)
+PROPULSION_MASS_SCALAR_FIELDS = (
+    "interval_duration_s",
+    "fuel_consumption_rate_kgps",
+    "consumed_fuel_mass_kg",
+    "mass_delta_kg",
+    "committed_mass_kg",
+    "mass_candidate_kg",
+)
 
 
 def require(condition: bool, message: str) -> None:
@@ -121,6 +154,86 @@ def run_probe(probe: Path) -> tuple[bytes, dict]:
         completed.stdout.decode("utf-8"), parse_float=Decimal)
 
 
+def compare_propulsion_case(actual: dict, expected: dict,
+                            absolute: Decimal,
+                            relative: Decimal) -> Decimal:
+    case_id = expected["id"]
+    require(actual["id"] == case_id,
+            f"propulsion case id differs for {case_id}")
+    maximum = Decimal(0)
+    for section, exact_fields, vector_fields, scalar_fields in (
+        (
+            "response",
+            ("source_id", "quality", "body_frame_id", "sample_tick",
+             "clock_domain", "configuration_revision",
+             "valid_from_tick", "valid_until_tick"),
+            PROPULSION_RESPONSE_VECTOR_FIELDS,
+            ("fuel_consumption_rate_kgps",),
+        ),
+        (
+            "closure_consumer",
+            ("source_id", "body_frame_id", "sample_tick",
+             "clock_domain", "configuration_revision"),
+            PROPULSION_CLOSURE_VECTOR_FIELDS,
+            (),
+        ),
+        (
+            "mass_consumer",
+            ("mass_state_id", "clock_domain", "configuration_revision",
+             "valid_from_tick", "valid_until_tick"),
+            (),
+            PROPULSION_MASS_SCALAR_FIELDS,
+        ),
+    ):
+        observed = actual[section]
+        reference = expected[section]
+        if section == "response":
+            require(observed["model_id"] == PROPULSION_PRODUCT_MODEL_ID,
+                    f"{case_id}.response.model_id differs")
+        for field in exact_fields:
+            require(observed[field] == reference[field],
+                    f"{case_id}.{section}.{field} differs")
+        for field in vector_fields:
+            maximum = max(
+                maximum,
+                compare_vector(observed[field], reference[field],
+                               absolute, relative,
+                               f"{case_id}.{section}.{field}"))
+        for field in scalar_fields:
+            maximum = max(
+                maximum,
+                compare_number(observed[field], reference[field],
+                               absolute, relative,
+                               f"{case_id}.{section}.{field}"))
+    return maximum
+
+
+def compare_propulsion_equivalence(actual: list, expected: list,
+                                   absolute: Decimal,
+                                   relative: Decimal) -> Decimal:
+    require(len(actual) == len(expected) == 1,
+            "propulsion equivalence count differs")
+    observed = actual[0]
+    reference = expected[0]
+    require(observed["id"] == reference["id"] and
+            observed["status"] == reference["status"],
+            "propulsion equivalence identity differs")
+    maximum = Decimal(0)
+    for field in (
+            "force_and_response_max_abs_difference",
+            "application_wrench_max_abs_difference",
+            "summed_consumed_fuel_mass_kg",
+            "consumed_fuel_mass_difference_kg",
+            "sequential_final_mass_candidate_kg",
+            "final_mass_candidate_difference_kg"):
+        maximum = max(
+            maximum,
+            compare_number(observed[field], reference[field],
+                           absolute, relative,
+                           f"propulsion.equivalence.{field}"))
+    return maximum
+
+
 def verify(cases_path: Path, oracle_path: Path, probe_path: Path) -> dict:
     getcontext().prec = 80
     raw_cases = cases_path.read_bytes()
@@ -147,7 +260,7 @@ def verify(cases_path: Path, oracle_path: Path, probe_path: Path) -> dict:
     require(first_stdout == second_stdout and probe == second_probe,
             "product probe reruns differ")
     require(probe["schema_version"] ==
-            "gnczmkn.yyz-two-interval-mass-commit-product-probe/1" and
+            "gnczmkn.yyz-two-interval-mass-commit-product-probe/2" and
             probe["product_model_id"] == PRODUCT_MODEL_ID and
             probe["mass_model_id"] == PRODUCT_MASS_MODEL_ID and
             probe["contract_id"] == CONTRACT_ID and
@@ -162,6 +275,133 @@ def verify(cases_path: Path, oracle_path: Path, probe_path: Path) -> dict:
     require(set(probe["direct_checks"]) == DIRECT_CHECKS and
             len(probe["direct_checks"]) == len(DIRECT_CHECKS),
             "product direct-check coverage differs")
+
+    repo_root = cases_path.resolve().parents[2]
+    propulsion_cases_path = (
+        repo_root / "fixtures" / "ref-yyz-propulsion-response" /
+        "cases.json")
+    propulsion_oracle_path = (
+        repo_root / "oracles" / "ref-yyz-propulsion-response" /
+        "reference.json")
+    raw_propulsion_cases = propulsion_cases_path.read_bytes()
+    propulsion_cases = json.loads(
+        raw_propulsion_cases.decode("utf-8"), parse_float=Decimal)
+    propulsion_oracle = json.loads(
+        propulsion_oracle_path.read_text(encoding="utf-8"),
+        parse_float=Decimal)
+    require(propulsion_cases["fixture_id"] ==
+            propulsion_oracle["fixture_id"] == PROPULSION_FIXTURE_ID,
+            "propulsion fixture identity differs")
+    require(propulsion_cases["oracle_id"] ==
+            propulsion_oracle["oracle_id"] == PROPULSION_ORACLE_ID,
+            "propulsion oracle identity differs")
+    require(propulsion_cases["model"]["model_id"] ==
+            propulsion_oracle["model_id"] ==
+            PROPULSION_REFERENCE_MODEL_ID,
+            "propulsion reference model identity differs")
+    propulsion_raw_hash = hashlib.sha256(
+        raw_propulsion_cases).hexdigest()
+    require(propulsion_oracle["input_identity"]["bytes"] ==
+            len(raw_propulsion_cases) and
+            propulsion_oracle["input_identity"]["sha256"] ==
+            propulsion_raw_hash,
+            "propulsion source input byte identity differs")
+
+    propulsion = probe["propulsion"]
+    require(propulsion["product_model_id"] ==
+            PROPULSION_PRODUCT_MODEL_ID and
+            propulsion["contract_id"] == PROPULSION_CONTRACT_ID and
+            propulsion["source_fixture_id"] == PROPULSION_FIXTURE_ID and
+            propulsion["source_oracle_id"] == PROPULSION_ORACLE_ID and
+            propulsion["reference_model_id"] ==
+            PROPULSION_REFERENCE_MODEL_ID and
+            propulsion["status"] == "passed",
+            "propulsion product identity differs")
+    require(PROPULSION_PRODUCT_MODEL_ID !=
+            PROPULSION_REFERENCE_MODEL_ID,
+            "propulsion product and reference identities must differ")
+    require(set(propulsion["direct_checks"]) ==
+            PROPULSION_DIRECT_CHECKS and
+            len(propulsion["direct_checks"]) ==
+            len(PROPULSION_DIRECT_CHECKS),
+            "propulsion direct-check coverage differs")
+
+    propulsion_absolute = decimal(
+        propulsion_cases["tolerances"]["formula_absolute"])
+    propulsion_relative = decimal(
+        propulsion_cases["tolerances"]["formula_relative"])
+    observed_propulsion_cases = {
+        entry["id"]: entry for entry in propulsion["cases"]
+    }
+    require(len(observed_propulsion_cases) == len(propulsion["cases"]) ==
+            len(propulsion_oracle["cases"]),
+            "propulsion product cases are incomplete")
+    maximum_propulsion_error = Decimal(0)
+    for case_id, reference_case in propulsion_oracle["cases"].items():
+        require(case_id in observed_propulsion_cases,
+                f"propulsion product case is missing: {case_id}")
+        maximum_propulsion_error = max(
+            maximum_propulsion_error,
+            compare_propulsion_case(
+                observed_propulsion_cases[case_id], reference_case,
+                propulsion_absolute, propulsion_relative))
+    maximum_propulsion_error = max(
+        maximum_propulsion_error,
+        compare_propulsion_equivalence(
+            propulsion["equivalence_results"],
+            propulsion_oracle["equivalence_results"],
+            propulsion_absolute, propulsion_relative))
+    expected_invalid = {
+        entry["id"] for entry in
+        propulsion_cases["invalid_input_cases"]
+    }
+    require(set(propulsion["invalid_input_rejections"]) ==
+            expected_invalid and
+            len(propulsion["invalid_input_rejections"]) ==
+            len(expected_invalid),
+            "propulsion invalid-input coverage differs")
+
+    off_axis_id = "CASE-YYZ-PROPULSION-OFF-AXIS-CONSUMERS"
+    off_axis_reference = propulsion_oracle["cases"][off_axis_id]
+    fixture_cases = {
+        entry["id"]: entry for entry in propulsion_cases["cases"]
+    }
+    off_axis_fixture = fixture_cases[off_axis_id]
+    consumer = propulsion["atomic_boundary_consumer"]
+    maximum_propulsion_error = max(
+        maximum_propulsion_error,
+        compare_vector(
+            consumer["force_B_N"],
+            off_axis_reference["closure_consumer"]["force_B_N"],
+            propulsion_absolute, propulsion_relative,
+            "propulsion.atomic_consumer.force"),
+        compare_vector(
+            consumer["moment_about_CoM_B_Nm"],
+            off_axis_reference["closure_consumer"]
+                ["moment_about_CoM_B_Nm"],
+            propulsion_absolute, propulsion_relative,
+            "propulsion.atomic_consumer.moment"),
+    )
+    one_tick_consumed = (
+        decimal(off_axis_fixture["supplied_response"]
+                ["fuel_consumption_rate_kgps"]) *
+        decimal(off_axis_fixture["context"]["base_dt_s"]))
+    one_tick_candidate = (
+        decimal(off_axis_fixture["mass_consumer"]
+                ["committed_mass_kg"]) - one_tick_consumed)
+    maximum_propulsion_error = max(
+        maximum_propulsion_error,
+        compare_number(
+            consumer["consumed_fuel_mass_kg"], one_tick_consumed,
+            propulsion_absolute, propulsion_relative,
+            "propulsion.atomic_consumer.consumed_mass"),
+        compare_number(
+            consumer["mass_candidate_kg"], one_tick_candidate,
+            propulsion_absolute, propulsion_relative,
+            "propulsion.atomic_consumer.mass_candidate"),
+    )
+    require(consumer["candidate_tick"] == 1,
+            "propulsion atomic consumer candidate tick differs")
 
     expected = oracle["cases"][CASE_ID]
     actual = probe["accepted"]
@@ -271,6 +511,14 @@ def verify(cases_path: Path, oracle_path: Path, probe_path: Path) -> dict:
             str(value) for value in
             actual["terminal"]["rigid_state"]["velocity_I_mps"]],
         "direct_checks_passed": len(probe["direct_checks"]),
+        "propulsion_source_oracle_id": PROPULSION_ORACLE_ID,
+        "propulsion_product_model_id": PROPULSION_PRODUCT_MODEL_ID,
+        "propulsion_maximum_numeric_error":
+            str(maximum_propulsion_error),
+        "propulsion_cases_passed": len(observed_propulsion_cases),
+        "propulsion_invalid_inputs_rejected": len(expected_invalid),
+        "propulsion_direct_checks_passed":
+            len(propulsion["direct_checks"]),
     }
 
 

@@ -5,7 +5,7 @@
 ## 当前交付状态
 
 - 当前 gate：`R1`；G0/G1 已由仓库所有者判定 `Passed`。
-- 允许开展：`R1-FND-001` 收敛复核、`R1-CTR-001` consumer-driven 契约，以及仓库所有者授权重排的首个 YYZ 产品纵向切片。
+- 允许开展：`R1-FND-001` 收敛复核、`R1-CTR-001` consumer-driven 契约，以及仓库所有者授权的 consumer-driven YYZ 产品纵向切片。
 - 暂缓开展：未被当前纵向调用消费的 R1 平台能力；R2～R8 在对应 gate 前保持锁定。
 - 旧 GNCZMKN 只作为只读行为与科学参照，不进入任何生产 target、include path 或运行依赖。
 
@@ -47,7 +47,7 @@ build/dev/gnc_sim --self-check
 build/dev/gnc_yyz_rigid_step_product_probe --self-check
 ```
 
-第二个 YYZ 产品入口把两段刚体推进与标量燃耗连接到 typed atomic boundary：
+第二个 YYZ 产品入口把两段刚体推进与标量燃耗连接到 typed atomic boundary，并已加入 typed supplied-propulsion definition/input。推进响应同时产生带 `CoM→作用点` 几何的 body wrench 与 `MassFlowIntervalInput`；适配器读取已提交质心位置后进入既有 rigid/mass atomic consumer，结果匹配 `REF-YYZ-PROPULSION-RESPONSE-001`：
 
 ```powershell
 build/dev/gnc_yyz_two_interval_mass_commit_product_probe --self-check

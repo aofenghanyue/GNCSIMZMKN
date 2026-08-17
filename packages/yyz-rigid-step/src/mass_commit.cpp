@@ -5,7 +5,6 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdint>
-#include <limits>
 #include <string_view>
 #include <utility>
 
@@ -106,6 +105,22 @@ template <typename Value>
                         policy);
 }
 
+[[nodiscard]] bool valid_propulsion_interval(
+    const IntervalSampleContext& context,
+    const SuppliedPropulsionDefinition& definition) noexcept {
+    const NumericalPolicy& policy = definition.numerical_policy;
+    const SimulationInstant& start = context.validity.effective_from;
+    const SimulationInstant& end = context.validity.effective_until;
+    return context.sample.frame == definition.body_frame &&
+           context.sample.clock_domain == definition.clock_domain &&
+           context.sample.configuration_revision >= 0 &&
+           context.sample.quality == DataQuality::Valid &&
+           same_instant(context.sample.sample_time, start, policy) &&
+           start.tick >= 0 && end.tick > start.tick &&
+           std::isfinite(start.seconds) && std::isfinite(end.seconds) &&
+           end.seconds > start.seconds;
+}
+
 [[nodiscard]] bool approximate_status(NumericalStatus status) noexcept {
     return status == NumericalStatus::Approximate ||
            status == NumericalStatus::Extrapolated;
@@ -128,6 +143,92 @@ template <typename Value>
 }
 
 } // namespace
+
+NumericalOutcome<SuppliedPropulsionOutput>
+SuppliedPropulsionKernel::evaluate(
+    const SuppliedPropulsionDefinition& definition,
+    const SuppliedPropulsionInput& input) {
+    if (definition.model_id != kSuppliedPropulsionModelIdentity ||
+        definition.model_version.empty() || definition.source_id.empty() ||
+        definition.body_frame.id.empty() ||
+        definition.clock_domain.id.empty() ||
+        definition.mass_state_id.empty() ||
+        !gnc::foundation::valid_numerical_policy(
+            definition.numerical_policy)) {
+        return mass_commit_failure<SuppliedPropulsionOutput>(
+            kSuppliedPropulsionKernelIdentity,
+            NumericalStatus::DomainError, "definition-or-policy");
+    }
+    if (!valid_propulsion_interval(input.context, definition)) {
+        return mass_commit_failure<SuppliedPropulsionOutput>(
+            kSuppliedPropulsionKernelIdentity,
+            NumericalStatus::DomainError, "response-context");
+    }
+    const Vec3& direction = input.thrust_direction.value;
+    const Vec3& radius =
+        input.center_of_mass_to_application.value;
+    const Vec3& intrinsic_moment =
+        input.intrinsic_moment_at_application.value;
+    if (!std::isfinite(input.thrust_magnitude_newtons) ||
+        !std::isfinite(
+            input.fuel_consumption_rate_kilograms_per_second) ||
+        !finite(direction) || !finite(radius) ||
+        !finite(intrinsic_moment)) {
+        return mass_commit_failure<SuppliedPropulsionOutput>(
+            kSuppliedPropulsionKernelIdentity,
+            NumericalStatus::NonFiniteInput, "physical-input");
+    }
+    if (input.thrust_magnitude_newtons < 0.0 ||
+        input.fuel_consumption_rate_kilograms_per_second < 0.0) {
+        return mass_commit_failure<SuppliedPropulsionOutput>(
+            kSuppliedPropulsionKernelIdentity,
+            NumericalStatus::DomainError, "physical-domain");
+    }
+    const double direction_norm = direction.norm();
+    if (!std::isfinite(direction_norm) ||
+        !near(direction_norm, 1.0, definition.numerical_policy)) {
+        return mass_commit_failure<SuppliedPropulsionOutput>(
+            kSuppliedPropulsionKernelIdentity,
+            NumericalStatus::DomainError, "thrust-direction-unit");
+    }
+
+    const Vec3 force =
+        input.thrust_magnitude_newtons * direction;
+    const Vec3 lever_arm_moment = radius.cross(force);
+    const Vec3 moment_about_center_of_mass =
+        intrinsic_moment + lever_arm_moment;
+    if (!finite(force) || !finite(lever_arm_moment) ||
+        !finite(moment_about_center_of_mass)) {
+        return mass_commit_failure<SuppliedPropulsionOutput>(
+            kSuppliedPropulsionKernelIdentity,
+            NumericalStatus::NonFiniteIntermediate,
+            "response-closure-preview");
+    }
+
+    SuppliedPropulsionOutput output;
+    output.supplied_body_wrench.context = input.context;
+    output.supplied_body_wrench.source_id = definition.source_id;
+    output.supplied_body_wrench.force.value = force;
+    output.supplied_body_wrench.center_of_mass_to_application =
+        input.center_of_mass_to_application;
+    output.supplied_body_wrench.intrinsic_moment_at_application =
+        input.intrinsic_moment_at_application;
+    output.lever_arm_moment.value = lever_arm_moment;
+    output.moment_about_center_of_mass.value =
+        moment_about_center_of_mass;
+    output.mass_flow.context = input.context;
+    output.mass_flow.mass_state_id = definition.mass_state_id;
+    output.mass_flow.fuel_consumption_rate_kilograms_per_second =
+        input.fuel_consumption_rate_kilograms_per_second;
+
+    NumericalEvidence evidence = mass_commit_evidence(
+        kSuppliedPropulsionKernelIdentity, "supplied-response");
+    evidence.evaluations = 1U;
+    evidence.last_step = input.context.validity.effective_until.seconds -
+                         input.context.validity.effective_from.seconds;
+    return NumericalOutcome<SuppliedPropulsionOutput>::with_value(
+        NumericalStatus::Success, std::move(output), evidence);
+}
 
 NumericalOutcome<ScalarBurnMassOutput> ScalarBurnMassKernel::evaluate(
     const ScalarBurnMassDefinition& definition,
@@ -163,10 +264,8 @@ NumericalOutcome<ScalarBurnMassOutput> ScalarBurnMassKernel::evaluate(
     }
     const SimulationInstant start = flow.context.validity.effective_from;
     const SimulationInstant end = flow.context.validity.effective_until;
-    if (start.tick < 0 ||
-        start.tick == std::numeric_limits<std::int64_t>::max() ||
-        end.tick != start.tick + 1 || !std::isfinite(start.seconds) ||
-        !std::isfinite(end.seconds)) {
+    if (start.tick < 0 || end.tick <= start.tick ||
+        !std::isfinite(start.seconds) || !std::isfinite(end.seconds)) {
         return mass_commit_failure<ScalarBurnMassOutput>(
             kScalarBurnMassKernelIdentity, NumericalStatus::DomainError,
             "flow-time");
@@ -328,6 +427,83 @@ FrozenRigidMassStepKernel::evaluate(
             ? NumericalStatus::Approximate
             : NumericalStatus::Success,
         std::move(output), evidence);
+}
+
+NumericalOutcome<PropelledFrozenRigidMassStepOutput>
+PropelledFrozenRigidMassStepKernel::evaluate(
+    const PreparedRigidStepModel& rigid_model,
+    const ScalarBurnMassDefinition& mass_definition,
+    const SuppliedPropulsionDefinition& propulsion_definition,
+    const CommittedRigidMassBoundary& opening_boundary,
+    const PropelledRigidMassIntervalInput& interval) {
+    const auto propulsion = SuppliedPropulsionKernel::evaluate(
+        propulsion_definition, interval.propulsion);
+    if (!propulsion.has_value()) {
+        return mass_commit_failure<
+            PropelledFrozenRigidMassStepOutput>(
+                kPropelledFrozenRigidMassStepKernelIdentity,
+                propulsion.status(), "propulsion-response",
+                propulsion.evidence().flags);
+    }
+
+    RigidMassIntervalInput atomic_input;
+    atomic_input.context = interval.context;
+    atomic_input.environment = interval.environment;
+    const auto& response = propulsion.value();
+    atomic_input.supplied_wrench.context =
+        response.supplied_body_wrench.context;
+    atomic_input.supplied_wrench.source_id =
+        response.supplied_body_wrench.source_id;
+    atomic_input.supplied_wrench.force =
+        response.supplied_body_wrench.force;
+    atomic_input.supplied_wrench.body_origin_to_application.value =
+        opening_boundary.mass_state.body_origin_to_center_of_mass.value +
+        response.supplied_body_wrench
+            .center_of_mass_to_application.value;
+    atomic_input.supplied_wrench.intrinsic_moment_at_application =
+        response.supplied_body_wrench
+            .intrinsic_moment_at_application;
+    atomic_input.mass_flow = response.mass_flow;
+    if (!finite(atomic_input.supplied_wrench
+                    .body_origin_to_application.value)) {
+        return mass_commit_failure<
+            PropelledFrozenRigidMassStepOutput>(
+                kPropelledFrozenRigidMassStepKernelIdentity,
+                NumericalStatus::NonFiniteIntermediate,
+                "application-point-adapter",
+                propulsion.evidence().flags);
+    }
+
+    const auto boundary = FrozenRigidMassStepKernel::evaluate(
+        rigid_model, mass_definition, opening_boundary, atomic_input);
+    if (!boundary.has_value()) {
+        return mass_commit_failure<
+            PropelledFrozenRigidMassStepOutput>(
+                kPropelledFrozenRigidMassStepKernelIdentity,
+                boundary.status(), "atomic-boundary",
+                propulsion.evidence().flags |
+                    boundary.evidence().flags);
+    }
+
+    PropelledFrozenRigidMassStepOutput output;
+    output.propulsion = response;
+    output.atomic_boundary = boundary.value();
+    const NumericalFlags flags =
+        propulsion.evidence().flags | boundary.evidence().flags;
+    NumericalEvidence evidence = mass_commit_evidence(
+        kPropelledFrozenRigidMassStepKernelIdentity,
+        "propulsion-to-atomic-boundary", flags);
+    evidence.evaluations = propulsion.evidence().evaluations +
+                           boundary.evidence().evaluations;
+    evidence.last_step =
+        rigid_model.definition().algorithm.fixed_step_seconds;
+    return NumericalOutcome<
+        PropelledFrozenRigidMassStepOutput>::with_value(
+            approximate_status(propulsion.status()) ||
+                    approximate_status(boundary.status())
+                ? NumericalStatus::Approximate
+                : NumericalStatus::Success,
+            std::move(output), evidence);
 }
 
 NumericalOutcome<TwoIntervalMassCommitOutput>

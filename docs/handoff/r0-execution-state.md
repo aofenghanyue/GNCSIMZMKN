@@ -2,7 +2,7 @@
 
 - 更新日期：2026-08-17
 - 当前 gate：`R1`
-- 产品状态：R0 独立科学/性能 probe 与 executable source-boundary guard 已闭合；R1 Foundation 和首个 YYZ 刚体切片已完成，两段刚体/标量燃耗 atomic-boundary 产品切片进入 review，尚无 Session 仿真运行能力
+- 产品状态：R0 独立科学/性能 probe 与 executable source-boundary guard 已闭合；R1 Foundation、首个 YYZ 刚体切片和两段刚体/标量燃耗 atomic-boundary 切片已完成，typed propulsion 到 atomic boundary 的纵向切片进入 review，尚无 Session 仿真运行能力
 - 当前分支：`codex/r0-governance-reset`
 - 分支基线：`origin/main@dfedf27`
 
@@ -49,13 +49,14 @@
 - `R0-PERF-001` 已完成；`PERF-R0-M3DOF-BATCH-001` 在一个独立 C++17 executable 中运行 1、64、1024 和 16384 episodes，每 episode 为 80 个 fixed RK4 steps。80 位 Decimal comparator 先验证解析正确性，三个 fresh process 的 parsed semantic result 达到当前 workload-scoped D1；D2/D3 保持 pending。2026-08-15 的 observation-only baseline 保存两个 warm-up 与九个 measured process/point，共 44 条 raw samples。最大点 `batch-16384` 的本机 median 为 `16,534,400 ns`，p95 为 `17,576,400 ns`，median throughput 约 `79.27 million steps/s`。硬件为 Intel i7-12700K / 20 logical processors / 32 GiB / Hyper-V；当前 binary 为未进入产品支持 profile 的 Windows MinGW `gcc-15.1.0`，结果不构成 performance threshold、产品 toolchain 或 realtime 资格。
 - `R0-GATE-001` 已完成。仓库所有者于 2026-08-15 接受 G0/G1 `Passed`：九个依赖任务、九条 G0 架构检查、七条 Legacy behavior oracle、科学约定、minimal 3DoF、YYZ 和 CAVH 技术输入全部通过，未解释 YYZ 差异为零；Debug 与 Release 均完成配置、构建和 57/57 CTest，repository verification 通过。当前 gate 已推进到 R1。仓库所有者随后授权在 R1 内按可执行研究切片重排顺序，首个 YYZ 产品纵向切片可直接复用已闭合的 R0 科学输入；R2 及后续阶段继续锁定。
 - `R1-FND-001` 与 `R1-YYZ-001` 已由仓库所有者于 2026-08-17 接受并完成。Foundation 当前交付集保持冻结；首个 YYZ 产品 kernel 已从 typed committed rigid state、环境、质量属性、immutable 气动表和 supplied wrench 产生 tick 1 RK4 candidate，并匹配 `ORACLE-YYZ-FROZEN-INTERVAL-001`。
-- `R1-YYZ-002` 已形成两段 typed rigid/mass 产品切片并进入 review。`ScalarBurnMassKernel` 以 committed `MassState` 和 typed `MassFlowIntervalInput` 生成 constant-geometry candidate；`FrozenRigidMassStepKernel` 只在刚体与质量两项成功后返回 `AtomicRigidMassCandidate`；`TwoIntervalMassCommitKernel` 令 interval 1 读取 interval 0 的完整 closing boundary。产品 probe 覆盖 committed mass 可见性、下一段完整 pair、zero/negative flow、inertia、depletion、rigid-query failure 和 interval continuity；独立 comparator 与 `ORACLE-YYZ-TWO-INTERVAL-MASS-COMMIT-001` 的最大数值差为 `1e-14`，姿态差为零。
+- `R1-YYZ-002` 已由仓库所有者于 2026-08-17 接受提交 `ee0a0e4` 并完成。`ScalarBurnMassKernel` 以 committed `MassState` 和 typed `MassFlowIntervalInput` 生成 constant-geometry candidate；`FrozenRigidMassStepKernel` 只在刚体与质量两项成功后返回 `AtomicRigidMassCandidate`；`TwoIntervalMassCommitKernel` 令 interval 1 读取 interval 0 的完整 closing boundary。独立 comparator 与 `ORACLE-YYZ-TWO-INTERVAL-MASS-COMMIT-001` 的最大数值差为 `1e-14`，姿态差为零。
+- `R1-YYZ-003` 已形成 typed supplied-propulsion 产品链并进入 review。`SuppliedPropulsionKernel` 从 definition/input 产生带 `CoM→作用点` 几何和作用点本征力矩的 body wrench，同时产生 `MassFlowIntervalInput`；`PropelledFrozenRigidMassStepKernel` 从 committed `MassState` 取得 body-origin-to-CoM 几何后接入既有 rigid/mass atomic consumer。三组公式案例、区间分割等价和十组无效输入均匹配 `ORACLE-YYZ-PROPULSION-RESPONSE-001`，最大数值差为 `7e-15`；偏心推力 consumer 只搬移一次力矩并生成 `119.95 kg` candidate。
 
 ## 下一条开发主线
 
-1. `R1-FND-001` 与 `R1-YYZ-001` 已完成。动态矩阵分解、多变量求根、自适应积分和其他无当前 consumer 的数学能力继续留在范围外。
-2. `R1-YYZ-002` 当前为 `review`。产品入口 `gnc_yyz_two_interval_mass_commit_product_probe` 产生 tick 1 的 `119.95 kg` closing boundary，tick 2 到达 `119.90 kg`、`x≈2.0400041684 m`、`vx≈10.4000833681 m/s`。区间 0 的刚体积分读取 `120 kg` committed mass，区间 1 读取完整 tick 1 rigid/mass pair；任一 candidate 失败时区间 kernel 不返回部分 boundary。
-3. 当前 atomic boundary 仍是 package 内纯值组合，没有 mutable store、epoch、Session rollback 或失败后持久化语义。下一条推荐纵向切片是实现 typed propulsion response，使同一产品 kernel 同时产生 supplied body wrench 与 `MassFlowIntervalInput`，先匹配 `REF-YYZ-PROPULSION-RESPONSE-001`，再作为现有 rigid/mass boundary 的真实 producer。控制面、速率导数、Compiler、Session、Artifact、Workflow、前端与 R2 及后续能力继续锁定。
+1. `R1-FND-001`、`R1-YYZ-001` 与 `R1-YYZ-002` 已完成。动态矩阵分解、多变量求根、自适应积分和其他无当前 consumer 的数学能力继续留在范围外。
+2. `R1-YYZ-003` 当前为 `review`。产品入口 `gnc_yyz_two_interval_mass_commit_product_probe` 同时执行既有两段 atomic-boundary 回归和 typed propulsion 响应；独立 comparator 直接复用 R0 fixture/oracle，且产品 model identity 与 reference identity 保持分离。
+3. 当前 propulsion 与 atomic boundary 均为 package 内纯值组合，没有 mutable store、epoch、Session rollback 或失败后持久化语义。下一步只进行 `R1-YYZ-003` 的仓库所有者复核；控制面、速率导数、Compiler、Session、Artifact、Workflow、前端与 R2 及后续能力继续锁定。
 
 ## 保留与恢复
 

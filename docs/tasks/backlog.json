@@ -370,7 +370,7 @@
       "id": "R1-YYZ-002",
       "stage": "R1",
       "title": "Compose two typed YYZ rigid and scalar-burn intervals through atomic boundaries",
-      "status": "review",
+      "status": "done",
       "priority": "P0",
       "size": "M",
       "owner_role": "model_sdk_lead",
@@ -378,8 +378,23 @@
       "depends_on": ["R1-YYZ-001", "R0-SCI-003"],
       "deliverables": ["Typed scalar-burn MassState candidate", "atomic rigid/mass boundary composition", "two-interval executable product probe and independent oracle comparison"],
       "acceptance": ["Interval zero uses committed mass while its mass candidate remains hidden, both candidates commit together, interval one consumes the newly committed rigid state and mass, and the product matches ORACLE-YYZ-TWO-INTERVAL-MASS-COMMIT-001 with no partial boundary on failure"],
-      "evidence": ["packages/yyz-rigid-step/include/yyz/mass_commit.hpp and src/mass_commit.cpp implement typed MassState/MassFlowInterval, constant-geometry scalar burn, all-or-nothing rigid/mass candidates and two consecutive committed boundary values", "r1.yyz-two-interval-mass-commit.probe covers committed-mass visibility, complete next-boundary consumption, constant geometry, zero/negative flow, inertia, depletion, rigid-query failure and interval continuity", "r1.yyz-two-interval-mass-commit.oracle compares both interval candidates and closing commits with ORACLE-YYZ-TWO-INTERVAL-MASS-COMMIT-001; maximum numeric error is 1e-14 and orientation error is zero"],
+      "evidence": ["packages/yyz-rigid-step/include/yyz/mass_commit.hpp and src/mass_commit.cpp implement typed MassState/MassFlowInterval, constant-geometry scalar burn, all-or-nothing rigid/mass candidates and two consecutive committed boundary values", "r1.yyz-two-interval-mass-commit.probe covers committed-mass visibility, complete next-boundary consumption, constant geometry, zero/negative flow, inertia, depletion, rigid-query failure and interval continuity", "r1.yyz-two-interval-mass-commit.oracle compares both interval candidates and closing commits with ORACLE-YYZ-TWO-INTERVAL-MASS-COMMIT-001; maximum numeric error is 1e-14 and orientation error is zero", "Repository owner accepted commit ee0a0e4 on 2026-08-17"],
       "architecture_refs": ["14 §6–§8", "14 §16", "14 §18.1", "15 §8", "15 §19"]
+    },
+    {
+      "id": "R1-YYZ-003",
+      "stage": "R1",
+      "title": "Feed a typed supplied-propulsion response into the rigid/mass atomic boundary",
+      "status": "review",
+      "priority": "P0",
+      "size": "M",
+      "owner_role": "model_sdk_lead",
+      "assignee": null,
+      "depends_on": ["R1-YYZ-002", "R0-SCI-003"],
+      "deliverables": ["Typed supplied-propulsion definition and interval input", "Body wrench and MassFlowIntervalInput response", "Executable rigid/mass atomic-boundary consumer and independent oracle comparison"],
+      "acceptance": ["The product preserves the accepted body-frame thrust, CoM-to-application geometry, intrinsic moment and nonnegative mass-flow semantics; rigid Closure transports the wrench exactly once; the scalar mass consumer integrates the half-open interval; and a one-tick product response reaches the existing atomic rigid/mass boundary without Session or control-plane capability"],
+      "evidence": ["packages/yyz-rigid-step/include/yyz/mass_commit.hpp and src/mass_commit.cpp implement SuppliedPropulsionKernel plus PropelledFrozenRigidMassStepKernel, with committed MassState as the sole source of body-origin-to-CoM geometry", "r1.yyz-two-interval-mass-commit.probe covers all three REF-YYZ-PROPULSION-RESPONSE-001 formula cases, interval partition equivalence, ten invalid inputs and a real off-axis atomic-boundary consumer", "r1.yyz-two-interval-mass-commit.oracle reuses ORACLE-YYZ-PROPULSION-RESPONSE-001 and reports a maximum propulsion numeric error of 7e-15; the consumer closes [-39,28,-272] N*m once and produces a 119.95 kg candidate"],
+      "architecture_refs": ["14 §16", "14 §18.1", "15 §8", "15 §19"]
     },
     {
       "id": "R1-GATE-001",
