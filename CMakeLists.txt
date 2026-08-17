@@ -57,7 +57,8 @@ target_link_libraries(adapters INTERFACE foundation contracts application)
 add_library(
     yyz_rigid_step
     STATIC
-        packages/yyz-rigid-step/src/rigid_step.cpp)
+        packages/yyz-rigid-step/src/rigid_step.cpp
+        packages/yyz-rigid-step/src/mass_commit.cpp)
 target_include_directories(
     yyz_rigid_step
     PUBLIC
@@ -137,6 +138,16 @@ if(GNC_BUILD_TESTS)
     target_link_libraries(
         gnc_yyz_rigid_step_product_probe PRIVATE yyz_rigid_step)
     gnc_enable_warnings(gnc_yyz_rigid_step_product_probe)
+
+    # R1 YYZ product slice: scalar burn and two typed atomic boundaries.
+    add_executable(
+        gnc_yyz_two_interval_mass_commit_product_probe
+        tests/yyz_product_two_interval_mass_commit.cpp)
+    target_link_libraries(
+        gnc_yyz_two_interval_mass_commit_product_probe
+        PRIVATE yyz_rigid_step)
+    gnc_enable_warnings(
+        gnc_yyz_two_interval_mass_commit_product_probe)
 
     # R0 validation spike: intentionally isolated from product modules and Legacy.
     add_executable(
@@ -350,6 +361,9 @@ if(GNC_BUILD_TESTS)
         NAME r1.yyz-rigid-step.probe
         COMMAND gnc_yyz_rigid_step_product_probe --self-check)
     add_test(
+        NAME r1.yyz-two-interval-mass-commit.probe
+        COMMAND gnc_yyz_two_interval_mass_commit_product_probe --self-check)
+    add_test(
         NAME r0.scientific-conventions.properties
         COMMAND gnc_scientific_conventions --self-check)
     add_test(
@@ -491,6 +505,19 @@ if(GNC_BUILD_TESTS)
             ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-frozen-interval/reference.json
             --probe
             $<TARGET_FILE:gnc_yyz_rigid_step_product_probe>)
+    add_test(
+        NAME r1.yyz-two-interval-mass-commit.oracle
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/validate-yyz-two-interval-mass-commit-product.py
+            --cases
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-yyz-two-interval-mass-commit/cases.json
+            --oracle
+            ${CMAKE_CURRENT_SOURCE_DIR}/oracles/ref-yyz-two-interval-mass-commit/reference.json
+            --probe
+            $<TARGET_FILE:gnc_yyz_two_interval_mass_commit_product_probe>)
     add_test(
         NAME r0.scientific-conventions.cross-tool
         COMMAND

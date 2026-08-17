@@ -1,7 +1,7 @@
 {
   "schema_version": "gnczmkn.task-backlog/1",
   "current_gate": "R1",
-  "updated_at": "2026-08-15",
+  "updated_at": "2026-08-17",
   "status_values": ["planned", "ready", "in_progress", "blocked", "review", "done"],
   "tasks": [
     {
@@ -265,7 +265,7 @@
       "id": "R1-FND-001",
       "stage": "R1",
       "title": "Implement canonical numeric storage, policy and NumericalOutcome",
-      "status": "review",
+      "status": "done",
       "priority": "P0",
       "size": "XL",
       "owner_role": "runtime_numerics_lead",
@@ -273,7 +273,7 @@
       "depends_on": ["R0-GATE-001"],
       "deliverables": ["Foundation numeric library", "policy/result contracts", "math verification suite"],
       "acceptance": ["Core algorithms share typed outcome and pass property/convergence tests"],
-      "evidence": ["framework/include/gnc/foundation/numerical_outcome.hpp and numerical_policy.hpp", "framework/include/gnc/foundation/linear_algebra.hpp, fixed_rk4.hpp, trilinear_table.hpp, bracketed_root.hpp and spd_cholesky_3x3.hpp", "r1.foundation-numerics.probe and r1.foundation-numerics.oracle", "r1.foundation-trilinear.probe and r1.foundation-trilinear.oracle", "r1.foundation-root.probe and r1.foundation-root.oracle", "r1.foundation-spd-solve.probe and r1.foundation-spd-solve.oracle", "framework/include/gnc/foundation/passive_quaternion.hpp with r1.foundation-quaternion.probe and r1.foundation-quaternion.oracle", "framework/include/gnc/foundation/local_newton_root.hpp with r1.foundation-local-root.probe and r1.foundation-local-root.oracle", "framework/include/gnc/foundation/scaled_central_difference.hpp with r1.foundation-differentiation.probe and r1.foundation-differentiation.oracle", "Current committed Foundation set is frozen after direct configure, build and consumer-relevant probe/oracle verification; owner completion decision remains pending"],
+      "evidence": ["framework/include/gnc/foundation/numerical_outcome.hpp and numerical_policy.hpp", "framework/include/gnc/foundation/linear_algebra.hpp, fixed_rk4.hpp, trilinear_table.hpp, bracketed_root.hpp and spd_cholesky_3x3.hpp", "r1.foundation-numerics.probe and r1.foundation-numerics.oracle", "r1.foundation-trilinear.probe and r1.foundation-trilinear.oracle", "r1.foundation-root.probe and r1.foundation-root.oracle", "r1.foundation-spd-solve.probe and r1.foundation-spd-solve.oracle", "framework/include/gnc/foundation/passive_quaternion.hpp with r1.foundation-quaternion.probe and r1.foundation-quaternion.oracle", "framework/include/gnc/foundation/local_newton_root.hpp with r1.foundation-local-root.probe and r1.foundation-local-root.oracle", "framework/include/gnc/foundation/scaled_central_difference.hpp with r1.foundation-differentiation.probe and r1.foundation-differentiation.oracle", "Current committed Foundation set is frozen after direct configure, build and consumer-relevant probe/oracle verification; repository owner accepted completion on 2026-08-17"],
       "architecture_refs": ["03"]
     },
     {
@@ -355,7 +355,7 @@
       "id": "R1-YYZ-001",
       "stage": "R1",
       "title": "Build the first verified YYZ model package slice",
-      "status": "review",
+      "status": "done",
       "priority": "P0",
       "size": "XL",
       "owner_role": "model_sdk_lead",
@@ -363,8 +363,23 @@
       "depends_on": ["R0-GATE-001", "R0-SCI-003"],
       "deliverables": ["Typed YYZ rigid-step input/output", "immutable prepared aerodynamic model", "one-step RK4 product kernel and executable probe"],
       "acceptance": ["The package directly consumes Contracts and Foundation, produces an interval candidate, and matches the accepted R0 FrozenInterval oracle without Session, Mission, filesystem or logger"],
-      "evidence": ["packages/yyz-rigid-step implements definition preparation, strict trilinear aerodynamic query, dimensionalization, CoM wrench closure, full-inertia derivative and fixed RK4 candidate", "r1.yyz-rigid-step.probe covers frame/time/quality/mass/inertia/table/numerical failures and r1.yyz-rigid-step.oracle compares the product result with ORACLE-YYZ-FROZEN-INTERVAL-001"],
+      "evidence": ["packages/yyz-rigid-step implements definition preparation, strict trilinear aerodynamic query, dimensionalization, CoM wrench closure, full-inertia derivative and fixed RK4 candidate", "r1.yyz-rigid-step.probe covers frame/time/quality/mass/inertia/table/numerical failures and r1.yyz-rigid-step.oracle compares the product result with ORACLE-YYZ-FROZEN-INTERVAL-001", "Repository owner accepted completion on 2026-08-17"],
       "architecture_refs": ["15 §2–§9"]
+    },
+    {
+      "id": "R1-YYZ-002",
+      "stage": "R1",
+      "title": "Compose two typed YYZ rigid and scalar-burn intervals through atomic boundaries",
+      "status": "review",
+      "priority": "P0",
+      "size": "M",
+      "owner_role": "model_sdk_lead",
+      "assignee": null,
+      "depends_on": ["R1-YYZ-001", "R0-SCI-003"],
+      "deliverables": ["Typed scalar-burn MassState candidate", "atomic rigid/mass boundary composition", "two-interval executable product probe and independent oracle comparison"],
+      "acceptance": ["Interval zero uses committed mass while its mass candidate remains hidden, both candidates commit together, interval one consumes the newly committed rigid state and mass, and the product matches ORACLE-YYZ-TWO-INTERVAL-MASS-COMMIT-001 with no partial boundary on failure"],
+      "evidence": ["packages/yyz-rigid-step/include/yyz/mass_commit.hpp and src/mass_commit.cpp implement typed MassState/MassFlowInterval, constant-geometry scalar burn, all-or-nothing rigid/mass candidates and two consecutive committed boundary values", "r1.yyz-two-interval-mass-commit.probe covers committed-mass visibility, complete next-boundary consumption, constant geometry, zero/negative flow, inertia, depletion, rigid-query failure and interval continuity", "r1.yyz-two-interval-mass-commit.oracle compares both interval candidates and closing commits with ORACLE-YYZ-TWO-INTERVAL-MASS-COMMIT-001; maximum numeric error is 1e-14 and orientation error is zero"],
+      "architecture_refs": ["14 §6–§8", "14 §16", "14 §18.1", "15 §8", "15 §19"]
     },
     {
       "id": "R1-GATE-001",

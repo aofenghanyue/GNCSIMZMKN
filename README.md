@@ -47,6 +47,12 @@ build/dev/gnc_sim --self-check
 build/dev/gnc_yyz_rigid_step_product_probe --self-check
 ```
 
+第二个 YYZ 产品入口把两段刚体推进与标量燃耗连接到 typed atomic boundary：
+
+```powershell
+build/dev/gnc_yyz_two_interval_mass_commit_product_probe --self-check
+```
+
 ## 仓库地图
 
 ```text
