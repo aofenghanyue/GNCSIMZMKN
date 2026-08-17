@@ -6,6 +6,7 @@
 #include "gnc/foundation/numerical_policy.hpp"
 #include "gnc/foundation/passive_quaternion.hpp"
 #include "gnc/foundation/trilinear_table.hpp"
+#include "gnc/model_sdk/algorithm_evaluation.hpp"
 #include "gnc/model_sdk/model_metadata.hpp"
 
 #include <array>
@@ -237,6 +238,10 @@ struct RigidStateCandidate {
 };
 
 struct RigidStepOutput {
+    RigidStateCandidate candidate;
+};
+
+struct RigidStepTelemetry {
     AirDataOutput air_data;
     AerodynamicLookupOutput aerodynamic_lookup;
     BodyWrenchContribution aerodynamic_contribution;
@@ -244,12 +249,16 @@ struct RigidStepOutput {
     BodyForceNewtons force_total;
     BodyMomentNewtonMeters moment_total_about_center_of_mass;
     RigidDerivativeOutput derivative_at_interval_start;
-    RigidStateCandidate candidate;
 };
+
+using RigidStepEvaluation =
+    gnc::model_sdk::AlgorithmEvaluation<RigidStepOutput,
+                                        RigidStepTelemetry>;
 
 class RigidStepKernel {
   public:
-    [[nodiscard]] static gnc::foundation::NumericalOutcome<RigidStepOutput>
+    [[nodiscard]] static
+        gnc::foundation::NumericalOutcome<RigidStepEvaluation>
     evaluate(const PreparedRigidStepModel& model,
              const RigidStepInput& input);
 };

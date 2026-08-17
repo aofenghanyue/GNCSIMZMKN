@@ -292,19 +292,19 @@ NumericalOutcome<PreparedCavhFormulaModel> prepare_cavh_formula_model(
                          1U));
 }
 
-NumericalOutcome<GammaReferenceOutput>
+NumericalOutcome<GammaReferenceEvaluation>
 CavhFormulaKernel::evaluate_gamma_reference(
     const PreparedCavhFormulaModel& model,
     const CavhFormulaInput& input) {
     const auto& definition = model.definition();
     if (const auto failure = validate_context(definition, input.context)) {
-        return product_failure<GammaReferenceOutput>(
+        return product_failure<GammaReferenceEvaluation>(
             kCavhGammaReferenceIdentity, failure->status,
             failure->detail);
     }
     if (const auto failure =
             validate_operating_point_common(input.operating_point)) {
-        return product_failure<GammaReferenceOutput>(
+        return product_failure<GammaReferenceEvaluation>(
             kCavhGammaReferenceIdentity, failure->status,
             failure->detail);
     }
@@ -312,7 +312,7 @@ CavhFormulaKernel::evaluate_gamma_reference(
     const auto envelope_outcome =
         solve_envelope(definition, input.operating_point.mach);
     if (!envelope_outcome.has_value()) {
-        return NumericalOutcome<GammaReferenceOutput>::failure(
+        return NumericalOutcome<GammaReferenceEvaluation>::failure(
             envelope_outcome.status(), envelope_outcome.evidence());
     }
     const auto& envelope = envelope_outcome.value();
@@ -322,13 +322,13 @@ CavhFormulaKernel::evaluate_gamma_reference(
     const double dcl_vertical_dmach =
         envelope.dcl_star_dmach * bank_cosine;
     if (!finite({bank_cosine, cl_vertical, dcl_vertical_dmach})) {
-        return product_failure<GammaReferenceOutput>(
+        return product_failure<GammaReferenceEvaluation>(
             kCavhGammaReferenceIdentity,
             NumericalStatus::NonFiniteIntermediate,
             "formula-bank-projection");
     }
     if (cl_vertical <= 0.0 || envelope.cd_star <= 0.0) {
-        return product_failure<GammaReferenceOutput>(
+        return product_failure<GammaReferenceEvaluation>(
             kCavhGammaReferenceIdentity, NumericalStatus::DomainError,
             "formula-domain");
     }
@@ -378,7 +378,7 @@ CavhFormulaKernel::evaluate_gamma_reference(
         values.b3 = 1.0 - a31 + a34 + a35;
         if (small_denominator(values.b2, threshold) ||
             small_denominator(values.b3, threshold)) {
-            return product_failure<GammaReferenceOutput>(
+            return product_failure<GammaReferenceEvaluation>(
                 kCavhGammaReferenceIdentity,
                 NumericalStatus::Singular, "formula-denominator");
         }
@@ -388,13 +388,13 @@ CavhFormulaKernel::evaluate_gamma_reference(
     } else {
         if (!finite({point.mach_speed_partial_seconds_per_meter,
                      point.mach_altitude_partial_per_meter})) {
-            return product_failure<GammaReferenceOutput>(
+            return product_failure<GammaReferenceEvaluation>(
                 kCavhGammaReferenceIdentity,
                 NumericalStatus::NonFiniteInput,
                 "eq17-mach-partials");
         }
         if (point.mach_speed_partial_seconds_per_meter <= 0.0) {
-            return product_failure<GammaReferenceOutput>(
+            return product_failure<GammaReferenceEvaluation>(
                 kCavhGammaReferenceIdentity,
                 NumericalStatus::DomainError,
                 "eq17-mach-speed-partial");
@@ -410,7 +410,7 @@ CavhFormulaKernel::evaluate_gamma_reference(
         if (std::abs(values.dcl_vertical_dspeed_seconds_per_meter) <=
             definition.algorithm
                 .derivative_minimum_absolute_seconds_per_meter) {
-            return product_failure<GammaReferenceOutput>(
+            return product_failure<GammaReferenceEvaluation>(
                 kCavhGammaReferenceIdentity,
                 NumericalStatus::IllConditioned,
                 "eq17-derivative-degenerate-fallback-forbidden");
@@ -456,7 +456,7 @@ CavhFormulaKernel::evaluate_gamma_reference(
         if (small_denominator(*values.b1, threshold) ||
             small_denominator(values.b2, threshold) ||
             small_denominator(values.b3, threshold)) {
-            return product_failure<GammaReferenceOutput>(
+            return product_failure<GammaReferenceEvaluation>(
                 kCavhGammaReferenceIdentity,
                 NumericalStatus::Singular, "formula-denominator");
         }
@@ -467,18 +467,19 @@ CavhFormulaKernel::evaluate_gamma_reference(
     }
 
     if (!finite(values) || !std::isfinite(gamma_reference)) {
-        return product_failure<GammaReferenceOutput>(
+        return product_failure<GammaReferenceEvaluation>(
             kCavhGammaReferenceIdentity,
             NumericalStatus::NonFiniteOutput, "formula-output");
     }
 
-    return NumericalOutcome<GammaReferenceOutput>::with_value(
+    return NumericalOutcome<GammaReferenceEvaluation>::with_value(
         NumericalStatus::Success,
-        GammaReferenceOutput{input.context,
-                             definition.algorithm.equation,
-                             envelope,
-                             values,
-                             gamma_reference},
+        GammaReferenceEvaluation{
+            GammaReferenceOutput{input.context,
+                                 definition.algorithm.equation,
+                                 envelope.alpha_star_radians,
+                                 gamma_reference},
+            GammaReferenceTelemetry{envelope, values}},
         product_evidence(
             kCavhGammaReferenceIdentity,
             definition.algorithm.equation ==
@@ -488,18 +489,18 @@ CavhFormulaKernel::evaluate_gamma_reference(
             0U, 2U));
 }
 
-NumericalOutcome<TdctFormulaOutput> CavhFormulaKernel::evaluate_tdct(
+NumericalOutcome<TdctFormulaEvaluation> CavhFormulaKernel::evaluate_tdct(
     const PreparedCavhFormulaModel& model,
     const TdctFormulaInput& input) {
     const auto& definition = model.definition();
     if (const auto failure = validate_context(definition, input.context)) {
-        return product_failure<TdctFormulaOutput>(
+        return product_failure<TdctFormulaEvaluation>(
             kCavhTdctIdentity, failure->status, failure->detail);
     }
     if (!finite({input.alpha_star_radians,
                  input.gamma_reference_radians,
                  input.gamma_measured_radians})) {
-        return product_failure<TdctFormulaOutput>(
+        return product_failure<TdctFormulaEvaluation>(
             kCavhTdctIdentity, NumericalStatus::NonFiniteInput,
             "tdct-input");
     }
@@ -512,7 +513,7 @@ NumericalOutcome<TdctFormulaOutput> CavhFormulaKernel::evaluate_tdct(
         raw, definition.tdct.alpha_min_radians,
         definition.tdct.alpha_max_radians);
     if (!finite({error, correction, raw, limited})) {
-        return product_failure<TdctFormulaOutput>(
+        return product_failure<TdctFormulaEvaluation>(
             kCavhTdctIdentity, NumericalStatus::NonFiniteOutput,
             "tdct-output");
     }
@@ -527,37 +528,42 @@ NumericalOutcome<TdctFormulaOutput> CavhFormulaKernel::evaluate_tdct(
         saturation == TdctSaturation::None
             ? 0U
             : gnc::foundation::numerical_flag(NumericalFlag::Clamped);
-    return NumericalOutcome<TdctFormulaOutput>::with_value(
+    return NumericalOutcome<TdctFormulaEvaluation>::with_value(
         NumericalStatus::Success,
-        TdctFormulaOutput{input.context, error, correction, raw, limited,
-                          saturation},
+        TdctFormulaEvaluation{
+            TdctFormulaOutput{input.context, limited},
+            TdctFormulaTelemetry{error, correction, raw, saturation}},
         product_evidence(kCavhTdctIdentity, "tdct", flags, 1U));
 }
 
-NumericalOutcome<CavhFormulaOutput> CavhFormulaKernel::evaluate(
+NumericalOutcome<CavhFormulaEvaluation> CavhFormulaKernel::evaluate(
     const PreparedCavhFormulaModel& model,
     const CavhFormulaInput& input) {
     const auto reference = evaluate_gamma_reference(model, input);
     if (!reference.has_value()) {
-        return NumericalOutcome<CavhFormulaOutput>::failure(
+        return NumericalOutcome<CavhFormulaEvaluation>::failure(
             reference.status(), reference.evidence());
     }
     const auto tdct = evaluate_tdct(
         model,
         TdctFormulaInput{input.context,
-                         reference.value().envelope.alpha_star_radians,
-                         reference.value().gamma_reference_radians,
+                         reference.value().output.alpha_star_radians,
+                         reference.value().output.gamma_reference_radians,
                          input.gamma_measured_radians});
     if (!tdct.has_value()) {
-        return NumericalOutcome<CavhFormulaOutput>::failure(
+        return NumericalOutcome<CavhFormulaEvaluation>::failure(
             tdct.status(), tdct.evidence());
     }
 
     const NumericalFlags flags =
         reference.evidence().flags | tdct.evidence().flags;
-    return NumericalOutcome<CavhFormulaOutput>::with_value(
+    return NumericalOutcome<CavhFormulaEvaluation>::with_value(
         NumericalStatus::Success,
-        CavhFormulaOutput{reference.value(), tdct.value()},
+        CavhFormulaEvaluation{
+            CavhFormulaOutput{reference.value().output,
+                              tdct.value().output},
+            CavhFormulaTelemetry{reference.value().telemetry,
+                                 tdct.value().telemetry}},
         product_evidence(kCavhFormulaKernelIdentity, "formula-tdct",
                          flags,
                          reference.evidence().evaluations +

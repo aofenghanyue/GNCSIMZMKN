@@ -3,6 +3,7 @@
 #include "gnc/contracts/sample_context.hpp"
 #include "gnc/foundation/numerical_outcome.hpp"
 #include "gnc/foundation/numerical_policy.hpp"
+#include "gnc/model_sdk/algorithm_evaluation.hpp"
 #include "gnc/model_sdk/model_metadata.hpp"
 
 #include <cstdint>
@@ -178,10 +179,18 @@ struct GammaReferenceOutput {
     gnc::contracts::SampleContext context;
     GammaReferenceEquation equation =
         GammaReferenceEquation::Eq18MachIndependent;
-    CavhEnvelopeOutput envelope;
-    GammaReferenceIntermediates intermediates;
+    double alpha_star_radians = 0.0;
     double gamma_reference_radians = 0.0;
 };
+
+struct GammaReferenceTelemetry {
+    CavhEnvelopeOutput envelope;
+    GammaReferenceIntermediates intermediates;
+};
+
+using GammaReferenceEvaluation =
+    gnc::model_sdk::AlgorithmEvaluation<GammaReferenceOutput,
+                                        GammaReferenceTelemetry>;
 
 struct TdctFormulaInput {
     gnc::contracts::SampleContext context;
@@ -192,31 +201,48 @@ struct TdctFormulaInput {
 
 struct TdctFormulaOutput {
     gnc::contracts::SampleContext context;
+    double alpha_limited_radians = 0.0;
+};
+
+struct TdctFormulaTelemetry {
     double error_radians = 0.0;
     double correction_radians = 0.0;
     double alpha_raw_radians = 0.0;
-    double alpha_limited_radians = 0.0;
     TdctSaturation saturation = TdctSaturation::None;
 };
+
+using TdctFormulaEvaluation =
+    gnc::model_sdk::AlgorithmEvaluation<TdctFormulaOutput,
+                                        TdctFormulaTelemetry>;
 
 struct CavhFormulaOutput {
     GammaReferenceOutput gamma_reference;
     TdctFormulaOutput tdct;
 };
 
+struct CavhFormulaTelemetry {
+    GammaReferenceTelemetry gamma_reference;
+    TdctFormulaTelemetry tdct;
+};
+
+using CavhFormulaEvaluation =
+    gnc::model_sdk::AlgorithmEvaluation<CavhFormulaOutput,
+                                        CavhFormulaTelemetry>;
+
 class CavhFormulaKernel {
   public:
     [[nodiscard]] static gnc::foundation::NumericalOutcome<
-        GammaReferenceOutput>
+        GammaReferenceEvaluation>
     evaluate_gamma_reference(const PreparedCavhFormulaModel& model,
                              const CavhFormulaInput& input);
 
     [[nodiscard]] static gnc::foundation::NumericalOutcome<
-        TdctFormulaOutput>
+        TdctFormulaEvaluation>
     evaluate_tdct(const PreparedCavhFormulaModel& model,
                   const TdctFormulaInput& input);
 
-    [[nodiscard]] static gnc::foundation::NumericalOutcome<CavhFormulaOutput>
+    [[nodiscard]] static
+        gnc::foundation::NumericalOutcome<CavhFormulaEvaluation>
     evaluate(const PreparedCavhFormulaModel& model,
              const CavhFormulaInput& input);
 };

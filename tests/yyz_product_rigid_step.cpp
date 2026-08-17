@@ -205,7 +205,7 @@ void expect_failure(const NumericalOutcome<Value>& outcome,
 
 struct ProbeBundle {
     gnc::model_sdk::PreparedModelMetadata metadata;
-    RigidStepOutput accepted;
+    RigidStepEvaluation accepted;
     std::vector<std::string> direct_checks;
 };
 
@@ -230,42 +230,48 @@ ProbeBundle run_probe() {
     const RigidStepInput accepted_input = fixture_input();
     const auto accepted_outcome =
         RigidStepKernel::evaluate(prepared, accepted_input);
-    const RigidStepOutput& accepted = require_value(
+    const RigidStepEvaluation& accepted = require_value(
         accepted_outcome, "YYZ product accepted step failed");
-    require(accepted.aerodynamic_lookup.domain_status ==
+    require(accepted.telemetry.aerodynamic_lookup.domain_status ==
                 InterpolationDomainStatus::Inside &&
-                near(accepted.air_data.dynamic_pressure_pascals, 6125.0) &&
-                near(accepted.air_data.mach, 5.0 / 17.0) &&
-                near(accepted.aerodynamic_lookup.weights[0], 4.0 / 17.0) &&
-                near(accepted.aerodynamic_lookup.weights[1], 0.5) &&
-                near(accepted.aerodynamic_lookup.weights[2], 0.5) &&
-                near(accepted.aerodynamic_lookup
+                near(accepted.telemetry.air_data.dynamic_pressure_pascals,
+                     6125.0) &&
+                near(accepted.telemetry.air_data.mach, 5.0 / 17.0) &&
+                near(accepted.telemetry.aerodynamic_lookup.weights[0],
+                     4.0 / 17.0) &&
+                near(accepted.telemetry.aerodynamic_lookup.weights[1],
+                     0.5) &&
+                near(accepted.telemetry.aerodynamic_lookup.weights[2],
+                     0.5) &&
+                near(accepted.telemetry.aerodynamic_lookup
                          .coefficients_ca_cy_cn_cl_cm_cn[0],
                      27.0 / 850.0) &&
-                near(accepted.aerodynamic_lookup
+                near(accepted.telemetry.aerodynamic_lookup
                          .coefficients_ca_cy_cn_cl_cm_cn[4],
                      -3.0 / 68.0) &&
-                near(accepted.force_total.value,
+                near(accepted.telemetry.force_total.value,
                      Vec3{-3215.0 / 34.0, 0.0, 0.0}) &&
-                near(accepted.moment_total_about_center_of_mass.value,
+                near(accepted.telemetry
+                         .moment_total_about_center_of_mass.value,
                      Vec3::Zero()) &&
-                near(accepted.candidate.state.position.value,
+                near(accepted.output.candidate.state.position.value,
                      Vec3{10.995272058823529, 0.0, 999.95096675}) &&
-                near(accepted.candidate.state.velocity.value,
+                near(accepted.output.candidate.state.velocity.value,
                      Vec3{109.90544117647059, 0.0, -0.980665}),
             "YYZ product accepted result differs from oracle anchors");
 
     std::vector<std::string> checks{
-        "prepared-model-metadata", "accepted-oracle-anchors"};
+        "prepared-model-metadata", "formal-output-telemetry-separation",
+        "accepted-oracle-anchors"};
 
     const auto repeated_outcome =
         RigidStepKernel::evaluate(prepared, accepted_input);
     const auto& repeated = require_value(
         repeated_outcome, "YYZ repeated independent evaluation failed");
-    require(near(repeated.candidate.state.position.value,
-                 accepted.candidate.state.position.value) &&
-                near(repeated.candidate.state.velocity.value,
-                     accepted.candidate.state.velocity.value),
+    require(near(repeated.output.candidate.state.position.value,
+                 accepted.output.candidate.state.position.value) &&
+                near(repeated.output.candidate.state.velocity.value,
+                     accepted.output.candidate.state.velocity.value),
             "YYZ prepared model evaluation is not deterministic");
     checks.emplace_back("deterministic-independent-evaluation");
 
@@ -279,9 +285,10 @@ ProbeBundle run_probe() {
     const auto rotated_outcome = RigidStepKernel::evaluate(prepared, rotated);
     const auto& rotated_output = require_value(
         rotated_outcome, "passive frame-direction case failed");
-    require(near(rotated_output.air_data.velocity_relative_body.value,
+    require(near(rotated_output.telemetry.air_data
+                     .velocity_relative_body.value,
                  Vec3{100.0, 0.0, 0.0}) &&
-                near(rotated_output.derivative_at_interval_start
+                near(rotated_output.telemetry.derivative_at_interval_start
                          .force_total_inertial.value,
                      Vec3{0.0, 3215.0 / 34.0, 0.0}),
             "passive frame direction differs");
@@ -294,9 +301,10 @@ ProbeBundle run_probe() {
         RigidStepKernel::evaluate(prepared, boundary);
     const auto& boundary_output = require_value(
         boundary_outcome, "inclusive aero boundary case failed");
-    require(boundary_output.aerodynamic_lookup.domain_status ==
+    require(boundary_output.telemetry.aerodynamic_lookup.domain_status ==
                 InterpolationDomainStatus::Boundary &&
-                near(boundary_output.aerodynamic_lookup.weights[0], 0.0),
+                near(boundary_output.telemetry.aerodynamic_lookup.weights[0],
+                     0.0),
             "inclusive aero boundary semantics differ");
     checks.emplace_back("inclusive-table-boundary");
 
@@ -396,7 +404,7 @@ ProbeBundle run_probe() {
         RigidStepKernel::evaluate(prepared, full_inertia);
     const auto& full_inertia_output = require_value(
         full_inertia_outcome, "full-inertia derivative case failed");
-    require(near(full_inertia_output.derivative_at_interval_start
+    require(near(full_inertia_output.telemetry.derivative_at_interval_start
                      .angular_acceleration.value,
                  Vec3{39.0 / 11.0, -57.0 / 11.0, 2.5}),
             "full-inertia angular acceleration differs");
@@ -458,6 +466,8 @@ void write_array(const std::array<double, Size>& values) {
 
 void write_json(const ProbeBundle& bundle) {
     const auto& output = bundle.accepted;
+    const auto& formal_output = output.output;
+    const auto& telemetry = output.telemetry;
     std::cout << std::setprecision(17)
               << "{\"schema_version\":\"gnczmkn.yyz-rigid-step-product-probe/1\""
               << ",\"product_model_id\":\"" << kRigidStepModelIdentity
@@ -482,74 +492,75 @@ void write_json(const ProbeBundle& bundle) {
               << bundle.metadata.preparation_algorithm_version
               << "\"},\"accepted\":{";
     std::cout << "\"air_data\":{\"velocity_relative_I_mps\":";
-    write_vec3(output.air_data.velocity_relative_inertial.value);
+    write_vec3(telemetry.air_data.velocity_relative_inertial.value);
     std::cout << ",\"velocity_relative_B_mps\":";
-    write_vec3(output.air_data.velocity_relative_body.value);
+    write_vec3(telemetry.air_data.velocity_relative_body.value);
     std::cout << ",\"airspeed_mps\":";
-    write_number(output.air_data.airspeed_meters_per_second);
+    write_number(telemetry.air_data.airspeed_meters_per_second);
     std::cout << ",\"alpha_rad\":";
-    write_number(output.air_data.alpha_radians);
+    write_number(telemetry.air_data.alpha_radians);
     std::cout << ",\"beta_rad\":";
-    write_number(output.air_data.beta_radians);
+    write_number(telemetry.air_data.beta_radians);
     std::cout << ",\"dynamic_pressure_Pa\":";
-    write_number(output.air_data.dynamic_pressure_pascals);
+    write_number(telemetry.air_data.dynamic_pressure_pascals);
     std::cout << ",\"mach\":";
-    write_number(output.air_data.mach);
+    write_number(telemetry.air_data.mach);
     std::cout << "},\"aero_lookup\":{\"domain_status\":\""
               << gnc::foundation::to_string(
-                     output.aerodynamic_lookup.domain_status)
+                     telemetry.aerodynamic_lookup.domain_status)
               << "\",\"weights_M_alpha_beta\":";
-    write_array(output.aerodynamic_lookup.weights);
+    write_array(telemetry.aerodynamic_lookup.weights);
     std::cout << ",\"coefficients_CA_CY_CN_Cl_Cm_Cn\":";
-    write_array(output.aerodynamic_lookup
+    write_array(telemetry.aerodynamic_lookup
                     .coefficients_ca_cy_cn_cl_cm_cn);
     std::cout << "},\"aero_contribution\":{\"source_id\":\""
-              << output.aerodynamic_contribution.source_id
+              << telemetry.aerodynamic_contribution.source_id
               << "\",\"force_B_N\":";
-    write_vec3(output.aerodynamic_contribution.force.value);
+    write_vec3(telemetry.aerodynamic_contribution.force.value);
     std::cout << ",\"moment_about_CoM_B_Nm\":";
-    write_vec3(output.aerodynamic_contribution
+    write_vec3(telemetry.aerodynamic_contribution
                    .moment_about_center_of_mass.value);
     std::cout << "},\"supplied_contribution\":{\"source_id\":\""
-              << output.supplied_contribution.source_id
+              << telemetry.supplied_contribution.source_id
               << "\",\"force_B_N\":";
-    write_vec3(output.supplied_contribution.force.value);
+    write_vec3(telemetry.supplied_contribution.force.value);
     std::cout << ",\"moment_about_CoM_B_Nm\":";
-    write_vec3(output.supplied_contribution
+    write_vec3(telemetry.supplied_contribution
                    .moment_about_center_of_mass.value);
     std::cout << "},\"closure\":{\"force_total_B_N\":";
-    write_vec3(output.force_total.value);
+    write_vec3(telemetry.force_total.value);
     std::cout << ",\"moment_total_about_CoM_B_Nm\":";
-    write_vec3(output.moment_total_about_center_of_mass.value);
+    write_vec3(telemetry.moment_total_about_center_of_mass.value);
     std::cout << "},\"rigid_derivative_at_tick0\":{\"force_total_I_N\":";
-    write_vec3(output.derivative_at_interval_start
+    write_vec3(telemetry.derivative_at_interval_start
                    .force_total_inertial.value);
     std::cout << ",\"acceleration_I_mps2\":";
-    write_vec3(output.derivative_at_interval_start.acceleration.value);
+    write_vec3(telemetry.derivative_at_interval_start.acceleration.value);
     std::cout << ",\"angular_momentum_B_kgm2ps\":";
-    write_vec3(output.derivative_at_interval_start.angular_momentum.value);
+    write_vec3(telemetry.derivative_at_interval_start.angular_momentum.value);
     std::cout << ",\"gyroscopic_moment_B_Nm\":";
-    write_vec3(output.derivative_at_interval_start
+    write_vec3(telemetry.derivative_at_interval_start
                    .gyroscopic_moment.value);
     std::cout << ",\"net_moment_B_Nm\":";
-    write_vec3(output.derivative_at_interval_start.net_moment.value);
+    write_vec3(telemetry.derivative_at_interval_start.net_moment.value);
     std::cout << ",\"angular_acceleration_B_radps2\":";
-    write_vec3(output.derivative_at_interval_start
+    write_vec3(telemetry.derivative_at_interval_start
                    .angular_acceleration.value);
     std::cout << ",\"q_derivative_I_B_per_s\":";
-    write_quaternion(output.derivative_at_interval_start
+    write_quaternion(telemetry.derivative_at_interval_start
                          .attitude_derivative.value);
     std::cout << "},\"candidate\":{\"tick\":"
-              << output.candidate.effective_at.tick << ",\"time_s\":";
-    write_number(output.candidate.effective_at.seconds);
+              << formal_output.candidate.effective_at.tick
+              << ",\"time_s\":";
+    write_number(formal_output.candidate.effective_at.seconds);
     std::cout << ",\"position_I_m\":";
-    write_vec3(output.candidate.state.position.value);
+    write_vec3(formal_output.candidate.state.position.value);
     std::cout << ",\"velocity_I_mps\":";
-    write_vec3(output.candidate.state.velocity.value);
+    write_vec3(formal_output.candidate.state.velocity.value);
     std::cout << ",\"q_I_B_wxyz\":";
-    write_quaternion(output.candidate.state.attitude.value);
+    write_quaternion(formal_output.candidate.state.attitude.value);
     std::cout << ",\"omega_BI_B_radps\":";
-    write_vec3(output.candidate.state.angular_rate.value);
+    write_vec3(formal_output.candidate.state.angular_rate.value);
     std::cout << "}},\"direct_checks\":[";
     for (std::size_t index = 0U; index < bundle.direct_checks.size();
          ++index) {

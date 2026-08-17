@@ -192,7 +192,7 @@ struct AtomicRigidMassCandidate {
 struct FrozenRigidMassStepOutput {
     CommittedRigidMassBoundary opening_boundary;
     MassPropertiesInput projected_committed_mass;
-    RigidStepOutput rigid_step;
+    RigidStepEvaluation rigid_step;
     ScalarBurnMassOutput mass_evolution;
     AtomicRigidMassCandidate candidate;
 };

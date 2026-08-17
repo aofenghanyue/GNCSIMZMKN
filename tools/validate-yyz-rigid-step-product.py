@@ -21,6 +21,7 @@ CONTRACT_ID = "gnc.package.yyz.rigid-step.contract.experimental@1"
 CASE_ID = "CASE-YYZ-FROZEN-INTERVAL-COMPOSED-TRAJECTORY"
 DIRECT_CHECKS = {
     "prepared-model-metadata",
+    "formal-output-telemetry-separation",
     "accepted-oracle-anchors",
     "deterministic-independent-evaluation",
     "passive-frame-direction",

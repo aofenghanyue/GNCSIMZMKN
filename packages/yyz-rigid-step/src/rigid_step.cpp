@@ -586,17 +586,17 @@ NumericalOutcome<PreparedRigidStepModel> prepare_rigid_step_model(
         evidence);
 }
 
-NumericalOutcome<RigidStepOutput> RigidStepKernel::evaluate(
+NumericalOutcome<RigidStepEvaluation> RigidStepKernel::evaluate(
     const PreparedRigidStepModel& model,
     const RigidStepInput& input) {
     const auto& definition = model.definition();
     if (const auto failure = validate_contexts(definition, input)) {
-        return product_failure<RigidStepOutput>(failure->status,
-                                                failure->detail);
+        return product_failure<RigidStepEvaluation>(failure->status,
+                                                    failure->detail);
     }
     if (const auto failure = validate_values(definition, input)) {
-        return product_failure<RigidStepOutput>(failure->status,
-                                                failure->detail);
+        return product_failure<RigidStepEvaluation>(failure->status,
+                                                    failure->detail);
     }
 
     NumericalFlags flags = 0U;
@@ -605,7 +605,7 @@ NumericalOutcome<RigidStepOutput> RigidStepKernel::evaluate(
         input.mass_properties.inertia_about_center_of_mass.value,
         Vec3::Zero(), definition.algorithm.numerical_policy);
     if (!inertia_check.has_value()) {
-        return product_failure<RigidStepOutput>(
+        return product_failure<RigidStepEvaluation>(
             inertia_check.status(), "mass-inertia",
             inertia_check.evidence().flags);
     }
@@ -616,7 +616,7 @@ NumericalOutcome<RigidStepOutput> RigidStepKernel::evaluate(
         definition, model.table_, input.committed_state,
         input.environment);
     if (!air_lookup.has_value()) {
-        return product_failure<RigidStepOutput>(
+        return product_failure<RigidStepEvaluation>(
             air_lookup.status(), air_lookup.evidence().detail,
             flags | air_lookup.evidence().flags);
     }
@@ -644,7 +644,7 @@ NumericalOutcome<RigidStepOutput> RigidStepKernel::evaluate(
     };
     if (!finite(aerodynamic_force) ||
         !finite(aerodynamic_moment_at_application)) {
-        return product_failure<RigidStepOutput>(
+        return product_failure<RigidStepEvaluation>(
             NumericalStatus::NonFiniteIntermediate,
             "aero-dimensionalization", flags);
     }
@@ -666,7 +666,7 @@ NumericalOutcome<RigidStepOutput> RigidStepKernel::evaluate(
         aerodynamic.moment_about_center_of_mass.value +
         supplied.moment_about_center_of_mass.value;
     if (!finite(force_total) || !finite(moment_total)) {
-        return product_failure<RigidStepOutput>(
+        return product_failure<RigidStepEvaluation>(
             NumericalStatus::NonFiniteIntermediate,
             "force-moment-closure", flags);
     }
@@ -677,7 +677,7 @@ NumericalOutcome<RigidStepOutput> RigidStepKernel::evaluate(
         input.mass_properties.inertia_about_center_of_mass.value,
         force_total, moment_total, input.environment.gravity.value);
     if (!initial_derivative.has_value()) {
-        return product_failure<RigidStepOutput>(
+        return product_failure<RigidStepEvaluation>(
             initial_derivative.status(), initial_derivative.evidence().detail,
             flags | initial_derivative.evidence().flags);
     }
@@ -707,7 +707,7 @@ NumericalOutcome<RigidStepOutput> RigidStepKernel::evaluate(
         definition.algorithm.fixed_step_seconds, derivative,
         definition.algorithm.numerical_policy);
     if (!integrated.has_value()) {
-        return product_failure<RigidStepOutput>(
+        return product_failure<RigidStepEvaluation>(
             integrated.status(), "rk4", flags | integrated.evidence().flags);
     }
     flags |= integrated.evidence().flags;
@@ -719,7 +719,7 @@ NumericalOutcome<RigidStepOutput> RigidStepKernel::evaluate(
             candidate_state.attitude.value,
             definition.algorithm.candidate_attitude_policy);
     if (!candidate_attitude.has_value()) {
-        return product_failure<RigidStepOutput>(
+        return product_failure<RigidStepEvaluation>(
             candidate_attitude.status(), "candidate-attitude",
             flags | candidate_attitude.evidence().flags);
     }
@@ -727,18 +727,19 @@ NumericalOutcome<RigidStepOutput> RigidStepKernel::evaluate(
     approximate = approximate || approximate_status(candidate_attitude.status());
     candidate_state.attitude.value = candidate_attitude.value();
     if (!finite(candidate_state)) {
-        return product_failure<RigidStepOutput>(
+        return product_failure<RigidStepEvaluation>(
             NumericalStatus::NonFiniteOutput, "candidate", flags);
     }
 
+    RigidStepTelemetry telemetry;
+    telemetry.air_data = air;
+    telemetry.aerodynamic_lookup = lookup;
+    telemetry.aerodynamic_contribution = std::move(aerodynamic);
+    telemetry.supplied_contribution = std::move(supplied);
+    telemetry.force_total.value = force_total;
+    telemetry.moment_total_about_center_of_mass.value = moment_total;
+    telemetry.derivative_at_interval_start = initial_derivative.value();
     RigidStepOutput output;
-    output.air_data = air;
-    output.aerodynamic_lookup = lookup;
-    output.aerodynamic_contribution = std::move(aerodynamic);
-    output.supplied_contribution = std::move(supplied);
-    output.force_total.value = force_total;
-    output.moment_total_about_center_of_mass.value = moment_total;
-    output.derivative_at_interval_start = initial_derivative.value();
     output.candidate.effective_at = input.context.interval_end;
     output.candidate.state = std::move(candidate_state);
     NumericalEvidence evidence = product_evidence(
@@ -746,10 +747,11 @@ NumericalOutcome<RigidStepOutput> RigidStepKernel::evaluate(
     evidence.evaluations = integrated.evidence().evaluations +
                            air_lookup.evidence().evaluations;
     evidence.last_step = definition.algorithm.fixed_step_seconds;
-    return NumericalOutcome<RigidStepOutput>::with_value(
+    return NumericalOutcome<RigidStepEvaluation>::with_value(
         approximate ? NumericalStatus::Approximate
                     : NumericalStatus::Success,
-        std::move(output), evidence);
+        RigidStepEvaluation{std::move(output), std::move(telemetry)},
+        evidence);
 }
 
 } // namespace gnc::packages::yyz

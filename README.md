@@ -1,13 +1,16 @@
 # GNCZMKN Next
 
-这是 GNCZMKN 大型目标架构的 greenfield 实现仓库。仓库版本仍为 `0.0.0-bootstrap`；R0 科学基线已经闭合，当前从 Foundation 与 Contracts 开始 R1 产品实现，尚未形成仿真运行能力。
+这是 GNCZMKN 大型目标架构的 greenfield 实现仓库。仓库版本仍为 `0.0.0-bootstrap`；R0 科学基线已经闭合，R1 正在交付可独立求值的模型语义，尚未形成仿真运行能力。
 
 ## 当前交付状态
 
 - 当前 gate：`R1`；G0/G1 已由仓库所有者判定 `Passed`。
-- 允许开展：`R1-FND-001` 已闭合成果、`R1-CTR-001` consumer-driven 契约，以及仓库所有者授权的 YYZ 与 CAVH 产品纵向切片。
-- 暂缓开展：未被当前纵向调用消费的 R1 平台能力；R2～R8 在对应 gate 前保持锁定。
+- 已闭合：R1 Foundation、当前 in-process Contracts、YYZ 四个产品切片和 CAVH 公式产品切片。
+- 当前 review：双 consumer 的 immutable model definition/prepared metadata，以及 formal output/telemetry 分离的 Algorithm 独立求值能力。
+- 暂缓开展：缺少真实 consumer 的 R1 平台抽象；R2～R8 在对应 gate 前保持锁定。
 - 旧 GNCZMKN 只作为只读行为与科学参照，不进入任何生产 target、include path 或运行依赖。
+
+阶段顺序已经固定：R1 以 Definition、PreparedModel 和 Kernel 的无 Session 独立求值为终点；R2 在 R1 gate 后实现 MissionSource 到已证明、已链接 ExecutionPlan 的静态编译；R3 再由正式 Session、StepTransaction 和 IntegrationScopePlan 形成首个正常 YYZ run。R1/R2 不建设临时 runner、mini Session 或影子 runtime。
 
 ## 新成员从这里开始
 
@@ -41,7 +44,7 @@ build/dev/gnc_sim --version
 build/dev/gnc_sim --self-check
 ```
 
-首个 YYZ 产品入口已能独立计算一步 candidate：
+首个 YYZ 产品入口已能独立计算一步 candidate。`RigidStepOutput` 只携带下游消费的 candidate；air-data、气动查表、闭合力矩和初始导数位于 `RigidStepTelemetry`：
 
 ```powershell
 build/dev/gnc_yyz_rigid_step_product_probe --self-check
@@ -53,13 +56,15 @@ build/dev/gnc_yyz_rigid_step_product_probe --self-check
 build/dev/gnc_yyz_two_interval_mass_commit_product_probe --self-check
 ```
 
-首个 CAVH 产品入口从 typed definition、显式 operating point 与 `SampleContext` 计算解析抛物线包络，按 immutable equation identity 执行 Eq17 或 Eq18，再把 typed gamma reference 直接交给 TDCT。它复用 `ORACLE-CAVH-FORMULA-001` 比较三组方程与四组 TDCT 结果，并拒绝包络域错误、公式奇异、Eq17 导数退化、非法 TDCT 和上下文不一致：
+首个 CAVH 产品入口从 typed definition、显式 operating point 与 `SampleContext` 计算解析抛物线包络，按 immutable equation identity 执行 Eq17 或 Eq18，再把 typed gamma reference 与正式 `alpha*` 直接交给 TDCT。limited alpha 属于正式 output；包络、公式中间量、TDCT 修正和饱和信息属于 telemetry。它复用 `ORACLE-CAVH-FORMULA-001` 比较三组方程与四组 TDCT 结果，并拒绝包络域错误、公式奇异、Eq17 导数退化、非法 TDCT 和上下文不一致：
 
 ```powershell
 build/dev/gnc_cavh_formula_product_probe --self-check
 ```
 
-当前 CAVH 输出止于 TDCT 公式阶段的限幅 alpha；产品级 guidance command 的 frame、时间与 ownership 映射仍待仓库所有者选择。
+当前 CAVH 输出止于 TDCT 公式阶段的限幅 alpha；产品级 guidance command 的 frame、时间与 ownership 映射等待真实 vehicle/controller consumer。
+
+YYZ 与 CAVH 共同消费 `ModelDefinitionMetadata`、`PreparedModelMetadata` 和 `AlgorithmEvaluation<Output, Telemetry>`。两个现有产品 probe 同时作为 `r1.model-sdk-prepared-model.conformance` 与 `r1.model-sdk-algorithm-evaluation.conformance` 的真实 consumer，验证独立、确定性、无 Session 求值，并保留各自既有 R0 oracle。
 
 ## 仓库地图
 

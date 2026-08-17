@@ -527,6 +527,17 @@ if(GNC_BUILD_TESTS)
             --cavh-probe
             $<TARGET_FILE:gnc_cavh_formula_product_probe>)
     add_test(
+        NAME r1.model-sdk-algorithm-evaluation.conformance
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/validate-model-sdk-algorithm-evaluations.py
+            --yyz-probe
+            $<TARGET_FILE:gnc_yyz_rigid_step_product_probe>
+            --cavh-probe
+            $<TARGET_FILE:gnc_cavh_formula_product_probe>)
+    add_test(
         NAME r1.yyz-rigid-step.oracle
         COMMAND
             ${Python3_EXECUTABLE}

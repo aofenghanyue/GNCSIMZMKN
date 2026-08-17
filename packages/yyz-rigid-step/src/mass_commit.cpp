@@ -659,7 +659,7 @@ FrozenRigidMassStepKernel::evaluate(
             "mass-candidate", rigid.evidence().flags |
                                   mass.evidence().flags);
     }
-    if (!same_instant(rigid.value().candidate.effective_at,
+    if (!same_instant(rigid.value().output.candidate.effective_at,
                       mass.value().candidate.effective_at, policy)) {
         return mass_commit_failure<FrozenRigidMassStepOutput>(
             kFrozenRigidMassStepKernelIdentity,
@@ -673,8 +673,9 @@ FrozenRigidMassStepKernel::evaluate(
     output.projected_committed_mass = projected_mass;
     output.rigid_step = rigid.value();
     output.mass_evolution = mass.value();
-    output.candidate.effective_at = rigid.value().candidate.effective_at;
-    output.candidate.rigid = rigid.value().candidate;
+    output.candidate.effective_at =
+        rigid.value().output.candidate.effective_at;
+    output.candidate.rigid = rigid.value().output.candidate;
     output.candidate.mass = mass.value().candidate;
     const NumericalFlags flags =
         rigid.evidence().flags | mass.evidence().flags;

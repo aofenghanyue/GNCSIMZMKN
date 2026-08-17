@@ -804,10 +804,10 @@ struct PropulsionProbeBundle {
                  Vec3{300.0, 400.0, 0.0}) &&
                 near(consumer.propulsion.moment_about_center_of_mass.value,
                      Vec3{-39.0, 28.0, -272.0}) &&
-                near(consumer.atomic_boundary.rigid_step
+                near(consumer.atomic_boundary.rigid_step.telemetry
                          .supplied_contribution.force.value,
                      Vec3{300.0, 400.0, 0.0}) &&
-                near(consumer.atomic_boundary.rigid_step
+                near(consumer.atomic_boundary.rigid_step.telemetry
                          .supplied_contribution
                          .moment_about_center_of_mass.value,
                      Vec3{-39.0, 28.0, -272.0}) &&
@@ -894,12 +894,13 @@ struct MissionControlProbeBundle {
     const auto& boundary = accepted.atomic_boundary;
     require(near(accepted.propulsion.moment_about_center_of_mass.value,
                  Vec3::Zero()) &&
-                near(boundary.rigid_step.supplied_contribution.force.value,
+                near(boundary.rigid_step.telemetry.supplied_contribution
+                         .force.value,
                      Vec3{100.0, 0.0, 0.0}) &&
-                near(boundary.rigid_step.supplied_contribution
+                near(boundary.rigid_step.telemetry.supplied_contribution
                          .moment_about_center_of_mass.value,
                      Vec3{0.0, 20.0, 0.0}) &&
-                near(boundary.rigid_step
+                near(boundary.rigid_step.telemetry
                          .moment_total_about_center_of_mass.value,
                      Vec3{0.0, 36.766216427351054, 0.0}) &&
                 near(boundary.mass_evolution.candidate.state.mass_kilograms,
@@ -908,13 +909,14 @@ struct MissionControlProbeBundle {
             "controlled propulsion atomic boundary differs");
     checks.emplace_back("mission-control-propulsion-single-transport");
 
-    require(near(boundary.rigid_step.candidate.state.position.value,
+    require(near(boundary.rigid_step.output.candidate.state.position.value,
                  Vec3{21.981798901675346, 0.0,
                       999.8062748637297}) &&
-                near(boundary.rigid_step.candidate.state.velocity.value,
+                near(boundary.rigid_step.output.candidate.state.velocity.value,
                      Vec3{109.82516983067299, 0.0,
                           -1.9130498687217244}) &&
-                near(boundary.rigid_step.candidate.state.angular_rate.value,
+                near(boundary.rigid_step.output.candidate.state.angular_rate
+                         .value,
                      Vec3{0.0, 0.18383108213675527, 0.0}),
             "controlled interval candidate differs from mission oracle");
     checks.emplace_back("mission-controlled-candidate-oracle-anchors");
@@ -1190,12 +1192,15 @@ ProbeBundle run_probe() {
                 near(first.staged.mass_evolution
                          .candidate.state.mass_kilograms,
                      119.95) &&
-                near(first.staged.rigid_step.derivative_at_interval_start
+                near(first.staged.rigid_step.telemetry
+                         .derivative_at_interval_start
                          .acceleration.value,
                      Vec3{2.0, 0.0, 0.0}) &&
-                near(first.staged.rigid_step.candidate.state.position.value,
+                near(first.staged.rigid_step.output.candidate.state.position
+                         .value,
                      Vec3{1.01, 0.0, 0.0}) &&
-                near(first.staged.rigid_step.candidate.state.velocity.value,
+                near(first.staged.rigid_step.output.candidate.state.velocity
+                         .value,
                      Vec3{10.2, 0.0, 0.0}),
             "interval zero did not use committed mass");
     std::vector<std::string> checks{
@@ -1221,7 +1226,8 @@ ProbeBundle run_probe() {
                      first.closing_commit.rigid_state.velocity.value) &&
                 near(second.staged.projected_committed_mass.mass_kilograms,
                      first.closing_commit.mass_state.mass_kilograms) &&
-                near(second.staged.rigid_step.derivative_at_interval_start
+                near(second.staged.rigid_step.telemetry
+                         .derivative_at_interval_start
                          .acceleration.value,
                      Vec3{240.0 / 119.95, 0.0, 0.0}),
             "interval one did not consume the complete committed pair");
@@ -1396,7 +1402,7 @@ void write_interval(const TwoIntervalMassCommitIntervalOutput& interval) {
     write_number(mass.candidate.state.mass_kilograms);
     std::cout << ",\"pending_visibility_before_commit\":\"candidate-only\""
               << ",\"acceleration_I_mps2\":";
-    write_vec3(staged.rigid_step.derivative_at_interval_start
+    write_vec3(staged.rigid_step.telemetry.derivative_at_interval_start
                    .acceleration.value);
     std::cout << ",\"initial_rigid_state\":";
     write_rigid_state(staged.opening_boundary.rigid_state);
@@ -1542,10 +1548,10 @@ void write_propulsion(const PropulsionProbeBundle& propulsion) {
     }
     const auto& consumer = propulsion.consumer;
     std::cout << "],\"atomic_boundary_consumer\":{\"force_B_N\":";
-    write_vec3(consumer.atomic_boundary.rigid_step
+    write_vec3(consumer.atomic_boundary.rigid_step.telemetry
                    .supplied_contribution.force.value);
     std::cout << ",\"moment_about_CoM_B_Nm\":";
-    write_vec3(consumer.atomic_boundary.rigid_step
+    write_vec3(consumer.atomic_boundary.rigid_step.telemetry
                    .supplied_contribution
                    .moment_about_center_of_mass.value);
     std::cout << ",\"consumed_fuel_mass_kg\":";
@@ -1612,19 +1618,20 @@ void write_mission_control(
               << ",\"moment_about_CoM_B_Nm\":";
     write_vec3(value.actuator.moment_about_center_of_mass.value);
     std::cout << "},\"atomic_boundary\":{\"supplied_force_B_N\":";
-    write_vec3(boundary.rigid_step.supplied_contribution.force.value);
+    write_vec3(boundary.rigid_step.telemetry.supplied_contribution
+                   .force.value);
     std::cout << ",\"supplied_moment_about_CoM_B_Nm\":";
-    write_vec3(boundary.rigid_step.supplied_contribution
+    write_vec3(boundary.rigid_step.telemetry.supplied_contribution
                    .moment_about_center_of_mass.value);
     std::cout << ",\"total_moment_about_CoM_B_Nm\":";
-    write_vec3(boundary.rigid_step
+    write_vec3(boundary.rigid_step.telemetry
                    .moment_total_about_center_of_mass.value);
     std::cout << ",\"candidate_tick\":"
               << boundary.candidate.effective_at.tick
               << ",\"candidate_mass_kg\":";
     write_number(boundary.mass_evolution.candidate.state.mass_kilograms);
     std::cout << ",\"candidate_rigid_state\":";
-    write_rigid_state(boundary.rigid_step.candidate.state);
+    write_rigid_state(boundary.rigid_step.output.candidate.state);
     std::cout << "},\"direct_checks\":[";
     for (std::size_t index = 0U;
          index < mission_control.direct_checks.size(); ++index) {
@@ -1653,10 +1660,10 @@ void write_mission_two_interval_entry(
     std::cout << ",\"consumed_mass_kg\":";
     write_number(boundary.mass_evolution.consumed_mass_kilograms);
     std::cout << ",\"supplied_moment_about_CoM_B_Nm\":";
-    write_vec3(boundary.rigid_step.supplied_contribution
+    write_vec3(boundary.rigid_step.telemetry.supplied_contribution
                    .moment_about_center_of_mass.value);
     std::cout << ",\"total_moment_about_CoM_B_Nm\":";
-    write_vec3(boundary.rigid_step
+    write_vec3(boundary.rigid_step.telemetry
                    .moment_total_about_center_of_mass.value);
     std::cout << ",\"closing_tick\":"
               << interval.closing_commit.rigid_context.sample_time.tick

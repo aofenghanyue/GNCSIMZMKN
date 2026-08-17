@@ -163,12 +163,12 @@ PreparedCavhFormulaModel prepared(CavhFormulaDefinition definition) {
 
 struct EquationCase {
     std::string id;
-    GammaReferenceOutput output;
+    GammaReferenceEvaluation evaluation;
 };
 
 struct TdctCase {
     std::string id;
-    TdctFormulaOutput output;
+    TdctFormulaEvaluation evaluation;
 };
 
 struct ProbeBundle {
@@ -177,7 +177,7 @@ struct ProbeBundle {
     CavhEnvelopeOutput mach_envelope;
     std::vector<EquationCase> equations;
     std::vector<TdctCase> tdct;
-    CavhFormulaOutput typed_consumer;
+    CavhFormulaEvaluation typed_consumer;
     double typed_consumer_gamma_measured = 0.0;
     double typed_consumer_gain = 0.0;
     std::vector<std::string> direct_checks;
@@ -209,23 +209,29 @@ ProbeBundle run_probe() {
         eq18_model, fixture_input(0.0));
     const auto& eq18_unbanked_value = require_value(
         eq18_unbanked, "Eq18 unbanked product evaluation failed");
-    require(near(eq18_unbanked_value.envelope.cd0, 0.02) &&
-                near(eq18_unbanked_value.envelope.cl_star, 0.5) &&
-                near(eq18_unbanked_value.envelope.cd_star, 0.04) &&
-                near(eq18_unbanked_value.envelope.lift_to_drag_maximum,
+    require(near(eq18_unbanked_value.telemetry.envelope.cd0, 0.02) &&
+                near(eq18_unbanked_value.telemetry.envelope.cl_star, 0.5) &&
+                near(eq18_unbanked_value.telemetry.envelope.cd_star, 0.04) &&
+                near(eq18_unbanked_value.telemetry.envelope
+                         .lift_to_drag_maximum,
                      12.5) &&
-                near(eq18_unbanked_value.envelope.alpha_star_radians,
+                near(eq18_unbanked_value.output.alpha_star_radians,
                      0.25) &&
-                near(eq18_unbanked_value.envelope.dcl_star_dmach, 0.0),
+                near(eq18_unbanked_value.output.alpha_star_radians,
+                     eq18_unbanked_value.telemetry.envelope
+                         .alpha_star_radians) &&
+                near(eq18_unbanked_value.telemetry.envelope.dcl_star_dmach,
+                     0.0),
             "constant-polar envelope differs from the accepted oracle");
+    checks.emplace_back("formal-output-telemetry-separation");
     checks.emplace_back("envelope-accepted");
 
     const auto repeated_eq18 =
         CavhFormulaKernel::evaluate_gamma_reference(
             eq18_model, fixture_input(0.0));
     require(repeated_eq18.has_value() &&
-                near(repeated_eq18.value().gamma_reference_radians,
-                     eq18_unbanked_value.gamma_reference_radians),
+                near(repeated_eq18.value().output.gamma_reference_radians,
+                     eq18_unbanked_value.output.gamma_reference_radians),
             "CAVH prepared model evaluation is not deterministic");
     checks.emplace_back("deterministic-independent-evaluation");
 
@@ -233,13 +239,16 @@ ProbeBundle run_probe() {
         eq18_model, fixture_input(kPi / 3.0));
     const auto& eq18_banked_value = require_value(
         eq18_banked, "Eq18 banked product evaluation failed");
-    require(near(eq18_unbanked_value.gamma_reference_radians,
+    require(near(eq18_unbanked_value.output.gamma_reference_radians,
                  -0.0109446746632963695) &&
-                near(eq18_banked_value.gamma_reference_radians,
+                near(eq18_banked_value.output.gamma_reference_radians,
                      -0.0111187885840221742) &&
-                near(eq18_unbanked_value.intermediates.cl_vertical, 0.5) &&
-                near(eq18_banked_value.intermediates.cl_vertical, 0.25) &&
-                !eq18_unbanked_value.intermediates.b1.has_value(),
+                near(eq18_unbanked_value.telemetry.intermediates
+                         .cl_vertical,
+                     0.5) &&
+                near(eq18_banked_value.telemetry.intermediates.cl_vertical,
+                     0.25) &&
+                !eq18_unbanked_value.telemetry.intermediates.b1.has_value(),
             "Eq18 product results differ from the accepted oracle");
     checks.emplace_back("eq18-accepted");
 
@@ -254,8 +263,8 @@ ProbeBundle run_probe() {
         CavhFormulaKernel::evaluate_gamma_reference(
             eq18_model, eq18_without_derivatives);
     require(eq18_immutable.has_value() &&
-                near(eq18_immutable.value().gamma_reference_radians,
-                     eq18_unbanked_value.gamma_reference_radians),
+                near(eq18_immutable.value().output.gamma_reference_radians,
+                     eq18_unbanked_value.output.gamma_reference_radians),
             "Eq18 consumed derivative inputs excluded by its identity");
     checks.emplace_back("eq18-ignores-unused-derivatives");
 
@@ -266,14 +275,14 @@ ProbeBundle run_probe() {
         eq17_model, eq17_input);
     const auto& eq17_value = require_value(
         eq17, "Eq17 product evaluation failed");
-    require(near(eq17_value.envelope.cl_star,
+    require(near(eq17_value.telemetry.envelope.cl_star,
                  0.61237243569579452455) &&
-                near(eq17_value.envelope.dcl_star_dmach,
+                near(eq17_value.telemetry.envelope.dcl_star_dmach,
                      0.010206207261596575409) &&
-                near(eq17_value.intermediates.cl_vertical,
+                near(eq17_value.telemetry.intermediates.cl_vertical,
                      0.53033008588991064330) &&
-                eq17_value.intermediates.b1.has_value() &&
-                near(eq17_value.gamma_reference_radians,
+                eq17_value.telemetry.intermediates.b1.has_value() &&
+                near(eq17_value.output.gamma_reference_radians,
                      -0.017777640903762576252),
             "Eq17 product results differ from the accepted oracle");
     checks.emplace_back("eq17-accepted");
@@ -310,14 +319,22 @@ ProbeBundle run_probe() {
     tdct_cases.push_back(
         {"CASE-CAVH-TDCT-ZERO-GAIN",
          require_value(zero_gain, "zero-gain TDCT evaluation failed")});
-    require(near(tdct_cases[0].output.alpha_limited_radians, 0.31) &&
-                tdct_cases[0].output.saturation == TdctSaturation::None &&
-                near(tdct_cases[1].output.alpha_limited_radians, 0.4) &&
-                tdct_cases[1].output.saturation == TdctSaturation::Upper &&
-                near(tdct_cases[2].output.alpha_limited_radians, 0.1) &&
-                tdct_cases[2].output.saturation == TdctSaturation::Lower &&
-                near(tdct_cases[3].output.alpha_limited_radians, 0.25) &&
-                tdct_cases[3].output.saturation == TdctSaturation::None,
+    require(near(tdct_cases[0].evaluation.output.alpha_limited_radians,
+                 0.31) &&
+                tdct_cases[0].evaluation.telemetry.saturation ==
+                    TdctSaturation::None &&
+                near(tdct_cases[1].evaluation.output.alpha_limited_radians,
+                     0.4) &&
+                tdct_cases[1].evaluation.telemetry.saturation ==
+                    TdctSaturation::Upper &&
+                near(tdct_cases[2].evaluation.output.alpha_limited_radians,
+                     0.1) &&
+                tdct_cases[2].evaluation.telemetry.saturation ==
+                    TdctSaturation::Lower &&
+                near(tdct_cases[3].evaluation.output.alpha_limited_radians,
+                     0.25) &&
+                tdct_cases[3].evaluation.telemetry.saturation ==
+                    TdctSaturation::None,
             "TDCT product results differ from the accepted oracle");
     checks.emplace_back("tdct-accepted");
     checks.emplace_back("tdct-clamp-evidence");
@@ -327,15 +344,16 @@ ProbeBundle run_probe() {
     const auto& composite_value = require_value(
         composite, "typed formula-to-TDCT evaluation failed");
     const double expected_composite_raw =
-        composite_value.gamma_reference.envelope.alpha_star_radians +
+        composite_value.output.gamma_reference.alpha_star_radians +
         3.0 *
-            (composite_value.gamma_reference.gamma_reference_radians -
+            (composite_value.output.gamma_reference
+                 .gamma_reference_radians -
              eq17_input.gamma_measured_radians);
-    require(near(composite_value.tdct.alpha_raw_radians,
+    require(near(composite_value.telemetry.tdct.alpha_raw_radians,
                  expected_composite_raw) &&
-                near(composite_value.tdct.alpha_limited_radians,
+                near(composite_value.output.tdct.alpha_limited_radians,
                      expected_composite_raw) &&
-                composite_value.tdct.context.sample_time.tick ==
+                composite_value.output.tdct.context.sample_time.tick ==
                     eq17_input.context.sample_time.tick &&
                 composite.evidence().algorithm.id ==
                     kCavhFormulaKernelIdentity.id,
@@ -503,8 +521,8 @@ ProbeBundle run_probe() {
 
     return {
         prepared_metadata,
-        eq18_unbanked_value.envelope,
-        eq17_value.envelope,
+        eq18_unbanked_value.telemetry.envelope,
+        eq17_value.telemetry.envelope,
         {{"CASE-CAVH-EQ18-UNBANKED", eq18_unbanked_value},
          {"CASE-CAVH-EQ18-BANKED", eq18_banked_value},
          {"CASE-CAVH-EQ17-MACH-ALTITUDE-COUPLED", eq17_value}},
@@ -536,8 +554,9 @@ void write_envelope(const CavhEnvelopeOutput& output) {
     std::cout << '}';
 }
 
-void write_equation(const GammaReferenceOutput& output) {
-    const auto& values = output.intermediates;
+void write_equation(const GammaReferenceEvaluation& evaluation) {
+    const auto& output = evaluation.output;
+    const auto& values = evaluation.telemetry.intermediates;
     std::cout << "{\"equation\":\"" << to_string(output.equation)
               << "\",\"density_kg_per_m3\":";
     write_number(values.density_kilograms_per_cubic_meter);
@@ -575,16 +594,18 @@ void write_equation(const GammaReferenceOutput& output) {
     std::cout << '}';
 }
 
-void write_tdct(const TdctFormulaOutput& output) {
+void write_tdct(const TdctFormulaEvaluation& evaluation) {
+    const auto& output = evaluation.output;
+    const auto& telemetry = evaluation.telemetry;
     std::cout << "{\"error_rad\":";
-    write_number(output.error_radians);
+    write_number(telemetry.error_radians);
     std::cout << ",\"correction_rad\":";
-    write_number(output.correction_radians);
+    write_number(telemetry.correction_radians);
     std::cout << ",\"alpha_raw_rad\":";
-    write_number(output.alpha_raw_radians);
+    write_number(telemetry.alpha_raw_radians);
     std::cout << ",\"alpha_command_rad\":";
     write_number(output.alpha_limited_radians);
-    std::cout << ",\"saturation\":\"" << to_string(output.saturation)
+    std::cout << ",\"saturation\":\"" << to_string(telemetry.saturation)
               << "\"}";
 }
 
@@ -622,7 +643,7 @@ void write_json(const ProbeBundle& bundle) {
             std::cout << ',';
         }
         std::cout << '\"' << bundle.equations[index].id << "\":";
-        write_equation(bundle.equations[index].output);
+        write_equation(bundle.equations[index].evaluation);
     }
     std::cout << "},\"tdct_cases\":{";
     for (std::size_t index = 0U; index < bundle.tdct.size(); ++index) {
@@ -630,29 +651,29 @@ void write_json(const ProbeBundle& bundle) {
             std::cout << ',';
         }
         std::cout << '\"' << bundle.tdct[index].id << "\":";
-        write_tdct(bundle.tdct[index].output);
+        write_tdct(bundle.tdct[index].evaluation);
     }
     const auto& consumer = bundle.typed_consumer;
     std::cout << "},\"typed_consumer\":{\"equation\":\""
-              << to_string(consumer.gamma_reference.equation)
+              << to_string(consumer.output.gamma_reference.equation)
               << "\",\"alpha_star_rad\":";
-    write_number(consumer.gamma_reference.envelope.alpha_star_radians);
+    write_number(consumer.output.gamma_reference.alpha_star_radians);
     std::cout << ",\"gamma_reference_rad\":";
-    write_number(consumer.gamma_reference.gamma_reference_radians);
+    write_number(consumer.output.gamma_reference.gamma_reference_radians);
     std::cout << ",\"gamma_measured_rad\":";
     write_number(bundle.typed_consumer_gamma_measured);
     std::cout << ",\"gain\":";
     write_number(bundle.typed_consumer_gain);
     std::cout << ",\"alpha_raw_rad\":";
-    write_number(consumer.tdct.alpha_raw_radians);
+    write_number(consumer.telemetry.tdct.alpha_raw_radians);
     std::cout << ",\"alpha_limited_rad\":";
-    write_number(consumer.tdct.alpha_limited_radians);
+    write_number(consumer.output.tdct.alpha_limited_radians);
     std::cout << ",\"saturation\":\""
-              << to_string(consumer.tdct.saturation)
+              << to_string(consumer.telemetry.tdct.saturation)
               << "\",\"sample_tick\":"
-              << consumer.tdct.context.sample_time.tick
+              << consumer.output.tdct.context.sample_time.tick
               << ",\"configuration_revision\":"
-              << consumer.tdct.context.configuration_revision
+              << consumer.output.tdct.context.configuration_revision
               << "},\"direct_checks\":[";
     for (std::size_t index = 0U; index < bundle.direct_checks.size();
          ++index) {
