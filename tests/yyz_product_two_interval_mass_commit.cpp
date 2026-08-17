@@ -44,6 +44,12 @@ constexpr std::string_view kPropulsionOracleId =
     "ORACLE-YYZ-PROPULSION-RESPONSE-001";
 constexpr std::string_view kPropulsionReferenceModelId =
     "MODEL-YYZ-PROPULSION-RESPONSE-001";
+constexpr std::string_view kMissionFixtureId =
+    "REF-YYZ-MISSION-COMPOSITION-001";
+constexpr std::string_view kMissionOracleId =
+    "ORACLE-YYZ-MISSION-COMPOSITION-001";
+constexpr std::string_view kMissionReferenceModelId =
+    "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-004";
 constexpr std::string_view kPropulsionSourceId = "propulsion.main";
 constexpr std::string_view kMassStateId =
     "mass.fixture.yyz.vehicle@1";
@@ -166,6 +172,80 @@ SuppliedPropulsionDefinition fixture_propulsion_definition() {
     return definition;
 }
 
+RigidStepModelDefinition mission_rigid_definition() {
+    RigidStepModelDefinition definition = fixture_rigid_definition();
+    definition.model_version = "0.3.0";
+    auto& aero = definition.aerodynamics;
+    aero.source_id = "aero.body";
+    aero.table_id = "aero-table.fixture.yyz.multiaffine@1";
+    aero.configuration_id = "configuration.fixture.yyz.clean@1";
+    aero.body_origin_to_application.value =
+        Vec3{0.2, 0.0, -25.0 / 18.0};
+    aero.mach_axis = {0.2, 0.6};
+    aero.alpha_axis_radians = {-0.1, 0.1};
+    aero.beta_axis_radians = {-0.05, 0.05};
+    aero.coefficient_rows_ca_cy_cn_cl_cm_cn = {
+        {0.006, 0.0245, -0.0795, 0.005, 0.014, -0.00755},
+        {0.006, -0.0245, -0.0805, -0.005, 0.014, 0.00755},
+        {0.05, 0.0245, 0.0795, 0.005, -0.106, -0.00785},
+        {0.05, -0.0245, 0.0805, -0.005, -0.106, 0.00785},
+        {0.018, 0.0235, -0.0795, 0.005, 0.022, -0.00795},
+        {0.018, -0.0235, -0.0805, -0.005, 0.022, 0.00795},
+        {0.07, 0.0235, 0.0795, 0.005, -0.098, -0.00825},
+        {0.07, -0.0235, 0.0805, -0.005, -0.098, 0.00825},
+    };
+    return definition;
+}
+
+ControlledPropelledRigidMassStepDefinition mission_control_definition() {
+    ControlledPropelledRigidMassStepDefinition definition;
+    definition.model_id =
+        std::string(kControlledPropelledRigidMassStepModelIdentity);
+    definition.model_version = "0.1.0";
+    definition.combined_wrench_source_id =
+        "propulsion.main+actuation.pitch-moment";
+    definition.guidance.model_id =
+        std::string(kAltitudePitchGuidanceModelIdentity);
+    definition.guidance.model_version = "0.1.0";
+    definition.guidance.inertial_frame =
+        FrameIdentity{std::string(kInertialFrame)};
+    definition.guidance.clock_domain =
+        ClockDomainIdentity{std::string(kClock)};
+    definition.guidance.configuration_revision = 11;
+    definition.guidance.target_altitude_meters = 1000.0;
+    definition.guidance.altitude_error_gain_radians_per_meter = 0.02;
+    definition.guidance.vertical_speed_gain_radian_seconds_per_meter = 0.05;
+    definition.guidance.pitch_command_limit_radians = 0.04;
+    definition.guidance.attitude_policy = fixture_quaternion_policy();
+    definition.controller.model_id =
+        std::string(kPitchMomentControllerModelIdentity);
+    definition.controller.model_version = "0.1.0";
+    definition.controller.body_frame =
+        FrameIdentity{std::string(kBodyFrame)};
+    definition.controller.clock_domain =
+        ClockDomainIdentity{std::string(kClock)};
+    definition.controller.configuration_revision = 11;
+    definition.controller.pitch_error_gain_newton_meters_per_radian =
+        500.0;
+    definition.controller
+        .pitch_rate_gain_newton_meter_seconds_per_radian = 80.0;
+    definition.controller.moment_command_limit_newton_meters = 25.0;
+    definition.controller.numerical_policy = fixture_numerical_policy();
+    definition.actuator.model_id =
+        std::string(kIdealBodyMomentActuatorModelIdentity);
+    definition.actuator.model_version = "0.1.0";
+    definition.actuator.source_id =
+        "actuation.fixture.yyz.ideal-body-moment@1";
+    definition.actuator.body_frame =
+        FrameIdentity{std::string(kBodyFrame)};
+    definition.actuator.clock_domain =
+        ClockDomainIdentity{std::string(kClock)};
+    definition.actuator.configuration_revision = 11;
+    definition.actuator.realization_gain = 1.0;
+    definition.actuator.numerical_policy = fixture_numerical_policy();
+    return definition;
+}
+
 [[nodiscard]] SimulationInstant instant_at(std::int64_t tick,
                                            double base_dt_seconds) {
     return {tick, base_dt_seconds * static_cast<double>(tick)};
@@ -211,6 +291,64 @@ SuppliedPropulsionDefinition fixture_propulsion_definition() {
         sample_context(frame, tick),
         HalfOpenValidityInterval{instant(tick), instant(tick + 1)},
     };
+}
+
+[[nodiscard]] CommittedRigidMassBoundary mission_boundary(
+    std::int64_t tick) {
+    CommittedRigidMassBoundary boundary;
+    boundary.rigid_context = sample_context(kInertialFrame, tick);
+    boundary.mass_state.context = sample_context(kBodyFrame, tick);
+    boundary.mass_state.mass_state_id = std::string(kMassStateId);
+    boundary.mass_state.body_origin_to_center_of_mass.value =
+        Vec3{0.2, 0.0, 0.0};
+    boundary.mass_state.inertia_about_center_of_mass.value = Mat3::Zero();
+    boundary.mass_state.inertia_about_center_of_mass.value.diagonal() =
+        Vec3{10.0, 20.0, 30.0};
+    boundary.rigid_state.attitude.value =
+        gnc::foundation::quaternion_from_wxyz(1.0, 0.0, 0.0, 0.0);
+    if (tick == 0) {
+        boundary.rigid_state.position.value = Vec3{0.0, 0.0, 1000.0};
+        boundary.rigid_state.velocity.value = Vec3{110.0, 0.0, 0.0};
+        boundary.rigid_state.angular_rate.value = Vec3::Zero();
+        boundary.mass_state.mass_kilograms = 100.0;
+        return boundary;
+    }
+    require(tick == 1, "unsupported mission opening tick");
+    boundary.rigid_state.position.value =
+        Vec3{10.995272058823529, 0.0, 999.95096675};
+    boundary.rigid_state.velocity.value =
+        Vec3{109.90544117647059, 0.0, -0.980665};
+    boundary.rigid_state.angular_rate.value = Vec3::Zero();
+    boundary.mass_state.mass_kilograms = 99.95;
+    return boundary;
+}
+
+[[nodiscard]] PropelledRigidMassIntervalInput mission_control_interval(
+    std::int64_t tick) {
+    PropelledRigidMassIntervalInput interval;
+    interval.context = {
+        FrameIdentity{std::string(kInertialFrame)},
+        FrameIdentity{std::string(kBodyFrame)},
+        ClockDomainIdentity{std::string(kClock)},
+        instant(tick),
+        instant(tick + 1),
+        11,
+        DataQuality::Valid,
+    };
+    interval.environment.context = sample_context(kInertialFrame, tick);
+    interval.environment.gravity.value = Vec3{0.0, 0.0, -9.80665};
+    interval.environment.velocity_airmass.value = Vec3{10.0, 0.0, 0.0};
+    interval.environment.density_kilograms_per_cubic_meter = 1.225;
+    interval.environment.speed_of_sound_meters_per_second = 340.0;
+    interval.propulsion.context = interval_context(kBodyFrame, tick);
+    interval.propulsion.thrust_magnitude_newtons = 100.0;
+    interval.propulsion.thrust_direction.value = Vec3::UnitX();
+    interval.propulsion.center_of_mass_to_application.value =
+        Vec3{0.0, 0.2, 0.0};
+    interval.propulsion.intrinsic_moment_at_application.value =
+        Vec3{0.0, 0.0, 20.0};
+    interval.propulsion.fuel_consumption_rate_kilograms_per_second = 0.5;
+    return interval;
 }
 
 [[nodiscard]] RigidMassIntervalInput interval_input(std::int64_t tick) {
@@ -644,10 +782,128 @@ struct PropulsionProbeBundle {
     };
 }
 
+struct MissionControlProbeBundle {
+    ControlledPropelledRigidMassStepOutput accepted;
+    std::vector<std::string> direct_checks;
+};
+
+[[nodiscard]] MissionControlProbeBundle run_mission_control_probe() {
+    const auto prepared_outcome =
+        prepare_rigid_step_model(mission_rigid_definition());
+    const auto& prepared = require_value(
+        prepared_outcome, "mission rigid model preparation failed");
+    const ScalarBurnMassDefinition mass_definition =
+        fixture_mass_definition();
+    const SuppliedPropulsionDefinition propulsion_definition =
+        fixture_propulsion_definition();
+    const ControlledPropelledRigidMassStepDefinition control_definition =
+        mission_control_definition();
+    const CommittedRigidMassBoundary opening = mission_boundary(1);
+    const PropelledRigidMassIntervalInput interval =
+        mission_control_interval(1);
+    const auto accepted_outcome =
+        ControlledPropelledRigidMassStepKernel::evaluate(
+            prepared, mass_definition, propulsion_definition,
+            control_definition, opening, interval);
+    const auto& accepted = require_value(
+        accepted_outcome, "mission control product evaluation failed");
+
+    require(accepted.observation.context.sample_time.tick == 1 &&
+                near(accepted.observation.state.position.value,
+                     opening.rigid_state.position.value) &&
+                near(accepted.guidance.measured_pitch_radians, 0.0) &&
+                near(accepted.guidance.altitude_error_meters, 0.04903325) &&
+                near(accepted.guidance.altitude_feedback_radians,
+                     0.000980665) &&
+                near(accepted.guidance.vertical_speed_feedback_radians,
+                     0.04903325) &&
+                near(accepted.guidance.raw_pitch_command_radians,
+                     0.050013915) &&
+                near(accepted.guidance.pitch_command_radians, 0.04) &&
+                accepted.guidance.saturated,
+            "committed observation or guidance anchors differ");
+    std::vector<std::string> checks{
+        "mission-committed-observation-to-bounded-guidance"};
+
+    require(near(accepted.controller.pitch_error_radians, 0.04) &&
+                near(accepted.controller.proportional_moment_newton_meters,
+                     20.0) &&
+                near(accepted.controller.rate_damping_moment_newton_meters,
+                     0.0) &&
+                near(accepted.controller.raw_moment_command_newton_meters,
+                     20.0) &&
+                near(accepted.controller.moment_command_newton_meters,
+                     20.0) &&
+                !accepted.controller.saturated &&
+                accepted.actuator.context.sample.sample_time.tick == 1 &&
+                accepted.actuator.context.validity.effective_until.tick ==
+                    2 &&
+                near(accepted.actuator.moment_about_center_of_mass.value,
+                     Vec3{0.0, 20.0, 0.0}),
+            "controller or ideal actuation anchors differ");
+    checks.emplace_back("mission-controller-to-current-cycle-actuation");
+
+    const auto& boundary = accepted.atomic_boundary;
+    require(near(accepted.propulsion.moment_about_center_of_mass.value,
+                 Vec3::Zero()) &&
+                near(boundary.rigid_step.supplied_contribution.force.value,
+                     Vec3{100.0, 0.0, 0.0}) &&
+                near(boundary.rigid_step.supplied_contribution
+                         .moment_about_center_of_mass.value,
+                     Vec3{0.0, 20.0, 0.0}) &&
+                near(boundary.rigid_step
+                         .moment_total_about_center_of_mass.value,
+                     Vec3{0.0, 36.766216427351054, 0.0}) &&
+                near(boundary.mass_evolution.candidate.state.mass_kilograms,
+                     99.9) &&
+                boundary.candidate.effective_at.tick == 2,
+            "controlled propulsion atomic boundary differs");
+    checks.emplace_back("mission-control-propulsion-single-transport");
+
+    require(near(boundary.rigid_step.candidate.state.position.value,
+                 Vec3{21.981798901675346, 0.0,
+                      999.8062748637297}) &&
+                near(boundary.rigid_step.candidate.state.velocity.value,
+                     Vec3{109.82516983067299, 0.0,
+                          -1.9130498687217244}) &&
+                near(boundary.rigid_step.candidate.state.angular_rate.value,
+                     Vec3{0.0, 0.18383108213675527, 0.0}),
+            "controlled interval candidate differs from mission oracle");
+    checks.emplace_back("mission-controlled-candidate-oracle-anchors");
+
+    CommittedRigidMassBoundary non_pitch = opening;
+    non_pitch.rigid_state.attitude.value =
+        gnc::foundation::quaternion_from_wxyz(
+            std::sqrt(1.0 - 0.01 * 0.01), 0.01, 0.0, 0.0);
+    expect_failure(ControlledPropelledRigidMassStepKernel::evaluate(
+                       prepared, mass_definition, propulsion_definition,
+                       control_definition, non_pitch, interval),
+                   NumericalStatus::DomainError,
+                   "non-pure-pitch observation survived");
+    ControlledPropelledRigidMassStepDefinition nonideal =
+        control_definition;
+    nonideal.actuator.realization_gain = 1.1;
+    expect_failure(ControlledPropelledRigidMassStepKernel::evaluate(
+                       prepared, mass_definition, propulsion_definition,
+                       nonideal, opening, interval),
+                   NumericalStatus::DomainError,
+                   "nonunit ideal actuator gain survived");
+    CommittedRigidMassBoundary stale = opening;
+    stale.rigid_context.sample_time = instant(0);
+    expect_failure(ControlledPropelledRigidMassStepKernel::evaluate(
+                       prepared, mass_definition, propulsion_definition,
+                       control_definition, stale, interval),
+                   NumericalStatus::DomainError,
+                   "stale committed observation survived");
+    checks.emplace_back("mission-control-three-invalid-input-rejections");
+    return {accepted, std::move(checks)};
+}
+
 struct ProbeBundle {
     TwoIntervalMassCommitOutput accepted;
     std::vector<std::string> direct_checks;
     PropulsionProbeBundle propulsion;
+    MissionControlProbeBundle mission_control;
 };
 
 ProbeBundle run_probe() {
@@ -796,7 +1052,10 @@ ProbeBundle run_probe() {
 
     PropulsionProbeBundle propulsion = run_propulsion_probe(
         prepared, mass_definition, accepted_input.opening_boundary);
-    return {accepted, std::move(checks), std::move(propulsion)};
+    MissionControlProbeBundle mission_control =
+        run_mission_control_probe();
+    return {accepted, std::move(checks), std::move(propulsion),
+            std::move(mission_control)};
 }
 
 void write_number(double value) {
@@ -1041,10 +1300,79 @@ void write_propulsion(const PropulsionProbeBundle& propulsion) {
     std::cout << "]}";
 }
 
+void write_mission_control(
+    const MissionControlProbeBundle& mission_control) {
+    const auto& value = mission_control.accepted;
+    const auto& guidance = value.guidance;
+    const auto& controller = value.controller;
+    const auto& boundary = value.atomic_boundary;
+    std::cout << "{\"product_model_id\":\""
+              << kControlledPropelledRigidMassStepModelIdentity
+              << "\",\"source_fixture_id\":\"" << kMissionFixtureId
+              << "\",\"source_oracle_id\":\"" << kMissionOracleId
+              << "\",\"reference_model_id\":\""
+              << kMissionReferenceModelId
+              << "\",\"status\":\"passed\",\"observation_tick\":"
+              << value.observation.context.sample_time.tick
+              << ",\"guidance\":{\"altitude_error_m\":";
+    write_number(guidance.altitude_error_meters);
+    std::cout << ",\"altitude_feedback_rad\":";
+    write_number(guidance.altitude_feedback_radians);
+    std::cout << ",\"vertical_speed_feedback_rad\":";
+    write_number(guidance.vertical_speed_feedback_radians);
+    std::cout << ",\"raw_pitch_command_rad\":";
+    write_number(guidance.raw_pitch_command_radians);
+    std::cout << ",\"pitch_command_rad\":";
+    write_number(guidance.pitch_command_radians);
+    std::cout << ",\"saturated\":"
+              << (guidance.saturated ? "true" : "false")
+              << "},\"controller\":{\"pitch_error_rad\":";
+    write_number(controller.pitch_error_radians);
+    std::cout << ",\"proportional_moment_Nm\":";
+    write_number(controller.proportional_moment_newton_meters);
+    std::cout << ",\"rate_damping_moment_Nm\":";
+    write_number(controller.rate_damping_moment_newton_meters);
+    std::cout << ",\"raw_moment_command_Nm\":";
+    write_number(controller.raw_moment_command_newton_meters);
+    std::cout << ",\"moment_command_Nm\":";
+    write_number(controller.moment_command_newton_meters);
+    std::cout << ",\"saturated\":"
+              << (controller.saturated ? "true" : "false")
+              << "},\"actuator\":{\"valid_from_tick\":"
+              << value.actuator.context.validity.effective_from.tick
+              << ",\"valid_until_tick\":"
+              << value.actuator.context.validity.effective_until.tick
+              << ",\"moment_about_CoM_B_Nm\":";
+    write_vec3(value.actuator.moment_about_center_of_mass.value);
+    std::cout << "},\"atomic_boundary\":{\"supplied_force_B_N\":";
+    write_vec3(boundary.rigid_step.supplied_contribution.force.value);
+    std::cout << ",\"supplied_moment_about_CoM_B_Nm\":";
+    write_vec3(boundary.rigid_step.supplied_contribution
+                   .moment_about_center_of_mass.value);
+    std::cout << ",\"total_moment_about_CoM_B_Nm\":";
+    write_vec3(boundary.rigid_step
+                   .moment_total_about_center_of_mass.value);
+    std::cout << ",\"candidate_tick\":"
+              << boundary.candidate.effective_at.tick
+              << ",\"candidate_mass_kg\":";
+    write_number(boundary.mass_evolution.candidate.state.mass_kilograms);
+    std::cout << ",\"candidate_rigid_state\":";
+    write_rigid_state(boundary.rigid_step.candidate.state);
+    std::cout << "},\"direct_checks\":[";
+    for (std::size_t index = 0U;
+         index < mission_control.direct_checks.size(); ++index) {
+        if (index != 0U) {
+            std::cout << ',';
+        }
+        std::cout << '\"' << mission_control.direct_checks[index] << '\"';
+    }
+    std::cout << "]}";
+}
+
 void write_json(const ProbeBundle& bundle) {
     const auto& terminal = bundle.accepted.terminal_boundary;
     std::cout << std::setprecision(17)
-              << "{\"schema_version\":\"gnczmkn.yyz-two-interval-mass-commit-product-probe/2\""
+              << "{\"schema_version\":\"gnczmkn.yyz-two-interval-mass-commit-product-probe/3\""
               << ",\"product_model_id\":\""
               << kTwoIntervalMassCommitModelIdentity
               << "\",\"mass_model_id\":\""
@@ -1081,6 +1409,8 @@ void write_json(const ProbeBundle& bundle) {
     }
     std::cout << "],\"propulsion\":";
     write_propulsion(bundle.propulsion);
+    std::cout << ",\"mission_control\":";
+    write_mission_control(bundle.mission_control);
     std::cout << "}\n";
 }
 

@@ -127,14 +127,14 @@ template <typename Value>
 }
 
 [[nodiscard]] CommittedRigidMassBoundary promote_candidate(
-    const RigidMassIntervalInput& interval,
+    const RigidStepContext& context,
     const AtomicRigidMassCandidate& candidate) {
     CommittedRigidMassBoundary committed;
     committed.rigid_context = {
-        interval.context.inertial_frame,
-        interval.context.clock_domain,
+        context.inertial_frame,
+        context.clock_domain,
         candidate.effective_at,
-        interval.context.configuration_revision,
+        context.configuration_revision,
         DataQuality::Valid,
     };
     committed.rigid_state = candidate.rigid.state;
@@ -331,6 +331,261 @@ NumericalOutcome<ScalarBurnMassOutput> ScalarBurnMassKernel::evaluate(
         std::move(output), evidence);
 }
 
+NumericalOutcome<AltitudePitchGuidanceOutput>
+AltitudePitchGuidanceKernel::evaluate(
+    const AltitudePitchGuidanceDefinition& definition,
+    const CommittedRigidObservation& observation) {
+    const NumericalPolicy& policy = definition.attitude_policy.numerical;
+    if (definition.model_id != kAltitudePitchGuidanceModelIdentity ||
+        definition.model_version.empty() ||
+        definition.inertial_frame.id.empty() ||
+        definition.clock_domain.id.empty() ||
+        definition.configuration_revision < 0 ||
+        !gnc::foundation::valid_quaternion_policy(
+            definition.attitude_policy) ||
+        !std::isfinite(definition.target_altitude_meters) ||
+        !std::isfinite(
+            definition.altitude_error_gain_radians_per_meter) ||
+        !std::isfinite(
+            definition.vertical_speed_gain_radian_seconds_per_meter) ||
+        !std::isfinite(definition.pitch_command_limit_radians) ||
+        definition.altitude_error_gain_radians_per_meter < 0.0 ||
+        definition.vertical_speed_gain_radian_seconds_per_meter < 0.0 ||
+        definition.pitch_command_limit_radians <= 0.0) {
+        return mass_commit_failure<AltitudePitchGuidanceOutput>(
+            kAltitudePitchGuidanceKernelIdentity,
+            NumericalStatus::DomainError, "definition-or-policy");
+    }
+    if (!valid_sample_at(
+            observation.context, definition.inertial_frame,
+            definition.clock_domain, observation.context.sample_time,
+            definition.configuration_revision, policy) ||
+        observation.context.sample_time.tick < 0 ||
+        !std::isfinite(observation.context.sample_time.seconds)) {
+        return mass_commit_failure<AltitudePitchGuidanceOutput>(
+            kAltitudePitchGuidanceKernelIdentity,
+            NumericalStatus::DomainError, "committed-observation-context");
+    }
+    if (!finite(observation.state.position.value) ||
+        !finite(observation.state.velocity.value) ||
+        !finite(observation.state.angular_rate.value)) {
+        return mass_commit_failure<AltitudePitchGuidanceOutput>(
+            kAltitudePitchGuidanceKernelIdentity,
+            NumericalStatus::NonFiniteInput, "committed-observation-state");
+    }
+    const auto attitude = gnc::foundation::prepare_passive_quaternion(
+        observation.state.attitude.value, definition.attitude_policy);
+    if (!attitude.has_value()) {
+        return mass_commit_failure<AltitudePitchGuidanceOutput>(
+            kAltitudePitchGuidanceKernelIdentity, attitude.status(),
+            "committed-observation-attitude", attitude.evidence().flags);
+    }
+    const auto& q = attitude.value();
+    if (!near(q.x(), 0.0, policy) || !near(q.z(), 0.0, policy) ||
+        q.w() <= 0.0) {
+        return mass_commit_failure<AltitudePitchGuidanceOutput>(
+            kAltitudePitchGuidanceKernelIdentity,
+            NumericalStatus::DomainError, "pure-pitch-projection",
+            attitude.evidence().flags);
+    }
+
+    const double pitch = -2.0 * std::atan2(q.y(), q.w());
+    const double pitch_rate = observation.state.angular_rate.value(1);
+    const double altitude_error = definition.target_altitude_meters -
+                                  observation.state.position.value(2);
+    const double altitude_feedback =
+        definition.altitude_error_gain_radians_per_meter * altitude_error;
+    const double vertical_speed_feedback =
+        -definition.vertical_speed_gain_radian_seconds_per_meter *
+        observation.state.velocity.value(2);
+    const double raw_pitch_command =
+        altitude_feedback + vertical_speed_feedback;
+    const double pitch_command = std::clamp(
+        raw_pitch_command, -definition.pitch_command_limit_radians,
+        definition.pitch_command_limit_radians);
+    if (!std::isfinite(pitch) || !std::isfinite(pitch_rate) ||
+        !std::isfinite(altitude_error) ||
+        !std::isfinite(altitude_feedback) ||
+        !std::isfinite(vertical_speed_feedback) ||
+        !std::isfinite(raw_pitch_command) ||
+        !std::isfinite(pitch_command)) {
+        return mass_commit_failure<AltitudePitchGuidanceOutput>(
+            kAltitudePitchGuidanceKernelIdentity,
+            NumericalStatus::NonFiniteIntermediate, "guidance-formula",
+            attitude.evidence().flags);
+    }
+
+    AltitudePitchGuidanceOutput output;
+    output.source_observation = observation;
+    output.measured_pitch_radians = pitch;
+    output.measured_pitch_rate_radians_per_second = pitch_rate;
+    output.altitude_error_meters = altitude_error;
+    output.altitude_feedback_radians = altitude_feedback;
+    output.vertical_speed_feedback_radians = vertical_speed_feedback;
+    output.raw_pitch_command_radians = raw_pitch_command;
+    output.pitch_command_radians = pitch_command;
+    output.saturated = pitch_command != raw_pitch_command;
+    NumericalEvidence evidence = mass_commit_evidence(
+        kAltitudePitchGuidanceKernelIdentity, "committed-altitude-pitch",
+        attitude.evidence().flags);
+    evidence.evaluations = attitude.evidence().evaluations + 1U;
+    evidence.residual_norm = attitude.evidence().residual_norm;
+    return NumericalOutcome<AltitudePitchGuidanceOutput>::with_value(
+        approximate_status(attitude.status())
+            ? NumericalStatus::Approximate
+            : NumericalStatus::Success,
+        std::move(output), evidence);
+}
+
+NumericalOutcome<PitchMomentControllerOutput>
+PitchMomentControllerKernel::evaluate(
+    const PitchMomentControllerDefinition& definition,
+    const AltitudePitchGuidanceOutput& guidance) {
+    if (definition.model_id != kPitchMomentControllerModelIdentity ||
+        definition.model_version.empty() || definition.body_frame.id.empty() ||
+        definition.clock_domain.id.empty() ||
+        definition.configuration_revision < 0 ||
+        !gnc::foundation::valid_numerical_policy(
+            definition.numerical_policy) ||
+        !std::isfinite(
+            definition.pitch_error_gain_newton_meters_per_radian) ||
+        !std::isfinite(
+            definition.pitch_rate_gain_newton_meter_seconds_per_radian) ||
+        !std::isfinite(
+            definition.moment_command_limit_newton_meters) ||
+        definition.pitch_error_gain_newton_meters_per_radian < 0.0 ||
+        definition.pitch_rate_gain_newton_meter_seconds_per_radian < 0.0 ||
+        definition.moment_command_limit_newton_meters <= 0.0) {
+        return mass_commit_failure<PitchMomentControllerOutput>(
+            kPitchMomentControllerKernelIdentity,
+            NumericalStatus::DomainError, "definition-or-policy");
+    }
+    const auto& source = guidance.source_observation.context;
+    if (source.clock_domain != definition.clock_domain ||
+        source.configuration_revision !=
+            definition.configuration_revision ||
+        source.quality != DataQuality::Valid ||
+        source.sample_time.tick < 0 ||
+        !std::isfinite(source.sample_time.seconds)) {
+        return mass_commit_failure<PitchMomentControllerOutput>(
+            kPitchMomentControllerKernelIdentity,
+            NumericalStatus::DomainError, "guidance-context");
+    }
+    if (!std::isfinite(guidance.measured_pitch_radians) ||
+        !std::isfinite(guidance.measured_pitch_rate_radians_per_second) ||
+        !std::isfinite(guidance.pitch_command_radians)) {
+        return mass_commit_failure<PitchMomentControllerOutput>(
+            kPitchMomentControllerKernelIdentity,
+            NumericalStatus::NonFiniteInput, "guidance-value");
+    }
+
+    const double pitch_error = guidance.pitch_command_radians -
+                               guidance.measured_pitch_radians;
+    const double proportional =
+        definition.pitch_error_gain_newton_meters_per_radian * pitch_error;
+    const double damping =
+        -definition.pitch_rate_gain_newton_meter_seconds_per_radian *
+        guidance.measured_pitch_rate_radians_per_second;
+    const double raw_command = proportional + damping;
+    const double command = std::clamp(
+        raw_command, -definition.moment_command_limit_newton_meters,
+        definition.moment_command_limit_newton_meters);
+    if (!std::isfinite(pitch_error) || !std::isfinite(proportional) ||
+        !std::isfinite(damping) || !std::isfinite(raw_command) ||
+        !std::isfinite(command)) {
+        return mass_commit_failure<PitchMomentControllerOutput>(
+            kPitchMomentControllerKernelIdentity,
+            NumericalStatus::NonFiniteIntermediate, "controller-formula");
+    }
+
+    PitchMomentControllerOutput output;
+    output.context = source;
+    output.context.frame = definition.body_frame;
+    output.pitch_error_radians = pitch_error;
+    output.proportional_moment_newton_meters = proportional;
+    output.rate_damping_moment_newton_meters = damping;
+    output.raw_moment_command_newton_meters = raw_command;
+    output.moment_command_newton_meters = command;
+    output.saturated = command != raw_command;
+    NumericalEvidence evidence = mass_commit_evidence(
+        kPitchMomentControllerKernelIdentity, "pitch-moment-command");
+    evidence.evaluations = 1U;
+    return NumericalOutcome<PitchMomentControllerOutput>::with_value(
+        NumericalStatus::Success, std::move(output), evidence);
+}
+
+NumericalOutcome<IdealBodyMomentActuatorOutput>
+IdealBodyMomentActuatorKernel::evaluate(
+    const IdealBodyMomentActuatorDefinition& definition,
+    const IntervalSampleContext& context,
+    const PitchMomentControllerOutput& controller) {
+    if (definition.model_id != kIdealBodyMomentActuatorModelIdentity ||
+        definition.model_version.empty() || definition.source_id.empty() ||
+        definition.body_frame.id.empty() ||
+        definition.clock_domain.id.empty() ||
+        definition.configuration_revision < 0 ||
+        !gnc::foundation::valid_numerical_policy(
+            definition.numerical_policy) ||
+        !std::isfinite(definition.realization_gain) ||
+        !near(definition.realization_gain, 1.0,
+              definition.numerical_policy)) {
+        return mass_commit_failure<IdealBodyMomentActuatorOutput>(
+            kIdealBodyMomentActuatorKernelIdentity,
+            NumericalStatus::DomainError, "definition-or-policy");
+    }
+    if (!valid_interval_at(
+            context, definition.body_frame, definition.clock_domain,
+            context.validity.effective_from,
+            context.validity.effective_until,
+            definition.configuration_revision,
+            definition.numerical_policy) ||
+        context.validity.effective_from.tick < 0 ||
+        context.validity.effective_until.tick <=
+            context.validity.effective_from.tick ||
+        !std::isfinite(context.validity.effective_from.seconds) ||
+        !std::isfinite(context.validity.effective_until.seconds) ||
+        context.validity.effective_until.seconds <=
+            context.validity.effective_from.seconds ||
+        controller.context.frame != definition.body_frame ||
+        controller.context.clock_domain != definition.clock_domain ||
+        controller.context.configuration_revision !=
+            definition.configuration_revision ||
+        controller.context.quality != DataQuality::Valid ||
+        !same_instant(controller.context.sample_time,
+                      context.validity.effective_from,
+                      definition.numerical_policy)) {
+        return mass_commit_failure<IdealBodyMomentActuatorOutput>(
+            kIdealBodyMomentActuatorKernelIdentity,
+            NumericalStatus::DomainError, "controller-or-interval-context");
+    }
+    if (!std::isfinite(controller.moment_command_newton_meters)) {
+        return mass_commit_failure<IdealBodyMomentActuatorOutput>(
+            kIdealBodyMomentActuatorKernelIdentity,
+            NumericalStatus::NonFiniteInput, "moment-command");
+    }
+    const double realized = definition.realization_gain *
+                            controller.moment_command_newton_meters;
+    if (!std::isfinite(realized)) {
+        return mass_commit_failure<IdealBodyMomentActuatorOutput>(
+            kIdealBodyMomentActuatorKernelIdentity,
+            NumericalStatus::NonFiniteIntermediate,
+            "moment-realization");
+    }
+
+    IdealBodyMomentActuatorOutput output;
+    output.context = context;
+    output.source_id = definition.source_id;
+    output.moment_about_center_of_mass.value = Vec3{0.0, realized, 0.0};
+    NumericalEvidence evidence = mass_commit_evidence(
+        kIdealBodyMomentActuatorKernelIdentity,
+        "current-cycle-ideal-moment");
+    evidence.evaluations = 1U;
+    evidence.last_step = context.validity.effective_until.seconds -
+                         context.validity.effective_from.seconds;
+    return NumericalOutcome<IdealBodyMomentActuatorOutput>::with_value(
+        NumericalStatus::Success, std::move(output), evidence);
+}
+
 NumericalOutcome<FrozenRigidMassStepOutput>
 FrozenRigidMassStepKernel::evaluate(
     const PreparedRigidStepModel& rigid_model,
@@ -506,6 +761,168 @@ PropelledFrozenRigidMassStepKernel::evaluate(
             std::move(output), evidence);
 }
 
+NumericalOutcome<ControlledPropelledRigidMassStepOutput>
+ControlledPropelledRigidMassStepKernel::evaluate(
+    const PreparedRigidStepModel& rigid_model,
+    const ScalarBurnMassDefinition& mass_definition,
+    const SuppliedPropulsionDefinition& propulsion_definition,
+    const ControlledPropelledRigidMassStepDefinition& definition,
+    const CommittedRigidMassBoundary& opening_boundary,
+    const PropelledRigidMassIntervalInput& interval) {
+    const auto& rigid_definition = rigid_model.definition();
+    if (definition.model_id !=
+            kControlledPropelledRigidMassStepModelIdentity ||
+        definition.model_version.empty() ||
+        definition.combined_wrench_source_id.empty() ||
+        definition.guidance.inertial_frame !=
+            rigid_definition.inertial_frame ||
+        definition.controller.body_frame != rigid_definition.body_frame ||
+        definition.actuator.body_frame != rigid_definition.body_frame ||
+        definition.guidance.clock_domain !=
+            rigid_definition.clock_domain ||
+        definition.controller.clock_domain !=
+            rigid_definition.clock_domain ||
+        definition.actuator.clock_domain !=
+            rigid_definition.clock_domain ||
+        definition.guidance.configuration_revision !=
+            rigid_definition.configuration_revision ||
+        definition.controller.configuration_revision !=
+            rigid_definition.configuration_revision ||
+        definition.actuator.configuration_revision !=
+            rigid_definition.configuration_revision ||
+        propulsion_definition.body_frame != rigid_definition.body_frame ||
+        propulsion_definition.clock_domain !=
+            rigid_definition.clock_domain) {
+        return mass_commit_failure<
+            ControlledPropelledRigidMassStepOutput>(
+                kControlledPropelledRigidMassStepKernelIdentity,
+                NumericalStatus::DomainError,
+                "definition-identity-closure");
+    }
+
+    CommittedRigidObservation observation;
+    observation.context = opening_boundary.rigid_context;
+    observation.state = opening_boundary.rigid_state;
+    const auto guidance = AltitudePitchGuidanceKernel::evaluate(
+        definition.guidance, observation);
+    if (!guidance.has_value()) {
+        return mass_commit_failure<
+            ControlledPropelledRigidMassStepOutput>(
+                kControlledPropelledRigidMassStepKernelIdentity,
+                guidance.status(), "guidance",
+                guidance.evidence().flags);
+    }
+    const auto controller = PitchMomentControllerKernel::evaluate(
+        definition.controller, guidance.value());
+    if (!controller.has_value()) {
+        return mass_commit_failure<
+            ControlledPropelledRigidMassStepOutput>(
+                kControlledPropelledRigidMassStepKernelIdentity,
+                controller.status(), "controller",
+                guidance.evidence().flags |
+                    controller.evidence().flags);
+    }
+    const auto actuator = IdealBodyMomentActuatorKernel::evaluate(
+        definition.actuator, interval.propulsion.context,
+        controller.value());
+    if (!actuator.has_value()) {
+        return mass_commit_failure<
+            ControlledPropelledRigidMassStepOutput>(
+                kControlledPropelledRigidMassStepKernelIdentity,
+                actuator.status(), "actuator",
+                guidance.evidence().flags |
+                    controller.evidence().flags |
+                    actuator.evidence().flags);
+    }
+    const auto propulsion = SuppliedPropulsionKernel::evaluate(
+        propulsion_definition, interval.propulsion);
+    if (!propulsion.has_value()) {
+        return mass_commit_failure<
+            ControlledPropelledRigidMassStepOutput>(
+                kControlledPropelledRigidMassStepKernelIdentity,
+                propulsion.status(), "propulsion-response",
+                guidance.evidence().flags |
+                    controller.evidence().flags |
+                    actuator.evidence().flags |
+                    propulsion.evidence().flags);
+    }
+
+    RigidMassIntervalInput atomic_input;
+    atomic_input.context = interval.context;
+    atomic_input.environment = interval.environment;
+    const auto& response = propulsion.value();
+    atomic_input.supplied_wrench.context =
+        response.supplied_body_wrench.context;
+    atomic_input.supplied_wrench.source_id =
+        definition.combined_wrench_source_id;
+    atomic_input.supplied_wrench.force =
+        response.supplied_body_wrench.force;
+    atomic_input.supplied_wrench.body_origin_to_application.value =
+        opening_boundary.mass_state.body_origin_to_center_of_mass.value +
+        response.supplied_body_wrench
+            .center_of_mass_to_application.value;
+    atomic_input.supplied_wrench.intrinsic_moment_at_application.value =
+        response.supplied_body_wrench
+            .intrinsic_moment_at_application.value +
+        actuator.value().moment_about_center_of_mass.value;
+    atomic_input.mass_flow = response.mass_flow;
+    if (!finite(atomic_input.supplied_wrench
+                    .body_origin_to_application.value) ||
+        !finite(atomic_input.supplied_wrench
+                    .intrinsic_moment_at_application.value)) {
+        return mass_commit_failure<
+            ControlledPropelledRigidMassStepOutput>(
+                kControlledPropelledRigidMassStepKernelIdentity,
+                NumericalStatus::NonFiniteIntermediate,
+                "controlled-wrench-adapter");
+    }
+    const auto boundary = FrozenRigidMassStepKernel::evaluate(
+        rigid_model, mass_definition, opening_boundary, atomic_input);
+    if (!boundary.has_value()) {
+        return mass_commit_failure<
+            ControlledPropelledRigidMassStepOutput>(
+                kControlledPropelledRigidMassStepKernelIdentity,
+                boundary.status(), "atomic-boundary",
+                guidance.evidence().flags |
+                    controller.evidence().flags |
+                    actuator.evidence().flags |
+                    propulsion.evidence().flags |
+                    boundary.evidence().flags);
+    }
+
+    ControlledPropelledRigidMassStepOutput output;
+    output.observation = std::move(observation);
+    output.guidance = guidance.value();
+    output.controller = controller.value();
+    output.actuator = actuator.value();
+    output.propulsion = propulsion.value();
+    output.atomic_boundary = boundary.value();
+    const NumericalFlags flags =
+        guidance.evidence().flags | controller.evidence().flags |
+        actuator.evidence().flags | propulsion.evidence().flags |
+        boundary.evidence().flags;
+    NumericalEvidence evidence = mass_commit_evidence(
+        kControlledPropelledRigidMassStepKernelIdentity,
+        "committed-control-to-atomic-boundary", flags);
+    evidence.evaluations = guidance.evidence().evaluations +
+                           controller.evidence().evaluations +
+                           actuator.evidence().evaluations +
+                           propulsion.evidence().evaluations +
+                           boundary.evidence().evaluations;
+    evidence.last_step =
+        rigid_definition.algorithm.fixed_step_seconds;
+    return NumericalOutcome<
+        ControlledPropelledRigidMassStepOutput>::with_value(
+            approximate_status(guidance.status()) ||
+                    approximate_status(controller.status()) ||
+                    approximate_status(actuator.status()) ||
+                    approximate_status(propulsion.status()) ||
+                    approximate_status(boundary.status())
+                ? NumericalStatus::Approximate
+                : NumericalStatus::Success,
+            std::move(output), evidence);
+}
+
 NumericalOutcome<TwoIntervalMassCommitOutput>
 TwoIntervalMassCommitKernel::evaluate(
     const PreparedRigidStepModel& rigid_model,
@@ -520,7 +937,7 @@ TwoIntervalMassCommitKernel::evaluate(
             "interval-0", first.evidence().flags);
     }
     CommittedRigidMassBoundary first_commit = promote_candidate(
-        input.intervals[0], first.value().candidate);
+        input.intervals[0].context, first.value().candidate);
 
     const auto second = FrozenRigidMassStepKernel::evaluate(
         rigid_model, mass_definition, first_commit, input.intervals[1]);
@@ -531,7 +948,7 @@ TwoIntervalMassCommitKernel::evaluate(
                               second.evidence().flags);
     }
     CommittedRigidMassBoundary second_commit = promote_candidate(
-        input.intervals[1], second.value().candidate);
+        input.intervals[1].context, second.value().candidate);
 
     TwoIntervalMassCommitOutput output;
     output.intervals[0].staged = first.value();

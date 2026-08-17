@@ -20,6 +20,15 @@ inline constexpr std::string_view kSuppliedPropulsionContractIdentity =
     "gnc.package.yyz.propulsion-response.contract.experimental@1";
 inline constexpr std::string_view kSuppliedPropulsionModelIdentity =
     "gnc.package.yyz.propulsion-response.supplied.experimental@1";
+inline constexpr std::string_view kAltitudePitchGuidanceModelIdentity =
+    "gnc.package.yyz.guidance.altitude-pitch.experimental@1";
+inline constexpr std::string_view kPitchMomentControllerModelIdentity =
+    "gnc.package.yyz.controller.pitch-moment.experimental@1";
+inline constexpr std::string_view kIdealBodyMomentActuatorModelIdentity =
+    "gnc.package.yyz.actuator.ideal-body-moment.experimental@1";
+inline constexpr std::string_view
+    kControlledPropelledRigidMassStepModelIdentity =
+        "gnc.package.yyz.controlled-propelled-rigid-mass-step.experimental@1";
 
 inline constexpr gnc::foundation::AlgorithmIdentity
     kScalarBurnMassKernelIdentity{
@@ -36,6 +45,19 @@ inline constexpr gnc::foundation::AlgorithmIdentity
 inline constexpr gnc::foundation::AlgorithmIdentity
     kPropelledFrozenRigidMassStepKernelIdentity{
         "gnc.package.yyz.rigid-mass.propelled-frozen-step.kernel@1",
+        "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kAltitudePitchGuidanceKernelIdentity{
+        "gnc.package.yyz.guidance.altitude-pitch.kernel@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kPitchMomentControllerKernelIdentity{
+        "gnc.package.yyz.controller.pitch-moment.kernel@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kIdealBodyMomentActuatorKernelIdentity{
+        "gnc.package.yyz.actuator.ideal-body-moment.kernel@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kControlledPropelledRigidMassStepKernelIdentity{
+        "gnc.package.yyz.rigid-mass.controlled-propelled-step.kernel@1",
         "0.1.0"};
 
 struct ScalarBurnMassDefinition {
@@ -193,6 +215,131 @@ class PropelledFrozenRigidMassStepKernel {
                  const SuppliedPropulsionDefinition& propulsion_definition,
                  const CommittedRigidMassBoundary& opening_boundary,
                  const PropelledRigidMassIntervalInput& interval);
+};
+
+struct CommittedRigidObservation {
+    gnc::contracts::SampleContext context;
+    RigidState state;
+};
+
+struct AltitudePitchGuidanceDefinition {
+    std::string model_id;
+    std::string model_version;
+    gnc::contracts::FrameIdentity inertial_frame;
+    gnc::contracts::ClockDomainIdentity clock_domain;
+    std::int64_t configuration_revision = 0;
+    double target_altitude_meters = 0.0;
+    double altitude_error_gain_radians_per_meter = 0.0;
+    double vertical_speed_gain_radian_seconds_per_meter = 0.0;
+    double pitch_command_limit_radians = 0.0;
+    gnc::foundation::QuaternionPolicy attitude_policy;
+};
+
+struct AltitudePitchGuidanceOutput {
+    CommittedRigidObservation source_observation;
+    double measured_pitch_radians = 0.0;
+    double measured_pitch_rate_radians_per_second = 0.0;
+    double altitude_error_meters = 0.0;
+    double altitude_feedback_radians = 0.0;
+    double vertical_speed_feedback_radians = 0.0;
+    double raw_pitch_command_radians = 0.0;
+    double pitch_command_radians = 0.0;
+    bool saturated = false;
+};
+
+class AltitudePitchGuidanceKernel {
+  public:
+    [[nodiscard]] static gnc::foundation::NumericalOutcome<
+        AltitudePitchGuidanceOutput>
+        evaluate(const AltitudePitchGuidanceDefinition& definition,
+                 const CommittedRigidObservation& observation);
+};
+
+struct PitchMomentControllerDefinition {
+    std::string model_id;
+    std::string model_version;
+    gnc::contracts::FrameIdentity body_frame;
+    gnc::contracts::ClockDomainIdentity clock_domain;
+    std::int64_t configuration_revision = 0;
+    double pitch_error_gain_newton_meters_per_radian = 0.0;
+    double pitch_rate_gain_newton_meter_seconds_per_radian = 0.0;
+    double moment_command_limit_newton_meters = 0.0;
+    gnc::foundation::NumericalPolicy numerical_policy;
+};
+
+struct PitchMomentControllerOutput {
+    gnc::contracts::SampleContext context;
+    double pitch_error_radians = 0.0;
+    double proportional_moment_newton_meters = 0.0;
+    double rate_damping_moment_newton_meters = 0.0;
+    double raw_moment_command_newton_meters = 0.0;
+    double moment_command_newton_meters = 0.0;
+    bool saturated = false;
+};
+
+class PitchMomentControllerKernel {
+  public:
+    [[nodiscard]] static gnc::foundation::NumericalOutcome<
+        PitchMomentControllerOutput>
+        evaluate(const PitchMomentControllerDefinition& definition,
+                 const AltitudePitchGuidanceOutput& guidance);
+};
+
+struct IdealBodyMomentActuatorDefinition {
+    std::string model_id;
+    std::string model_version;
+    std::string source_id;
+    gnc::contracts::FrameIdentity body_frame;
+    gnc::contracts::ClockDomainIdentity clock_domain;
+    std::int64_t configuration_revision = 0;
+    double realization_gain = 0.0;
+    gnc::foundation::NumericalPolicy numerical_policy;
+};
+
+struct IdealBodyMomentActuatorOutput {
+    gnc::contracts::IntervalSampleContext context;
+    std::string source_id;
+    BodyMomentNewtonMeters moment_about_center_of_mass;
+};
+
+class IdealBodyMomentActuatorKernel {
+  public:
+    [[nodiscard]] static gnc::foundation::NumericalOutcome<
+        IdealBodyMomentActuatorOutput>
+        evaluate(const IdealBodyMomentActuatorDefinition& definition,
+                 const gnc::contracts::IntervalSampleContext& context,
+                 const PitchMomentControllerOutput& controller);
+};
+
+struct ControlledPropelledRigidMassStepDefinition {
+    std::string model_id;
+    std::string model_version;
+    std::string combined_wrench_source_id;
+    AltitudePitchGuidanceDefinition guidance;
+    PitchMomentControllerDefinition controller;
+    IdealBodyMomentActuatorDefinition actuator;
+};
+
+struct ControlledPropelledRigidMassStepOutput {
+    CommittedRigidObservation observation;
+    AltitudePitchGuidanceOutput guidance;
+    PitchMomentControllerOutput controller;
+    IdealBodyMomentActuatorOutput actuator;
+    SuppliedPropulsionOutput propulsion;
+    FrozenRigidMassStepOutput atomic_boundary;
+};
+
+class ControlledPropelledRigidMassStepKernel {
+  public:
+    [[nodiscard]] static gnc::foundation::NumericalOutcome<
+        ControlledPropelledRigidMassStepOutput>
+        evaluate(
+            const PreparedRigidStepModel& rigid_model,
+            const ScalarBurnMassDefinition& mass_definition,
+            const SuppliedPropulsionDefinition& propulsion_definition,
+            const ControlledPropelledRigidMassStepDefinition& definition,
+            const CommittedRigidMassBoundary& opening_boundary,
+            const PropelledRigidMassIntervalInput& interval);
 };
 
 struct TwoIntervalMassCommitInput {

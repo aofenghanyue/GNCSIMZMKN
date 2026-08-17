@@ -31,6 +31,13 @@ PROPULSION_PRODUCT_MODEL_ID = \
     "gnc.package.yyz.propulsion-response.supplied.experimental@1"
 PROPULSION_CONTRACT_ID = \
     "gnc.package.yyz.propulsion-response.contract.experimental@1"
+MISSION_FIXTURE_ID = "REF-YYZ-MISSION-COMPOSITION-001"
+MISSION_ORACLE_ID = "ORACLE-YYZ-MISSION-COMPOSITION-001"
+MISSION_REFERENCE_MODEL_ID = \
+    "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-004"
+MISSION_PRODUCT_MODEL_ID = \
+    "gnc.package.yyz.controlled-propelled-rigid-mass-step.experimental@1"
+MISSION_CASE_ID = "CASE-YYZ-MISSION-COMPOSITION-BASELINE"
 CASE_ID = "CASE-YYZ-TWO-INTERVAL-MASS-COMMIT-TRAJECTORY"
 DIRECT_CHECKS = {
     "interval-zero-committed-mass-and-hidden-candidate",
@@ -50,6 +57,13 @@ PROPULSION_DIRECT_CHECKS = {
     "propulsion-interval-partition-equivalence",
     "propulsion-ten-invalid-input-rejections",
     "propulsion-to-atomic-boundary-single-transport",
+}
+MISSION_CONTROL_DIRECT_CHECKS = {
+    "mission-committed-observation-to-bounded-guidance",
+    "mission-controller-to-current-cycle-actuation",
+    "mission-control-propulsion-single-transport",
+    "mission-controlled-candidate-oracle-anchors",
+    "mission-control-three-invalid-input-rejections",
 }
 
 PROPULSION_RESPONSE_VECTOR_FIELDS = (
@@ -260,7 +274,7 @@ def verify(cases_path: Path, oracle_path: Path, probe_path: Path) -> dict:
     require(first_stdout == second_stdout and probe == second_probe,
             "product probe reruns differ")
     require(probe["schema_version"] ==
-            "gnczmkn.yyz-two-interval-mass-commit-product-probe/2" and
+            "gnczmkn.yyz-two-interval-mass-commit-product-probe/3" and
             probe["product_model_id"] == PRODUCT_MODEL_ID and
             probe["mass_model_id"] == PRODUCT_MASS_MODEL_ID and
             probe["contract_id"] == CONTRACT_ID and
@@ -403,6 +417,120 @@ def verify(cases_path: Path, oracle_path: Path, probe_path: Path) -> dict:
     require(consumer["candidate_tick"] == 1,
             "propulsion atomic consumer candidate tick differs")
 
+    mission_cases_path = (
+        repo_root / "fixtures" / "ref-yyz-mission-composition" /
+        "cases.json")
+    mission_oracle_path = (
+        repo_root / "oracles" / "ref-yyz-mission-composition" /
+        "reference.json")
+    mission_cases = json.loads(
+        mission_cases_path.read_text(encoding="utf-8"),
+        parse_float=Decimal)
+    mission_oracle = json.loads(
+        mission_oracle_path.read_text(encoding="utf-8"),
+        parse_float=Decimal)
+    require(mission_cases["fixture_id"] ==
+            mission_oracle["fixture_id"] == MISSION_FIXTURE_ID and
+            mission_cases["oracle_id"] ==
+            mission_oracle["oracle_id"] == MISSION_ORACLE_ID and
+            mission_cases["model"]["model_id"] ==
+            mission_oracle["model_id"] == MISSION_REFERENCE_MODEL_ID,
+            "mission source identity differs")
+    mission_control = probe["mission_control"]
+    require(mission_control["product_model_id"] ==
+            MISSION_PRODUCT_MODEL_ID and
+            mission_control["source_fixture_id"] == MISSION_FIXTURE_ID and
+            mission_control["source_oracle_id"] == MISSION_ORACLE_ID and
+            mission_control["reference_model_id"] ==
+            MISSION_REFERENCE_MODEL_ID and
+            mission_control["status"] == "passed" and
+            MISSION_PRODUCT_MODEL_ID != MISSION_REFERENCE_MODEL_ID,
+            "mission control product identity differs")
+    require(set(mission_control["direct_checks"]) ==
+            MISSION_CONTROL_DIRECT_CHECKS and
+            len(mission_control["direct_checks"]) ==
+            len(MISSION_CONTROL_DIRECT_CHECKS),
+            "mission control direct-check coverage differs")
+    mission_reference = mission_oracle["cases"][MISSION_CASE_ID]
+    interval_one = mission_reference["interval_executions"][1]
+    control_reference = interval_one["guidance_control"]
+    mission_absolute = decimal(
+        mission_cases["tolerances"]["formula_absolute"])
+    mission_relative = decimal(
+        mission_cases["tolerances"]["formula_relative"])
+    maximum_mission_error = Decimal(0)
+    require(mission_control["observation_tick"] ==
+            control_reference["source_observation"]["sample_tick"] == 1,
+            "mission committed observation tick differs")
+    for section, fields in (
+        ("guidance", (
+            "altitude_error_m", "altitude_feedback_rad",
+            "vertical_speed_feedback_rad", "raw_pitch_command_rad",
+            "pitch_command_rad")),
+        ("controller", (
+            "pitch_error_rad", "proportional_moment_Nm",
+            "rate_damping_moment_Nm", "raw_moment_command_Nm",
+            "moment_command_Nm")),
+    ):
+        observed = mission_control[section]
+        reference = control_reference[section]
+        require(observed["saturated"] == reference["saturated"],
+                f"mission {section} saturation differs")
+        for field in fields:
+            maximum_mission_error = max(
+                maximum_mission_error,
+                compare_number(observed[field], reference[field],
+                               mission_absolute, mission_relative,
+                               f"mission.{section}.{field}"))
+    actuation = mission_control["actuator"]
+    actuation_reference = control_reference["ideal_moment_actuation"]
+    require(actuation["valid_from_tick"] ==
+            actuation_reference["valid_from_tick"] and
+            actuation["valid_until_tick"] ==
+            actuation_reference["valid_until_tick"],
+            "mission actuation interval differs")
+    maximum_mission_error = max(
+        maximum_mission_error,
+        compare_vector(
+            actuation["moment_about_CoM_B_Nm"],
+            actuation_reference["moment_contribution_about_CoM_B_Nm"],
+            mission_absolute, mission_relative,
+            "mission.actuator.moment"))
+    atomic = mission_control["atomic_boundary"]
+    require(atomic["candidate_tick"] == 2,
+            "mission controlled candidate tick differs")
+    maximum_mission_error = max(
+        maximum_mission_error,
+        compare_vector(
+            atomic["supplied_force_B_N"], [100, 0, 0],
+            mission_absolute, mission_relative,
+            "mission.atomic.supplied_force"),
+        compare_vector(
+            atomic["supplied_moment_about_CoM_B_Nm"],
+            actuation_reference["moment_contribution_about_CoM_B_Nm"],
+            mission_absolute, mission_relative,
+            "mission.atomic.supplied_moment"),
+        compare_vector(
+            atomic["total_moment_about_CoM_B_Nm"],
+            interval_one["closure"]["moment_total_about_CoM_B_Nm"],
+            mission_absolute, mission_relative,
+            "mission.atomic.total_moment"),
+        compare_number(
+            atomic["candidate_mass_kg"],
+            interval_one["mass_transition"]
+                ["pending_mass_candidate_kg"],
+            mission_absolute, mission_relative,
+            "mission.atomic.candidate_mass"),
+    )
+    terminal_reference = mission_reference["committed_samples"][2]
+    state_error, attitude_error = compare_state(
+        atomic["candidate_rigid_state"], terminal_reference,
+        mission_absolute, mission_relative,
+        "mission.atomic.candidate_rigid_state")
+    maximum_mission_error = max(maximum_mission_error, state_error)
+    require(attitude_error <= mission_absolute,
+            "mission controlled candidate attitude differs")
+
     expected = oracle["cases"][CASE_ID]
     actual = probe["accepted"]
     absolute = decimal(cases["tolerances"]["formula_absolute"])
@@ -519,6 +647,14 @@ def verify(cases_path: Path, oracle_path: Path, probe_path: Path) -> dict:
         "propulsion_invalid_inputs_rejected": len(expected_invalid),
         "propulsion_direct_checks_passed":
             len(propulsion["direct_checks"]),
+        "mission_control_source_oracle_id": MISSION_ORACLE_ID,
+        "mission_control_product_model_id": MISSION_PRODUCT_MODEL_ID,
+        "mission_control_maximum_numeric_error":
+            str(maximum_mission_error),
+        "mission_control_maximum_orientation_error_rad":
+            str(attitude_error),
+        "mission_control_direct_checks_passed":
+            len(mission_control["direct_checks"]),
     }
 
 
