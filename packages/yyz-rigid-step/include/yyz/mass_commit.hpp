@@ -29,6 +29,9 @@ inline constexpr std::string_view kIdealBodyMomentActuatorModelIdentity =
 inline constexpr std::string_view
     kControlledPropelledRigidMassStepModelIdentity =
         "gnc.package.yyz.controlled-propelled-rigid-mass-step.experimental@1";
+inline constexpr std::string_view
+    kTwoIntervalControlledPropelledCommitModelIdentity =
+        "gnc.package.yyz.two-interval-controlled-propelled-commit.experimental@1";
 
 inline constexpr gnc::foundation::AlgorithmIdentity
     kScalarBurnMassKernelIdentity{
@@ -58,6 +61,10 @@ inline constexpr gnc::foundation::AlgorithmIdentity
 inline constexpr gnc::foundation::AlgorithmIdentity
     kControlledPropelledRigidMassStepKernelIdentity{
         "gnc.package.yyz.rigid-mass.controlled-propelled-step.kernel@1",
+        "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kTwoIntervalControlledPropelledCommitKernelIdentity{
+        "gnc.package.yyz.rigid-mass.two-interval-controlled-propelled.kernel@1",
         "0.1.0"};
 
 struct ScalarBurnMassDefinition {
@@ -340,6 +347,34 @@ class ControlledPropelledRigidMassStepKernel {
             const ControlledPropelledRigidMassStepDefinition& definition,
             const CommittedRigidMassBoundary& opening_boundary,
             const PropelledRigidMassIntervalInput& interval);
+};
+
+struct TwoIntervalControlledPropelledCommitInput {
+    CommittedRigidMassBoundary opening_boundary;
+    std::array<PropelledRigidMassIntervalInput, 2U> intervals;
+};
+
+struct TwoIntervalControlledPropelledCommitIntervalOutput {
+    ControlledPropelledRigidMassStepOutput staged;
+    CommittedRigidMassBoundary closing_commit;
+};
+
+struct TwoIntervalControlledPropelledCommitOutput {
+    std::array<TwoIntervalControlledPropelledCommitIntervalOutput, 2U>
+        intervals;
+    CommittedRigidMassBoundary terminal_boundary;
+};
+
+class TwoIntervalControlledPropelledCommitKernel {
+  public:
+    [[nodiscard]] static gnc::foundation::NumericalOutcome<
+        TwoIntervalControlledPropelledCommitOutput>
+        evaluate(
+            const PreparedRigidStepModel& rigid_model,
+            const ScalarBurnMassDefinition& mass_definition,
+            const SuppliedPropulsionDefinition& propulsion_definition,
+            const ControlledPropelledRigidMassStepDefinition& definition,
+            const TwoIntervalControlledPropelledCommitInput& input);
 };
 
 struct TwoIntervalMassCommitInput {

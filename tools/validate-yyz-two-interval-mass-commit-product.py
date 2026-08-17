@@ -37,6 +37,8 @@ MISSION_REFERENCE_MODEL_ID = \
     "MODEL-YYZ-FIXTURE-MISSION-COMPOSITION-004"
 MISSION_PRODUCT_MODEL_ID = \
     "gnc.package.yyz.controlled-propelled-rigid-mass-step.experimental@1"
+MISSION_TWO_INTERVAL_PRODUCT_MODEL_ID = \
+    "gnc.package.yyz.two-interval-controlled-propelled-commit.experimental@1"
 MISSION_CASE_ID = "CASE-YYZ-MISSION-COMPOSITION-BASELINE"
 CASE_ID = "CASE-YYZ-TWO-INTERVAL-MASS-COMMIT-TRAJECTORY"
 DIRECT_CHECKS = {
@@ -64,6 +66,13 @@ MISSION_CONTROL_DIRECT_CHECKS = {
     "mission-control-propulsion-single-transport",
     "mission-controlled-candidate-oracle-anchors",
     "mission-control-three-invalid-input-rejections",
+}
+MISSION_TWO_INTERVAL_DIRECT_CHECKS = {
+    "mission-interval-zero-committed-feedback",
+    "mission-first-controlled-atomic-commit",
+    "mission-next-interval-recomputes-feedback",
+    "mission-two-interval-terminal-oracle-anchors",
+    "mission-controlled-interval-gap-rejection",
 }
 
 PROPULSION_RESPONSE_VECTOR_FIELDS = (
@@ -274,7 +283,7 @@ def verify(cases_path: Path, oracle_path: Path, probe_path: Path) -> dict:
     require(first_stdout == second_stdout and probe == second_probe,
             "product probe reruns differ")
     require(probe["schema_version"] ==
-            "gnczmkn.yyz-two-interval-mass-commit-product-probe/3" and
+            "gnczmkn.yyz-two-interval-mass-commit-product-probe/4" and
             probe["product_model_id"] == PRODUCT_MODEL_ID and
             probe["mass_model_id"] == PRODUCT_MASS_MODEL_ID and
             probe["contract_id"] == CONTRACT_ID and
@@ -531,6 +540,84 @@ def verify(cases_path: Path, oracle_path: Path, probe_path: Path) -> dict:
     require(attitude_error <= mission_absolute,
             "mission controlled candidate attitude differs")
 
+    mission_two_interval = probe["mission_two_interval"]
+    require(mission_two_interval["product_model_id"] ==
+            MISSION_TWO_INTERVAL_PRODUCT_MODEL_ID and
+            mission_two_interval["source_fixture_id"] ==
+            MISSION_FIXTURE_ID and
+            mission_two_interval["source_oracle_id"] ==
+            MISSION_ORACLE_ID and
+            mission_two_interval["reference_model_id"] ==
+            MISSION_REFERENCE_MODEL_ID and
+            mission_two_interval["status"] == "passed" and
+            MISSION_TWO_INTERVAL_PRODUCT_MODEL_ID !=
+            MISSION_REFERENCE_MODEL_ID,
+            "mission two-interval product identity differs")
+    require(set(mission_two_interval["direct_checks"]) ==
+            MISSION_TWO_INTERVAL_DIRECT_CHECKS and
+            len(mission_two_interval["direct_checks"]) ==
+            len(MISSION_TWO_INTERVAL_DIRECT_CHECKS),
+            "mission two-interval direct-check coverage differs")
+    observed_mission_intervals = mission_two_interval["intervals"]
+    reference_mission_intervals = mission_reference["interval_executions"]
+    require(len(observed_mission_intervals) ==
+            len(reference_mission_intervals) == 2 and
+            mission_two_interval["terminal_tick"] == 2,
+            "mission two-interval shape differs")
+    maximum_two_interval_error = Decimal(0)
+    maximum_two_interval_orientation_error = Decimal(0)
+    for index, (observed, reference) in enumerate(zip(
+            observed_mission_intervals, reference_mission_intervals)):
+        label = f"mission_two_interval.intervals[{index}]"
+        control = reference["guidance_control"]
+        actuation = control["ideal_moment_actuation"]
+        transition = reference["mass_transition"]
+        closing_sample = mission_reference["committed_samples"][index + 1]
+        require(observed["observation_tick"] ==
+                control["source_observation"]["sample_tick"] and
+                observed["closing_tick"] ==
+                closing_sample["sample_tick"],
+                f"{label} tick identity differs")
+        for observed_field, reference_value in (
+            ("pitch_command_rad",
+             control["guidance"]["pitch_command_rad"]),
+            ("moment_command_Nm",
+             control["controller"]["moment_command_Nm"]),
+            ("integration_mass_kg",
+             transition["opening_committed_mass_kg"]),
+            ("consumed_mass_kg", transition["consumed_mass_kg"]),
+            ("closing_mass_kg", closing_sample["committed_mass_kg"]),
+        ):
+            maximum_two_interval_error = max(
+                maximum_two_interval_error,
+                compare_number(
+                    observed[observed_field], reference_value,
+                    mission_absolute, mission_relative,
+                    f"{label}.{observed_field}"))
+        for observed_field, reference_value in (
+            ("realized_moment_B_Nm",
+             actuation["moment_contribution_about_CoM_B_Nm"]),
+            ("supplied_moment_about_CoM_B_Nm",
+             actuation["moment_contribution_about_CoM_B_Nm"]),
+            ("total_moment_about_CoM_B_Nm",
+             reference["closure"]["moment_total_about_CoM_B_Nm"]),
+        ):
+            maximum_two_interval_error = max(
+                maximum_two_interval_error,
+                compare_vector(
+                    observed[observed_field], reference_value,
+                    mission_absolute, mission_relative,
+                    f"{label}.{observed_field}"))
+        state_error, state_attitude_error = compare_state(
+            observed["closing_rigid_state"], closing_sample,
+            mission_absolute, mission_relative,
+            f"{label}.closing_rigid_state")
+        maximum_two_interval_error = max(
+            maximum_two_interval_error, state_error)
+        maximum_two_interval_orientation_error = max(
+            maximum_two_interval_orientation_error,
+            state_attitude_error)
+
     expected = oracle["cases"][CASE_ID]
     actual = probe["accepted"]
     absolute = decimal(cases["tolerances"]["formula_absolute"])
@@ -655,6 +742,14 @@ def verify(cases_path: Path, oracle_path: Path, probe_path: Path) -> dict:
             str(attitude_error),
         "mission_control_direct_checks_passed":
             len(mission_control["direct_checks"]),
+        "mission_two_interval_product_model_id":
+            MISSION_TWO_INTERVAL_PRODUCT_MODEL_ID,
+        "mission_two_interval_maximum_numeric_error":
+            str(maximum_two_interval_error),
+        "mission_two_interval_maximum_orientation_error_rad":
+            str(maximum_two_interval_orientation_error),
+        "mission_two_interval_direct_checks_passed":
+            len(mission_two_interval["direct_checks"]),
     }
 
 

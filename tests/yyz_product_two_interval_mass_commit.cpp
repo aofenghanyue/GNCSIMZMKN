@@ -899,11 +899,123 @@ struct MissionControlProbeBundle {
     return {accepted, std::move(checks)};
 }
 
+struct MissionTwoIntervalProbeBundle {
+    TwoIntervalControlledPropelledCommitOutput accepted;
+    std::vector<std::string> direct_checks;
+};
+
+[[nodiscard]] MissionTwoIntervalProbeBundle
+run_mission_two_interval_probe() {
+    const auto prepared_outcome =
+        prepare_rigid_step_model(mission_rigid_definition());
+    const auto& prepared = require_value(
+        prepared_outcome,
+        "two-interval mission rigid model preparation failed");
+    const ScalarBurnMassDefinition mass_definition =
+        fixture_mass_definition();
+    const SuppliedPropulsionDefinition propulsion_definition =
+        fixture_propulsion_definition();
+    const ControlledPropelledRigidMassStepDefinition control_definition =
+        mission_control_definition();
+    TwoIntervalControlledPropelledCommitInput input;
+    input.opening_boundary = mission_boundary(0);
+    input.intervals = {
+        mission_control_interval(0), mission_control_interval(1)};
+    const auto accepted_outcome =
+        TwoIntervalControlledPropelledCommitKernel::evaluate(
+            prepared, mass_definition, propulsion_definition,
+            control_definition, input);
+    const auto& accepted = require_value(
+        accepted_outcome,
+        "two-interval mission product evaluation failed");
+    const auto& first = accepted.intervals[0];
+    const auto& second = accepted.intervals[1];
+
+    require(first.staged.observation.context.sample_time.tick == 0 &&
+                near(first.staged.guidance.pitch_command_radians, 0.0) &&
+                near(first.staged.controller
+                         .moment_command_newton_meters,
+                     0.0) &&
+                near(first.staged.actuator
+                         .moment_about_center_of_mass.value,
+                     Vec3::Zero()),
+            "opening committed feedback differs");
+    std::vector<std::string> checks{
+        "mission-interval-zero-committed-feedback"};
+
+    const CommittedRigidMassBoundary tick_one_reference =
+        mission_boundary(1);
+    require(first.closing_commit.rigid_context.sample_time.tick == 1 &&
+                first.closing_commit.mass_state.context.sample_time.tick ==
+                    1 &&
+                near(first.closing_commit.rigid_state.position.value,
+                     tick_one_reference.rigid_state.position.value) &&
+                near(first.closing_commit.rigid_state.velocity.value,
+                     tick_one_reference.rigid_state.velocity.value) &&
+                near(first.closing_commit.mass_state.mass_kilograms,
+                     99.95),
+            "mission tick-one atomic commit differs");
+    checks.emplace_back("mission-first-controlled-atomic-commit");
+
+    require(second.staged.observation.context.sample_time.tick == 1 &&
+                near(second.staged.observation.state.position.value,
+                     first.closing_commit.rigid_state.position.value) &&
+                near(second.staged.observation.state.velocity.value,
+                     first.closing_commit.rigid_state.velocity.value) &&
+                near(second.staged.atomic_boundary
+                         .projected_committed_mass.mass_kilograms,
+                     first.closing_commit.mass_state.mass_kilograms) &&
+                near(second.staged.guidance.pitch_command_radians, 0.04) &&
+                near(second.staged.controller
+                         .moment_command_newton_meters,
+                     20.0) &&
+                near(second.staged.actuator
+                         .moment_about_center_of_mass.value,
+                     Vec3{0.0, 20.0, 0.0}),
+            "second interval did not recompute from committed pair");
+    checks.emplace_back("mission-next-interval-recomputes-feedback");
+
+    const auto terminal_quaternion =
+        gnc::foundation::quaternion_to_wxyz(
+            accepted.terminal_boundary.rigid_state.attitude.value);
+    require(accepted.terminal_boundary.rigid_context.sample_time.tick == 2 &&
+                accepted.terminal_boundary.mass_state.context.sample_time
+                        .tick == 2 &&
+                near(accepted.terminal_boundary.rigid_state.position.value,
+                     Vec3{21.981798901675346, 0.0,
+                          999.8062748637297}) &&
+                near(accepted.terminal_boundary.rigid_state.velocity.value,
+                     Vec3{109.82516983067299, 0.0,
+                          -1.9130498687217244}) &&
+                near(terminal_quaternion[0], 0.9999894394538129) &&
+                near(terminal_quaternion[2],
+                     -0.004595756830941491) &&
+                near(accepted.terminal_boundary.rigid_state
+                         .angular_rate.value,
+                     Vec3{0.0, 0.18383108213675527, 0.0}) &&
+                near(accepted.terminal_boundary.mass_state.mass_kilograms,
+                     99.9),
+            "mission terminal committed boundary differs");
+    checks.emplace_back("mission-two-interval-terminal-oracle-anchors");
+
+    TwoIntervalControlledPropelledCommitInput gap = input;
+    gap.intervals[1] = mission_control_interval(2);
+    expect_failure(
+        TwoIntervalControlledPropelledCommitKernel::evaluate(
+            prepared, mass_definition, propulsion_definition,
+            control_definition, gap),
+        NumericalStatus::DomainError,
+        "controlled interval gap survived");
+    checks.emplace_back("mission-controlled-interval-gap-rejection");
+    return {accepted, std::move(checks)};
+}
+
 struct ProbeBundle {
     TwoIntervalMassCommitOutput accepted;
     std::vector<std::string> direct_checks;
     PropulsionProbeBundle propulsion;
     MissionControlProbeBundle mission_control;
+    MissionTwoIntervalProbeBundle mission_two_interval;
 };
 
 ProbeBundle run_probe() {
@@ -1054,8 +1166,11 @@ ProbeBundle run_probe() {
         prepared, mass_definition, accepted_input.opening_boundary);
     MissionControlProbeBundle mission_control =
         run_mission_control_probe();
+    MissionTwoIntervalProbeBundle mission_two_interval =
+        run_mission_two_interval_probe();
     return {accepted, std::move(checks), std::move(propulsion),
-            std::move(mission_control)};
+            std::move(mission_control),
+            std::move(mission_two_interval)};
 }
 
 void write_number(double value) {
@@ -1369,10 +1484,67 @@ void write_mission_control(
     std::cout << "]}";
 }
 
+void write_mission_two_interval_entry(
+    const TwoIntervalControlledPropelledCommitIntervalOutput& interval) {
+    const auto& staged = interval.staged;
+    const auto& boundary = staged.atomic_boundary;
+    std::cout << "{\"observation_tick\":"
+              << staged.observation.context.sample_time.tick
+              << ",\"pitch_command_rad\":";
+    write_number(staged.guidance.pitch_command_radians);
+    std::cout << ",\"moment_command_Nm\":";
+    write_number(staged.controller.moment_command_newton_meters);
+    std::cout << ",\"realized_moment_B_Nm\":";
+    write_vec3(staged.actuator.moment_about_center_of_mass.value);
+    std::cout << ",\"integration_mass_kg\":";
+    write_number(boundary.projected_committed_mass.mass_kilograms);
+    std::cout << ",\"consumed_mass_kg\":";
+    write_number(boundary.mass_evolution.consumed_mass_kilograms);
+    std::cout << ",\"supplied_moment_about_CoM_B_Nm\":";
+    write_vec3(boundary.rigid_step.supplied_contribution
+                   .moment_about_center_of_mass.value);
+    std::cout << ",\"total_moment_about_CoM_B_Nm\":";
+    write_vec3(boundary.rigid_step
+                   .moment_total_about_center_of_mass.value);
+    std::cout << ",\"closing_tick\":"
+              << interval.closing_commit.rigid_context.sample_time.tick
+              << ",\"closing_mass_kg\":";
+    write_number(interval.closing_commit.mass_state.mass_kilograms);
+    std::cout << ",\"closing_rigid_state\":";
+    write_rigid_state(interval.closing_commit.rigid_state);
+    std::cout << '}';
+}
+
+void write_mission_two_interval(
+    const MissionTwoIntervalProbeBundle& mission) {
+    std::cout << "{\"product_model_id\":\""
+              << kTwoIntervalControlledPropelledCommitModelIdentity
+              << "\",\"source_fixture_id\":\"" << kMissionFixtureId
+              << "\",\"source_oracle_id\":\"" << kMissionOracleId
+              << "\",\"reference_model_id\":\""
+              << kMissionReferenceModelId
+              << "\",\"status\":\"passed\",\"intervals\":[";
+    write_mission_two_interval_entry(mission.accepted.intervals[0]);
+    std::cout << ',';
+    write_mission_two_interval_entry(mission.accepted.intervals[1]);
+    std::cout << "],\"terminal_tick\":"
+              << mission.accepted.terminal_boundary.rigid_context
+                     .sample_time.tick
+              << ",\"direct_checks\":[";
+    for (std::size_t index = 0U;
+         index < mission.direct_checks.size(); ++index) {
+        if (index != 0U) {
+            std::cout << ',';
+        }
+        std::cout << '\"' << mission.direct_checks[index] << '\"';
+    }
+    std::cout << "]}";
+}
+
 void write_json(const ProbeBundle& bundle) {
     const auto& terminal = bundle.accepted.terminal_boundary;
     std::cout << std::setprecision(17)
-              << "{\"schema_version\":\"gnczmkn.yyz-two-interval-mass-commit-product-probe/3\""
+              << "{\"schema_version\":\"gnczmkn.yyz-two-interval-mass-commit-product-probe/4\""
               << ",\"product_model_id\":\""
               << kTwoIntervalMassCommitModelIdentity
               << "\",\"mass_model_id\":\""
@@ -1411,6 +1583,8 @@ void write_json(const ProbeBundle& bundle) {
     write_propulsion(bundle.propulsion);
     std::cout << ",\"mission_control\":";
     write_mission_control(bundle.mission_control);
+    std::cout << ",\"mission_two_interval\":";
+    write_mission_two_interval(bundle.mission_two_interval);
     std::cout << "}\n";
 }
 

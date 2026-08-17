@@ -923,6 +923,64 @@ ControlledPropelledRigidMassStepKernel::evaluate(
             std::move(output), evidence);
 }
 
+NumericalOutcome<TwoIntervalControlledPropelledCommitOutput>
+TwoIntervalControlledPropelledCommitKernel::evaluate(
+    const PreparedRigidStepModel& rigid_model,
+    const ScalarBurnMassDefinition& mass_definition,
+    const SuppliedPropulsionDefinition& propulsion_definition,
+    const ControlledPropelledRigidMassStepDefinition& definition,
+    const TwoIntervalControlledPropelledCommitInput& input) {
+    const auto first = ControlledPropelledRigidMassStepKernel::evaluate(
+        rigid_model, mass_definition, propulsion_definition, definition,
+        input.opening_boundary, input.intervals[0]);
+    if (!first.has_value()) {
+        return mass_commit_failure<
+            TwoIntervalControlledPropelledCommitOutput>(
+                kTwoIntervalControlledPropelledCommitKernelIdentity,
+                first.status(), "interval-0", first.evidence().flags);
+    }
+    CommittedRigidMassBoundary first_commit = promote_candidate(
+        input.intervals[0].context,
+        first.value().atomic_boundary.candidate);
+
+    const auto second = ControlledPropelledRigidMassStepKernel::evaluate(
+        rigid_model, mass_definition, propulsion_definition, definition,
+        first_commit, input.intervals[1]);
+    if (!second.has_value()) {
+        return mass_commit_failure<
+            TwoIntervalControlledPropelledCommitOutput>(
+                kTwoIntervalControlledPropelledCommitKernelIdentity,
+                second.status(), "interval-1",
+                first.evidence().flags | second.evidence().flags);
+    }
+    CommittedRigidMassBoundary second_commit = promote_candidate(
+        input.intervals[1].context,
+        second.value().atomic_boundary.candidate);
+
+    TwoIntervalControlledPropelledCommitOutput output;
+    output.intervals[0].staged = first.value();
+    output.intervals[0].closing_commit = first_commit;
+    output.intervals[1].staged = second.value();
+    output.intervals[1].closing_commit = second_commit;
+    output.terminal_boundary = second_commit;
+    const NumericalFlags flags =
+        first.evidence().flags | second.evidence().flags;
+    NumericalEvidence evidence = mass_commit_evidence(
+        kTwoIntervalControlledPropelledCommitKernelIdentity,
+        "two-interval-committed-control-feedback", flags);
+    evidence.evaluations = first.evidence().evaluations +
+                           second.evidence().evaluations;
+    evidence.last_step =
+        rigid_model.definition().algorithm.fixed_step_seconds;
+    return NumericalOutcome<
+        TwoIntervalControlledPropelledCommitOutput>::with_value(
+            approximate_status(first.status()) ||
+                    approximate_status(second.status())
+                ? NumericalStatus::Approximate
+                : NumericalStatus::Success,
+            std::move(output), evidence);
+}
+
 NumericalOutcome<TwoIntervalMassCommitOutput>
 TwoIntervalMassCommitKernel::evaluate(
     const PreparedRigidStepModel& rigid_model,
