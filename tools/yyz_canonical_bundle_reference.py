@@ -393,6 +393,7 @@ def validate_source(source: dict, cases: dict, mission_cases: dict,
             "qualification schedule differs")
     vehicle = qualification["vehicle"]
     require(vehicle["subject"] == model["subject"] and
+            vehicle["lifecycle"] == "active_at_initialize" and
             vehicle["inertial_frame_id"] == model["inertial_frame_id"] and
             vehicle["body_frame_id"] == model["body_frame_id"] and
             vehicle["configuration_id"] == model["configuration_id"] and

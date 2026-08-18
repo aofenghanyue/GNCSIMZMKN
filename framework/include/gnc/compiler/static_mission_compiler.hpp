@@ -24,10 +24,32 @@ struct SourceRef {
     std::string node_path;
 };
 
+// This IR slice records only the initial lifecycle fact required by the
+// accepted YYZ qualification source. Topology and activation transactions
+// remain outside the current Compiler surface.
+enum class EntityLifecycle : std::uint8_t {
+    Unspecified,
+    ActiveAtInitialize,
+};
+
+[[nodiscard]] constexpr std::string_view to_string(
+    EntityLifecycle lifecycle) noexcept {
+    switch (lifecycle) {
+    case EntityLifecycle::Unspecified:
+        return "Unspecified";
+    case EntityLifecycle::ActiveAtInitialize:
+        return "active_at_initialize";
+    }
+    return "Unknown";
+}
+
 enum class DiagnosticCode : std::uint8_t {
     InvalidCatalogDescriptor,
     DuplicateCatalogIdentity,
     InvalidStaticCompositionSource,
+    InvalidEntity,
+    DuplicateEntity,
+    UnknownSubjectEntity,
     DuplicateOccurrence,
     UnknownDefinition,
     UnknownAlgorithm,
@@ -47,6 +69,12 @@ enum class DiagnosticCode : std::uint8_t {
         return "GNC-CAT-DUPLICATE-IDENTITY";
     case DiagnosticCode::InvalidStaticCompositionSource:
         return "GNC-SRC-INVALID-STATIC-COMPOSITION";
+    case DiagnosticCode::InvalidEntity:
+        return "GNC-IR-INVALID-ENTITY";
+    case DiagnosticCode::DuplicateEntity:
+        return "GNC-IR-DUPLICATE-ENTITY";
+    case DiagnosticCode::UnknownSubjectEntity:
+        return "GNC-IR-UNKNOWN-SUBJECT-ENTITY";
     case DiagnosticCode::DuplicateOccurrence:
         return "GNC-IR-DUPLICATE-OCCURRENCE";
     case DiagnosticCode::UnknownDefinition:
@@ -341,15 +369,26 @@ class Catalog {
     std::vector<CatalogAlgorithmRecord> algorithms_;
 };
 
+struct SourceEntity {
+    std::string entity_id;
+    EntityLifecycle lifecycle = EntityLifecycle::Unspecified;
+    SourceRef identity_source;
+    SourceRef lifecycle_source;
+};
+
 struct SourceModelOccurrence {
     std::string occurrence_id;
     std::string model_id;
     std::string model_version;
     SourceRef source;
+    std::string subject_entity_id;
+    SourceRef subject_source;
 };
 
-struct SourceAlgorithmOccurrence {
-    std::string occurrence_id;
+// A stateless kernel used as a binding consumer in the current conformance
+// slice. It is not a ModelDefinition-backed model occurrence.
+struct SourceAlgorithmConsumer {
+    std::string consumer_id;
     std::string algorithm_id;
     std::string algorithm_version;
     SourceRef source;
@@ -359,25 +398,35 @@ struct SourceBinding {
     std::string binding_id;
     std::string provider_occurrence_id;
     std::string provider_port_id;
-    std::string consumer_occurrence_id;
+    std::string consumer_id;
     std::string consumer_port_id;
     SourceRef source;
 };
 
-// Programmatic identity/binding input for the first R2 slice. This is not the
-// syntax-neutral SourceTree defined by the target Source Frontend.
+// Programmatic entity/subject/identity/binding input for the current R2
+// slices. This is not the syntax-neutral SourceTree defined by the target
+// Source Frontend.
 struct TypedStaticCompositionSource {
     std::string source_version;
     std::string mission_id;
+    SourceRef mission_source;
     std::string plan_id;
-    std::vector<SourceModelOccurrence> models;
-    std::vector<SourceAlgorithmOccurrence> algorithms;
-    std::vector<SourceBinding> bindings;
+    std::vector<SourceEntity> entities;
+    std::vector<SourceModelOccurrence> model_occurrences;
+    std::vector<SourceAlgorithmConsumer> algorithm_consumers;
+    std::vector<SourceBinding> binding_intents;
 };
 
 struct CanonicalPort {
     std::string port_id;
     std::string contract_id;
+};
+
+struct CanonicalEntity {
+    std::string entity_id;
+    EntityLifecycle lifecycle = EntityLifecycle::Unspecified;
+    SourceRef identity_source;
+    SourceRef lifecycle_source;
 };
 
 struct CanonicalModelOccurrence {
@@ -391,10 +440,12 @@ struct CanonicalModelOccurrence {
     std::string preparation_algorithm_version;
     std::vector<CanonicalPort> output_ports;
     SourceRef source;
+    std::string subject_entity_id;
+    SourceRef subject_source;
 };
 
-struct CanonicalAlgorithmOccurrence {
-    std::string occurrence_id;
+struct CanonicalAlgorithmConsumer {
+    std::string consumer_id;
     PackageLock package;
     std::string algorithm_id;
     std::string algorithm_version;
@@ -406,20 +457,22 @@ struct CanonicalBindingIntent {
     std::string binding_id;
     std::string provider_occurrence_id;
     std::string provider_port_id;
-    std::string consumer_occurrence_id;
+    std::string consumer_id;
     std::string consumer_port_id;
     SourceRef source;
 };
 
-// The executable R2-IR identity/binding slice. Source locations remain as
-// provenance, while its semantic explanation excludes representation-specific
-// locations and plan identity. Config, assets, entities, scopes, and hashes
-// remain outside this deliberately narrow slice.
+// The executable R2-IR entity/subject/identity/binding slice. Source
+// locations remain as provenance, while its semantic explanation excludes
+// representation-specific locations and plan identity. Config, assets,
+// scopes, topology, and hashes remain outside this deliberately narrow slice.
 struct CanonicalMissionIr {
     std::uint32_t revision = 1U;
     std::string mission_id;
-    std::vector<CanonicalModelOccurrence> models;
-    std::vector<CanonicalAlgorithmOccurrence> algorithms;
+    SourceRef mission_source;
+    std::vector<CanonicalEntity> entities;
+    std::vector<CanonicalModelOccurrence> model_occurrences;
+    std::vector<CanonicalAlgorithmConsumer> algorithm_consumers;
     std::vector<CanonicalBindingIntent> binding_intents;
 };
 
@@ -449,7 +502,7 @@ struct ModelPreparationIdentityPlan {
 };
 
 struct AlgorithmConsumerPlan {
-    std::string occurrence_id;
+    std::string consumer_id;
     PackageLock package;
     std::string algorithm_id;
     std::string algorithm_version;
@@ -460,7 +513,7 @@ struct BindingPlanEntry {
     std::string binding_id;
     std::string provider_occurrence_id;
     std::string provider_port_id;
-    std::string consumer_occurrence_id;
+    std::string consumer_id;
     std::string consumer_port_id;
     std::string contract_id;
 };
@@ -487,7 +540,7 @@ struct CompiledObligation {
     CompiledObligationKind kind =
         CompiledObligationKind::PureQueryEvaluation;
     std::string provider_occurrence_id;
-    std::string consumer_occurrence_id;
+    std::string consumer_id;
     std::string binding_id;
 };
 
@@ -544,8 +597,9 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
              "required"});
         return outcome;
     }
-    if (source.models.empty() && source.algorithms.empty() &&
-        source.bindings.empty()) {
+    if (source.model_occurrences.empty() &&
+        source.algorithm_consumers.empty() &&
+        source.binding_intents.empty()) {
         outcome.diagnostics.push_back(
             {DiagnosticCode::InvalidStaticCompositionSource,
              {"typed://mission", "/"}, source.mission_id,
@@ -556,9 +610,43 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
 
     CanonicalMissionIr ir;
     ir.mission_id = source.mission_id;
-    std::set<std::string> occurrence_ids;
+    ir.mission_source = source.mission_source;
 
-    auto model_sources = source.models;
+    std::set<std::string> entity_ids;
+    auto entity_sources = source.entities;
+    std::stable_sort(entity_sources.begin(), entity_sources.end(),
+                     [](const SourceEntity& lhs,
+                        const SourceEntity& rhs) {
+                         return lhs.entity_id < rhs.entity_id;
+                     });
+    for (const auto& entity : entity_sources) {
+        if (entity.entity_id.empty()) {
+            outcome.diagnostics.push_back(
+                {DiagnosticCode::InvalidEntity, entity.identity_source,
+                 entity.entity_id, "entity identity is required"});
+            continue;
+        }
+        if (!entity_ids.insert(entity.entity_id).second) {
+            outcome.diagnostics.push_back(
+                {DiagnosticCode::DuplicateEntity, entity.identity_source,
+                 entity.entity_id, "entity identity is duplicated"});
+            continue;
+        }
+        if (entity.lifecycle != EntityLifecycle::ActiveAtInitialize) {
+            outcome.diagnostics.push_back(
+                {DiagnosticCode::InvalidEntity, entity.lifecycle_source,
+                 entity.entity_id,
+                 "current canonical IR requires active_at_initialize"});
+            continue;
+        }
+        ir.entities.push_back(
+            {entity.entity_id, entity.lifecycle, entity.identity_source,
+             entity.lifecycle_source});
+    }
+
+    std::set<std::string> composition_node_ids;
+
+    auto model_sources = source.model_occurrences;
     std::sort(model_sources.begin(), model_sources.end(),
               [](const SourceModelOccurrence& lhs,
                  const SourceModelOccurrence& rhs) {
@@ -566,11 +654,19 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
               });
     for (const auto& model : model_sources) {
         if (model.occurrence_id.empty() ||
-            !occurrence_ids.insert(model.occurrence_id).second) {
+            !composition_node_ids.insert(model.occurrence_id).second) {
             outcome.diagnostics.push_back(
                 {DiagnosticCode::DuplicateOccurrence, model.source,
                  model.occurrence_id,
                  "occurrence identity is empty or duplicated"});
+            continue;
+        }
+        if (!model.subject_entity_id.empty() &&
+            entity_ids.find(model.subject_entity_id) == entity_ids.end()) {
+            outcome.diagnostics.push_back(
+                {DiagnosticCode::UnknownSubjectEntity,
+                 model.subject_source, model.occurrence_id,
+                 "model occurrence subject entity is absent from the IR"});
             continue;
         }
         const auto* catalog_model =
@@ -583,7 +679,7 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
             continue;
         }
         const auto& descriptor = catalog_model->descriptor;
-        ir.models.push_back(
+        ir.model_occurrences.push_back(
             {model.occurrence_id,
              catalog_model->package,
              descriptor.definition.model_id,
@@ -592,22 +688,24 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
              descriptor.preparation_algorithm_id,
              descriptor.preparation_algorithm_version,
              detail::canonical_ports(descriptor.ports),
-             model.source});
+             model.source,
+             model.subject_entity_id,
+             model.subject_source});
     }
 
-    auto algorithm_sources = source.algorithms;
+    auto algorithm_sources = source.algorithm_consumers;
     std::sort(algorithm_sources.begin(), algorithm_sources.end(),
-              [](const SourceAlgorithmOccurrence& lhs,
-                 const SourceAlgorithmOccurrence& rhs) {
-                  return lhs.occurrence_id < rhs.occurrence_id;
+              [](const SourceAlgorithmConsumer& lhs,
+                 const SourceAlgorithmConsumer& rhs) {
+                  return lhs.consumer_id < rhs.consumer_id;
               });
     for (const auto& algorithm : algorithm_sources) {
-        if (algorithm.occurrence_id.empty() ||
-            !occurrence_ids.insert(algorithm.occurrence_id).second) {
+        if (algorithm.consumer_id.empty() ||
+            !composition_node_ids.insert(algorithm.consumer_id).second) {
             outcome.diagnostics.push_back(
                 {DiagnosticCode::DuplicateOccurrence, algorithm.source,
-                 algorithm.occurrence_id,
-                 "occurrence identity is empty or duplicated"});
+                 algorithm.consumer_id,
+                 "composition node identity is empty or duplicated"});
             continue;
         }
         const auto* catalog_algorithm = catalog.find_algorithm(
@@ -615,13 +713,13 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
         if (catalog_algorithm == nullptr) {
             outcome.diagnostics.push_back(
                 {DiagnosticCode::UnknownAlgorithm, algorithm.source,
-                 algorithm.occurrence_id,
+                 algorithm.consumer_id,
                  "exact algorithm descriptor is absent from the Catalog"});
             continue;
         }
         const auto& descriptor = catalog_algorithm->descriptor;
-        ir.algorithms.push_back(
-            {algorithm.occurrence_id,
+        ir.algorithm_consumers.push_back(
+            {algorithm.consumer_id,
              catalog_algorithm->package,
              descriptor.algorithm_id,
              descriptor.algorithm_version,
@@ -629,7 +727,7 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
              algorithm.source});
     }
 
-    auto binding_sources = source.bindings;
+    auto binding_sources = source.binding_intents;
     std::sort(binding_sources.begin(), binding_sources.end(),
               [](const SourceBinding& lhs, const SourceBinding& rhs) {
                   return lhs.binding_id < rhs.binding_id;
@@ -648,7 +746,7 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
             {binding.binding_id,
              binding.provider_occurrence_id,
              binding.provider_port_id,
-             binding.consumer_occurrence_id,
+             binding.consumer_id,
              binding.consumer_port_id,
              binding.source});
     }
@@ -666,27 +764,35 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
     std::ostringstream stream;
     stream << "mission-ir " << ir.revision << " mission " << ir.mission_id
            << '\n';
-    for (const auto& model : ir.models) {
+    for (const auto& entity : ir.entities) {
+        stream << "entity " << entity.entity_id << ' '
+               << to_string(entity.lifecycle) << '\n';
+    }
+    for (const auto& model : ir.model_occurrences) {
         stream << "model " << model.occurrence_id << ' '
                << model.package.package_id << '@'
                << model.package.package_version << ' ' << model.model_id
                << '@' << model.model_version << ' '
                << gnc::model_sdk::to_string(model.execution_form)
                << " preparation " << model.preparation_algorithm_id << '@'
-               << model.preparation_algorithm_version << '\n';
+               << model.preparation_algorithm_version;
+        if (!model.subject_entity_id.empty()) {
+            stream << " subject " << model.subject_entity_id;
+        }
+        stream << '\n';
         for (const auto& port : model.output_ports) {
             stream << "output " << model.occurrence_id << '.'
                    << port.port_id << ' ' << port.contract_id << '\n';
         }
     }
-    for (const auto& algorithm : ir.algorithms) {
-        stream << "algorithm " << algorithm.occurrence_id << ' '
+    for (const auto& algorithm : ir.algorithm_consumers) {
+        stream << "algorithm-consumer " << algorithm.consumer_id << ' '
                << algorithm.package.package_id << '@'
                << algorithm.package.package_version << ' '
                << algorithm.algorithm_id << '@'
                << algorithm.algorithm_version << '\n';
         for (const auto& port : algorithm.input_ports) {
-            stream << "input " << algorithm.occurrence_id << '.'
+            stream << "input " << algorithm.consumer_id << '.'
                    << port.port_id << ' ' << port.contract_id << '\n';
         }
     }
@@ -694,7 +800,7 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
         stream << "intent " << binding.binding_id << ' '
                << binding.provider_occurrence_id << '.'
                << binding.provider_port_id << " -> "
-               << binding.consumer_occurrence_id << '.'
+               << binding.consumer_id << '.'
                << binding.consumer_port_id << '\n';
     }
     return stream.str();
@@ -718,13 +824,13 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
     }
 
     std::map<std::string, const CanonicalModelOccurrence*> model_by_id;
-    for (const auto& model : ir.models) {
+    for (const auto& model : ir.model_occurrences) {
         model_by_id.emplace(model.occurrence_id, &model);
     }
-    std::map<std::string, const CanonicalAlgorithmOccurrence*>
+    std::map<std::string, const CanonicalAlgorithmConsumer*>
         algorithm_by_id;
-    for (const auto& algorithm : ir.algorithms) {
-        algorithm_by_id.emplace(algorithm.occurrence_id, &algorithm);
+    for (const auto& algorithm : ir.algorithm_consumers) {
+        algorithm_by_id.emplace(algorithm.consumer_id, &algorithm);
     }
 
     std::vector<BindingPlanEntry> resolved_bindings;
@@ -737,7 +843,7 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
         const auto model_found =
             model_by_id.find(binding.provider_occurrence_id);
         const auto algorithm_found =
-            algorithm_by_id.find(binding.consumer_occurrence_id);
+            algorithm_by_id.find(binding.consumer_id);
         if (model_found == model_by_id.end() ||
             algorithm_found == algorithm_by_id.end()) {
             outcome.diagnostics.push_back(
@@ -772,12 +878,12 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
         const auto provider_key = detail::endpoint_key(
             binding.provider_occurrence_id, binding.provider_port_id);
         const auto consumer_key = detail::endpoint_key(
-            binding.consumer_occurrence_id, binding.consumer_port_id);
+            binding.consumer_id, binding.consumer_port_id);
         ++provider_counts[provider_key];
         ++consumer_counts[consumer_key];
         resolved_bindings.push_back(
             {binding.binding_id, binding.provider_occurrence_id,
-             binding.provider_port_id, binding.consumer_occurrence_id,
+             binding.provider_port_id, binding.consumer_id,
              binding.consumer_port_id, provider_port->contract_id});
         proofs.push_back(
             {"proof.binding." + binding.binding_id,
@@ -788,7 +894,7 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
              BindingProofResult::Proven});
     }
 
-    for (const auto& model : ir.models) {
+    for (const auto& model : ir.model_occurrences) {
         for (const auto& port : model.output_ports) {
             if (provider_counts[detail::endpoint_key(
                     model.occurrence_id, port.port_id)] == 0U) {
@@ -799,20 +905,20 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
             }
         }
     }
-    for (const auto& algorithm : ir.algorithms) {
+    for (const auto& algorithm : ir.algorithm_consumers) {
         for (const auto& port : algorithm.input_ports) {
             const auto count = consumer_counts[detail::endpoint_key(
-                algorithm.occurrence_id, port.port_id)];
+                algorithm.consumer_id, port.port_id)];
             if (count == 0U) {
                 outcome.diagnostics.push_back(
                     {DiagnosticCode::MissingRequiredBinding, algorithm.source,
-                     algorithm.occurrence_id + "." + port.port_id,
+                     algorithm.consumer_id + "." + port.port_id,
                      "required algorithm input has no provider"});
             } else if (count > 1U) {
                 outcome.diagnostics.push_back(
                     {DiagnosticCode::MultipleRequiredBindings,
                      algorithm.source,
-                     algorithm.occurrence_id + "." + port.port_id,
+                     algorithm.consumer_id + "." + port.port_id,
                      "required algorithm input has multiple providers"});
             }
         }
@@ -827,7 +933,7 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
     plan.mission_id = source.mission_id;
 
     std::map<std::string, PackageLock> dependency_locks;
-    for (const auto& model : ir.models) {
+    for (const auto& model : ir.model_occurrences) {
         dependency_locks.emplace(
             detail::exact_key(model.package.package_id,
                               model.package.package_version),
@@ -840,13 +946,13 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
              model.preparation_algorithm_id,
              model.preparation_algorithm_version, model.source});
     }
-    for (const auto& algorithm : ir.algorithms) {
+    for (const auto& algorithm : ir.algorithm_consumers) {
         dependency_locks.emplace(
             detail::exact_key(algorithm.package.package_id,
                               algorithm.package.package_version),
             algorithm.package);
         plan.algorithms.push_back(
-            {algorithm.occurrence_id, algorithm.package,
+            {algorithm.consumer_id, algorithm.package,
              algorithm.algorithm_id,
              algorithm.algorithm_version,
              algorithm.source});
@@ -867,7 +973,7 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
         plan.obligations.push_back(
             {"obligation." + binding.binding_id, index, kind,
              binding.provider_occurrence_id,
-             binding.consumer_occurrence_id, binding.binding_id});
+             binding.consumer_id, binding.binding_id});
     }
 
     outcome.value.emplace(
@@ -893,7 +999,7 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
                << model.preparation_algorithm_version << '\n';
     }
     for (const auto& algorithm : plan.algorithms) {
-        stream << "consumer " << algorithm.occurrence_id << ' '
+        stream << "consumer " << algorithm.consumer_id << ' '
                << algorithm.algorithm_id << '@'
                << algorithm.algorithm_version << '\n';
     }
@@ -901,7 +1007,7 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
         stream << "bind " << binding.binding_id << ' '
                << binding.provider_occurrence_id << '.'
                << binding.provider_port_id << " -> "
-               << binding.consumer_occurrence_id << '.'
+               << binding.consumer_id << '.'
                << binding.consumer_port_id << ' '
                << binding.contract_id << '\n';
     }
@@ -914,7 +1020,7 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
                << obligation.obligation_id << ' '
                << to_string(obligation.kind) << ' '
                << obligation.provider_occurrence_id << " -> "
-               << obligation.consumer_occurrence_id << '\n';
+               << obligation.consumer_id << '\n';
     }
     return stream.str();
 }

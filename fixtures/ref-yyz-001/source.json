@@ -36,6 +36,7 @@
       },
       "vehicle": {
         "subject": "vehicle.fixture.yyz@1",
+        "lifecycle": "active_at_initialize",
         "inertial_frame_id": "frame.fixture.yyz.inertial-cartesian@1",
         "body_frame_id": "frame.fixture.yyz.body@1",
         "configuration_id": "configuration.fixture.yyz.clean@1",

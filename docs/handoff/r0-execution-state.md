@@ -2,7 +2,7 @@
 
 - 更新日期：2026-08-18
 - 当前 gate：`R2`
-- 产品状态：R0 科学/性能基线与 G2 已闭合；R1 Foundation、窄范围 in-process Contracts、GlideEnvelope PureQuery、ForceMomentClosure、四个 YYZ 产品切片和 CAVH 公式产品切片已完成；首个 identity/binding 静态纵向切片已完成，canonical Mission IR identity/binding 子集正在推进，尚无 syntax-neutral SourceTree、完整 PreparedModel 重建、canonical semantic hash、plan linker、RuntimeComponent、产品级 CAVH guidance command 或 Session 仿真运行能力
+- 产品状态：R0 科学/性能基线与 G2 已闭合；R1 Foundation、窄范围 in-process Contracts、GlideEnvelope PureQuery、ForceMomentClosure、四个 YYZ 产品切片和 CAVH 公式产品切片已完成；首个 identity/binding 静态纵向切片已完成，canonical Mission IR 已加入真实 YYZ entity/subject 子集，尚无 scope/placement、syntax-neutral SourceTree、完整 PreparedModel 重建、canonical semantic hash、plan linker、RuntimeComponent、产品级 CAVH guidance command 或 Session 仿真运行能力
 - 当前分支：`codex/r0-governance-reset`
 - 分支基线：`origin/main@dfedf27`
 
@@ -60,11 +60,11 @@
 - `R1-ALG-001` 已完成。`AlgorithmEvaluation<Output, Telemetry>` 被 GlideEnvelope query、Eq17/Eq18、TDCT、ForceMomentClosure 与 rigid-step 正式路径消费；C++ 类型级守卫限制 telemetry 字段进入正式 output。YYZ `RigidStepKernel` 从 Closure output 取得 held `RigidFormInput` 并用于全部 RK4 stages；两个 package 保持无跨调用状态，stateless kernel 省略 State。
 - `R1-GATE-001` 已完成，G2 结果为 `Passed`。仓库所有者的条件式接受已满足：真实 GlideEnvelope query 与 ForceMomentClosure 均有直接 consumer，`RuntimeComponent` 残缺声明已退出，既有 R0 oracle 与全量 Debug/Release/仓库检查通过，Kernel source 没有增加 package-specific 分支。R2 已解锁。
 - `R2-SRC-001` 已完成首个 identity/binding 静态纵向切片。programmatic `TypedStaticCompositionSource` 经 package-owned YYZ/CAVH descriptors 进入只读 Catalog；`GlideEnvelope` output 到 CAVH formula algorithm、`ForceMomentClosure` output 到 rigid-step algorithm 的两条 exact-contract binding 生成带直接 source refs 的 proof，并 lower 为两项静态 query/closure obligation。Catalog 只接受 model Output 与 algorithm Input，全部 consumer input 强制恰好一个 provider；未经验证的 `composition_model_id` 已从 descriptor、plan 与 explain 移除。package prepare 同时 exact 检查 model id/version/form。当前 plan 只固定 package、model、algorithm 与 preparation identity，没有 canonical config 或 asset，无法重建完整 PreparedModel。直接负例覆盖错误 model version、unknown definition、missing/multiple binding、contract mismatch、duplicate occurrence/catalog identity、invalid execution form、反向端口和非法 port-direction enum。Compiler production source 没有引用具体 package，Kernel source 保持不变。
-- `R2-IR-001` 已进入 `in_progress`。`build_canonical_mission_ir` 可独立生成 `CanonicalMissionIr` identity/binding 子集，规范化真实 YYZ/CAVH occurrence、精确 package/model/algorithm/preparation identity、Output/Input contract 与 binding intent。确定性 explain 排除 source URI/path 和 descriptor plan identity，IR 仍保留 source ref 供后续诊断；全空 typed source 直接返回 `GNC-SRC-INVALID-STATIC-COMPOSITION`，部分 source 继续进入正常解析或 binding 诊断。当前 golden 只证明 identity/binding 语义，entity/scope、canonical config、asset、跨 frontend 表示等价与 canonical semantic hash 尚未闭合。
+- `R2-IR-001` 保持 `in_progress`。独立 REF-YYZ-001 programmatic source 现从 `/source_id`、`/profiles/qualification/vehicle/subject`、`/profiles/qualification/vehicle/lifecycle` 和 asset index 的 `/component_bindings/1/role` 投影 mission/source identity、`vehicle.fixture.yyz@1`、`active_at_initialize` 及 ForceMomentClosure occurrence subject relation。`build_canonical_mission_ir` 规范化 entity、model occurrence、algorithm consumer 与 binding intent；空或重复 entity identity 返回 `GNC-IR-INVALID-ENTITY`/`GNC-IR-DUPLICATE-ENTITY`，unresolved subject 返回 `GNC-IR-UNKNOWN-SUBJECT-ENTITY`，全部诊断保留直接 source ref。确定性 explain 排除 source URI/path 与 plan identity；既有双 package source 的 plan、proof 和 query/closure obligation 保持原结果，CAVH formula 与 YYZ rigid-step 继续作为 algorithm consumer。scope/placement、canonical config、asset identity、跨 frontend 表示等价与 canonical semantic hash 尚未闭合。
 
 ## 下一条开发主线
 
-1. 当前先用既有 `GlideEnvelope` PureQuery 与 `ForceMomentClosure` Closure 推进 canonical Mission IR，按真实 YYZ/CAVH source 需求补齐 entity/scope、canonical config、asset identity 和 semantic hash；`R2-IR-001` 在完整 acceptance 闭合前保持 `in_progress`。
+1. 下一切片继续使用同一 REF-YYZ-001 qualification source，为 `vehicle.fixture.yyz@1` 与 ForceMomentClosure occurrence 补齐最小 scope/placement 语义；canonical config、asset identity、跨 frontend 表示独立性与 semantic hash 继续分阶段闭合，`R2-IR-001` 保持 `in_progress`。
 2. `R2-CAT-001` 保持 `planned`。`RuntimeComponent` 在 runtime plan lowering 前加入；首个真实模型需要具备独立 state ownership、调度、命令或 lifecycle obligation，并与 recipe/profile、ports/state、execution obligations、lifecycle 和 Compiler consumer 同切片实现。既有 rigid/mass atomic boundary 继续归入未来 `IntegrationScopePlan` 与 `StepTransaction` 的多 owner 原子协调。
 3. JSON/YAML/INI、多端 adapter、Session、mini runtime、manager、runtime registry、serializer、StateFragment、Artifact、Workflow、前端与 R3+ 能力继续保持关闭。
 

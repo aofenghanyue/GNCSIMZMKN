@@ -8,10 +8,11 @@ separate: the executable two-interval Cartesian qualification mission and the
 
 The qualification profile starts from position `[0, 0, 1000] m`, velocity
 `[110, 0, 0] m/s`, identity `q_I_B`, zero body rate and `100 kg` committed
-mass. It executes two `0.1 s` lookup-composed FrozenIntervals. The current
-committed boundary drives altitude guidance, pitch-moment control and the
-unit-gain ideal moment transform. Three committed samples support the terminal
-decision, terminal observation and result.
+mass. Its vehicle subject is `vehicle.fixture.yyz@1`, active at initialize.
+It executes two `0.1 s` lookup-composed FrozenIntervals. The current committed
+boundary drives altitude guidance, pitch-moment control and the unit-gain ideal
+moment transform. Three committed samples support the terminal decision,
+terminal observation and result.
 
 `asset-index.json` selects twelve executable component fixture/oracle/model
 identities and seven concrete input families: uniform environment, mass and
