@@ -31,6 +31,19 @@ inline constexpr std::string_view kRigidStepModelIdentity =
 inline constexpr std::string_view kForceMomentClosureModelIdentity =
     "gnc.package.yyz.force-moment-closure.frozen-interval.experimental@1";
 inline constexpr std::string_view kForceMomentClosureModelVersion = "0.1.0";
+inline constexpr std::string_view kAerodynamicTableModelIdentity =
+    "gnc.package.yyz.aerodynamic-table.multiaffine.experimental@1";
+inline constexpr std::string_view kAerodynamicTableModelVersion = "0.1.0";
+inline constexpr std::string_view kForceMomentClosureConfigSchemaIdentity =
+    "gnc.package.yyz.force-moment-closure.config@1";
+inline constexpr std::uint32_t kForceMomentClosureConfigSchemaVersion = 1U;
+inline constexpr std::string_view kAerodynamicTableConfigSchemaIdentity =
+    "gnc.package.yyz.aerodynamic-table.config@1";
+inline constexpr std::uint32_t kAerodynamicTableConfigSchemaVersion = 1U;
+inline constexpr std::string_view kAerodynamicTableAssetSchemaIdentity =
+    "gnc.asset.yyz.aerodynamic-table.multiaffine@1";
+inline constexpr std::string_view kAerodynamicCoefficientsContractIdentity =
+    "gnc.contract.yyz.aerodynamic-coefficients@1";
 inline constexpr std::string_view kRigidFormInputContractIdentity =
     "gnc.contract.yyz.rigid-form-input@1";
 inline constexpr gnc::foundation::AlgorithmIdentity
@@ -42,6 +55,12 @@ inline constexpr gnc::foundation::AlgorithmIdentity
 inline constexpr gnc::foundation::AlgorithmIdentity
     kForceMomentClosureKernelIdentity{
         "gnc.package.yyz.force-moment-closure.kernel@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kAerodynamicTablePreparationIdentity{
+        "gnc.package.yyz.aerodynamic-table.prepare@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kAerodynamicTableQueryIdentity{
+        "gnc.package.yyz.aerodynamic-table.query@1", "0.1.0"};
 inline constexpr gnc::foundation::AlgorithmIdentity kRigidStepKernelIdentity{
     "gnc.package.yyz.rigid-step.kernel@1", "0.1.0"};
 
@@ -154,19 +173,106 @@ struct RigidStepAlgorithmDefinition {
     gnc::foundation::QuaternionPolicy candidate_attitude_policy;
 };
 
-struct AerodynamicTableDefinition {
-    std::string source_id;
-    std::string table_id;
-    std::string configuration_id;
-    double reference_area_square_meters = 0.0;
-    double reference_span_meters = 0.0;
-    double reference_chord_meters = 0.0;
-    BodyPointMeters body_origin_to_application;
+struct AerodynamicTableAsset {
+    std::string asset_schema_id;
+    std::string asset_id;
     std::vector<double> mach_axis;
     std::vector<double> alpha_axis_radians;
     std::vector<double> beta_axis_radians;
     std::vector<std::array<double, 6U>>
         coefficient_rows_ca_cy_cn_cl_cm_cn;
+};
+
+struct AerodynamicTableDefinition {
+    gnc::model_sdk::ModelDefinitionMetadata metadata;
+    std::string source_id;
+    std::string configuration_id;
+    double reference_area_square_meters = 0.0;
+    double reference_span_meters = 0.0;
+    double reference_chord_meters = 0.0;
+    BodyPointMeters body_origin_to_application;
+    std::string table_asset_id;
+};
+
+[[nodiscard]] gnc::model_sdk::CanonicalConfigBlock
+canonical_aerodynamic_table_config(
+    const AerodynamicTableDefinition& definition);
+
+[[nodiscard]] gnc::foundation::NumericalOutcome<
+    AerodynamicTableDefinition>
+build_aerodynamic_table_definition(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration,
+    std::string table_asset_id);
+
+class PreparedAerodynamicTableModel {
+  public:
+    PreparedAerodynamicTableModel(
+        const PreparedAerodynamicTableModel&) = default;
+    PreparedAerodynamicTableModel(
+        PreparedAerodynamicTableModel&&) noexcept = default;
+    PreparedAerodynamicTableModel& operator=(
+        const PreparedAerodynamicTableModel&) = default;
+    PreparedAerodynamicTableModel& operator=(
+        PreparedAerodynamicTableModel&&) noexcept = default;
+
+    [[nodiscard]] const AerodynamicTableDefinition& definition()
+        const noexcept;
+    [[nodiscard]] const AerodynamicTableAsset& asset() const noexcept;
+    [[nodiscard]] const gnc::model_sdk::PreparedModelMetadata& metadata()
+        const noexcept;
+
+  private:
+    PreparedAerodynamicTableModel(
+        std::shared_ptr<const AerodynamicTableDefinition> definition,
+        std::shared_ptr<const AerodynamicTableAsset> asset,
+        gnc::foundation::PreparedTrilinearTableView<6U> table,
+        gnc::model_sdk::PreparedModelMetadata metadata) noexcept;
+
+    std::shared_ptr<const AerodynamicTableDefinition> definition_;
+    std::shared_ptr<const AerodynamicTableAsset> asset_;
+    gnc::foundation::PreparedTrilinearTableView<6U> table_;
+    gnc::model_sdk::PreparedModelMetadata metadata_;
+
+    friend gnc::foundation::NumericalOutcome<
+        PreparedAerodynamicTableModel>
+    prepare_aerodynamic_table_model(
+        AerodynamicTableDefinition definition,
+        AerodynamicTableAsset asset);
+    friend class AerodynamicTableQueryKernel;
+};
+
+[[nodiscard]] gnc::foundation::NumericalOutcome<
+    PreparedAerodynamicTableModel>
+prepare_aerodynamic_table_model(
+    AerodynamicTableDefinition definition,
+    AerodynamicTableAsset asset);
+
+struct AerodynamicTableQueryInput {
+    double mach = 0.0;
+    double alpha_radians = 0.0;
+    double beta_radians = 0.0;
+};
+
+struct AerodynamicTableQueryOutput {
+    std::array<double, 6U> coefficients_ca_cy_cn_cl_cm_cn{};
+};
+
+struct AerodynamicTableQueryTelemetry {
+    gnc::foundation::InterpolationDomainStatus domain_status =
+        gnc::foundation::InterpolationDomainStatus::Inside;
+    std::array<double, 3U> weights{};
+};
+
+using AerodynamicTableQueryEvaluation =
+    gnc::model_sdk::AlgorithmEvaluation<AerodynamicTableQueryOutput,
+                                        AerodynamicTableQueryTelemetry>;
+
+class AerodynamicTableQueryKernel {
+  public:
+    [[nodiscard]] static gnc::foundation::NumericalOutcome<
+        AerodynamicTableQueryEvaluation>
+    evaluate(const PreparedAerodynamicTableModel& model,
+             const AerodynamicTableQueryInput& input);
 };
 
 struct ForceMomentClosureDefinition {
@@ -176,6 +282,15 @@ struct ForceMomentClosureDefinition {
     std::int64_t configuration_revision = -1;
     gnc::foundation::NumericalPolicy numerical_policy;
 };
+
+[[nodiscard]] gnc::model_sdk::CanonicalConfigBlock
+canonical_force_moment_closure_config(
+    const ForceMomentClosureDefinition& definition);
+
+[[nodiscard]] gnc::foundation::NumericalOutcome<
+    ForceMomentClosureDefinition>
+build_force_moment_closure_definition(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration);
 
 class PreparedForceMomentClosureModel {
   public:
@@ -217,6 +332,7 @@ struct RigidStepModelDefinition {
     ForceMomentClosureDefinition force_moment_closure;
     RigidStepAlgorithmDefinition algorithm;
     AerodynamicTableDefinition aerodynamics;
+    AerodynamicTableAsset aerodynamic_table;
 };
 
 [[nodiscard]] inline gnc::model_sdk::StaticPackageDescriptor
@@ -226,18 +342,87 @@ describe_yyz_rigid_step_package() {
         std::string(kForceMomentClosureModelIdentity),
         std::string(kForceMomentClosureModelVersion),
         gnc::model_sdk::ModelExecutionForm::Closure};
+    closure.placement =
+        gnc::model_sdk::ModelPlacement::InteractionClosure;
     closure.preparation_algorithm_id =
         std::string(kForceMomentClosurePreparationIdentity.id);
     closure.preparation_algorithm_version =
         std::string(kForceMomentClosurePreparationIdentity.version);
+    closure.configuration.schema_id =
+        std::string(kForceMomentClosureConfigSchemaIdentity);
+    closure.configuration.schema_version =
+        kForceMomentClosureConfigSchemaVersion;
+    closure.configuration.fields = {
+        {"body_frame_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"clock_domain_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"configuration_revision",
+         gnc::model_sdk::CanonicalConfigValueKind::Integer},
+        {"numerical.absolute_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"numerical.condition_limit",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"numerical.finite_check",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"numerical.relative_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"numerical.zero_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+    };
     closure.ports.push_back(
         {"form-input", std::string(kRigidFormInputContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Output});
+
+    gnc::model_sdk::StaticModelDescriptor aerodynamics;
+    aerodynamics.definition = {
+        std::string(kAerodynamicTableModelIdentity),
+        std::string(kAerodynamicTableModelVersion),
+        gnc::model_sdk::ModelExecutionForm::PureQuery};
+    aerodynamics.placement =
+        gnc::model_sdk::ModelPlacement::VehicleOutput;
+    aerodynamics.preparation_algorithm_id =
+        std::string(kAerodynamicTablePreparationIdentity.id);
+    aerodynamics.preparation_algorithm_version =
+        std::string(kAerodynamicTablePreparationIdentity.version);
+    aerodynamics.configuration.schema_id =
+        std::string(kAerodynamicTableConfigSchemaIdentity);
+    aerodynamics.configuration.schema_version =
+        kAerodynamicTableConfigSchemaVersion;
+    aerodynamics.configuration.fields = {
+        {"body_origin_to_application.x_m",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"body_origin_to_application.y_m",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"body_origin_to_application.z_m",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"configuration_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"reference_area_square_meters",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"reference_chord_meters",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"reference_span_meters",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"source_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+    };
+    aerodynamics.asset_slots.push_back(
+        {"aerodynamics",
+         std::string(kAerodynamicTableAssetSchemaIdentity)});
+    aerodynamics.ports.push_back(
+        {"coefficients",
+         std::string(kAerodynamicCoefficientsContractIdentity),
          gnc::model_sdk::StaticPortDirection::Output});
 
     gnc::model_sdk::StaticAlgorithmDescriptor rigid_step;
     rigid_step.algorithm_id = std::string(kRigidStepKernelIdentity.id);
     rigid_step.algorithm_version =
         std::string(kRigidStepKernelIdentity.version);
+    rigid_step.ports.push_back(
+        {"aerodynamic-coefficients",
+         std::string(kAerodynamicCoefficientsContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Input});
     rigid_step.ports.push_back(
         {"form-input", std::string(kRigidFormInputContractIdentity),
          gnc::model_sdk::StaticPortDirection::Input});
@@ -246,6 +431,7 @@ describe_yyz_rigid_step_package() {
     package.package_id = std::string(kYyzRigidStepPackageIdentity);
     package.package_version = std::string(kYyzRigidStepPackageVersion);
     package.models.push_back(std::move(closure));
+    package.models.push_back(std::move(aerodynamics));
     package.algorithms.push_back(std::move(rigid_step));
     return package;
 }
@@ -262,15 +448,17 @@ class PreparedRigidStepModel {
     [[nodiscard]] const PreparedForceMomentClosureModel&
     force_moment_closure_model()
         const noexcept;
+    [[nodiscard]] const PreparedAerodynamicTableModel&
+    aerodynamic_table_model() const noexcept;
 
   private:
     PreparedRigidStepModel(
         std::shared_ptr<const RigidStepModelDefinition> definition,
-        gnc::foundation::PreparedTrilinearTableView<6U> table,
+        PreparedAerodynamicTableModel aerodynamic_table_model,
         PreparedForceMomentClosureModel force_moment_closure_model) noexcept;
 
     std::shared_ptr<const RigidStepModelDefinition> definition_;
-    gnc::foundation::PreparedTrilinearTableView<6U> table_;
+    PreparedAerodynamicTableModel aerodynamic_table_model_;
     PreparedForceMomentClosureModel force_moment_closure_model_;
 
     friend gnc::foundation::NumericalOutcome<PreparedRigidStepModel>

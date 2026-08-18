@@ -26,6 +26,9 @@ inline constexpr std::string_view kCavhFormulaModelIdentity =
 inline constexpr std::string_view kGlideEnvelopeModelIdentity =
     "gnc.package.cavh.glide-envelope.parabolic.experimental@1";
 inline constexpr std::string_view kGlideEnvelopeModelVersion = "0.1.0";
+inline constexpr std::string_view kGlideEnvelopeConfigSchemaIdentity =
+    "gnc.package.cavh.glide-envelope.config@1";
+inline constexpr std::uint32_t kGlideEnvelopeConfigSchemaVersion = 1U;
 inline constexpr std::string_view kGlideEnvelopeOutputContractIdentity =
     "gnc.contract.cavh.glide-envelope-query-output@1";
 inline constexpr gnc::foundation::AlgorithmIdentity
@@ -95,6 +98,14 @@ struct GlideEnvelopeDefinition {
     gnc::model_sdk::ModelDefinitionMetadata metadata;
     ParabolicEnvelopeDefinition polar;
 };
+
+[[nodiscard]] gnc::model_sdk::CanonicalConfigBlock
+canonical_glide_envelope_config(
+    const GlideEnvelopeDefinition& definition);
+
+[[nodiscard]] gnc::foundation::NumericalOutcome<GlideEnvelopeDefinition>
+build_glide_envelope_definition(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration);
 
 class GlideEnvelopePreparedModel {
   public:
@@ -182,10 +193,31 @@ describe_cavh_formula_package() {
         std::string(kGlideEnvelopeModelIdentity),
         std::string(kGlideEnvelopeModelVersion),
         gnc::model_sdk::ModelExecutionForm::PureQuery};
+    envelope.placement =
+        gnc::model_sdk::ModelPlacement::VehicleOutput;
     envelope.preparation_algorithm_id =
         std::string(kGlideEnvelopePreparationIdentity.id);
     envelope.preparation_algorithm_version =
         std::string(kGlideEnvelopePreparationIdentity.version);
+    envelope.configuration.schema_id =
+        std::string(kGlideEnvelopeConfigSchemaIdentity);
+    envelope.configuration.schema_version =
+        kGlideEnvelopeConfigSchemaVersion;
+    envelope.configuration.fields = {
+        {"alpha_max_radians",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"alpha_min_radians",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"cd0_base", gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"cd0_slope_per_mach",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"cl_intercept",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"cl_slope_per_radian",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"induced_drag_factor",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+    };
     envelope.ports.push_back(
         {"envelope", std::string(kGlideEnvelopeOutputContractIdentity),
          gnc::model_sdk::StaticPortDirection::Output});

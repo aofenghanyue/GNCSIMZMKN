@@ -21,6 +21,7 @@ CONTRACT_ID = "gnc.package.cavh.formula.contract.experimental@1"
 DIRECT_CHECKS = {
     "product-reference-identity",
     "prepared-model-metadata",
+    "canonical-model-config-roundtrip",
     "formal-output-telemetry-separation",
     "formula-consumes-glide-envelope-query-output",
     "envelope-accepted",

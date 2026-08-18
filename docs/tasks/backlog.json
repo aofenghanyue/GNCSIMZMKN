@@ -446,16 +446,16 @@
       "id": "R2-IR-001",
       "stage": "R2",
       "title": "Implement canonical Mission IR and model graph",
-      "status": "in_progress",
+      "status": "done",
       "priority": "P0",
       "size": "XL",
       "owner_role": "compiler_lead",
-      "assignee": "codex",
+      "assignee": null,
       "depends_on": ["R2-SRC-001"],
-      "deliverables": ["CanonicalMissionIr typed entity/subject/identity/binding slices", "real occurrence/entity relation with direct source provenance", "canonical scope/config/asset identity and semantic hash"],
-      "acceptance": ["IR resolves referenced entity identities, remains independent of source encoding and creates no runtime instance"],
-      "evidence": ["framework/include/gnc/compiler/static_mission_compiler.hpp exposes independent build_canonical_mission_ir and deterministic semantic explain over typed entities, model occurrences, algorithm consumers and binding intents", "An independent REF-YYZ-001 programmatic source retains exact source refs for mission.fixture.yyz.lookup-altitude-hold@1, vehicle.fixture.yyz@1, active_at_initialize and the ForceMomentClosure subject relation", "r2.compiler-static-plan.probe covers the real YYZ entity/subject golden, empty and duplicate entity identity, unknown subject, insertion-order/source-location independence, the existing dual-package plan and partial-source continuation"],
-      "architecture_refs": ["05 §8–§10", "00A §3.1"]
+      "deliverables": ["CanonicalMissionIr with typed entity, Vehicle scope, subject, package-owned placement, model/config/asset and binding semantics", "real YYZ AerodynamicTable PureQuery and asset identity consumed by RigidStep", "tagged canonical semantic bytes and SHA-256 with an independent Python reference"],
+      "acceptance": ["REF-YYZ-001 resolves exact entity/scope/subject/placement/config/asset semantics with direct provenance and no runtime instance", "GlideEnvelope, AerodynamicTable and ForceMomentClosure definitions rebuild deterministically from exact canonical config schemas", "Equivalent source locations, declaration order and plan identity hash equally; entity, scope relation, placement, model, config and asset mutations hash differently; invalid canonical graphs fail before hashing"],
+      "evidence": ["r2.compiler-static-plan.probe covers REF-YYZ-001 scope/placement/config/asset semantics, the CAVH definition-only placement consumer, required negative cases, deterministic source normalization and semantic mutation hashing", "r2.compiler-canonical-semantic-hash.reference independently reproduces SHA-256 vector cf7676b9764d95157cd473e0b429c63b8c48e2c6f0bbd79fbe21e12dffb6c259 from fixtures/ref-r2-canonical-ir/cases.json", "r1.yyz-rigid-step.probe and oracle directly consume the formal AerodynamicTable query output while preserving existing YYZ aero/frozen-interval results"],
+      "architecture_refs": ["05 §8–§10", "00A §3.1", "12 §5.1", "15 §8.4"]
     },
     {
       "id": "R2-BIND-001",

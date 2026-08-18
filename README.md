@@ -6,7 +6,7 @@
 
 - 当前 gate：`R2`；G0/G1/G2 已由仓库所有者判定 `Passed`。
 - 已闭合：R1 Foundation、窄范围 in-process Contracts、真实 GlideEnvelope PureQuery、真实 ForceMomentClosure、YYZ 四个产品切片和 CAVH 公式产品切片。
-- 当前静态编译入口：programmatic `TypedStaticCompositionSource` 已贯通真实 YYZ/CAVH package descriptor、只读 Catalog、可独立构建的 canonical Mission IR entity/subject/identity/binding 子集、exact-contract proof、compiled query/closure obligation 和窄静态 `ExecutionPlanDescriptor`。
+- 当前静态编译入口：programmatic `TypedStaticCompositionSource` 已贯通真实 YYZ/CAVH package descriptor、只读 Catalog、完整的当前 R2 canonical Mission IR、exact-contract proof、compiled query/closure obligation 和窄静态 `ExecutionPlanDescriptor`。IR 已冻结 entity/Vehicle scope/subject、package-owned placement、canonical config、真实 asset binding 与 source-independent SHA-256 semantic identity。
 - 暂缓开展：YAML/INI、多端 adapter、Session、mini runtime、runtime registry、serializer、StateFragment 与 R3～R8 能力。
 - 旧 GNCZMKN 只作为只读行为与科学参照，不进入任何生产 target、include path 或运行依赖。
 
@@ -44,7 +44,7 @@ build/dev/gnc_sim --version
 build/dev/gnc_sim --self-check
 ```
 
-首个 YYZ 产品入口已能独立计算一步 candidate。独立 `ForceMomentClosureKernel` 对显式 body-wrench contributions 做 CoM 力矩搬移与求和，正式 Closure output 生成 `RigidFormInput`，`RigidStepKernel` 将该输入固定用于全部 RK4 stages。`RigidStepOutput` 只携带下游消费的 candidate；air-data、气动查表、Closure evaluation 和初始导数位于 `RigidStepTelemetry`：
+首个 YYZ 产品入口已能独立计算一步 candidate。`AerodynamicTableDefinition`、真实 multiaffine table asset、`PreparedAerodynamicTableModel` 与 `AerodynamicTableQueryKernel` 形成独立 PureQuery；`RigidStepKernel` 直接消费正式 coefficient output，再完成 dimensionalization。独立 `ForceMomentClosureKernel` 对显式 body-wrench contributions 做 CoM 力矩搬移与求和，正式 Closure output 生成 `RigidFormInput`，该输入固定用于全部 RK4 stages。`RigidStepOutput` 只携带下游消费的 candidate；air-data、气动 query telemetry、Closure evaluation 和初始导数位于 `RigidStepTelemetry`：
 
 ```powershell
 build/dev/gnc_yyz_rigid_step_product_probe --self-check
@@ -64,15 +64,16 @@ build/dev/gnc_cavh_formula_product_probe --self-check
 
 当前 CAVH 输出止于 TDCT 公式阶段的限幅 alpha；产品级 guidance command 的 frame、时间与 ownership 映射等待真实 vehicle/controller consumer。
 
-YYZ 与 CAVH 共同消费最小 `ModelDefinitionMetadata`、`PreparedModelMetadata` 和 `AlgorithmEvaluation<Output, Telemetry>`。公共 metadata 只包含 stable model id/version、`PureQuery | Closure` 和 preparation identity；clock/configuration expectation 由 package definition 保持。两个 package prepare 对各自 model id、model version 与 execution form 做 exact 检查。两个产品 probe 直接验证真实 query/closure output 消费、错误 model version 拒绝与 C++ output 类型边界，并保留各自既有 R0 oracle。
+YYZ 与 CAVH 共同消费最小 `ModelDefinitionMetadata`、`PreparedModelMetadata` 和 `AlgorithmEvaluation<Output, Telemetry>`。公共 metadata 只包含 stable model id/version、`PureQuery | Closure` 和 preparation identity；clock/configuration expectation 由 package definition 保持。GlideEnvelope、AerodynamicTable 与 ForceMomentClosure prepare 对各自 model id、model version 与 execution form 做 exact 检查。产品 probe 直接验证真实 query/closure output 消费、错误 model version 拒绝与 C++ output 类型边界，并保留既有 R0 oracle。
 
-首个 R2 identity/binding 静态纵向切片从 package-owned descriptor 精确解析 `GlideEnvelope` PureQuery、`ForceMomentClosure` Closure、CAVH 公式 algorithm consumer 与 YYZ rigid-step algorithm consumer。既有双 package source 保持 identity/binding conformance fixture，CAVH formula 与 YYZ rigid-step 节点不具备 ModelDefinition occurrence 身份。独立 REF-YYZ-001 programmatic source 进一步把 `mission.fixture.yyz.lookup-altitude-hold@1`、`vehicle.fixture.yyz@1`、`active_at_initialize` 与真实 ForceMomentClosure subject relation 固化为 typed IR；每项 provenance 直接定位到 `source.json` 或 `asset-index.json`。`build_canonical_mission_ir` 规范化 entity、model occurrence、algorithm consumer、精确 package/model/algorithm/preparation identity、端口和 binding intent；确定性 explain 不受输入顺序、source URI/path 或 plan identity 影响，source ref 仍随 IR 保留供诊断使用。空或重复 entity identity、unresolved subject 与既有 composition 错误都在发布结果前失败。dry-run plan 继续包含两份 package lock、两项 model/preparation exact identity、两条 binding proof 和两项静态 obligation：
+当前 R2 static composition 从 package-owned descriptor 精确解析 `GlideEnvelope` 与 `AerodynamicTable` PureQuery、`ForceMomentClosure` Closure，以及 CAVH formula/YYZ rigid-step algorithm consumer。独立 REF-YYZ-001 typed source 将 `vehicle.fixture.yyz@1` 固定为 `Vehicle + subject_entity_id` scope；YYZ aero 位于 `vehicle.output`，closure 位于 `interaction/closure`，CAVH envelope 的 `vehicle.output` 只来自 definition policy。ForceMomentClosure canonical config 覆盖 body frame、clock、configuration revision 和完整 `NumericalPolicy`；YYZ aero 与 CAVH envelope 通过同一最小 typed config block 确定性重建 definition。真实 `aero-table.fixture.yyz.multiaffine@1` 以独立 asset schema/binding 进入 IR，并由既有 RigidStep 产品和 R0 aero/frozen-interval oracle 直接消费。dry-run plan 现包含三项 model/preparation identity、三条 binding proof 与 query/query/closure obligations：
 
 ```powershell
 build/dev/gnc_compiler_static_plan_probe --explain
+build/dev/gnc_compiler_static_plan_probe --semantic-hash
 ```
 
-`TypedStaticCompositionSource` 当前表达 typed entity、model occurrence、algorithm consumer 与 binding intent。canonical IR 已闭合 entity identity、初始激活事实、occurrence subject 和 identity/binding 子集；scope/placement、蓝图定义的 syntax-neutral `SourceTree`/`SourceMap`、canonical model config、asset binding、跨 frontend 表示独立性与 canonical semantic hash 尚未实现，因此静态 plan 尚不能重建完整 PreparedModel。source parser、完整 `PlanProofIndex`、plan link image、`RuntimeComponent` 和 Session 仍待后续真实 consumer。
+`hash_canonical_mission_ir` 使用 `gnc.canonical-mission-ir.semantic-bytes@1` 的显式 tagged/length-prefixed big-endian encoding 与 SHA-256。source URI/path、输入顺序和 plan id 被排除；entity、scope relation、placement、model、config 与 asset 变化均进入 digest。独立 Python reference 固定当前 YYZ qualification vector `cf7676b9764d95157cd473e0b429c63b8c48e2c6f0bbd79fbe21e12dffb6c259`。当前仍未提供蓝图定义的 syntax-neutral `SourceTree`/`SourceMap`、完整 `PlanProofIndex`、plan link image、持久化 serializer、`RuntimeComponent` 或 Session；静态 plan 也尚未携带重建完整 PreparedModel 所需的全部数据。
 
 ## 仓库地图
 

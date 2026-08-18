@@ -158,17 +158,26 @@ RigidStepModelDefinition fixture_rigid_definition() {
         fixture_quaternion_policy();
 
     auto& aero = definition.aerodynamics;
+    aero.metadata = {
+        std::string(kAerodynamicTableModelIdentity),
+        std::string(kAerodynamicTableModelVersion),
+        gnc::model_sdk::ModelExecutionForm::PureQuery,
+    };
     aero.source_id = "aero.zero-force";
-    aero.table_id = "aero-table.fixture.yyz.zero@1";
+    aero.table_asset_id = "aero-table.fixture.yyz.zero@1";
     aero.configuration_id = "configuration.fixture.yyz.clean@1";
     aero.reference_area_square_meters = 1.0;
     aero.reference_span_meters = 1.0;
     aero.reference_chord_meters = 1.0;
     aero.body_origin_to_application.value = Vec3::Zero();
-    aero.mach_axis = {0.05, 0.2};
-    aero.alpha_axis_radians = {-0.1, 0.1};
-    aero.beta_axis_radians = {-0.1, 0.1};
-    aero.coefficient_rows_ca_cy_cn_cl_cm_cn.assign(8U, {});
+    auto& table = definition.aerodynamic_table;
+    table.asset_schema_id =
+        std::string(kAerodynamicTableAssetSchemaIdentity);
+    table.asset_id = aero.table_asset_id;
+    table.mach_axis = {0.05, 0.2};
+    table.alpha_axis_radians = {-0.1, 0.1};
+    table.beta_axis_radians = {-0.1, 0.1};
+    table.coefficient_rows_ca_cy_cn_cl_cm_cn.assign(8U, {});
     return definition;
 }
 
@@ -196,14 +205,16 @@ RigidStepModelDefinition mission_rigid_definition() {
     RigidStepModelDefinition definition = fixture_rigid_definition();
     auto& aero = definition.aerodynamics;
     aero.source_id = "aero.body";
-    aero.table_id = "aero-table.fixture.yyz.multiaffine@1";
+    aero.table_asset_id = "aero-table.fixture.yyz.multiaffine@1";
     aero.configuration_id = "configuration.fixture.yyz.clean@1";
     aero.body_origin_to_application.value =
         Vec3{0.2, 0.0, -25.0 / 18.0};
-    aero.mach_axis = {0.2, 0.6};
-    aero.alpha_axis_radians = {-0.1, 0.1};
-    aero.beta_axis_radians = {-0.05, 0.05};
-    aero.coefficient_rows_ca_cy_cn_cl_cm_cn = {
+    auto& table = definition.aerodynamic_table;
+    table.asset_id = aero.table_asset_id;
+    table.mach_axis = {0.2, 0.6};
+    table.alpha_axis_radians = {-0.1, 0.1};
+    table.beta_axis_radians = {-0.05, 0.05};
+    table.coefficient_rows_ca_cy_cn_cl_cm_cn = {
         {0.006, 0.0245, -0.0795, 0.005, 0.014, -0.00755},
         {0.006, -0.0245, -0.0805, -0.005, 0.014, 0.00755},
         {0.05, 0.0245, 0.0795, 0.005, -0.106, -0.00785},

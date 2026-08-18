@@ -17,6 +17,8 @@ typed immutable GlideEnvelope definition
 
 `GlideEnvelopePreparedModel` 是当前唯一使用 `PureQuery` execution form 的 CAVH 模型。`PreparedCavhFormulaModel` 组合该 prepared query、equation identity、适用域阈值和 TDCT 参数；`CavhFormulaKernel` 显式把 `GlideEnvelopeQueryOutput` 交给 Eq17/Eq18，并校验 frame、clock、sample time、configuration revision 与 data quality。Eq17 的垂直升力导数退化会返回 `IllConditioned`，detail 固定为 `eq17-derivative-degenerate-fallback-forbidden`，且不会设置 `FallbackUsed`。
 
+package descriptor 将 GlideEnvelope 的 definition placement 固定为 `vehicle.output`，不创建 vehicle entity 或 occurrence scope。七个 polar 参数通过 canonical float64 config block 表达，package builder 可从同一 block 确定性重建 `GlideEnvelopeDefinition`。
+
 输出中的 `alpha_limited_radians` 仍属于已接受 TDCT 公式的阶段量。R0 科学证据尚未给出它到产品级 guidance command 的 frame、时间和 ownership 映射，因此本 package 不发布最终 guidance contract，也不接入 Session、Compiler、Workflow 或控制面。
 
 直接验证复用现有 R0 oracle：

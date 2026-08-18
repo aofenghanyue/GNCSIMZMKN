@@ -7,16 +7,20 @@
 ```text
 typed committed rigid state
 + typed environment and mass properties
-+ prepared Mach/alpha/beta aerodynamic table
++ prepared AerodynamicTable PureQuery and real table asset
 + supplied body wrench
-→ strict trilinear query
+→ formal strict trilinear query output
 → aerodynamic dimensionalization
 → pure ForceMomentClosure output and RigidFormInput
 → full-inertia rigid derivative consumes the held form input
 → fixed RK4 interval candidate
 ```
 
-`PreparedForceMomentClosureModel` 是当前唯一使用 `Closure` execution form 的 YYZ 模型。`ForceMomentClosureKernel` 规范化 contribution 顺序，拒绝重复 source 与 frame/clock/revision/interval 不一致，逐项完成 CoM 力矩搬移，并以正式 output 提供 total force/moment 和 `RigidFormInput`。`RigidStepModelDefinition` 在准备边界校验固定步长、数值策略、frame/clock identity、气动几何和表格；`PreparedRigidStepModel` 持有不可变定义、Closure model 与表格存储。`RigidStepKernel` 只接收显式 typed 输入并返回 candidate，不读取 Session、Mission、文件系统、logger 或全局 registry。
+`PreparedAerodynamicTableModel` 是 YYZ 当前真实 PureQuery：独立 definition 保存气动几何与 table asset identity，独立 asset 保存 Mach/alpha/beta axes 和 coefficient rows，prepare 形成 immutable trilinear view。`AerodynamicTableQueryKernel` 的正式 output 只提供六个 coefficients，domain status 与 weights 留在 telemetry；`RigidStepKernel` 直接消费该 output 并保持既有 dimensionalization 数值。
+
+`PreparedForceMomentClosureModel` 是当前唯一使用 `Closure` execution form 的 YYZ 模型。`ForceMomentClosureKernel` 规范化 contribution 顺序，拒绝重复 source 与 frame/clock/revision/interval 不一致，逐项完成 CoM 力矩搬移，并以正式 output 提供 total force/moment 和 `RigidFormInput`。`RigidStepModelDefinition` 在准备边界校验固定步长、数值策略、frame/clock identity、气动几何和真实表格 asset；`PreparedRigidStepModel` 持有不可变定义、AerodynamicTable query model 与 Closure model。`RigidStepKernel` 只接收显式 typed 输入并返回 candidate，不读取 Session、Mission、文件系统、logger 或全局 registry。
+
+package descriptor 将 AerodynamicTable 声明为 `vehicle.output`、ForceMomentClosure 声明为 `interaction/closure`，并提供各自 canonical config schema。对应 builder 从稳定 block 重建 typed definition；aero asset slot 只接受 `gnc.asset.yyz.aerodynamic-table.multiaffine@1`。
 
 两段边界调用链：
 

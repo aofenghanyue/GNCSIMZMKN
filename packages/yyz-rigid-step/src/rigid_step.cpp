@@ -27,7 +27,6 @@ using gnc::foundation::NumericalFlags;
 using gnc::foundation::NumericalOutcome;
 using gnc::foundation::NumericalPolicy;
 using gnc::foundation::NumericalStatus;
-using gnc::foundation::PreparedTrilinearTableView;
 using gnc::foundation::QuaternionStorage;
 using gnc::foundation::Vec3;
 
@@ -239,7 +238,7 @@ template <typename Value>
 
 [[nodiscard]] NumericalOutcome<AirLookupComputation> compute_air_lookup(
     const RigidStepModelDefinition& definition,
-    const PreparedTrilinearTableView<6U>& table,
+    const PreparedAerodynamicTableModel& aerodynamic_model,
     const RigidState& state,
     const EnvironmentInput& environment) {
     NumericalFlags flags = 0U;
@@ -309,8 +308,9 @@ template <typename Value>
             NumericalStatus::NonFiniteIntermediate, "air-data", flags);
     }
 
-    const auto query = gnc::foundation::query_trilinear_strict(
-        table, mach, alpha, beta);
+    const auto query = AerodynamicTableQueryKernel::evaluate(
+        aerodynamic_model,
+        AerodynamicTableQueryInput{mach, alpha, beta});
     if (!query.has_value()) {
         return product_failure<AirLookupComputation>(
             query.status(), "aero-query", flags | query.evidence().flags);
@@ -327,13 +327,10 @@ template <typename Value>
     output.air_data.beta_radians = beta;
     output.air_data.dynamic_pressure_pascals = dynamic_pressure;
     output.air_data.mach = mach;
-    output.lookup.domain_status = result.domain_status;
-    output.lookup.weights = {
-        result.x_bracket.weight,
-        result.y_bracket.weight,
-        result.z_bracket.weight,
-    };
-    output.lookup.coefficients_ca_cy_cn_cl_cm_cn = result.values;
+    output.lookup.domain_status = result.telemetry.domain_status;
+    output.lookup.weights = result.telemetry.weights;
+    output.lookup.coefficients_ca_cy_cn_cl_cm_cn =
+        result.output.coefficients_ca_cy_cn_cl_cm_cn;
     NumericalEvidence evidence = product_evidence(
         kRigidStepKernelIdentity, "air-and-aero-query", flags);
     evidence.evaluations = query.evidence().evaluations;
@@ -497,6 +494,383 @@ template <typename Value>
 
 } // namespace
 
+namespace {
+
+[[nodiscard]] std::string finite_check_token(FiniteCheck value) {
+    switch (value) {
+    case FiniteCheck::Disabled:
+        return "disabled";
+    case FiniteCheck::InputAndOutput:
+        return "input-and-output";
+    case FiniteCheck::EveryStage:
+        return "every-stage";
+    }
+    return {};
+}
+
+[[nodiscard]] std::optional<FiniteCheck> parse_finite_check(
+    std::string_view token) {
+    if (token == "disabled") {
+        return FiniteCheck::Disabled;
+    }
+    if (token == "input-and-output") {
+        return FiniteCheck::InputAndOutput;
+    }
+    if (token == "every-stage") {
+        return FiniteCheck::EveryStage;
+    }
+    return std::nullopt;
+}
+
+[[nodiscard]] bool canonical_double(double value) noexcept {
+    return std::isfinite(value) &&
+           !(value == 0.0 && std::signbit(value));
+}
+
+} // namespace
+
+gnc::model_sdk::CanonicalConfigBlock
+canonical_force_moment_closure_config(
+    const ForceMomentClosureDefinition& definition) {
+    const auto& policy = definition.numerical_policy;
+    return {
+        std::string(kForceMomentClosureConfigSchemaIdentity),
+        kForceMomentClosureConfigSchemaVersion,
+        {
+            {"body_frame_id", definition.body_frame.id},
+            {"clock_domain_id", definition.clock_domain.id},
+            {"configuration_revision",
+             definition.configuration_revision},
+            {"numerical.absolute_tolerance",
+             policy.absolute_tolerance},
+            {"numerical.condition_limit", policy.condition_limit},
+            {"numerical.finite_check",
+             gnc::model_sdk::CanonicalEnumValue{
+                 finite_check_token(policy.finite_check)}},
+            {"numerical.relative_tolerance",
+             policy.relative_tolerance},
+            {"numerical.zero_tolerance", policy.zero_tolerance},
+        },
+    };
+}
+
+NumericalOutcome<ForceMomentClosureDefinition>
+build_force_moment_closure_definition(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration) {
+    const auto failure = [] {
+        return NumericalOutcome<ForceMomentClosureDefinition>::failure(
+            NumericalStatus::DomainError,
+            product_evidence(kForceMomentClosurePreparationIdentity,
+                             "canonical-config"));
+    };
+    static constexpr std::array<std::string_view, 8U> kFields{
+        "body_frame_id",
+        "clock_domain_id",
+        "configuration_revision",
+        "numerical.absolute_tolerance",
+        "numerical.condition_limit",
+        "numerical.finite_check",
+        "numerical.relative_tolerance",
+        "numerical.zero_tolerance",
+    };
+    if (configuration.schema_id !=
+            kForceMomentClosureConfigSchemaIdentity ||
+        configuration.schema_version !=
+            kForceMomentClosureConfigSchemaVersion ||
+        configuration.fields.size() != kFields.size()) {
+        return failure();
+    }
+    for (std::size_t index = 0U; index < kFields.size(); ++index) {
+        if (configuration.fields[index].field_id != kFields[index]) {
+            return failure();
+        }
+    }
+
+    const auto* body_frame = std::get_if<std::string>(
+        &configuration.fields[0U].value);
+    const auto* clock_domain = std::get_if<std::string>(
+        &configuration.fields[1U].value);
+    const auto* revision = std::get_if<std::int64_t>(
+        &configuration.fields[2U].value);
+    const auto* absolute =
+        std::get_if<double>(&configuration.fields[3U].value);
+    const auto* condition =
+        std::get_if<double>(&configuration.fields[4U].value);
+    const auto* finite_token =
+        std::get_if<gnc::model_sdk::CanonicalEnumValue>(
+            &configuration.fields[5U].value);
+    const auto* relative =
+        std::get_if<double>(&configuration.fields[6U].value);
+    const auto* zero =
+        std::get_if<double>(&configuration.fields[7U].value);
+    if (body_frame == nullptr || body_frame->empty() ||
+        clock_domain == nullptr || clock_domain->empty() ||
+        revision == nullptr || *revision < 0 || absolute == nullptr ||
+        condition == nullptr || finite_token == nullptr ||
+        relative == nullptr || zero == nullptr ||
+        !canonical_double(*absolute) ||
+        !canonical_double(*condition) ||
+        !canonical_double(*relative) || !canonical_double(*zero)) {
+        return failure();
+    }
+    const auto finite_check = parse_finite_check(finite_token->token);
+    if (!finite_check.has_value()) {
+        return failure();
+    }
+
+    ForceMomentClosureDefinition definition;
+    definition.metadata = {
+        std::string(kForceMomentClosureModelIdentity),
+        std::string(kForceMomentClosureModelVersion),
+        gnc::model_sdk::ModelExecutionForm::Closure,
+    };
+    definition.body_frame.id = *body_frame;
+    definition.clock_domain.id = *clock_domain;
+    definition.configuration_revision = *revision;
+    definition.numerical_policy = {
+        *absolute, *relative, *finite_check, *zero, *condition,
+    };
+    const auto prepared = prepare_force_moment_closure_model(definition);
+    if (!prepared.has_value()) {
+        return NumericalOutcome<ForceMomentClosureDefinition>::failure(
+            prepared.status(), prepared.evidence());
+    }
+    return NumericalOutcome<ForceMomentClosureDefinition>::with_value(
+        NumericalStatus::Success, std::move(definition),
+        product_evidence(kForceMomentClosurePreparationIdentity,
+                         "canonical-config"));
+}
+
+gnc::model_sdk::CanonicalConfigBlock
+canonical_aerodynamic_table_config(
+    const AerodynamicTableDefinition& definition) {
+    return {
+        std::string(kAerodynamicTableConfigSchemaIdentity),
+        kAerodynamicTableConfigSchemaVersion,
+        {
+            {"body_origin_to_application.x_m",
+             definition.body_origin_to_application.value(0)},
+            {"body_origin_to_application.y_m",
+             definition.body_origin_to_application.value(1)},
+            {"body_origin_to_application.z_m",
+             definition.body_origin_to_application.value(2)},
+            {"configuration_id", definition.configuration_id},
+            {"reference_area_square_meters",
+             definition.reference_area_square_meters},
+            {"reference_chord_meters",
+             definition.reference_chord_meters},
+            {"reference_span_meters",
+             definition.reference_span_meters},
+            {"source_id", definition.source_id},
+        },
+    };
+}
+
+NumericalOutcome<AerodynamicTableDefinition>
+build_aerodynamic_table_definition(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration,
+    std::string table_asset_id) {
+    const auto failure = [] {
+        return NumericalOutcome<AerodynamicTableDefinition>::failure(
+            NumericalStatus::DomainError,
+            product_evidence(kAerodynamicTablePreparationIdentity,
+                             "canonical-config"));
+    };
+    static constexpr std::array<std::string_view, 8U> kFields{
+        "body_origin_to_application.x_m",
+        "body_origin_to_application.y_m",
+        "body_origin_to_application.z_m",
+        "configuration_id",
+        "reference_area_square_meters",
+        "reference_chord_meters",
+        "reference_span_meters",
+        "source_id",
+    };
+    if (configuration.schema_id !=
+            kAerodynamicTableConfigSchemaIdentity ||
+        configuration.schema_version !=
+            kAerodynamicTableConfigSchemaVersion ||
+        configuration.fields.size() != kFields.size() ||
+        table_asset_id.empty()) {
+        return failure();
+    }
+    for (std::size_t index = 0U; index < kFields.size(); ++index) {
+        if (configuration.fields[index].field_id != kFields[index]) {
+            return failure();
+        }
+    }
+    std::array<const double*, 6U> values{
+        std::get_if<double>(&configuration.fields[0U].value),
+        std::get_if<double>(&configuration.fields[1U].value),
+        std::get_if<double>(&configuration.fields[2U].value),
+        std::get_if<double>(&configuration.fields[4U].value),
+        std::get_if<double>(&configuration.fields[5U].value),
+        std::get_if<double>(&configuration.fields[6U].value),
+    };
+    const auto* configuration_id = std::get_if<std::string>(
+        &configuration.fields[3U].value);
+    const auto* source_id = std::get_if<std::string>(
+        &configuration.fields[7U].value);
+    if (std::any_of(values.begin(), values.end(), [](const double* value) {
+            return value == nullptr || !canonical_double(*value);
+        }) ||
+        configuration_id == nullptr || configuration_id->empty() ||
+        source_id == nullptr || source_id->empty()) {
+        return failure();
+    }
+
+    AerodynamicTableDefinition definition;
+    definition.metadata = {
+        std::string(kAerodynamicTableModelIdentity),
+        std::string(kAerodynamicTableModelVersion),
+        gnc::model_sdk::ModelExecutionForm::PureQuery,
+    };
+    definition.body_origin_to_application.value =
+        Vec3{*values[0U], *values[1U], *values[2U]};
+    definition.configuration_id = *configuration_id;
+    definition.reference_area_square_meters = *values[3U];
+    definition.reference_chord_meters = *values[4U];
+    definition.reference_span_meters = *values[5U];
+    definition.source_id = *source_id;
+    definition.table_asset_id = std::move(table_asset_id);
+    if (definition.reference_area_square_meters <= 0.0 ||
+        definition.reference_chord_meters <= 0.0 ||
+        definition.reference_span_meters <= 0.0) {
+        return failure();
+    }
+    return NumericalOutcome<AerodynamicTableDefinition>::with_value(
+        NumericalStatus::Success, std::move(definition),
+        product_evidence(kAerodynamicTablePreparationIdentity,
+                         "canonical-config"));
+}
+
+PreparedAerodynamicTableModel::PreparedAerodynamicTableModel(
+    std::shared_ptr<const AerodynamicTableDefinition> definition,
+    std::shared_ptr<const AerodynamicTableAsset> asset,
+    gnc::foundation::PreparedTrilinearTableView<6U> table,
+    gnc::model_sdk::PreparedModelMetadata metadata) noexcept
+    : definition_(std::move(definition)), asset_(std::move(asset)),
+      table_(std::move(table)), metadata_(std::move(metadata)) {}
+
+const AerodynamicTableDefinition&
+PreparedAerodynamicTableModel::definition() const noexcept {
+    return *definition_;
+}
+
+const AerodynamicTableAsset&
+PreparedAerodynamicTableModel::asset() const noexcept {
+    return *asset_;
+}
+
+const gnc::model_sdk::PreparedModelMetadata&
+PreparedAerodynamicTableModel::metadata() const noexcept {
+    return metadata_;
+}
+
+NumericalOutcome<PreparedAerodynamicTableModel>
+prepare_aerodynamic_table_model(
+    AerodynamicTableDefinition definition,
+    AerodynamicTableAsset asset) {
+    const auto failure = [](NumericalStatus status,
+                            std::string_view detail) {
+        return NumericalOutcome<PreparedAerodynamicTableModel>::failure(
+            status, product_evidence(
+                        kAerodynamicTablePreparationIdentity, detail));
+    };
+    auto metadata = gnc::model_sdk::prepare_model_metadata(
+        definition.metadata, kAerodynamicTablePreparationIdentity);
+    if (!metadata.has_value()) {
+        return NumericalOutcome<PreparedAerodynamicTableModel>::failure(
+            metadata.status(), metadata.evidence());
+    }
+    if (definition.metadata.model_id != kAerodynamicTableModelIdentity ||
+        definition.metadata.model_version !=
+            kAerodynamicTableModelVersion ||
+        definition.metadata.execution_form !=
+            gnc::model_sdk::ModelExecutionForm::PureQuery ||
+        definition.source_id.empty() ||
+        definition.configuration_id.empty() ||
+        definition.table_asset_id.empty() ||
+        asset.asset_schema_id != kAerodynamicTableAssetSchemaIdentity ||
+        asset.asset_id != definition.table_asset_id) {
+        return failure(NumericalStatus::DomainError,
+                       "definition-or-asset-identity");
+    }
+    if (!canonical_double(definition.reference_area_square_meters) ||
+        !canonical_double(definition.reference_span_meters) ||
+        !canonical_double(definition.reference_chord_meters) ||
+        definition.reference_area_square_meters <= 0.0 ||
+        definition.reference_span_meters <= 0.0 ||
+        definition.reference_chord_meters <= 0.0 ||
+        !finite(definition.body_origin_to_application.value)) {
+        return failure(NumericalStatus::DomainError,
+                       "definition-geometry");
+    }
+
+    auto owned_definition =
+        std::make_shared<const AerodynamicTableDefinition>(
+            std::move(definition));
+    auto owned_asset = std::make_shared<const AerodynamicTableAsset>(
+        std::move(asset));
+    gnc::foundation::TrilinearTableView<6U> view;
+    view.x_axis = {owned_asset->mach_axis.data(),
+                   owned_asset->mach_axis.size()};
+    view.y_axis = {owned_asset->alpha_axis_radians.data(),
+                   owned_asset->alpha_axis_radians.size()};
+    view.z_axis = {owned_asset->beta_axis_radians.data(),
+                   owned_asset->beta_axis_radians.size()};
+    view.rows =
+        owned_asset->coefficient_rows_ca_cy_cn_cl_cm_cn.data();
+    view.row_count =
+        owned_asset->coefficient_rows_ca_cy_cn_cl_cm_cn.size();
+    auto table = gnc::foundation::prepare_trilinear_table(view);
+    if (!table.has_value()) {
+        auto evidence = table.evidence();
+        evidence.algorithm = kAerodynamicTablePreparationIdentity;
+        evidence.detail = "asset-payload";
+        return NumericalOutcome<PreparedAerodynamicTableModel>::failure(
+            table.status(), evidence);
+    }
+    auto evidence = table.evidence();
+    evidence.algorithm = kAerodynamicTablePreparationIdentity;
+    evidence.detail = "prepared";
+    return NumericalOutcome<PreparedAerodynamicTableModel>::with_value(
+        table.status(),
+        PreparedAerodynamicTableModel{
+            std::move(owned_definition), std::move(owned_asset),
+            table.value(), std::move(metadata.value())},
+        evidence);
+}
+
+NumericalOutcome<AerodynamicTableQueryEvaluation>
+AerodynamicTableQueryKernel::evaluate(
+    const PreparedAerodynamicTableModel& model,
+    const AerodynamicTableQueryInput& input) {
+    const auto query = gnc::foundation::query_trilinear_strict(
+        model.table_, input.mach, input.alpha_radians,
+        input.beta_radians);
+    if (!query.has_value()) {
+        auto evidence = query.evidence();
+        evidence.algorithm = kAerodynamicTableQueryIdentity;
+        evidence.detail = "table-query";
+        return NumericalOutcome<AerodynamicTableQueryEvaluation>::failure(
+            query.status(), evidence);
+    }
+    const auto& value = query.value();
+    auto evidence = query.evidence();
+    evidence.algorithm = kAerodynamicTableQueryIdentity;
+    evidence.detail = "table-query";
+    return NumericalOutcome<AerodynamicTableQueryEvaluation>::with_value(
+        query.status(),
+        AerodynamicTableQueryEvaluation{
+            AerodynamicTableQueryOutput{value.values},
+            AerodynamicTableQueryTelemetry{
+                value.domain_status,
+                {value.x_bracket.weight, value.y_bracket.weight,
+                 value.z_bracket.weight}}},
+        evidence);
+}
+
 PreparedForceMomentClosureModel::PreparedForceMomentClosureModel(
     std::shared_ptr<const ForceMomentClosureDefinition> definition,
     gnc::model_sdk::PreparedModelMetadata metadata) noexcept
@@ -654,9 +1028,10 @@ ForceMomentClosureKernel::evaluate(
 
 PreparedRigidStepModel::PreparedRigidStepModel(
     std::shared_ptr<const RigidStepModelDefinition> definition,
-    PreparedTrilinearTableView<6U> table,
+    PreparedAerodynamicTableModel aerodynamic_table_model,
     PreparedForceMomentClosureModel force_moment_closure_model) noexcept
-    : definition_(std::move(definition)), table_(std::move(table)),
+    : definition_(std::move(definition)),
+      aerodynamic_table_model_(std::move(aerodynamic_table_model)),
       force_moment_closure_model_(std::move(force_moment_closure_model)) {}
 
 const RigidStepModelDefinition& PreparedRigidStepModel::definition()
@@ -667,6 +1042,11 @@ const RigidStepModelDefinition& PreparedRigidStepModel::definition()
 const PreparedForceMomentClosureModel&
 PreparedRigidStepModel::force_moment_closure_model() const noexcept {
     return force_moment_closure_model_;
+}
+
+const PreparedAerodynamicTableModel&
+PreparedRigidStepModel::aerodynamic_table_model() const noexcept {
+    return aerodynamic_table_model_;
 }
 
 NumericalOutcome<PreparedRigidStepModel> prepare_rigid_step_model(
@@ -684,12 +1064,16 @@ NumericalOutcome<PreparedRigidStepModel> prepare_rigid_step_model(
             closure.status(), closure.evidence());
     }
 
+    auto aerodynamics = prepare_aerodynamic_table_model(
+        definition.aerodynamics, definition.aerodynamic_table);
+    if (!aerodynamics.has_value()) {
+        return NumericalOutcome<PreparedRigidStepModel>::failure(
+            aerodynamics.status(), aerodynamics.evidence());
+    }
+
     if (definition.inertial_frame.id.empty() ||
         definition.inertial_frame ==
-            definition.force_moment_closure.body_frame ||
-        definition.aerodynamics.source_id.empty() ||
-        definition.aerodynamics.table_id.empty() ||
-        definition.aerodynamics.configuration_id.empty()) {
+            definition.force_moment_closure.body_frame) {
         return failure(NumericalStatus::DomainError, "definition-identity");
     }
     if (!std::isfinite(definition.algorithm.fixed_step_seconds) ||
@@ -703,47 +1087,16 @@ NumericalOutcome<PreparedRigidStepModel> prepare_rigid_step_model(
         return failure(NumericalStatus::DomainError,
                        "definition-numerical-policy");
     }
-    const auto& aero = definition.aerodynamics;
-    if (!std::isfinite(aero.reference_area_square_meters) ||
-        !std::isfinite(aero.reference_span_meters) ||
-        !std::isfinite(aero.reference_chord_meters) ||
-        aero.reference_area_square_meters <= 0.0 ||
-        aero.reference_span_meters <= 0.0 ||
-        aero.reference_chord_meters <= 0.0 ||
-        !finite(aero.body_origin_to_application.value)) {
-        return failure(NumericalStatus::DomainError,
-                       "definition-aero-geometry");
-    }
-
     auto owned_definition =
         std::make_shared<const RigidStepModelDefinition>(
             std::move(definition));
-    const auto& owned_aero = owned_definition->aerodynamics;
-    gnc::foundation::TrilinearTableView<6U> view;
-    view.x_axis = {owned_aero.mach_axis.data(),
-                   owned_aero.mach_axis.size()};
-    view.y_axis = {owned_aero.alpha_axis_radians.data(),
-                   owned_aero.alpha_axis_radians.size()};
-    view.z_axis = {owned_aero.beta_axis_radians.data(),
-                   owned_aero.beta_axis_radians.size()};
-    view.rows = owned_aero.coefficient_rows_ca_cy_cn_cl_cm_cn.data();
-    view.row_count =
-        owned_aero.coefficient_rows_ca_cy_cn_cl_cm_cn.size();
-    auto table = gnc::foundation::prepare_trilinear_table(view);
-    if (!table.has_value()) {
-        NumericalEvidence evidence = table.evidence();
-        evidence.algorithm = kRigidStepPreparationIdentity;
-        evidence.detail = "aero-table";
-        return NumericalOutcome<PreparedRigidStepModel>::failure(
-            table.status(), evidence);
-    }
-
-    NumericalEvidence evidence = table.evidence();
+    NumericalEvidence evidence = aerodynamics.evidence();
     evidence.algorithm = kRigidStepPreparationIdentity;
     evidence.detail = "prepared-aero-table";
     return NumericalOutcome<PreparedRigidStepModel>::with_value(
-        table.status(),
-        PreparedRigidStepModel{std::move(owned_definition), table.value(),
+        aerodynamics.status(),
+        PreparedRigidStepModel{std::move(owned_definition),
+                               std::move(aerodynamics.value()),
                                std::move(closure.value())},
         evidence);
 }
@@ -775,7 +1128,7 @@ NumericalOutcome<RigidStepEvaluation> RigidStepKernel::evaluate(
     approximate = approximate || approximate_status(inertia_check.status());
 
     const auto air_lookup = compute_air_lookup(
-        definition, model.table_, input.committed_state,
+        definition, model.aerodynamic_table_model(), input.committed_state,
         input.environment);
     if (!air_lookup.has_value()) {
         return product_failure<RigidStepEvaluation>(

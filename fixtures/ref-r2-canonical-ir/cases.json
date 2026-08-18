@@ -1,0 +1,171 @@
+{
+  "schema_version": "gnc.r2-canonical-semantic-hash-fixture/1",
+  "case_id": "CASE-R2-IR-YYZ-QUALIFICATION-SEMANTICS",
+  "encoding_id": "gnc.canonical-mission-ir.semantic-bytes@1",
+  "hash_algorithm": "SHA-256",
+  "expected_sha256": "cf7676b9764d95157cd473e0b429c63b8c48e2c6f0bbd79fbe21e12dffb6c259",
+  "ir": {
+    "revision": 1,
+    "mission_id": "mission.fixture.yyz.lookup-altitude-hold@1",
+    "entities": [
+      {
+        "entity_id": "vehicle.fixture.yyz@1",
+        "lifecycle": 1
+      }
+    ],
+    "scopes": [
+      {
+        "kind": 1,
+        "subject_entity_id": "vehicle.fixture.yyz@1"
+      }
+    ],
+    "models": [
+      {
+        "occurrence_id": "aero_lookup",
+        "package_id": "gnc.package.yyz-rigid-step.experimental@1",
+        "package_version": "0.1.0",
+        "model_id": "gnc.package.yyz.aerodynamic-table.multiaffine.experimental@1",
+        "model_version": "0.1.0",
+        "execution_form": 1,
+        "placement": 1,
+        "preparation_algorithm_id": "gnc.package.yyz.aerodynamic-table.prepare@1",
+        "preparation_algorithm_version": "0.1.0",
+        "subject_entity_id": "vehicle.fixture.yyz@1",
+        "scope": {
+          "kind": 1,
+          "subject_entity_id": "vehicle.fixture.yyz@1"
+        },
+        "output_ports": [
+          {
+            "port_id": "coefficients",
+            "contract_id": "gnc.contract.yyz.aerodynamic-coefficients@1"
+          }
+        ],
+        "configuration": {
+          "schema_id": "gnc.package.yyz.aerodynamic-table.config@1",
+          "schema_version": 1,
+          "fields": [
+            {
+              "field_id": "body_origin_to_application.x_m",
+              "kind": "float64",
+              "value": 0.2
+            },
+            {
+              "field_id": "body_origin_to_application.y_m",
+              "kind": "float64",
+              "value": 0.0
+            },
+            {
+              "field_id": "body_origin_to_application.z_m",
+              "kind": "float64",
+              "value": -1.3888888888888888
+            },
+            {
+              "field_id": "configuration_id",
+              "kind": "string",
+              "value": "configuration.fixture.yyz.clean@1"
+            },
+            {
+              "field_id": "reference_area_square_meters",
+              "kind": "float64",
+              "value": 1.0
+            },
+            {
+              "field_id": "reference_chord_meters",
+              "kind": "float64",
+              "value": 1.0
+            },
+            {
+              "field_id": "reference_span_meters",
+              "kind": "float64",
+              "value": 1.0
+            },
+            {
+              "field_id": "source_id",
+              "kind": "string",
+              "value": "aero.body"
+            }
+          ]
+        },
+        "assets": [
+          {
+            "role": "aerodynamics",
+            "asset_schema_id": "gnc.asset.yyz.aerodynamic-table.multiaffine@1",
+            "asset_id": "aero-table.fixture.yyz.multiaffine@1"
+          }
+        ]
+      },
+      {
+        "occurrence_id": "force_moment_closure",
+        "package_id": "gnc.package.yyz-rigid-step.experimental@1",
+        "package_version": "0.1.0",
+        "model_id": "gnc.package.yyz.force-moment-closure.frozen-interval.experimental@1",
+        "model_version": "0.1.0",
+        "execution_form": 2,
+        "placement": 2,
+        "preparation_algorithm_id": "gnc.package.yyz.force-moment-closure.prepare@1",
+        "preparation_algorithm_version": "0.1.0",
+        "subject_entity_id": "vehicle.fixture.yyz@1",
+        "scope": {
+          "kind": 1,
+          "subject_entity_id": "vehicle.fixture.yyz@1"
+        },
+        "output_ports": [
+          {
+            "port_id": "form-input",
+            "contract_id": "gnc.contract.yyz.rigid-form-input@1"
+          }
+        ],
+        "configuration": {
+          "schema_id": "gnc.package.yyz.force-moment-closure.config@1",
+          "schema_version": 1,
+          "fields": [
+            {
+              "field_id": "body_frame_id",
+              "kind": "string",
+              "value": "frame.fixture.yyz.body@1"
+            },
+            {
+              "field_id": "clock_domain_id",
+              "kind": "string",
+              "value": "clock.fixture.yyz.simulation@1"
+            },
+            {
+              "field_id": "configuration_revision",
+              "kind": "integer",
+              "value": 11
+            },
+            {
+              "field_id": "numerical.absolute_tolerance",
+              "kind": "float64",
+              "value": 2e-12
+            },
+            {
+              "field_id": "numerical.condition_limit",
+              "kind": "float64",
+              "value": 1000000000000.0
+            },
+            {
+              "field_id": "numerical.finite_check",
+              "kind": "enum",
+              "value": "every-stage"
+            },
+            {
+              "field_id": "numerical.relative_tolerance",
+              "kind": "float64",
+              "value": 2e-12
+            },
+            {
+              "field_id": "numerical.zero_tolerance",
+              "kind": "float64",
+              "value": 1e-14
+            }
+          ]
+        },
+        "assets": []
+      }
+    ],
+    "algorithms": [],
+    "bindings": []
+  }
+}

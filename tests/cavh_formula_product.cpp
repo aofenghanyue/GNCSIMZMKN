@@ -251,6 +251,23 @@ ProbeBundle run_probe() {
                 eq18_model.definition().configuration_revision == 4,
             "CAVH prepared-model metadata differs");
     checks.emplace_back("prepared-model-metadata");
+    const auto envelope_configuration = canonical_glide_envelope_config(
+        eq18_model.glide_envelope_model().definition());
+    const auto rebuilt_envelope = build_glide_envelope_definition(
+        envelope_configuration);
+    const auto& rebuilt_envelope_value = require_value(
+        rebuilt_envelope,
+        "canonical glide-envelope configuration did not rebuild");
+    require(rebuilt_envelope_value.metadata.model_id ==
+                kGlideEnvelopeModelIdentity &&
+                rebuilt_envelope_value.metadata.execution_form ==
+                    gnc::model_sdk::ModelExecutionForm::PureQuery &&
+                rebuilt_envelope_value.polar.cl_slope_per_radian == 2.0 &&
+                rebuilt_envelope_value.polar.cd0_base == 0.02 &&
+                rebuilt_envelope_value.polar.induced_drag_factor == 0.08,
+            "canonical glide-envelope configuration rebuilt different "
+            "semantics");
+    checks.emplace_back("canonical-model-config-roundtrip");
     const CavhFormulaInput eq18_unbanked_input = fixture_input(0.0);
     const auto envelope_query = GlideEnvelopeQueryKernel::evaluate(
         eq18_model.glide_envelope_model(),

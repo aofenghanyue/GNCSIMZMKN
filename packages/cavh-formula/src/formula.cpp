@@ -1,6 +1,7 @@
 #include "../include/cavh/formula.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <initializer_list>
 #include <limits>
@@ -207,6 +208,81 @@ validate_operating_point_common(
 }
 
 } // namespace
+
+gnc::model_sdk::CanonicalConfigBlock canonical_glide_envelope_config(
+    const GlideEnvelopeDefinition& definition) {
+    const auto& polar = definition.polar;
+    return {
+        std::string(kGlideEnvelopeConfigSchemaIdentity),
+        kGlideEnvelopeConfigSchemaVersion,
+        {
+            {"alpha_max_radians", polar.alpha_max_radians},
+            {"alpha_min_radians", polar.alpha_min_radians},
+            {"cd0_base", polar.cd0_base},
+            {"cd0_slope_per_mach", polar.cd0_slope_per_mach},
+            {"cl_intercept", polar.cl_intercept},
+            {"cl_slope_per_radian", polar.cl_slope_per_radian},
+            {"induced_drag_factor", polar.induced_drag_factor},
+        },
+    };
+}
+
+NumericalOutcome<GlideEnvelopeDefinition>
+build_glide_envelope_definition(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration) {
+    const auto failure = [] {
+        return NumericalOutcome<GlideEnvelopeDefinition>::failure(
+            NumericalStatus::DomainError,
+            product_evidence(kGlideEnvelopePreparationIdentity,
+                             "canonical-config"));
+    };
+    static constexpr std::array<std::string_view, 7U> kFields{
+        "alpha_max_radians",
+        "alpha_min_radians",
+        "cd0_base",
+        "cd0_slope_per_mach",
+        "cl_intercept",
+        "cl_slope_per_radian",
+        "induced_drag_factor",
+    };
+    if (configuration.schema_id != kGlideEnvelopeConfigSchemaIdentity ||
+        configuration.schema_version !=
+            kGlideEnvelopeConfigSchemaVersion ||
+        configuration.fields.size() != kFields.size()) {
+        return failure();
+    }
+    std::array<double, 7U> values{};
+    for (std::size_t index = 0U; index < kFields.size(); ++index) {
+        const auto& field = configuration.fields[index];
+        const auto* value = std::get_if<double>(&field.value);
+        if (field.field_id != kFields[index] || value == nullptr ||
+            !std::isfinite(*value) ||
+            (*value == 0.0 && std::signbit(*value))) {
+            return failure();
+        }
+        values[index] = *value;
+    }
+
+    GlideEnvelopeDefinition definition;
+    definition.metadata = {
+        std::string(kGlideEnvelopeModelIdentity),
+        std::string(kGlideEnvelopeModelVersion),
+        gnc::model_sdk::ModelExecutionForm::PureQuery,
+    };
+    definition.polar = {
+        values[4U], values[5U], values[2U], values[3U],
+        values[6U], values[1U], values[0U],
+    };
+    const auto prepared = prepare_glide_envelope_model(definition);
+    if (!prepared.has_value()) {
+        return NumericalOutcome<GlideEnvelopeDefinition>::failure(
+            prepared.status(), prepared.evidence());
+    }
+    return NumericalOutcome<GlideEnvelopeDefinition>::with_value(
+        NumericalStatus::Success, std::move(definition),
+        product_evidence(kGlideEnvelopePreparationIdentity,
+                         "canonical-config", 0U, 1U));
+}
 
 GlideEnvelopePreparedModel::GlideEnvelopePreparedModel(
     std::shared_ptr<const GlideEnvelopeDefinition> definition,

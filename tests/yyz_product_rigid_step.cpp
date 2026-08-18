@@ -116,17 +116,26 @@ RigidStepModelDefinition fixture_definition() {
         fixture_quaternion_policy();
 
     auto& aero = definition.aerodynamics;
+    aero.metadata = {
+        std::string(kAerodynamicTableModelIdentity),
+        std::string(kAerodynamicTableModelVersion),
+        gnc::model_sdk::ModelExecutionForm::PureQuery,
+    };
     aero.source_id = "aero.body";
-    aero.table_id = "aero-table.fixture.yyz.multiaffine@1";
+    aero.table_asset_id = "aero-table.fixture.yyz.multiaffine@1";
     aero.configuration_id = "configuration.fixture.yyz.clean@1";
     aero.reference_area_square_meters = 1.0;
     aero.reference_span_meters = 1.0;
     aero.reference_chord_meters = 1.0;
     aero.body_origin_to_application.value = Vec3{0.2, 0.0, -25.0 / 18.0};
-    aero.mach_axis = {0.2, 0.6};
-    aero.alpha_axis_radians = {-0.1, 0.1};
-    aero.beta_axis_radians = {-0.05, 0.05};
-    aero.coefficient_rows_ca_cy_cn_cl_cm_cn = {
+    auto& table = definition.aerodynamic_table;
+    table.asset_schema_id =
+        std::string(kAerodynamicTableAssetSchemaIdentity);
+    table.asset_id = aero.table_asset_id;
+    table.mach_axis = {0.2, 0.6};
+    table.alpha_axis_radians = {-0.1, 0.1};
+    table.beta_axis_radians = {-0.05, 0.05};
+    table.coefficient_rows_ca_cy_cn_cl_cm_cn = {
         {0.006, 0.0245, -0.0795, 0.005, 0.014, -0.00755},
         {0.006, -0.0245, -0.0805, -0.005, 0.014, 0.00755},
         {0.05, 0.0245, 0.0795, 0.005, -0.106, -0.00785},
@@ -224,10 +233,20 @@ struct has_contributions_member<
     Value, std::void_t<decltype(std::declval<Value>().contributions)>>
     : std::true_type {};
 
+template <typename Value, typename = void>
+struct has_domain_status_member : std::false_type {};
+
+template <typename Value>
+struct has_domain_status_member<
+    Value, std::void_t<decltype(std::declval<Value>().domain_status)>>
+    : std::true_type {};
+
 static_assert(!has_air_data_member<RigidStepOutput>::value,
               "rigid telemetry must stay outside RigidStepOutput");
 static_assert(!has_contributions_member<ForceMomentClosureOutput>::value,
               "closure telemetry must stay outside its formal output");
+static_assert(!has_domain_status_member<AerodynamicTableQueryOutput>::value,
+              "aero interpolation telemetry must stay outside query output");
 
 struct ProbeBundle {
     gnc::model_sdk::PreparedModelMetadata metadata;
@@ -259,6 +278,18 @@ ProbeBundle run_probe() {
                 prepared.definition().force_moment_closure
                         .configuration_revision == 11,
             "YYZ prepared-model metadata differs");
+    const auto& aero_metadata = prepared.aerodynamic_table_model().metadata();
+    require(aero_metadata.definition.model_id ==
+                kAerodynamicTableModelIdentity &&
+                aero_metadata.definition.model_version ==
+                    kAerodynamicTableModelVersion &&
+                aero_metadata.definition.execution_form ==
+                    gnc::model_sdk::ModelExecutionForm::PureQuery &&
+                aero_metadata.preparation_algorithm_id ==
+                    kAerodynamicTablePreparationIdentity.id &&
+                prepared.aerodynamic_table_model().asset().asset_id ==
+                    "aero-table.fixture.yyz.multiaffine@1",
+            "YYZ aerodynamic query metadata or asset identity differs");
     const RigidStepInput accepted_input = fixture_input();
     const auto accepted_outcome =
         RigidStepKernel::evaluate(prepared, accepted_input);
@@ -306,10 +337,61 @@ ProbeBundle run_probe() {
                      .force_total_inertial.value),
             "rigid derivative did not consume closure form input");
 
+    const auto direct_aero = AerodynamicTableQueryKernel::evaluate(
+        prepared.aerodynamic_table_model(),
+        AerodynamicTableQueryInput{5.0 / 17.0, 0.0, 0.0});
+    const auto& direct_aero_value = require_value(
+        direct_aero, "direct aerodynamic table query failed");
+    require(direct_aero.evidence().algorithm.id ==
+                kAerodynamicTableQueryIdentity.id &&
+                direct_aero_value.output
+                        .coefficients_ca_cy_cn_cl_cm_cn ==
+                    accepted.telemetry.aerodynamic_lookup
+                        .coefficients_ca_cy_cn_cl_cm_cn &&
+                direct_aero_value.telemetry.weights ==
+                    accepted.telemetry.aerodynamic_lookup.weights &&
+                direct_aero_value.telemetry.domain_status ==
+                    accepted.telemetry.aerodynamic_lookup.domain_status,
+            "rigid step did not consume the formal aerodynamic query result");
+
+    const auto closure_configuration =
+        canonical_force_moment_closure_config(
+            prepared.definition().force_moment_closure);
+    const auto rebuilt_closure = build_force_moment_closure_definition(
+        closure_configuration);
+    const auto& rebuilt_closure_value = require_value(
+        rebuilt_closure, "canonical closure configuration did not rebuild");
+    require(rebuilt_closure_value.body_frame ==
+                prepared.definition().force_moment_closure.body_frame &&
+                rebuilt_closure_value.clock_domain ==
+                    prepared.definition().force_moment_closure.clock_domain &&
+                rebuilt_closure_value.configuration_revision == 11 &&
+                rebuilt_closure_value.numerical_policy.absolute_tolerance ==
+                    kAbsolute &&
+                rebuilt_closure_value.numerical_policy.relative_tolerance ==
+                    kRelative,
+            "canonical closure configuration rebuilt different semantics");
+
+    const auto aero_configuration = canonical_aerodynamic_table_config(
+        prepared.definition().aerodynamics);
+    const auto rebuilt_aero = build_aerodynamic_table_definition(
+        aero_configuration,
+        prepared.definition().aerodynamics.table_asset_id);
+    const auto& rebuilt_aero_value = require_value(
+        rebuilt_aero, "canonical aero configuration did not rebuild");
+    require(rebuilt_aero_value.source_id == "aero.body" &&
+                rebuilt_aero_value.table_asset_id ==
+                    "aero-table.fixture.yyz.multiaffine@1" &&
+                near(rebuilt_aero_value.body_origin_to_application.value,
+                     Vec3{0.2, 0.0, -25.0 / 18.0}),
+            "canonical aero configuration rebuilt different semantics");
+
     std::vector<std::string> checks{
         "prepared-model-metadata", "formal-output-telemetry-separation",
         "accepted-oracle-anchors",
-        "rigid-step-consumes-force-moment-closure-output"};
+        "rigid-step-consumes-force-moment-closure-output",
+        "rigid-step-consumes-aerodynamic-query-output",
+        "canonical-model-config-roundtrip"};
 
     ForceMomentClosureDefinition direct_closure_definition =
         fixture_definition().force_moment_closure;
@@ -516,7 +598,7 @@ ProbeBundle run_probe() {
     checks.emplace_back("nonfinite-rejection");
 
     RigidStepModelDefinition invalid_table = fixture_definition();
-    invalid_table.aerodynamics.mach_axis = {0.2, 0.2};
+    invalid_table.aerodynamic_table.mach_axis = {0.2, 0.2};
     expect_failure(prepare_rigid_step_model(std::move(invalid_table)),
                    NumericalStatus::DomainError,
                    "invalid prepared table survived");

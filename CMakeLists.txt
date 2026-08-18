@@ -528,6 +528,21 @@ if(GNC_BUILD_TESTS)
             -Quiet)
     find_package(Python3 3.8 REQUIRED COMPONENTS Interpreter)
     add_test(
+        NAME r2.compiler-canonical-semantic-hash.reference
+        COMMAND
+            ${Python3_EXECUTABLE}
+            -I
+            -B
+            ${CMAKE_CURRENT_SOURCE_DIR}/tools/r2_canonical_ir_hash_reference.py
+            --cases
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-r2-canonical-ir/cases.json
+            --source
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-yyz-001/source.json
+            --asset-index
+            ${CMAKE_CURRENT_SOURCE_DIR}/fixtures/ref-yyz-001/asset-index.json
+            --probe
+            $<TARGET_FILE:gnc_compiler_static_plan_probe>)
+    add_test(
         NAME r1.model-sdk-prepared-model.conformance
         COMMAND
             ${Python3_EXECUTABLE}

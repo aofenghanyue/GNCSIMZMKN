@@ -126,6 +126,7 @@
     },
     {
       "role": "aerodynamics",
+      "asset_schema_id": "gnc.asset.yyz.aerodynamic-table.multiaffine@1",
       "asset_id": "aero-table.fixture.yyz.multiaffine@1",
       "source_case_path": "fixtures/ref-yyz-frozen-interval/cases.json#/cases/CASE-YYZ-FROZEN-INTERVAL-COMPOSED-TRAJECTORY/aero_lookup",
       "payload": {

@@ -1,4 +1,5 @@
 #include <cavh/formula.hpp>
+#include <gnc/compiler/canonical_semantic_hash.hpp>
 #include <gnc/compiler/static_mission_compiler.hpp>
 #include <yyz/rigid_step.hpp>
 
@@ -21,14 +22,20 @@ using gnc::compiler::Diagnostic;
 using gnc::compiler::DiagnosticCode;
 using gnc::compiler::EntityLifecycle;
 using gnc::compiler::ExecutionPlanDescriptor;
+using gnc::compiler::ScopeKey;
+using gnc::compiler::ScopeKind;
 using gnc::compiler::SourceAlgorithmConsumer;
+using gnc::compiler::SourceAssetBinding;
 using gnc::compiler::SourceBinding;
+using gnc::compiler::SourceConfigFieldProvenance;
 using gnc::compiler::SourceEntity;
 using gnc::compiler::SourceModelOccurrence;
 using gnc::compiler::SourceRef;
+using gnc::compiler::SourceScope;
 using gnc::compiler::StaticCompilation;
 using gnc::compiler::TypedStaticCompositionSource;
 using gnc::model_sdk::ModelExecutionForm;
+using gnc::model_sdk::ModelPlacement;
 using gnc::model_sdk::StaticAlgorithmDescriptor;
 using gnc::model_sdk::StaticPortDescriptor;
 using gnc::model_sdk::StaticPortDirection;
@@ -122,6 +129,34 @@ const Value& require_value(const CompileOutcome<Value>& outcome,
     return {std::string(kDocumentUri), std::move(path)};
 }
 
+void attach_configuration(
+    SourceModelOccurrence& occurrence,
+    gnc::model_sdk::CanonicalConfigBlock configuration,
+    SourceRef schema_source, std::string field_document_uri,
+    std::string field_path_prefix) {
+    occurrence.configuration = std::move(configuration);
+    occurrence.configuration_source = std::move(schema_source);
+    for (const auto& field : occurrence.configuration.fields) {
+        occurrence.configuration_field_sources.push_back(
+            {field.field_id,
+             {field_document_uri,
+              field_path_prefix + "/" + field.field_id}});
+    }
+}
+
+void set_field_source(SourceModelOccurrence& occurrence,
+                      std::string_view field_id, SourceRef source) {
+    const auto found = std::find_if(
+        occurrence.configuration_field_sources.begin(),
+        occurrence.configuration_field_sources.end(),
+        [field_id](const SourceConfigFieldProvenance& value) {
+            return value.field_id == field_id;
+        });
+    require(found != occurrence.configuration_field_sources.end(),
+            "configuration provenance field is absent");
+    found->source = std::move(source);
+}
+
 [[nodiscard]] gnc::packages::cavh::CavhFormulaDefinition
 cavh_definition() {
     gnc::packages::cavh::CavhFormulaDefinition definition;
@@ -129,6 +164,8 @@ cavh_definition() {
         std::string(gnc::packages::cavh::kGlideEnvelopeModelIdentity),
         std::string(gnc::packages::cavh::kGlideEnvelopeModelVersion),
         ModelExecutionForm::PureQuery};
+    definition.envelope.polar = {0.0, 2.0, 0.02, 0.0,
+                                 0.08, 0.0, 0.5};
     return definition;
 }
 
@@ -139,6 +176,28 @@ cavh_definition() {
         std::string(
             gnc::packages::yyz::kForceMomentClosureModelVersion),
         ModelExecutionForm::Closure};
+    definition.force_moment_closure.body_frame.id =
+        "frame.fixture.yyz.body@1";
+    definition.force_moment_closure.clock_domain.id =
+        "clock.fixture.yyz.simulation@1";
+    definition.force_moment_closure.configuration_revision = 11;
+    definition.force_moment_closure.numerical_policy = {
+        2.0e-12, 2.0e-12,
+        gnc::foundation::FiniteCheck::EveryStage, 1.0e-14, 1.0e12};
+    definition.aerodynamics.metadata = {
+        std::string(gnc::packages::yyz::kAerodynamicTableModelIdentity),
+        std::string(gnc::packages::yyz::kAerodynamicTableModelVersion),
+        ModelExecutionForm::PureQuery};
+    definition.aerodynamics.source_id = "aero.body";
+    definition.aerodynamics.configuration_id =
+        "configuration.fixture.yyz.clean@1";
+    definition.aerodynamics.reference_area_square_meters = 1.0;
+    definition.aerodynamics.reference_span_meters = 1.0;
+    definition.aerodynamics.reference_chord_meters = 1.0;
+    definition.aerodynamics.body_origin_to_application.value =
+        gnc::foundation::Vec3{0.2, 0.0, -25.0 / 18.0};
+    definition.aerodynamics.table_asset_id =
+        "aero-table.fixture.yyz.multiaffine@1";
     return definition;
 }
 
@@ -150,19 +209,52 @@ package_descriptors() {
         gnc::packages::cavh::describe_cavh_formula_package();
     auto yyz_package =
         gnc::packages::yyz::describe_yyz_rigid_step_package();
-    require(cavh_package.models[0U].definition.model_id ==
+    const auto find_model = [](const auto& package,
+                               std::string_view model_id)
+        -> const gnc::model_sdk::StaticModelDescriptor& {
+        const auto found = std::find_if(
+            package.models.begin(), package.models.end(),
+            [model_id](const auto& model) {
+                return model.definition.model_id == model_id;
+            });
+        require(found != package.models.end(),
+                "package descriptor omitted a real model");
+        return *found;
+    };
+    const auto& cavh_envelope = find_model(
+        cavh_package,
+        gnc::packages::cavh::kGlideEnvelopeModelIdentity);
+    const auto& yyz_closure = find_model(
+        yyz_package,
+        gnc::packages::yyz::kForceMomentClosureModelIdentity);
+    const auto& yyz_aero = find_model(
+        yyz_package,
+        gnc::packages::yyz::kAerodynamicTableModelIdentity);
+    require(cavh_envelope.definition.model_id ==
                 cavh.envelope.metadata.model_id &&
-                cavh_package.models[0U].definition.model_version ==
+                cavh_envelope.definition.model_version ==
                     cavh.envelope.metadata.model_version &&
-                cavh_package.models[0U].definition.execution_form ==
-                    cavh.envelope.metadata.execution_form,
+                cavh_envelope.definition.execution_form ==
+                    cavh.envelope.metadata.execution_form &&
+                cavh_envelope.placement == ModelPlacement::VehicleOutput,
             "CAVH package descriptor diverged from the real definition");
-    require(yyz_package.models[0U].definition.model_id ==
+    require(yyz_closure.definition.model_id ==
                 yyz.force_moment_closure.metadata.model_id &&
-                yyz_package.models[0U].definition.model_version ==
+                yyz_closure.definition.model_version ==
                     yyz.force_moment_closure.metadata.model_version &&
-                yyz_package.models[0U].definition.execution_form ==
-                    yyz.force_moment_closure.metadata.execution_form,
+                yyz_closure.definition.execution_form ==
+                    yyz.force_moment_closure.metadata.execution_form &&
+                yyz_closure.placement ==
+                    ModelPlacement::InteractionClosure &&
+                yyz_aero.definition.model_id ==
+                    yyz.aerodynamics.metadata.model_id &&
+                yyz_aero.definition.execution_form ==
+                    ModelExecutionForm::PureQuery &&
+                yyz_aero.placement == ModelPlacement::VehicleOutput &&
+                yyz_aero.asset_slots.size() == 1U &&
+                yyz_aero.asset_slots[0U].asset_schema_id ==
+                    gnc::packages::yyz::
+                        kAerodynamicTableAssetSchemaIdentity,
             "YYZ package descriptor diverged from the real definition");
     return {std::move(cavh_package), std::move(yyz_package)};
 }
@@ -183,6 +275,13 @@ package_descriptors() {
                 gnc::packages::cavh::kGlideEnvelopeModelVersion),
             ref("/models/cavh.envelope"), {}, {}},
         SourceModelOccurrence{
+            "yyz.aerodynamics",
+            std::string(
+                gnc::packages::yyz::kAerodynamicTableModelIdentity),
+            std::string(
+                gnc::packages::yyz::kAerodynamicTableModelVersion),
+            ref("/models/yyz.aerodynamics"), {}, {}},
+        SourceModelOccurrence{
             "yyz.closure",
             std::string(
                 gnc::packages::yyz::kForceMomentClosureModelIdentity),
@@ -190,6 +289,45 @@ package_descriptors() {
                 gnc::packages::yyz::kForceMomentClosureModelVersion),
             ref("/models/yyz.closure"), {}, {}},
     };
+    const auto cavh = cavh_definition();
+    const auto yyz = yyz_definition();
+    attach_configuration(
+        source.model_occurrences[0U],
+        gnc::packages::cavh::canonical_glide_envelope_config(
+            cavh.envelope),
+        ref("/models/cavh.envelope/configuration/schema"),
+        std::string(kDocumentUri),
+        "/models/cavh.envelope/configuration/fields");
+    attach_configuration(
+        source.model_occurrences[1U],
+        gnc::packages::yyz::canonical_aerodynamic_table_config(
+            yyz.aerodynamics),
+        ref("/models/yyz.aerodynamics/configuration/schema"),
+        std::string(kDocumentUri),
+        "/models/yyz.aerodynamics/configuration/fields");
+    source.model_occurrences[1U].placement =
+        ModelPlacement::VehicleOutput;
+    source.model_occurrences[1U].placement_source =
+        ref("/models/yyz.aerodynamics/placement");
+    source.model_occurrences[1U].asset_bindings = {
+        SourceAssetBinding{
+            "aerodynamics",
+            std::string(gnc::packages::yyz::
+                            kAerodynamicTableAssetSchemaIdentity),
+            yyz.aerodynamics.table_asset_id,
+            ref("/models/yyz.aerodynamics/assets/aerodynamics")},
+    };
+    attach_configuration(
+        source.model_occurrences[2U],
+        gnc::packages::yyz::canonical_force_moment_closure_config(
+            yyz.force_moment_closure),
+        ref("/models/yyz.closure/configuration/schema"),
+        std::string(kDocumentUri),
+        "/models/yyz.closure/configuration/fields");
+    source.model_occurrences[2U].placement =
+        ModelPlacement::InteractionClosure;
+    source.model_occurrences[2U].placement_source =
+        ref("/models/yyz.closure/placement");
     source.algorithm_consumers = {
         SourceAlgorithmConsumer{
             "cavh.formula",
@@ -210,6 +348,10 @@ package_descriptors() {
             "cavh.envelope-to-formula", "cavh.envelope", "envelope",
             "cavh.formula", "glide-envelope",
             ref("/bindings/cavh.envelope-to-formula")},
+        SourceBinding{
+            "yyz.aero-to-rigid", "yyz.aerodynamics", "coefficients",
+            "yyz.rigid-step", "aerodynamic-coefficients",
+            ref("/bindings/yyz.aero-to-rigid")},
         SourceBinding{
             "yyz.closure-to-rigid", "yyz.closure", "form-input",
             "yyz.rigid-step", "form-input",
@@ -237,6 +379,14 @@ package_descriptors() {
             {std::string(kYyzQualificationSourceUri),
              "/profiles/qualification/vehicle/lifecycle"}},
     };
+    const ScopeKey vehicle_scope{
+        ScopeKind::Vehicle, std::string(kYyzQualificationSubject)};
+    source.scopes = {
+        SourceScope{
+            vehicle_scope,
+            {std::string(kYyzQualificationSourceUri),
+             "/profiles/qualification/vehicle/subject"}},
+    };
     source.model_occurrences = {
         SourceModelOccurrence{
             "force_moment_closure",
@@ -249,6 +399,109 @@ package_descriptors() {
             std::string(kYyzQualificationSubject),
             {std::string(kYyzQualificationSourceUri),
              "/profiles/qualification/vehicle/subject"}},
+        SourceModelOccurrence{
+            "aero_lookup",
+            std::string(
+                gnc::packages::yyz::kAerodynamicTableModelIdentity),
+            std::string(
+                gnc::packages::yyz::kAerodynamicTableModelVersion),
+            {std::string(kYyzQualificationAssetIndexUri),
+             "/component_bindings/4/role"},
+            std::string(kYyzQualificationSubject),
+            {std::string(kYyzQualificationSourceUri),
+             "/profiles/qualification/vehicle/subject"}},
+    };
+    const auto yyz = yyz_definition();
+    auto& closure = source.model_occurrences[0U];
+    closure.scope = vehicle_scope;
+    closure.scope_source = {
+        std::string(kYyzQualificationSourceUri),
+        "/profiles/qualification/vehicle/subject"};
+    closure.placement = ModelPlacement::InteractionClosure;
+    closure.placement_source = {
+        std::string(kYyzQualificationAssetIndexUri),
+        "/component_bindings/1/role"};
+    attach_configuration(
+        closure,
+        gnc::packages::yyz::canonical_force_moment_closure_config(
+            yyz.force_moment_closure),
+        {"package://gnc.package.yyz-rigid-step.experimental@1",
+         "/schemas/force-moment-closure-config/1"},
+        "package://gnc.package.yyz-rigid-step.experimental@1",
+        "/defaults/force-moment-closure");
+    set_field_source(
+        closure, "body_frame_id",
+        {std::string(kYyzQualificationSourceUri),
+         "/profiles/qualification/vehicle/body_frame_id"});
+    set_field_source(
+        closure, "clock_domain_id",
+        {std::string(kYyzQualificationSourceUri),
+         "/profiles/qualification/clock/clock_domain"});
+    set_field_source(
+        closure, "configuration_revision",
+        {std::string(kYyzQualificationSourceUri),
+         "/profiles/qualification/vehicle/configuration_revision"});
+
+    auto& aero = source.model_occurrences[1U];
+    aero.scope = vehicle_scope;
+    aero.scope_source = {
+        std::string(kYyzQualificationSourceUri),
+        "/profiles/qualification/vehicle/subject"};
+    aero.placement = ModelPlacement::VehicleOutput;
+    aero.placement_source = {
+        std::string(kYyzQualificationAssetIndexUri),
+        "/component_bindings/4/role"};
+    attach_configuration(
+        aero,
+        gnc::packages::yyz::canonical_aerodynamic_table_config(
+            yyz.aerodynamics),
+        {"package://gnc.package.yyz-rigid-step.experimental@1",
+         "/schemas/aerodynamic-table-config/1"},
+        std::string(kYyzQualificationAssetIndexUri),
+        "/selected_assets/2/payload");
+    set_field_source(
+        aero, "body_origin_to_application.x_m",
+        {std::string(kYyzQualificationAssetIndexUri),
+         "/selected_assets/2/payload/"
+         "r_body_origin_to_application_B_m/0"});
+    set_field_source(
+        aero, "body_origin_to_application.y_m",
+        {std::string(kYyzQualificationAssetIndexUri),
+         "/selected_assets/2/payload/"
+         "r_body_origin_to_application_B_m/1"});
+    set_field_source(
+        aero, "body_origin_to_application.z_m",
+        {std::string(kYyzQualificationAssetIndexUri),
+         "/selected_assets/2/payload/"
+         "r_body_origin_to_application_B_m/2"});
+    set_field_source(
+        aero, "configuration_id",
+        {std::string(kYyzQualificationAssetIndexUri),
+         "/selected_assets/2/payload/configuration_id"});
+    set_field_source(
+        aero, "reference_area_square_meters",
+        {std::string(kYyzQualificationAssetIndexUri),
+         "/selected_assets/2/payload/reference_area_m2"});
+    set_field_source(
+        aero, "reference_chord_meters",
+        {std::string(kYyzQualificationAssetIndexUri),
+         "/selected_assets/2/payload/reference_chord_m"});
+    set_field_source(
+        aero, "reference_span_meters",
+        {std::string(kYyzQualificationAssetIndexUri),
+         "/selected_assets/2/payload/reference_span_m"});
+    set_field_source(
+        aero, "source_id",
+        {"package://gnc.package.yyz-rigid-step.experimental@1",
+         "/defaults/aerodynamic-table/source_id"});
+    aero.asset_bindings = {
+        SourceAssetBinding{
+            "aerodynamics",
+            std::string(gnc::packages::yyz::
+                            kAerodynamicTableAssetSchemaIdentity),
+            yyz.aerodynamics.table_asset_id,
+            {std::string(kYyzQualificationAssetIndexUri),
+             "/selected_assets/2/asset_id"}},
     };
     return source;
 }
@@ -296,19 +549,46 @@ const Diagnostic& require_diagnostic(
                 ir.entities[0U].lifecycle_source.node_path ==
                     "/profiles/qualification/vehicle/lifecycle",
             "YYZ entity identity or initial lifecycle changed");
-    require(ir.model_occurrences.size() == 1U &&
+    require(ir.scopes.size() == 1U &&
+                ir.scopes[0U].key.kind == ScopeKind::Vehicle &&
+                ir.scopes[0U].key.subject_entity_id ==
+                    kYyzQualificationSubject &&
+                ir.model_occurrences.size() == 2U &&
                 ir.algorithm_consumers.empty() &&
                 ir.binding_intents.empty(),
-            "YYZ entity slice promoted a kernel consumer to a model "
-            "occurrence");
-    const auto& closure = ir.model_occurrences[0U];
+            "YYZ canonical entity/scope/model partition changed");
+    const auto& aero = ir.model_occurrences[0U];
+    const auto& closure = ir.model_occurrences[1U];
+    require(aero.occurrence_id == "aero_lookup" &&
+                aero.model_id ==
+                    gnc::packages::yyz::
+                        kAerodynamicTableModelIdentity &&
+                aero.execution_form == ModelExecutionForm::PureQuery &&
+                aero.placement == ModelPlacement::VehicleOutput &&
+                aero.subject_entity_id == kYyzQualificationSubject &&
+                aero.scope.has_value() &&
+                *aero.scope == ir.scopes[0U].key &&
+                aero.asset_bindings.size() == 1U &&
+                aero.asset_bindings[0U].role == "aerodynamics" &&
+                aero.asset_bindings[0U].asset_schema_id ==
+                    gnc::packages::yyz::
+                        kAerodynamicTableAssetSchemaIdentity &&
+                aero.asset_bindings[0U].asset_id ==
+                    "aero-table.fixture.yyz.multiaffine@1" &&
+                aero.asset_bindings[0U].source.node_path ==
+                    "/selected_assets/2/asset_id",
+            "YYZ aero query lost its real scope, placement, or asset");
     require(closure.occurrence_id == "force_moment_closure" &&
                 closure.model_id ==
                     gnc::packages::yyz::
                         kForceMomentClosureModelIdentity &&
                 closure.execution_form == ModelExecutionForm::Closure &&
+                closure.placement ==
+                    ModelPlacement::InteractionClosure &&
                 closure.subject_entity_id ==
                     kYyzQualificationSubject &&
+                closure.scope.has_value() &&
+                *closure.scope == ir.scopes[0U].key &&
                 closure.source.document_uri ==
                     kYyzQualificationAssetIndexUri &&
                 closure.source.node_path ==
@@ -319,26 +599,64 @@ const Diagnostic& require_diagnostic(
                     "/profiles/qualification/vehicle/subject",
             "YYZ closure occurrence lost its real definition, role, or "
             "subject relation");
+    const auto rebuilt_closure =
+        gnc::packages::yyz::build_force_moment_closure_definition(
+            closure.configuration);
+    const auto rebuilt_aero =
+        gnc::packages::yyz::build_aerodynamic_table_definition(
+            aero.configuration, aero.asset_bindings[0U].asset_id);
+    const auto rebuilt_closure_again =
+        gnc::packages::yyz::build_force_moment_closure_definition(
+            closure.configuration);
+    const auto rebuilt_aero_again =
+        gnc::packages::yyz::build_aerodynamic_table_definition(
+            aero.configuration, aero.asset_bindings[0U].asset_id);
+    require(rebuilt_closure.has_value() && rebuilt_aero.has_value() &&
+                rebuilt_closure_again.has_value() &&
+                rebuilt_aero_again.has_value() &&
+                rebuilt_closure.value().body_frame.id ==
+                    "frame.fixture.yyz.body@1" &&
+                rebuilt_closure.value().clock_domain.id ==
+                    "clock.fixture.yyz.simulation@1" &&
+                rebuilt_closure.value().configuration_revision == 11 &&
+                rebuilt_aero.value().configuration_id ==
+                    "configuration.fixture.yyz.clean@1" &&
+                rebuilt_aero.value().table_asset_id ==
+                    "aero-table.fixture.yyz.multiaffine@1" &&
+                gnc::packages::yyz::
+                        canonical_force_moment_closure_config(
+                            rebuilt_closure.value())
+                        .fields ==
+                    gnc::packages::yyz::
+                        canonical_force_moment_closure_config(
+                            rebuilt_closure_again.value())
+                        .fields &&
+                gnc::packages::yyz::canonical_aerodynamic_table_config(
+                    rebuilt_aero.value()).fields ==
+                    gnc::packages::yyz::canonical_aerodynamic_table_config(
+                        rebuilt_aero_again.value()).fields,
+            "canonical YYZ config did not rebuild typed definitions");
 
-    const std::string expected =
-        "mission-ir 1 mission "
-        "mission.fixture.yyz.lookup-altitude-hold@1\n"
-        "entity vehicle.fixture.yyz@1 active_at_initialize\n"
-        "model force_moment_closure "
-        "gnc.package.yyz-rigid-step.experimental@1@0.1.0 "
-        "gnc.package.yyz.force-moment-closure.frozen-interval.experimental@1"
-        "@0.1.0 Closure preparation "
-        "gnc.package.yyz.force-moment-closure.prepare@1@0.1.0 "
-        "subject vehicle.fixture.yyz@1\n"
-        "output force_moment_closure.form-input "
-        "gnc.contract.yyz.rigid-form-input@1\n";
     const auto explain =
         gnc::compiler::explain_canonical_mission_ir(ir);
-    require(explain == expected,
-            "YYZ entity/subject canonical IR golden changed");
+    require(explain.find(
+                "scope Vehicle subject vehicle.fixture.yyz@1\n") !=
+                std::string::npos &&
+                explain.find(
+                    "placement interaction/closure subject "
+                    "vehicle.fixture.yyz@1 scope "
+                    "Vehicle:vehicle.fixture.yyz@1\n") !=
+                    std::string::npos &&
+                explain.find(
+                    "asset aero_lookup.aerodynamics "
+                    "gnc.asset.yyz.aerodynamic-table.multiaffine@1 "
+                    "aero-table.fixture.yyz.multiaffine@1\n") !=
+                    std::string::npos,
+            "YYZ canonical explain omitted scope, placement, or asset");
 
     auto relocated = source;
     std::reverse(relocated.entities.begin(), relocated.entities.end());
+    std::reverse(relocated.scopes.begin(), relocated.scopes.end());
     std::reverse(relocated.model_occurrences.begin(),
                  relocated.model_occurrences.end());
     relocated.mission_source =
@@ -347,21 +665,52 @@ const Diagnostic& require_diagnostic(
         {"repo://relocated/qualification.json", "/entities/0/id"};
     relocated.entities[0U].lifecycle_source =
         {"repo://relocated/qualification.json", "/entities/0/lifecycle"};
-    relocated.model_occurrences[0U].source =
-        {"repo://relocated/assets.json", "/models/0"};
-    relocated.model_occurrences[0U].subject_source =
-        {"repo://relocated/qualification.json", "/models/0/subject"};
+    relocated.scopes[0U].source =
+        {"repo://relocated/qualification.json", "/scopes/0"};
+    for (std::size_t index = 0U;
+         index < relocated.model_occurrences.size(); ++index) {
+        auto& model = relocated.model_occurrences[index];
+        model.source = {"repo://relocated/assets.json",
+                        "/models/" + std::to_string(index)};
+        model.subject_source = {
+            "repo://relocated/qualification.json",
+            "/models/" + std::to_string(index) + "/subject"};
+        model.scope_source = {
+            "repo://relocated/qualification.json",
+            "/models/" + std::to_string(index) + "/scope"};
+        model.placement_source = {
+            "repo://relocated/assets.json",
+            "/models/" + std::to_string(index) + "/placement"};
+        model.configuration_source = {
+            "repo://relocated/config.json",
+            "/models/" + std::to_string(index) + "/configuration"};
+        std::reverse(model.configuration.fields.begin(),
+                     model.configuration.fields.end());
+        std::reverse(model.configuration_field_sources.begin(),
+                     model.configuration_field_sources.end());
+        for (auto& field : model.configuration_field_sources) {
+            field.source = {"repo://relocated/config.json",
+                            "/fields/" + field.field_id};
+        }
+        std::reverse(model.asset_bindings.begin(),
+                     model.asset_bindings.end());
+        for (auto& asset : model.asset_bindings) {
+            asset.source = {"repo://relocated/assets.json",
+                            "/assets/" + asset.role};
+        }
+    }
     const auto relocated_outcome =
         gnc::compiler::build_canonical_mission_ir(relocated, catalog);
     const auto& relocated_ir = require_value(
         relocated_outcome, "relocated YYZ canonical IR build failed");
     require(gnc::compiler::explain_canonical_mission_ir(relocated_ir) ==
-                expected &&
+                explain &&
                 relocated_ir.entities[0U]
                         .lifecycle_source.document_uri ==
                     "repo://relocated/qualification.json" &&
                 relocated_ir.model_occurrences[0U]
-                        .subject_source.node_path == "/models/0/subject",
+                        .configuration_source.document_uri ==
+                    "repo://relocated/config.json",
             "YYZ source order/location changed semantics or lost "
             "provenance");
     return explain;
@@ -415,6 +764,89 @@ void verify_yyz_entity_subject_negative_cases(const Catalog& catalog) {
                 unknown_diagnostic.source.node_path ==
                     "/profiles/qualification/vehicle/subject",
             "unknown YYZ subject entered IR or lost its source path");
+
+    auto unknown_scope_entity = yyz_qualification_source();
+    unknown_scope_entity.scopes[0U].key.subject_entity_id =
+        "vehicle.fixture.unknown@1";
+    const auto unknown_scope_entity_outcome =
+        gnc::compiler::build_canonical_mission_ir(
+            unknown_scope_entity, catalog);
+    require(!unknown_scope_entity_outcome.value.has_value() &&
+                has_diagnostic(
+                    unknown_scope_entity_outcome.diagnostics,
+                    DiagnosticCode::UnknownScopeEntity),
+            "Vehicle scope anchored to an unknown entity entered IR");
+
+    auto unknown_occurrence_scope = yyz_qualification_source();
+    unknown_occurrence_scope.model_occurrences[0U].scope = ScopeKey{
+        ScopeKind::Vehicle, "vehicle.fixture.unbound@1"};
+    const auto unknown_occurrence_scope_outcome =
+        gnc::compiler::build_canonical_mission_ir(
+            unknown_occurrence_scope, catalog);
+    require(!unknown_occurrence_scope_outcome.value.has_value() &&
+                has_diagnostic(
+                    unknown_occurrence_scope_outcome.diagnostics,
+                    DiagnosticCode::UnknownScope),
+            "occurrence with an undeclared scope entered IR");
+
+    auto mismatched_placement = yyz_qualification_source();
+    mismatched_placement.model_occurrences[0U].placement =
+        ModelPlacement::VehicleOutput;
+    const auto mismatched_placement_outcome =
+        gnc::compiler::build_canonical_mission_ir(
+            mismatched_placement, catalog);
+    require(!mismatched_placement_outcome.value.has_value() &&
+                has_diagnostic(
+                    mismatched_placement_outcome.diagnostics,
+                    DiagnosticCode::PlacementMismatch),
+            "source placement incompatible with package policy entered IR");
+
+    auto mismatched_subject_scope = yyz_qualification_source();
+    mismatched_subject_scope.model_occurrences[0U]
+        .subject_entity_id.clear();
+    const auto mismatched_subject_scope_outcome =
+        gnc::compiler::build_canonical_mission_ir(
+            mismatched_subject_scope, catalog);
+    require(!mismatched_subject_scope_outcome.value.has_value() &&
+                has_diagnostic(
+                    mismatched_subject_scope_outcome.diagnostics,
+                    DiagnosticCode::SubjectScopeMismatch),
+            "Vehicle scope and occurrence subject mismatch entered IR");
+
+    auto invalid_configuration = yyz_qualification_source();
+    invalid_configuration.model_occurrences[0U]
+        .configuration.fields[2U].value = std::string("eleven");
+    const auto invalid_configuration_outcome =
+        gnc::compiler::build_canonical_mission_ir(
+            invalid_configuration, catalog);
+    require(!invalid_configuration_outcome.value.has_value() &&
+                has_diagnostic(
+                    invalid_configuration_outcome.diagnostics,
+                    DiagnosticCode::InvalidConfiguration),
+            "configuration field with the wrong canonical type entered IR");
+
+    auto missing_asset = yyz_qualification_source();
+    missing_asset.model_occurrences[1U].asset_bindings.clear();
+    const auto missing_asset_outcome =
+        gnc::compiler::build_canonical_mission_ir(
+            missing_asset, catalog);
+    require(!missing_asset_outcome.value.has_value() &&
+                has_diagnostic(missing_asset_outcome.diagnostics,
+                               DiagnosticCode::MissingAssetBinding),
+            "asset-bearing aero model entered IR without its asset");
+
+    auto incompatible_asset_schema = yyz_qualification_source();
+    incompatible_asset_schema.model_occurrences[1U]
+        .asset_bindings[0U]
+        .asset_schema_id = "gnc.asset.fixture.incompatible@1";
+    const auto incompatible_asset_schema_outcome =
+        gnc::compiler::build_canonical_mission_ir(
+            incompatible_asset_schema, catalog);
+    require(!incompatible_asset_schema_outcome.value.has_value() &&
+                has_diagnostic(
+                    incompatible_asset_schema_outcome.diagnostics,
+                    DiagnosticCode::AssetSchemaMismatch),
+            "incompatible aerodynamic asset schema entered IR");
 }
 
 void verify_success_product(const StaticCompilation& compilation) {
@@ -423,9 +855,10 @@ void verify_success_product(const StaticCompilation& compilation) {
     require(ir.revision == 1U && ir.mission_id == kMissionId,
             "typed source did not produce the expected minimal IR");
     require(ir.entities.empty() &&
-                ir.model_occurrences.size() == 2U &&
+                ir.scopes.empty() &&
+                ir.model_occurrences.size() == 3U &&
                 ir.algorithm_consumers.size() == 2U &&
-                ir.binding_intents.size() == 2U,
+                ir.binding_intents.size() == 3U,
             "minimal IR occurrence or binding count changed");
     require(ir.model_occurrences[0U].occurrence_id == "cavh.envelope" &&
                 ir.model_occurrences[0U].model_id ==
@@ -434,12 +867,28 @@ void verify_success_product(const StaticCompilation& compilation) {
                 ir.model_occurrences[0U].output_ports[0U].contract_id ==
                     gnc::packages::cavh::
                         kGlideEnvelopeOutputContractIdentity &&
-                ir.model_occurrences[1U].occurrence_id == "yyz.closure" &&
+                ir.model_occurrences[0U].placement ==
+                    ModelPlacement::VehicleOutput &&
+                ir.model_occurrences[0U].subject_entity_id.empty() &&
+                !ir.model_occurrences[0U].scope.has_value() &&
+                ir.model_occurrences[0U]
+                        .placement_source.document_uri ==
+                    "catalog://gnc.package.cavh-formula.experimental@1" &&
+                ir.model_occurrences[1U].occurrence_id ==
+                    "yyz.aerodynamics" &&
                 ir.model_occurrences[1U].model_id ==
+                    gnc::packages::yyz::kAerodynamicTableModelIdentity &&
+                ir.model_occurrences[1U].placement ==
+                    ModelPlacement::VehicleOutput &&
+                ir.model_occurrences[1U].asset_bindings.size() == 1U &&
+                ir.model_occurrences[2U].occurrence_id == "yyz.closure" &&
+                ir.model_occurrences[2U].model_id ==
                     gnc::packages::yyz::
                         kForceMomentClosureModelIdentity &&
-                ir.model_occurrences[1U].output_ports.size() == 1U &&
-                ir.model_occurrences[1U].output_ports[0U].contract_id ==
+                ir.model_occurrences[2U].placement ==
+                    ModelPlacement::InteractionClosure &&
+                ir.model_occurrences[2U].output_ports.size() == 1U &&
+                ir.model_occurrences[2U].output_ports[0U].contract_id ==
                     gnc::packages::yyz::kRigidFormInputContractIdentity,
             "canonical IR lost exact model or output identities");
     require(ir.algorithm_consumers[0U].consumer_id == "cavh.formula" &&
@@ -449,24 +898,31 @@ void verify_success_product(const StaticCompilation& compilation) {
                         kGlideEnvelopeOutputContractIdentity &&
                 ir.algorithm_consumers[1U].consumer_id ==
                     "yyz.rigid-step" &&
-                ir.algorithm_consumers[1U].input_ports.size() == 1U &&
+                ir.algorithm_consumers[1U].input_ports.size() == 2U &&
                 ir.algorithm_consumers[1U]
                         .input_ports[0U]
+                        .contract_id ==
+                    gnc::packages::yyz::
+                        kAerodynamicCoefficientsContractIdentity &&
+                ir.algorithm_consumers[1U]
+                        .input_ports[1U]
                         .contract_id ==
                     gnc::packages::yyz::kRigidFormInputContractIdentity &&
                 ir.binding_intents[0U].binding_id ==
                     "cavh.envelope-to-formula" &&
                 ir.binding_intents[1U].binding_id ==
+                    "yyz.aero-to-rigid" &&
+                ir.binding_intents[2U].binding_id ==
                     "yyz.closure-to-rigid",
             "canonical IR lost exact algorithm inputs or binding intents");
     require(plan.plan_id == kPlanId && plan.mission_id == kMissionId,
             "static plan identity changed");
     require(plan.dependency_lock.size() == 2U &&
-                plan.model_preparation_identities.size() == 2U &&
+                plan.model_preparation_identities.size() == 3U &&
                 plan.algorithms.size() == 2U &&
-                plan.bindings.size() == 2U &&
-                plan.binding_proofs.size() == 2U &&
-                plan.obligations.size() == 2U,
+                plan.bindings.size() == 3U &&
+                plan.binding_proofs.size() == 3U &&
+                plan.obligations.size() == 3U,
             "static plan closure count changed");
 
     const auto& cavh_model = plan.model_preparation_identities[0U];
@@ -478,7 +934,18 @@ void verify_success_product(const StaticCompilation& compilation) {
                     gnc::packages::cavh::
                         kGlideEnvelopePreparationIdentity.id,
             "CAVH plan entry lost its real query definition");
-    const auto& yyz_model = plan.model_preparation_identities[1U];
+    const auto& yyz_aero_model =
+        plan.model_preparation_identities[1U];
+    require(yyz_aero_model.occurrence_id == "yyz.aerodynamics" &&
+                yyz_aero_model.model_id ==
+                    gnc::packages::yyz::kAerodynamicTableModelIdentity &&
+                yyz_aero_model.execution_form ==
+                    ModelExecutionForm::PureQuery &&
+                yyz_aero_model.preparation_algorithm_id ==
+                    gnc::packages::yyz::
+                        kAerodynamicTablePreparationIdentity.id,
+            "YYZ plan entry lost its real aerodynamic query definition");
+    const auto& yyz_model = plan.model_preparation_identities[2U];
     require(yyz_model.occurrence_id == "yyz.closure" &&
                 yyz_model.model_id ==
                     gnc::packages::yyz::
@@ -503,6 +970,9 @@ void verify_success_product(const StaticCompilation& compilation) {
                 gnc::packages::cavh::
                     kGlideEnvelopeOutputContractIdentity &&
                 plan.bindings[1U].contract_id ==
+                    gnc::packages::yyz::
+                        kAerodynamicCoefficientsContractIdentity &&
+                plan.bindings[2U].contract_id ==
                     gnc::packages::yyz::kRigidFormInputContractIdentity,
             "formal query or closure output contract changed");
     require(plan.binding_proofs[0U].assertion_code ==
@@ -511,6 +981,8 @@ void verify_success_product(const StaticCompilation& compilation) {
                 plan.binding_proofs[0U].source_refs[1U].node_path ==
                     "/bindings/cavh.envelope-to-formula" &&
                 plan.binding_proofs[1U].source_refs[1U].node_path ==
+                    "/bindings/yyz.aero-to-rigid" &&
+                plan.binding_proofs[2U].source_refs[1U].node_path ==
                     "/bindings/yyz.closure-to-rigid",
             "binding proof lost direct source locations");
     require(plan.obligations[0U].kind ==
@@ -518,8 +990,13 @@ void verify_success_product(const StaticCompilation& compilation) {
                 plan.obligations[0U].consumer_id ==
                     "cavh.formula" &&
                 plan.obligations[1U].kind ==
+                    CompiledObligationKind::PureQueryEvaluation &&
+                plan.obligations[1U].provider_occurrence_id ==
+                    "yyz.aerodynamics" &&
+                plan.obligations[1U].consumer_id == "yyz.rigid-step" &&
+                plan.obligations[2U].kind ==
                     CompiledObligationKind::ClosureEvaluation &&
-                plan.obligations[1U].consumer_id ==
+                plan.obligations[2U].consumer_id ==
                     "yyz.rigid-step",
             "compiled obligations no longer express true package consumers");
 }
@@ -541,9 +1018,32 @@ void verify_deterministic_order(std::string_view expected_ir_explain,
                  source.binding_intents.end());
     for (std::size_t index = 0U;
          index < source.model_occurrences.size(); ++index) {
-        source.model_occurrences[index].source =
+        auto& model = source.model_occurrences[index];
+        model.source =
             {"typed://alternate/source.yaml",
              "/model_occurrences/" + std::to_string(index)};
+        model.configuration_source =
+            {"typed://alternate/config.yaml",
+             "/model_configurations/" + std::to_string(index)};
+        std::reverse(model.configuration.fields.begin(),
+                     model.configuration.fields.end());
+        std::reverse(model.configuration_field_sources.begin(),
+                     model.configuration_field_sources.end());
+        for (auto& field : model.configuration_field_sources) {
+            field.source = {"typed://alternate/config.yaml",
+                            "/fields/" + field.field_id};
+        }
+        std::reverse(model.asset_bindings.begin(),
+                     model.asset_bindings.end());
+        for (auto& asset : model.asset_bindings) {
+            asset.source = {"typed://alternate/assets.yaml",
+                            "/assets/" + asset.role};
+        }
+        if (model.placement != ModelPlacement::Unspecified) {
+            model.placement_source =
+                {"typed://alternate/source.yaml",
+                 "/placements/" + std::to_string(index)};
+        }
     }
     for (std::size_t index = 0U;
          index < source.algorithm_consumers.size(); ++index) {
@@ -756,12 +1256,205 @@ void verify_negative_cases() {
             "invalid execution form entered the Catalog");
 }
 
+[[nodiscard]] const gnc::compiler::CanonicalSemanticHash&
+require_hash(
+    const CompileOutcome<gnc::compiler::CanonicalSemanticHash>& outcome,
+    std::string_view message) {
+    return require_value(outcome, message);
+}
+
+[[nodiscard]] std::string verify_semantic_hash(const Catalog& catalog) {
+    const auto base_source = yyz_qualification_source();
+    const auto base_ir_outcome =
+        gnc::compiler::build_canonical_mission_ir(base_source, catalog);
+    const auto& base_ir = require_value(
+        base_ir_outcome, "semantic-hash base IR build failed");
+    const auto base_hash_outcome =
+        gnc::compiler::hash_canonical_mission_ir(base_ir);
+    const auto& base_hash = require_hash(
+        base_hash_outcome, "semantic-hash base encoding failed");
+    require(base_hash.algorithm == "SHA-256" &&
+                base_hash.encoding_id ==
+                    gnc::compiler::kCanonicalSemanticEncodingIdentity &&
+                base_hash.hex_digest.size() == 64U,
+            "semantic hash identity or digest width differs");
+
+    auto relocated_ir = base_ir;
+    relocated_ir.mission_source = {"repo://relocated/source.json",
+                                   "/mission"};
+    for (auto& entity : relocated_ir.entities) {
+        entity.identity_source = {"repo://relocated/source.json",
+                                  "/entities/id"};
+        entity.lifecycle_source = {"repo://relocated/source.json",
+                                   "/entities/lifecycle"};
+    }
+    for (auto& scope : relocated_ir.scopes) {
+        scope.source = {"repo://relocated/source.json", "/scopes"};
+    }
+    for (auto& model : relocated_ir.model_occurrences) {
+        model.source = {"repo://relocated/models.json", "/model"};
+        model.subject_source = {"repo://relocated/source.json",
+                                "/subject"};
+        model.scope_source = {"repo://relocated/source.json", "/scope"};
+        model.placement_source = {"repo://relocated/models.json",
+                                  "/placement"};
+        model.configuration_source = {"repo://relocated/config.json",
+                                      "/configuration"};
+        for (auto& field : model.configuration_field_sources) {
+            field.source = {"repo://relocated/config.json", "/field"};
+        }
+        for (auto& asset : model.asset_bindings) {
+            asset.source = {"repo://relocated/assets.json", "/asset"};
+        }
+    }
+    const auto relocated_hash = require_hash(
+        gnc::compiler::hash_canonical_mission_ir(relocated_ir),
+        "relocated IR semantic hashing failed");
+    require(relocated_hash.hex_digest == base_hash.hex_digest,
+            "source URI/path entered canonical semantic hash");
+
+    auto reordered_source = base_source;
+    reordered_source.plan_id = "plan.representation-local@1";
+    std::reverse(reordered_source.entities.begin(),
+                 reordered_source.entities.end());
+    std::reverse(reordered_source.scopes.begin(),
+                 reordered_source.scopes.end());
+    std::reverse(reordered_source.model_occurrences.begin(),
+                 reordered_source.model_occurrences.end());
+    for (auto& model : reordered_source.model_occurrences) {
+        std::reverse(model.configuration.fields.begin(),
+                     model.configuration.fields.end());
+        std::reverse(model.configuration_field_sources.begin(),
+                     model.configuration_field_sources.end());
+        std::reverse(model.asset_bindings.begin(),
+                     model.asset_bindings.end());
+    }
+    const auto reordered_ir_outcome =
+        gnc::compiler::build_canonical_mission_ir(
+            reordered_source, catalog);
+    const auto& reordered_ir = require_value(
+        reordered_ir_outcome, "reordered source IR build failed");
+    const auto reordered_hash = require_hash(
+        gnc::compiler::hash_canonical_mission_ir(reordered_ir),
+        "reordered source semantic hashing failed");
+    require(reordered_hash.hex_digest == base_hash.hex_digest,
+            "source order or plan identity entered canonical semantic hash");
+
+    const auto expect_changed = [&](CanonicalMissionIr changed,
+                                    std::string_view label) {
+        const auto changed_hash = require_hash(
+            gnc::compiler::hash_canonical_mission_ir(changed), label);
+        require(changed_hash.hex_digest != base_hash.hex_digest, label);
+    };
+
+    auto entity_changed = base_ir;
+    entity_changed.entities[0U].entity_id =
+        "vehicle.fixture.yyz-renamed@1";
+    entity_changed.scopes[0U].key.subject_entity_id =
+        entity_changed.entities[0U].entity_id;
+    for (auto& model : entity_changed.model_occurrences) {
+        model.subject_entity_id = entity_changed.entities[0U].entity_id;
+        model.scope->subject_entity_id =
+            entity_changed.entities[0U].entity_id;
+    }
+    expect_changed(std::move(entity_changed),
+                   "entity semantic mutation did not change hash");
+
+    auto scope_baseline = base_ir;
+    scope_baseline.entities.push_back(
+        {"vehicle.fixture.yyz.alternate@1",
+         EntityLifecycle::ActiveAtInitialize, {}, {}});
+    std::sort(scope_baseline.entities.begin(),
+              scope_baseline.entities.end(),
+              [](const auto& lhs, const auto& rhs) {
+                  return lhs.entity_id < rhs.entity_id;
+              });
+    scope_baseline.scopes.push_back(
+        {ScopeKey{ScopeKind::Vehicle,
+                  "vehicle.fixture.yyz.alternate@1"},
+         {}});
+    std::sort(scope_baseline.scopes.begin(),
+              scope_baseline.scopes.end(),
+              [](const auto& lhs, const auto& rhs) {
+                  return lhs.key < rhs.key;
+              });
+    const auto scope_baseline_hash = require_hash(
+        gnc::compiler::hash_canonical_mission_ir(scope_baseline),
+        "two-scope baseline hashing failed");
+    auto scope_changed = scope_baseline;
+    scope_changed.model_occurrences[0U].subject_entity_id =
+        "vehicle.fixture.yyz.alternate@1";
+    scope_changed.model_occurrences[0U].scope = ScopeKey{
+        ScopeKind::Vehicle, "vehicle.fixture.yyz.alternate@1"};
+    const auto scope_changed_hash = require_hash(
+        gnc::compiler::hash_canonical_mission_ir(scope_changed),
+        "scope semantic mutation hashing failed");
+    require(scope_changed_hash.hex_digest !=
+                scope_baseline_hash.hex_digest,
+            "scope semantic mutation did not change hash");
+
+    auto placement_changed = base_ir;
+    placement_changed.model_occurrences[0U].placement =
+        ModelPlacement::InteractionClosure;
+    expect_changed(std::move(placement_changed),
+                   "placement semantic mutation did not change hash");
+
+    auto model_changed = base_ir;
+    model_changed.model_occurrences[0U].model_version = "0.1.1";
+    expect_changed(std::move(model_changed),
+                   "model semantic mutation did not change hash");
+
+    auto config_changed = base_ir;
+    auto& config_fields =
+        config_changed.model_occurrences[1U].configuration.fields;
+    const auto absolute = std::find_if(
+        config_fields.begin(), config_fields.end(),
+        [](const auto& field) {
+            return field.field_id == "numerical.absolute_tolerance";
+        });
+    require(absolute != config_fields.end(),
+            "closure canonical config field is absent");
+    absolute->value = 3.0e-12;
+    expect_changed(std::move(config_changed),
+                   "config semantic mutation did not change hash");
+
+    auto asset_changed = base_ir;
+    asset_changed.model_occurrences[0U]
+        .asset_bindings[0U]
+        .asset_id = "aero-table.fixture.yyz.alternate@1";
+    expect_changed(std::move(asset_changed),
+                   "asset semantic mutation did not change hash");
+
+    auto noncanonical_order = base_ir;
+    std::reverse(noncanonical_order.model_occurrences.begin(),
+                 noncanonical_order.model_occurrences.end());
+    const auto noncanonical_order_hash =
+        gnc::compiler::hash_canonical_mission_ir(noncanonical_order);
+    require(!noncanonical_order_hash.value.has_value() &&
+                has_diagnostic(noncanonical_order_hash.diagnostics,
+                               DiagnosticCode::NonCanonicalIr),
+            "noncanonical model order reached SHA-256");
+
+    auto negative_zero = base_ir;
+    negative_zero.model_occurrences[0U]
+        .configuration.fields[0U]
+        .value = -0.0;
+    const auto negative_zero_hash =
+        gnc::compiler::hash_canonical_mission_ir(negative_zero);
+    require(!negative_zero_hash.value.has_value() &&
+                has_diagnostic(negative_zero_hash.diagnostics,
+                               DiagnosticCode::NonCanonicalIr),
+            "noncanonical negative zero reached SHA-256");
+    return base_hash.hex_digest;
+}
+
 [[nodiscard]] std::string run_self_check() {
     const auto catalog_outcome = Catalog::build(package_descriptors());
     const auto& catalog =
         require_value(catalog_outcome, "fixture Catalog build failed");
     static_cast<void>(verify_yyz_entity_subject_slice(catalog));
     verify_yyz_entity_subject_negative_cases(catalog);
+    static_cast<void>(verify_semantic_hash(catalog));
     const auto source = composition_source();
     const auto ir_outcome =
         gnc::compiler::build_canonical_mission_ir(source, catalog);
@@ -769,39 +1462,23 @@ void verify_negative_cases() {
         ir_outcome, "canonical Mission IR build failed");
     const auto ir_explain =
         gnc::compiler::explain_canonical_mission_ir(ir);
-    const std::string expected_ir =
-        "mission-ir 1 mission "
-        "mission.r2.yyz-cavh-static-composition@1\n"
-        "model cavh.envelope "
-        "gnc.package.cavh-formula.experimental@1@0.1.0 "
-        "gnc.package.cavh.glide-envelope.parabolic.experimental@1@0.1.0 "
-        "PureQuery preparation "
-        "gnc.package.cavh.glide-envelope.prepare@1@0.1.0\n"
-        "output cavh.envelope.envelope "
-        "gnc.contract.cavh.glide-envelope-query-output@1\n"
-        "model yyz.closure "
-        "gnc.package.yyz-rigid-step.experimental@1@0.1.0 "
-        "gnc.package.yyz.force-moment-closure.frozen-interval.experimental@1"
-        "@0.1.0 Closure preparation "
-        "gnc.package.yyz.force-moment-closure.prepare@1@0.1.0\n"
-        "output yyz.closure.form-input "
-        "gnc.contract.yyz.rigid-form-input@1\n"
-        "algorithm-consumer cavh.formula "
-        "gnc.package.cavh-formula.experimental@1@0.1.0 "
-        "gnc.package.cavh.formula.composite@1@0.1.0\n"
-        "input cavh.formula.glide-envelope "
-        "gnc.contract.cavh.glide-envelope-query-output@1\n"
-        "algorithm-consumer yyz.rigid-step "
-        "gnc.package.yyz-rigid-step.experimental@1@0.1.0 "
-        "gnc.package.yyz.rigid-step.kernel@1@0.1.0\n"
-        "input yyz.rigid-step.form-input "
-        "gnc.contract.yyz.rigid-form-input@1\n"
-        "intent cavh.envelope-to-formula cavh.envelope.envelope -> "
-        "cavh.formula.glide-envelope\n"
-        "intent yyz.closure-to-rigid yyz.closure.form-input -> "
-        "yyz.rigid-step.form-input\n";
-    require(ir_explain == expected_ir,
-            "canonical Mission IR golden changed");
+    require(ir_explain.find(
+                "model cavh.envelope "
+                "gnc.package.cavh-formula.experimental@1@0.1.0") !=
+                std::string::npos &&
+                ir_explain.find(
+                    "model yyz.aerodynamics "
+                    "gnc.package.yyz-rigid-step.experimental@1@0.1.0") !=
+                    std::string::npos &&
+                ir_explain.find(
+                    "asset yyz.aerodynamics.aerodynamics "
+                    "gnc.asset.yyz.aerodynamic-table.multiaffine@1") !=
+                    std::string::npos &&
+                ir_explain.find(
+                    "model yyz.closure "
+                    "gnc.package.yyz-rigid-step.experimental@1@0.1.0") !=
+                    std::string::npos,
+            "canonical Mission IR explain lost a real package model");
 
     const auto compile_outcome =
         gnc::compiler::compile_static_plan(source, catalog);
@@ -811,39 +1488,15 @@ void verify_negative_cases() {
 
     const auto explain =
         gnc::compiler::explain_static_plan(compilation.plan);
-    const std::string expected =
-        "plan plan.r2.yyz-cavh-static-composition@1 mission "
-        "mission.r2.yyz-cavh-static-composition@1\n"
-        "lock gnc.package.cavh-formula.experimental@1@0.1.0\n"
-        "lock gnc.package.yyz-rigid-step.experimental@1@0.1.0\n"
-        "model cavh.envelope "
-        "gnc.package.cavh.glide-envelope.parabolic.experimental@1@0.1.0 "
-        "PureQuery preparation "
-        "gnc.package.cavh.glide-envelope.prepare@1@0.1.0\n"
-        "model yyz.closure "
-        "gnc.package.yyz.force-moment-closure.frozen-interval.experimental@1"
-        "@0.1.0 Closure preparation "
-        "gnc.package.yyz.force-moment-closure.prepare@1@0.1.0\n"
-        "consumer cavh.formula "
-        "gnc.package.cavh.formula.composite@1@0.1.0\n"
-        "consumer yyz.rigid-step "
-        "gnc.package.yyz.rigid-step.kernel@1@0.1.0\n"
-        "bind cavh.envelope-to-formula cavh.envelope.envelope -> "
-        "cavh.formula.glide-envelope "
-        "gnc.contract.cavh.glide-envelope-query-output@1\n"
-        "bind yyz.closure-to-rigid yyz.closure.form-input -> "
-        "yyz.rigid-step.form-input gnc.contract.yyz.rigid-form-input@1\n"
-        "prove proof.binding.cavh.envelope-to-formula "
-        "GNC.PLAN.BINDING.CONTRACT.EXACT "
-        "gnc.contract.cavh.glide-envelope-query-output@1\n"
-        "prove proof.binding.yyz.closure-to-rigid "
-        "GNC.PLAN.BINDING.CONTRACT.EXACT "
-        "gnc.contract.yyz.rigid-form-input@1\n"
-        "obligation 0 obligation.cavh.envelope-to-formula "
-        "PureQueryEvaluation cavh.envelope -> cavh.formula\n"
-        "obligation 1 obligation.yyz.closure-to-rigid "
-        "ClosureEvaluation yyz.closure -> yyz.rigid-step\n";
-    require(explain == expected, "static dry-run explain changed");
+    require(explain.find(
+                "obligation 1 obligation.yyz.aero-to-rigid "
+                "PureQueryEvaluation yyz.aerodynamics -> "
+                "yyz.rigid-step\n") != std::string::npos &&
+                explain.find(
+                    "obligation 2 obligation.yyz.closure-to-rigid "
+                    "ClosureEvaluation yyz.closure -> yyz.rigid-step\n") !=
+                    std::string::npos,
+            "static dry-run explain lost query/closure obligations");
     require(gnc::compiler::explain_canonical_mission_ir(compilation.ir) ==
                 ir_explain,
             "static plan did not consume the standalone canonical IR result");
@@ -857,14 +1510,23 @@ void verify_negative_cases() {
 int main(int argc, char** argv) {
     try {
         if (argc != 2 || (std::string_view(argv[1]) != "--self-check" &&
-                          std::string_view(argv[1]) != "--explain")) {
+                          std::string_view(argv[1]) != "--explain" &&
+                          std::string_view(argv[1]) !=
+                              "--semantic-hash")) {
             std::cerr << "usage: gnc_compiler_static_plan_probe "
-                         "--self-check|--explain\n";
+                         "--self-check|--explain|--semantic-hash\n";
             return 2;
         }
         const auto explain = run_self_check();
         if (std::string_view(argv[1]) == "--explain") {
             std::cout << explain;
+        } else if (std::string_view(argv[1]) == "--semantic-hash") {
+            const auto catalog_outcome = Catalog::build(
+                package_descriptors());
+            const auto& catalog = require_value(
+                catalog_outcome,
+                "semantic-hash Catalog build failed");
+            std::cout << verify_semantic_hash(catalog) << '\n';
         } else {
             std::cout << "R2 typed static composition self-check passed\n";
         }

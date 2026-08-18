@@ -24,6 +24,8 @@ DIRECT_CHECKS = {
     "formal-output-telemetry-separation",
     "accepted-oracle-anchors",
     "rigid-step-consumes-force-moment-closure-output",
+    "rigid-step-consumes-aerodynamic-query-output",
+    "canonical-model-config-roundtrip",
     "force-moment-closure-r0-oracle-anchors",
     "force-moment-closure-order-equivalence",
     "force-moment-closure-five-invalid-rejections",

@@ -3,8 +3,10 @@
 #include "gnc/model_sdk/static_descriptor.hpp"
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
 #include <cstdint>
+#include <iomanip>
 #include <map>
 #include <optional>
 #include <set>
@@ -43,6 +45,42 @@ enum class EntityLifecycle : std::uint8_t {
     return "Unknown";
 }
 
+enum class ScopeKind : std::uint8_t {
+    Unspecified,
+    Vehicle,
+};
+
+[[nodiscard]] constexpr std::string_view to_string(
+    ScopeKind kind) noexcept {
+    switch (kind) {
+    case ScopeKind::Unspecified:
+        return "Unspecified";
+    case ScopeKind::Vehicle:
+        return "Vehicle";
+    }
+    return "Unknown";
+}
+
+struct ScopeKey {
+    ScopeKind kind = ScopeKind::Unspecified;
+    std::string subject_entity_id;
+};
+
+[[nodiscard]] inline bool operator==(const ScopeKey& lhs,
+                                     const ScopeKey& rhs) {
+    return lhs.kind == rhs.kind &&
+           lhs.subject_entity_id == rhs.subject_entity_id;
+}
+
+[[nodiscard]] inline bool operator<(const ScopeKey& lhs,
+                                    const ScopeKey& rhs) {
+    if (lhs.kind != rhs.kind) {
+        return static_cast<std::uint8_t>(lhs.kind) <
+               static_cast<std::uint8_t>(rhs.kind);
+    }
+    return lhs.subject_entity_id < rhs.subject_entity_id;
+}
+
 enum class DiagnosticCode : std::uint8_t {
     InvalidCatalogDescriptor,
     DuplicateCatalogIdentity,
@@ -50,6 +88,17 @@ enum class DiagnosticCode : std::uint8_t {
     InvalidEntity,
     DuplicateEntity,
     UnknownSubjectEntity,
+    InvalidScope,
+    DuplicateScope,
+    UnknownScopeEntity,
+    UnknownScope,
+    PlacementMismatch,
+    SubjectScopeMismatch,
+    InvalidConfiguration,
+    MissingAssetBinding,
+    DuplicateAssetBinding,
+    UnknownAssetRole,
+    AssetSchemaMismatch,
     DuplicateOccurrence,
     UnknownDefinition,
     UnknownAlgorithm,
@@ -58,6 +107,7 @@ enum class DiagnosticCode : std::uint8_t {
     ContractMismatch,
     MissingRequiredBinding,
     MultipleRequiredBindings,
+    NonCanonicalIr,
 };
 
 [[nodiscard]] constexpr std::string_view to_string(
@@ -75,6 +125,28 @@ enum class DiagnosticCode : std::uint8_t {
         return "GNC-IR-DUPLICATE-ENTITY";
     case DiagnosticCode::UnknownSubjectEntity:
         return "GNC-IR-UNKNOWN-SUBJECT-ENTITY";
+    case DiagnosticCode::InvalidScope:
+        return "GNC-IR-INVALID-SCOPE";
+    case DiagnosticCode::DuplicateScope:
+        return "GNC-IR-DUPLICATE-SCOPE";
+    case DiagnosticCode::UnknownScopeEntity:
+        return "GNC-IR-UNKNOWN-SCOPE-ENTITY";
+    case DiagnosticCode::UnknownScope:
+        return "GNC-IR-UNKNOWN-SCOPE";
+    case DiagnosticCode::PlacementMismatch:
+        return "GNC-IR-PLACEMENT-MISMATCH";
+    case DiagnosticCode::SubjectScopeMismatch:
+        return "GNC-IR-SUBJECT-SCOPE-MISMATCH";
+    case DiagnosticCode::InvalidConfiguration:
+        return "GNC-IR-INVALID-CONFIGURATION";
+    case DiagnosticCode::MissingAssetBinding:
+        return "GNC-IR-MISSING-ASSET-BINDING";
+    case DiagnosticCode::DuplicateAssetBinding:
+        return "GNC-IR-DUPLICATE-ASSET-BINDING";
+    case DiagnosticCode::UnknownAssetRole:
+        return "GNC-IR-UNKNOWN-ASSET-ROLE";
+    case DiagnosticCode::AssetSchemaMismatch:
+        return "GNC-IR-ASSET-SCHEMA-MISMATCH";
     case DiagnosticCode::DuplicateOccurrence:
         return "GNC-IR-DUPLICATE-OCCURRENCE";
     case DiagnosticCode::UnknownDefinition:
@@ -91,6 +163,8 @@ enum class DiagnosticCode : std::uint8_t {
         return "GNC-BIND-MISSING-REQUIRED";
     case DiagnosticCode::MultipleRequiredBindings:
         return "GNC-BIND-MULTIPLE-REQUIRED";
+    case DiagnosticCode::NonCanonicalIr:
+        return "GNC-IR-NONCANONICAL";
     }
     return "GNC-COMPILER-UNKNOWN";
 }
@@ -246,6 +320,59 @@ class Catalog {
                          "model identity, execution form, and preparation "
                          "identity are required"});
                 }
+                if (!gnc::model_sdk::valid_model_placement(
+                        model.placement)) {
+                    outcome.diagnostics.push_back(
+                        {DiagnosticCode::InvalidCatalogDescriptor,
+                         detail::catalog_source(package.package_id,
+                                                definition.model_id),
+                         definition.model_id,
+                         "a supported package-owned placement policy is "
+                         "required"});
+                }
+                const auto& configuration = model.configuration;
+                if (configuration.schema_id.empty() ||
+                    configuration.schema_version == 0U ||
+                    configuration.fields.empty()) {
+                    outcome.diagnostics.push_back(
+                        {DiagnosticCode::InvalidCatalogDescriptor,
+                         detail::catalog_source(package.package_id,
+                                                definition.model_id),
+                         definition.model_id,
+                         "an exact nonempty configuration schema is "
+                         "required"});
+                }
+                std::string previous_config_field;
+                for (const auto& field : configuration.fields) {
+                    if (field.field_id.empty() ||
+                        (!previous_config_field.empty() &&
+                         field.field_id <= previous_config_field)) {
+                        outcome.diagnostics.push_back(
+                            {DiagnosticCode::InvalidCatalogDescriptor,
+                             detail::catalog_source(package.package_id,
+                                                    definition.model_id),
+                             field.field_id,
+                             "configuration fields must have unique "
+                             "canonical order"});
+                    }
+                    previous_config_field = field.field_id;
+                }
+                std::string previous_asset_role;
+                for (const auto& slot : model.asset_slots) {
+                    if (slot.role.empty() ||
+                        slot.asset_schema_id.empty() ||
+                        (!previous_asset_role.empty() &&
+                         slot.role <= previous_asset_role)) {
+                        outcome.diagnostics.push_back(
+                            {DiagnosticCode::InvalidCatalogDescriptor,
+                             detail::catalog_source(package.package_id,
+                                                    definition.model_id),
+                             slot.role,
+                             "asset slots must have identities and unique "
+                             "canonical order"});
+                    }
+                    previous_asset_role = slot.role;
+                }
                 detail::validate_ports(
                     model.ports, package.package_id, definition.model_id,
                     gnc::model_sdk::StaticPortDirection::Output,
@@ -376,6 +503,23 @@ struct SourceEntity {
     SourceRef lifecycle_source;
 };
 
+struct SourceScope {
+    ScopeKey key;
+    SourceRef source;
+};
+
+struct SourceConfigFieldProvenance {
+    std::string field_id;
+    SourceRef source;
+};
+
+struct SourceAssetBinding {
+    std::string role;
+    std::string asset_schema_id;
+    std::string asset_id;
+    SourceRef source;
+};
+
 struct SourceModelOccurrence {
     std::string occurrence_id;
     std::string model_id;
@@ -383,6 +527,31 @@ struct SourceModelOccurrence {
     SourceRef source;
     std::string subject_entity_id;
     SourceRef subject_source;
+    std::optional<ScopeKey> scope;
+    SourceRef scope_source;
+    gnc::model_sdk::ModelPlacement placement =
+        gnc::model_sdk::ModelPlacement::Unspecified;
+    SourceRef placement_source;
+    gnc::model_sdk::CanonicalConfigBlock configuration;
+    SourceRef configuration_source;
+    std::vector<SourceConfigFieldProvenance>
+        configuration_field_sources;
+    std::vector<SourceAssetBinding> asset_bindings;
+
+    SourceModelOccurrence() = default;
+
+    SourceModelOccurrence(std::string occurrence_identity,
+                          std::string model_identity,
+                          std::string version,
+                          SourceRef occurrence_source,
+                          std::string subject_identity,
+                          SourceRef subject_provenance)
+        : occurrence_id(std::move(occurrence_identity)),
+          model_id(std::move(model_identity)),
+          model_version(std::move(version)),
+          source(std::move(occurrence_source)),
+          subject_entity_id(std::move(subject_identity)),
+          subject_source(std::move(subject_provenance)) {}
 };
 
 // A stateless kernel used as a binding consumer in the current conformance
@@ -412,6 +581,7 @@ struct TypedStaticCompositionSource {
     SourceRef mission_source;
     std::string plan_id;
     std::vector<SourceEntity> entities;
+    std::vector<SourceScope> scopes;
     std::vector<SourceModelOccurrence> model_occurrences;
     std::vector<SourceAlgorithmConsumer> algorithm_consumers;
     std::vector<SourceBinding> binding_intents;
@@ -429,6 +599,23 @@ struct CanonicalEntity {
     SourceRef lifecycle_source;
 };
 
+struct CanonicalScope {
+    ScopeKey key;
+    SourceRef source;
+};
+
+struct CanonicalConfigFieldProvenance {
+    std::string field_id;
+    SourceRef source;
+};
+
+struct CanonicalAssetBinding {
+    std::string role;
+    std::string asset_schema_id;
+    std::string asset_id;
+    SourceRef source;
+};
+
 struct CanonicalModelOccurrence {
     std::string occurrence_id;
     PackageLock package;
@@ -442,6 +629,16 @@ struct CanonicalModelOccurrence {
     SourceRef source;
     std::string subject_entity_id;
     SourceRef subject_source;
+    std::optional<ScopeKey> scope;
+    SourceRef scope_source;
+    gnc::model_sdk::ModelPlacement placement =
+        gnc::model_sdk::ModelPlacement::Unspecified;
+    SourceRef placement_source;
+    gnc::model_sdk::CanonicalConfigBlock configuration;
+    SourceRef configuration_source;
+    std::vector<CanonicalConfigFieldProvenance>
+        configuration_field_sources;
+    std::vector<CanonicalAssetBinding> asset_bindings;
 };
 
 struct CanonicalAlgorithmConsumer {
@@ -462,15 +659,15 @@ struct CanonicalBindingIntent {
     SourceRef source;
 };
 
-// The executable R2-IR entity/subject/identity/binding slice. Source
-// locations remain as provenance, while its semantic explanation excludes
-// representation-specific locations and plan identity. Config, assets,
-// scopes, topology, and hashes remain outside this deliberately narrow slice.
+// The executable R2 canonical graph. Source locations remain as provenance,
+// while semantic encoding excludes representation-specific locations and
+// plan identity. Topology, activation and runtime instances remain outside.
 struct CanonicalMissionIr {
     std::uint32_t revision = 1U;
     std::string mission_id;
     SourceRef mission_source;
     std::vector<CanonicalEntity> entities;
+    std::vector<CanonicalScope> scopes;
     std::vector<CanonicalModelOccurrence> model_occurrences;
     std::vector<CanonicalAlgorithmConsumer> algorithm_consumers;
     std::vector<CanonicalBindingIntent> binding_intents;
@@ -582,6 +779,175 @@ namespace detail {
     return result;
 }
 
+[[nodiscard]] inline bool valid_source_ref(
+    const SourceRef& source) noexcept {
+    return !source.document_uri.empty() && !source.node_path.empty();
+}
+
+[[nodiscard]] inline bool valid_canonical_config_value(
+    const gnc::model_sdk::CanonicalConfigValue& value) noexcept {
+    if (const auto* text = std::get_if<std::string>(&value)) {
+        return !text->empty();
+    }
+    if (const auto* token =
+            std::get_if<gnc::model_sdk::CanonicalEnumValue>(&value)) {
+        return !token->token.empty();
+    }
+    if (const auto* number = std::get_if<double>(&value)) {
+        return std::isfinite(*number) &&
+               !(*number == 0.0 && std::signbit(*number));
+    }
+    return true;
+}
+
+inline bool canonicalize_configuration(
+    const SourceModelOccurrence& source,
+    const gnc::model_sdk::StaticModelDescriptor& descriptor,
+    gnc::model_sdk::CanonicalConfigBlock& configuration,
+    std::vector<CanonicalConfigFieldProvenance>& provenance,
+    std::vector<Diagnostic>& diagnostics) {
+    const auto fail = [&](const SourceRef& location,
+                          std::string detail) {
+        diagnostics.push_back(
+            {DiagnosticCode::InvalidConfiguration, location,
+             source.occurrence_id, std::move(detail)});
+    };
+    configuration = source.configuration;
+    if (configuration.schema_id !=
+            descriptor.configuration.schema_id ||
+        configuration.schema_version !=
+            descriptor.configuration.schema_version ||
+        !valid_source_ref(source.configuration_source)) {
+        fail(source.configuration_source,
+             "configuration schema identity/version or provenance differs "
+             "from the package descriptor");
+        return false;
+    }
+    std::sort(configuration.fields.begin(), configuration.fields.end(),
+              [](const gnc::model_sdk::CanonicalConfigField& lhs,
+                 const gnc::model_sdk::CanonicalConfigField& rhs) {
+                  return lhs.field_id < rhs.field_id;
+              });
+    if (configuration.fields.size() !=
+        descriptor.configuration.fields.size()) {
+        fail(source.configuration_source,
+             "configuration field set differs from the exact schema");
+        return false;
+    }
+    for (std::size_t index = 0U;
+         index < configuration.fields.size(); ++index) {
+        const auto& actual = configuration.fields[index];
+        const auto& expected = descriptor.configuration.fields[index];
+        if (actual.field_id != expected.field_id ||
+            gnc::model_sdk::canonical_config_value_kind(actual.value) !=
+                expected.value_kind ||
+            !valid_canonical_config_value(actual.value)) {
+            fail(source.configuration_source,
+                 "configuration field identity, type, or canonical value "
+                 "differs from the exact schema");
+            return false;
+        }
+    }
+
+    auto field_sources = source.configuration_field_sources;
+    std::sort(field_sources.begin(), field_sources.end(),
+              [](const SourceConfigFieldProvenance& lhs,
+                 const SourceConfigFieldProvenance& rhs) {
+                  return lhs.field_id < rhs.field_id;
+              });
+    if (field_sources.size() != configuration.fields.size()) {
+        fail(source.configuration_source,
+             "every canonical configuration field requires one provenance "
+             "reference");
+        return false;
+    }
+    provenance.clear();
+    provenance.reserve(field_sources.size());
+    for (std::size_t index = 0U; index < field_sources.size(); ++index) {
+        if (field_sources[index].field_id !=
+                configuration.fields[index].field_id ||
+            !valid_source_ref(field_sources[index].source)) {
+            fail(field_sources[index].source,
+                 "configuration field provenance is missing, duplicated, "
+                 "or attached to another field");
+            return false;
+        }
+        provenance.push_back(
+            {field_sources[index].field_id,
+             field_sources[index].source});
+    }
+    return true;
+}
+
+inline bool canonicalize_assets(
+    const SourceModelOccurrence& source,
+    const gnc::model_sdk::StaticModelDescriptor& descriptor,
+    std::vector<CanonicalAssetBinding>& assets,
+    std::vector<Diagnostic>& diagnostics) {
+    auto bindings = source.asset_bindings;
+    std::sort(bindings.begin(), bindings.end(),
+              [](const SourceAssetBinding& lhs,
+                 const SourceAssetBinding& rhs) {
+                  return lhs.role < rhs.role;
+              });
+    for (std::size_t index = 1U; index < bindings.size(); ++index) {
+        if (bindings[index - 1U].role == bindings[index].role) {
+            diagnostics.push_back(
+                {DiagnosticCode::DuplicateAssetBinding,
+                 bindings[index].source, source.occurrence_id,
+                 "an asset role is bound more than once"});
+            return false;
+        }
+    }
+    if (bindings.size() < descriptor.asset_slots.size()) {
+        diagnostics.push_back(
+            {DiagnosticCode::MissingAssetBinding, source.source,
+             source.occurrence_id,
+             "a required package asset role is unbound"});
+        return false;
+    }
+    if (bindings.size() > descriptor.asset_slots.size()) {
+        diagnostics.push_back(
+            {DiagnosticCode::UnknownAssetRole,
+             bindings[descriptor.asset_slots.size()].source,
+             source.occurrence_id,
+             "the source binds an asset role absent from the package "
+             "descriptor"});
+        return false;
+    }
+    assets.clear();
+    assets.reserve(bindings.size());
+    for (std::size_t index = 0U; index < bindings.size(); ++index) {
+        const auto& binding = bindings[index];
+        const auto& slot = descriptor.asset_slots[index];
+        if (binding.role != slot.role) {
+            diagnostics.push_back(
+                {DiagnosticCode::UnknownAssetRole, binding.source,
+                 source.occurrence_id,
+                 "the source asset role differs from the package slot"});
+            return false;
+        }
+        if (binding.asset_schema_id != slot.asset_schema_id) {
+            diagnostics.push_back(
+                {DiagnosticCode::AssetSchemaMismatch, binding.source,
+                 source.occurrence_id,
+                 "the asset schema differs from the package slot"});
+            return false;
+        }
+        if (binding.asset_id.empty() ||
+            !valid_source_ref(binding.source)) {
+            diagnostics.push_back(
+                {DiagnosticCode::AssetSchemaMismatch, binding.source,
+                 source.occurrence_id,
+                 "asset identity and provenance are required"});
+            return false;
+        }
+        assets.push_back({binding.role, binding.asset_schema_id,
+                          binding.asset_id, binding.source});
+    }
+    return true;
+}
+
 } // namespace detail
 
 [[nodiscard]] inline CompileOutcome<CanonicalMissionIr>
@@ -644,6 +1010,40 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
              entity.lifecycle_source});
     }
 
+    std::set<ScopeKey> scope_keys;
+    auto scope_sources = source.scopes;
+    std::sort(scope_sources.begin(), scope_sources.end(),
+              [](const SourceScope& lhs, const SourceScope& rhs) {
+                  return lhs.key < rhs.key;
+              });
+    for (const auto& scope : scope_sources) {
+        if (scope.key.kind != ScopeKind::Vehicle ||
+            scope.key.subject_entity_id.empty()) {
+            outcome.diagnostics.push_back(
+                {DiagnosticCode::InvalidScope, scope.source,
+                 scope.key.subject_entity_id,
+                 "current canonical IR supports a typed Vehicle scope "
+                 "anchored by subject entity identity"});
+            continue;
+        }
+        if (!scope_keys.insert(scope.key).second) {
+            outcome.diagnostics.push_back(
+                {DiagnosticCode::DuplicateScope, scope.source,
+                 scope.key.subject_entity_id,
+                 "the exact Vehicle scope is declared more than once"});
+            continue;
+        }
+        if (entity_ids.find(scope.key.subject_entity_id) ==
+            entity_ids.end()) {
+            outcome.diagnostics.push_back(
+                {DiagnosticCode::UnknownScopeEntity, scope.source,
+                 scope.key.subject_entity_id,
+                 "Vehicle scope subject entity is absent from the IR"});
+            continue;
+        }
+        ir.scopes.push_back({scope.key, scope.source});
+    }
+
     std::set<std::string> composition_node_ids;
 
     auto model_sources = source.model_occurrences;
@@ -669,6 +1069,24 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
                  "model occurrence subject entity is absent from the IR"});
             continue;
         }
+        if (model.scope.has_value() &&
+            scope_keys.find(*model.scope) == scope_keys.end()) {
+            outcome.diagnostics.push_back(
+                {DiagnosticCode::UnknownScope, model.scope_source,
+                 model.occurrence_id,
+                 "model occurrence references an undeclared typed scope"});
+            continue;
+        }
+        if (model.scope.has_value() &&
+            (model.scope->kind != ScopeKind::Vehicle ||
+             model.subject_entity_id !=
+                 model.scope->subject_entity_id)) {
+            outcome.diagnostics.push_back(
+                {DiagnosticCode::SubjectScopeMismatch,
+                 model.scope_source, model.occurrence_id,
+                 "Vehicle scope and model subject entity differ"});
+            continue;
+        }
         const auto* catalog_model =
             catalog.find_model(model.model_id, model.model_version);
         if (catalog_model == nullptr) {
@@ -679,18 +1097,62 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
             continue;
         }
         const auto& descriptor = catalog_model->descriptor;
-        ir.model_occurrences.push_back(
-            {model.occurrence_id,
-             catalog_model->package,
-             descriptor.definition.model_id,
-             descriptor.definition.model_version,
-             descriptor.definition.execution_form,
-             descriptor.preparation_algorithm_id,
-             descriptor.preparation_algorithm_version,
-             detail::canonical_ports(descriptor.ports),
-             model.source,
-             model.subject_entity_id,
-             model.subject_source});
+        if (model.placement !=
+                gnc::model_sdk::ModelPlacement::Unspecified &&
+            model.placement != descriptor.placement) {
+            outcome.diagnostics.push_back(
+                {DiagnosticCode::PlacementMismatch,
+                 model.placement_source, model.occurrence_id,
+                 "source placement differs from the package-owned model "
+                 "placement policy"});
+            continue;
+        }
+        gnc::model_sdk::CanonicalConfigBlock configuration;
+        std::vector<CanonicalConfigFieldProvenance>
+            configuration_provenance;
+        if (!detail::canonicalize_configuration(
+                model, descriptor, configuration,
+                configuration_provenance, outcome.diagnostics)) {
+            continue;
+        }
+        std::vector<CanonicalAssetBinding> assets;
+        if (!detail::canonicalize_assets(
+                model, descriptor, assets, outcome.diagnostics)) {
+            continue;
+        }
+
+        CanonicalModelOccurrence canonical;
+        canonical.occurrence_id = model.occurrence_id;
+        canonical.package = catalog_model->package;
+        canonical.model_id = descriptor.definition.model_id;
+        canonical.model_version = descriptor.definition.model_version;
+        canonical.execution_form =
+            descriptor.definition.execution_form;
+        canonical.preparation_algorithm_id =
+            descriptor.preparation_algorithm_id;
+        canonical.preparation_algorithm_version =
+            descriptor.preparation_algorithm_version;
+        canonical.output_ports =
+            detail::canonical_ports(descriptor.ports);
+        canonical.source = model.source;
+        canonical.subject_entity_id = model.subject_entity_id;
+        canonical.subject_source = model.subject_source;
+        canonical.scope = model.scope;
+        canonical.scope_source = model.scope_source;
+        canonical.placement = descriptor.placement;
+        canonical.placement_source =
+            model.placement ==
+                    gnc::model_sdk::ModelPlacement::Unspecified
+                ? detail::catalog_source(
+                      catalog_model->package.package_id,
+                      descriptor.definition.model_id)
+                : model.placement_source;
+        canonical.configuration = std::move(configuration);
+        canonical.configuration_source = model.configuration_source;
+        canonical.configuration_field_sources =
+            std::move(configuration_provenance);
+        canonical.asset_bindings = std::move(assets);
+        ir.model_occurrences.push_back(std::move(canonical));
     }
 
     auto algorithm_sources = source.algorithm_consumers;
@@ -768,6 +1230,10 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
         stream << "entity " << entity.entity_id << ' '
                << to_string(entity.lifecycle) << '\n';
     }
+    for (const auto& scope : ir.scopes) {
+        stream << "scope " << to_string(scope.key.kind) << " subject "
+               << scope.key.subject_entity_id << '\n';
+    }
     for (const auto& model : ir.model_occurrences) {
         stream << "model " << model.occurrence_id << ' '
                << model.package.package_id << '@'
@@ -775,11 +1241,48 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
                << '@' << model.model_version << ' '
                << gnc::model_sdk::to_string(model.execution_form)
                << " preparation " << model.preparation_algorithm_id << '@'
-               << model.preparation_algorithm_version;
+               << model.preparation_algorithm_version << " placement "
+               << gnc::model_sdk::to_string(model.placement);
         if (!model.subject_entity_id.empty()) {
             stream << " subject " << model.subject_entity_id;
         }
+        if (model.scope.has_value()) {
+            stream << " scope " << to_string(model.scope->kind) << ':'
+                   << model.scope->subject_entity_id;
+        }
         stream << '\n';
+        stream << "config " << model.occurrence_id << ' '
+               << model.configuration.schema_id << '@'
+               << model.configuration.schema_version << '\n';
+        for (const auto& field : model.configuration.fields) {
+            stream << "config-field " << model.occurrence_id << '.'
+                   << field.field_id << ' '
+                   << gnc::model_sdk::to_string(
+                          gnc::model_sdk::canonical_config_value_kind(
+                              field.value))
+                   << ' ';
+            if (const auto* text =
+                    std::get_if<std::string>(&field.value)) {
+                stream << *text;
+            } else if (const auto* integer =
+                           std::get_if<std::int64_t>(&field.value)) {
+                stream << *integer;
+            } else if (const auto* token =
+                           std::get_if<
+                               gnc::model_sdk::CanonicalEnumValue>(
+                               &field.value)) {
+                stream << token->token;
+            } else {
+                stream << std::setprecision(17)
+                       << std::get<double>(field.value);
+            }
+            stream << '\n';
+        }
+        for (const auto& asset : model.asset_bindings) {
+            stream << "asset " << model.occurrence_id << '.'
+                   << asset.role << ' ' << asset.asset_schema_id << ' '
+                   << asset.asset_id << '\n';
+        }
         for (const auto& port : model.output_ports) {
             stream << "output " << model.occurrence_id << '.'
                    << port.port_id << ' ' << port.contract_id << '\n';
