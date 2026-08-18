@@ -32,6 +32,7 @@ DIRECT_CHECKS = {
     "tdct-clamp-evidence",
     "typed-formula-tdct-consumer",
     "definition-identity-rejection",
+    "definition-version-rejection",
     "model-metadata-rejection",
     "package-context-policy-rejection",
     "sample-context-rejection",

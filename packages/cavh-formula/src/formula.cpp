@@ -239,6 +239,7 @@ prepare_glide_envelope_model(GlideEnvelopeDefinition definition) {
             metadata.status(), metadata.evidence());
     }
     if (definition.metadata.model_id != kGlideEnvelopeModelIdentity ||
+        definition.metadata.model_version != kGlideEnvelopeModelVersion ||
         definition.metadata.execution_form !=
             gnc::model_sdk::ModelExecutionForm::PureQuery) {
         return failure(NumericalStatus::DomainError,

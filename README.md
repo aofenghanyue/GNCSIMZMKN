@@ -6,7 +6,7 @@
 
 - 当前 gate：`R2`；G0/G1/G2 已由仓库所有者判定 `Passed`。
 - 已闭合：R1 Foundation、窄范围 in-process Contracts、真实 GlideEnvelope PureQuery、真实 ForceMomentClosure、YYZ 四个产品切片和 CAVH 公式产品切片。
-- 当前静态编译入口：单一 programmatic typed `SourceTree` 已贯通真实 YYZ/CAVH package descriptor、只读 Catalog、最小 IR、exact-contract binding proof、compiled query/closure obligation 和静态 `ExecutionPlanDescriptor`。
+- 当前静态编译入口：单一 programmatic `TypedStaticCompositionSource` 已贯通真实 YYZ/CAVH package descriptor、只读 Catalog、identity/binding IR、exact-contract proof、compiled query/closure obligation 和窄静态 `ExecutionPlanDescriptor`。
 - 暂缓开展：YAML/INI、多端 adapter、Session、mini runtime、runtime registry、serializer、StateFragment 与 R3～R8 能力。
 - 旧 GNCZMKN 只作为只读行为与科学参照，不进入任何生产 target、include path 或运行依赖。
 
@@ -64,15 +64,15 @@ build/dev/gnc_cavh_formula_product_probe --self-check
 
 当前 CAVH 输出止于 TDCT 公式阶段的限幅 alpha；产品级 guidance command 的 frame、时间与 ownership 映射等待真实 vehicle/controller consumer。
 
-YYZ 与 CAVH 共同消费最小 `ModelDefinitionMetadata`、`PreparedModelMetadata` 和 `AlgorithmEvaluation<Output, Telemetry>`。公共 metadata 只包含 stable model id/version、`PureQuery | Closure` 和 preparation identity；clock/configuration expectation 由 package definition 保持。两个产品 probe 直接验证真实 query/closure output 消费与 C++ output 类型边界，并保留各自既有 R0 oracle。
+YYZ 与 CAVH 共同消费最小 `ModelDefinitionMetadata`、`PreparedModelMetadata` 和 `AlgorithmEvaluation<Output, Telemetry>`。公共 metadata 只包含 stable model id/version、`PureQuery | Closure` 和 preparation identity；clock/configuration expectation 由 package definition 保持。两个 package prepare 对各自 model id、model version 与 execution form 做 exact 检查。两个产品 probe 直接验证真实 query/closure output 消费、错误 model version 拒绝与 C++ output 类型边界，并保留各自既有 R0 oracle。
 
-首个 R2 编译入口从 package-owned static descriptor 精确解析 `GlideEnvelope` PureQuery、`ForceMomentClosure` Closure、CAVH 公式组合与 YYZ rigid-step 组合。dry-run plan 包含两份 package lock、两项 prepared model、两条 output-to-consumer binding proof 和两项静态 obligation；未知 identity、缺失或多重 binding、contract 不兼容、重复 occurrence/catalog identity 与无效 execution form 均在 plan 发布前失败：
+首个 R2 identity/binding 静态纵向切片从 package-owned descriptor 精确解析 `GlideEnvelope` PureQuery、`ForceMomentClosure` Closure、CAVH 公式 algorithm 与 YYZ rigid-step algorithm。当前端口能力只接受 model Output 到 algorithm Input，全部 algorithm Input 都是单值 required consumer。dry-run plan 包含两份 package lock、两项 model/preparation exact identity、两条 binding proof 和两项静态 obligation；未知 identity、缺失或多重 binding、contract 不兼容、重复 occurrence/catalog identity、无效 execution form、反向端口与非法 port-direction enum 均在 plan 发布前失败：
 
 ```powershell
 build/dev/gnc_compiler_static_plan_probe --explain
 ```
 
-该切片保持 in-process typed API；source parser、layered hash、完整 `PlanProofIndex`、plan link image、`RuntimeComponent` 和 Session 仍待后续真实 consumer。
+`TypedStaticCompositionSource` 只表达 typed model/algorithm occurrence 与 binding。当前没有蓝图定义的 syntax-neutral `SourceTree`/`SourceMap`、canonical model config 或 asset binding，因此静态 plan 尚不能重建完整 PreparedModel。source parser、layered hash、完整 `PlanProofIndex`、plan link image、`RuntimeComponent` 和 Session 仍待后续真实 consumer。
 
 ## 仓库地图
 

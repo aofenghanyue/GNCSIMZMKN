@@ -40,6 +40,7 @@ DIRECT_CHECKS = {
     "nonfinite-rejection",
     "table-preparation-rejection",
     "model-metadata-rejection",
+    "definition-version-rejection",
     "full-inertia-derivative",
     "rk4-stage-discards-candidate",
 }

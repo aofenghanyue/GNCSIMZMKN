@@ -16,8 +16,8 @@
 
 namespace gnc::compiler {
 
-inline constexpr std::string_view kTypedSourceTreeVersion =
-    "gnc.typed-source-tree/1";
+inline constexpr std::string_view kTypedStaticCompositionSourceVersion =
+    "gnc.typed-static-composition-source/1";
 
 struct SourceRef {
     std::string document_uri;
@@ -27,7 +27,7 @@ struct SourceRef {
 enum class DiagnosticCode : std::uint8_t {
     InvalidCatalogDescriptor,
     DuplicateCatalogIdentity,
-    InvalidSourceTree,
+    InvalidStaticCompositionSource,
     DuplicateOccurrence,
     UnknownDefinition,
     UnknownAlgorithm,
@@ -45,8 +45,8 @@ enum class DiagnosticCode : std::uint8_t {
         return "GNC-CAT-INVALID-DESCRIPTOR";
     case DiagnosticCode::DuplicateCatalogIdentity:
         return "GNC-CAT-DUPLICATE-IDENTITY";
-    case DiagnosticCode::InvalidSourceTree:
-        return "GNC-SRC-INVALID-TYPED-TREE";
+    case DiagnosticCode::InvalidStaticCompositionSource:
+        return "GNC-SRC-INVALID-STATIC-COMPOSITION";
     case DiagnosticCode::DuplicateOccurrence:
         return "GNC-IR-DUPLICATE-OCCURRENCE";
     case DiagnosticCode::UnknownDefinition:
@@ -68,7 +68,8 @@ enum class DiagnosticCode : std::uint8_t {
 }
 
 struct Diagnostic {
-    DiagnosticCode code = DiagnosticCode::InvalidSourceTree;
+    DiagnosticCode code =
+        DiagnosticCode::InvalidStaticCompositionSource;
     SourceRef source;
     std::string subject;
     std::string detail;
@@ -117,7 +118,14 @@ namespace detail {
 inline void validate_ports(
     const std::vector<gnc::model_sdk::StaticPortDescriptor>& ports,
     std::string_view package_id, std::string_view owner,
+    gnc::model_sdk::StaticPortDirection supported_direction,
     std::vector<Diagnostic>& diagnostics) {
+    if (ports.empty()) {
+        diagnostics.push_back(
+            {DiagnosticCode::InvalidCatalogDescriptor,
+             catalog_source(package_id, owner), std::string(owner),
+             "current static composition requires at least one port"});
+    }
     std::set<std::string> port_ids;
     for (const auto& port : ports) {
         if (port.port_id.empty() || port.contract_id.empty()) {
@@ -131,6 +139,13 @@ inline void validate_ports(
                 {DiagnosticCode::InvalidCatalogDescriptor,
                  catalog_source(package_id, owner), port.port_id,
                  "duplicate port identity within descriptor"});
+        }
+        if (port.direction != supported_direction) {
+            diagnostics.push_back(
+                {DiagnosticCode::InvalidCatalogDescriptor,
+                 catalog_source(package_id, owner), port.port_id,
+                 "current static composition supports model Output ports "
+                 "and algorithm Input ports only"});
         }
     }
 }
@@ -203,27 +218,28 @@ class Catalog {
                          "model identity, execution form, and preparation "
                          "identity are required"});
                 }
-                detail::validate_ports(model.ports, package.package_id,
-                                       definition.model_id,
-                                       outcome.diagnostics);
+                detail::validate_ports(
+                    model.ports, package.package_id, definition.model_id,
+                    gnc::model_sdk::StaticPortDirection::Output,
+                    outcome.diagnostics);
                 models.push_back({lock, std::move(model)});
             }
 
             for (auto& algorithm : package.algorithms) {
                 if (algorithm.algorithm_id.empty() ||
-                    algorithm.algorithm_version.empty() ||
-                    algorithm.composition_model_id.empty()) {
+                    algorithm.algorithm_version.empty()) {
                     outcome.diagnostics.push_back(
                         {DiagnosticCode::InvalidCatalogDescriptor,
                          detail::catalog_source(package.package_id,
                                                 algorithm.algorithm_id),
                          algorithm.algorithm_id,
-                         "algorithm and composition model identities are "
-                         "required"});
+                         "algorithm identity and version are required"});
                 }
-                detail::validate_ports(algorithm.ports, package.package_id,
-                                       algorithm.algorithm_id,
-                                       outcome.diagnostics);
+                detail::validate_ports(
+                    algorithm.ports, package.package_id,
+                    algorithm.algorithm_id,
+                    gnc::model_sdk::StaticPortDirection::Input,
+                    outcome.diagnostics);
                 algorithms.push_back({lock, std::move(algorithm)});
             }
         }
@@ -348,10 +364,10 @@ struct SourceBinding {
     SourceRef source;
 };
 
-// Programmatic typed entry for the first R2 slice. No syntax frontend or
-// format-specific node is visible to the Compiler core.
-struct SourceTree {
-    std::string source_tree_version;
+// Programmatic identity/binding input for the first R2 slice. This is not the
+// syntax-neutral SourceTree defined by the target Source Frontend.
+struct TypedStaticCompositionSource {
+    std::string source_version;
     std::string mission_id;
     std::string plan_id;
     std::vector<SourceModelOccurrence> models;
@@ -377,7 +393,7 @@ struct BindingIntent {
     SourceBinding source_binding;
 };
 
-struct MissionIr {
+struct StaticCompositionIr {
     std::uint32_t revision = 1U;
     std::string mission_id;
     std::vector<ResolvedModelOccurrence> models;
@@ -398,7 +414,7 @@ struct BindingProof {
     BindingProofResult result = BindingProofResult::Proven;
 };
 
-struct PreparedModelPlan {
+struct ModelPreparationIdentityPlan {
     std::string occurrence_id;
     PackageLock package;
     std::string model_id;
@@ -410,12 +426,11 @@ struct PreparedModelPlan {
     SourceRef source;
 };
 
-struct AlgorithmPlan {
+struct AlgorithmConsumerPlan {
     std::string occurrence_id;
     PackageLock package;
     std::string algorithm_id;
     std::string algorithm_version;
-    std::string composition_model_id;
     SourceRef source;
 };
 
@@ -454,39 +469,42 @@ struct CompiledObligation {
     std::string binding_id;
 };
 
-// This is a static, in-process descriptor. It intentionally contains no
-// runtime instance, function address, Session identity, or mutable state.
+// This narrow, in-process descriptor freezes only exact identities, one-way
+// bindings, and query/closure obligations. It has no canonical model config,
+// asset binding, runtime instance, function address, Session identity, or
+// mutable state, so it cannot reconstruct a complete PreparedModel.
 struct ExecutionPlanDescriptor {
     std::uint32_t revision = 1U;
     std::string plan_id;
     std::string mission_id;
     std::vector<PackageLock> dependency_lock;
-    std::vector<PreparedModelPlan> prepared_models;
-    std::vector<AlgorithmPlan> algorithms;
+    std::vector<ModelPreparationIdentityPlan>
+        model_preparation_identities;
+    std::vector<AlgorithmConsumerPlan> algorithms;
     std::vector<BindingPlanEntry> bindings;
     std::vector<BindingProof> binding_proofs;
     std::vector<CompiledObligation> obligations;
 };
 
 struct StaticCompilation {
-    MissionIr ir;
+    StaticCompositionIr ir;
     ExecutionPlanDescriptor plan;
 };
 
 [[nodiscard]] inline CompileOutcome<StaticCompilation> compile_static_plan(
-    const SourceTree& source, const Catalog& catalog) {
+    const TypedStaticCompositionSource& source, const Catalog& catalog) {
     CompileOutcome<StaticCompilation> outcome;
-    if (source.source_tree_version != kTypedSourceTreeVersion ||
+    if (source.source_version != kTypedStaticCompositionSourceVersion ||
         source.mission_id.empty() || source.plan_id.empty()) {
         outcome.diagnostics.push_back(
-            {DiagnosticCode::InvalidSourceTree,
+            {DiagnosticCode::InvalidStaticCompositionSource,
              {"typed://mission", "/"}, source.mission_id,
-             "source tree version, mission identity, and plan identity are "
-             "required"});
+             "static composition source version, mission identity, and "
+             "plan identity are required"});
         return outcome;
     }
 
-    MissionIr ir;
+    StaticCompositionIr ir;
     ir.mission_id = source.mission_id;
     std::set<std::string> occurrence_ids;
 
@@ -557,7 +575,8 @@ struct StaticCompilation {
         if (binding.binding_id.empty() ||
             !binding_ids.insert(binding.binding_id).second) {
             outcome.diagnostics.push_back(
-                {DiagnosticCode::InvalidSourceTree, binding.source,
+                {DiagnosticCode::InvalidStaticCompositionSource,
+                 binding.source,
                  binding.binding_id,
                  "binding identity is empty or duplicated"});
         }
@@ -648,10 +667,8 @@ struct StaticCompilation {
 
     for (const auto& model : ir.models) {
         for (const auto& port : model.descriptor.ports) {
-            if (port.required && port.direction ==
-                                     gnc::model_sdk::StaticPortDirection::Output &&
-                provider_counts[detail::endpoint_key(model.occurrence_id,
-                                                     port.port_id)] == 0U) {
+            if (provider_counts[detail::endpoint_key(
+                    model.occurrence_id, port.port_id)] == 0U) {
                 outcome.diagnostics.push_back(
                     {DiagnosticCode::MissingRequiredBinding, model.source,
                      model.occurrence_id + "." + port.port_id,
@@ -661,10 +678,6 @@ struct StaticCompilation {
     }
     for (const auto& algorithm : ir.algorithms) {
         for (const auto& port : algorithm.descriptor.ports) {
-            if (!port.required || port.direction !=
-                                      gnc::model_sdk::StaticPortDirection::Input) {
-                continue;
-            }
             const auto count = consumer_counts[detail::endpoint_key(
                 algorithm.occurrence_id, port.port_id)];
             if (count == 0U) {
@@ -696,7 +709,7 @@ struct StaticCompilation {
             detail::exact_key(model.package.package_id,
                               model.package.package_version),
             model.package);
-        plan.prepared_models.push_back(
+        plan.model_preparation_identities.push_back(
             {model.occurrence_id, model.package,
              model.descriptor.definition.model_id,
              model.descriptor.definition.model_version,
@@ -713,7 +726,7 @@ struct StaticCompilation {
             {algorithm.occurrence_id, algorithm.package,
              algorithm.descriptor.algorithm_id,
              algorithm.descriptor.algorithm_version,
-             algorithm.descriptor.composition_model_id, algorithm.source});
+             algorithm.source});
     }
     for (const auto& dependency : dependency_locks) {
         plan.dependency_lock.push_back(dependency.second);
@@ -748,18 +761,18 @@ struct StaticCompilation {
         stream << "lock " << dependency.package_id << '@'
                << dependency.package_version << '\n';
     }
-    for (const auto& model : plan.prepared_models) {
-        stream << "prepare " << model.occurrence_id << ' '
+    for (const auto& model : plan.model_preparation_identities) {
+        stream << "model " << model.occurrence_id << ' '
                << model.model_id << '@' << model.model_version << ' '
-               << gnc::model_sdk::to_string(model.execution_form) << ' '
+               << gnc::model_sdk::to_string(model.execution_form)
+               << " preparation "
                << model.preparation_algorithm_id << '@'
                << model.preparation_algorithm_version << '\n';
     }
     for (const auto& algorithm : plan.algorithms) {
-        stream << "algorithm " << algorithm.occurrence_id << ' '
+        stream << "consumer " << algorithm.occurrence_id << ' '
                << algorithm.algorithm_id << '@'
-               << algorithm.algorithm_version << " model "
-               << algorithm.composition_model_id << '\n';
+               << algorithm.algorithm_version << '\n';
     }
     for (const auto& binding : plan.bindings) {
         stream << "bind " << binding.binding_id << ' '

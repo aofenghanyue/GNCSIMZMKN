@@ -232,16 +232,15 @@ describe_yyz_rigid_step_package() {
         std::string(kForceMomentClosurePreparationIdentity.version);
     closure.ports.push_back(
         {"form-input", std::string(kRigidFormInputContractIdentity),
-         gnc::model_sdk::StaticPortDirection::Output, true});
+         gnc::model_sdk::StaticPortDirection::Output});
 
     gnc::model_sdk::StaticAlgorithmDescriptor rigid_step;
     rigid_step.algorithm_id = std::string(kRigidStepKernelIdentity.id);
     rigid_step.algorithm_version =
         std::string(kRigidStepKernelIdentity.version);
-    rigid_step.composition_model_id = std::string(kRigidStepModelIdentity);
     rigid_step.ports.push_back(
         {"form-input", std::string(kRigidFormInputContractIdentity),
-         gnc::model_sdk::StaticPortDirection::Input, true});
+         gnc::model_sdk::StaticPortDirection::Input});
 
     gnc::model_sdk::StaticPackageDescriptor package;
     package.package_id = std::string(kYyzRigidStepPackageIdentity);

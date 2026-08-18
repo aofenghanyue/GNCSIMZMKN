@@ -530,6 +530,8 @@ prepare_force_moment_closure_model(
     }
     if (definition.metadata.model_id !=
             kForceMomentClosureModelIdentity ||
+        definition.metadata.model_version !=
+            kForceMomentClosureModelVersion ||
         definition.metadata.execution_form !=
             gnc::model_sdk::ModelExecutionForm::Closure ||
         definition.body_frame.id.empty() ||

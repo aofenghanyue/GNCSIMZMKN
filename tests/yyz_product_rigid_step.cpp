@@ -97,7 +97,7 @@ RigidStepModelDefinition fixture_definition() {
     RigidStepModelDefinition definition;
     definition.force_moment_closure.metadata = {
         std::string(kForceMomentClosureModelIdentity),
-        "0.1.0",
+        std::string(kForceMomentClosureModelVersion),
         gnc::model_sdk::ModelExecutionForm::Closure,
     };
     definition.inertial_frame = FrameIdentity{std::string(kInertialFrame)};
@@ -246,7 +246,8 @@ ProbeBundle run_probe() {
         prepared.force_moment_closure_model().metadata();
     require(prepared_metadata.definition.model_id ==
                 kForceMomentClosureModelIdentity &&
-                prepared_metadata.definition.model_version == "0.1.0" &&
+                prepared_metadata.definition.model_version ==
+                    kForceMomentClosureModelVersion &&
                 prepared_metadata.definition.execution_form ==
                     gnc::model_sdk::ModelExecutionForm::Closure &&
                 prepared_metadata.preparation_algorithm_id ==
@@ -535,6 +536,19 @@ ProbeBundle run_probe() {
                     "model-execution-form",
             "YYZ invalid framework model metadata prepared");
     checks.emplace_back("model-metadata-rejection");
+
+    ForceMomentClosureDefinition invalid_version =
+        fixture_definition().force_moment_closure;
+    invalid_version.metadata.model_version = "0.1.1";
+    const auto invalid_version_outcome =
+        prepare_force_moment_closure_model(std::move(invalid_version));
+    require(!invalid_version_outcome.has_value() &&
+                invalid_version_outcome.status() ==
+                    NumericalStatus::DomainError &&
+                invalid_version_outcome.evidence().detail ==
+                    "definition-identity-or-context",
+            "wrong ForceMomentClosure model version prepared");
+    checks.emplace_back("definition-version-rejection");
 
     RigidStepInput full_inertia = accepted_input;
     Mat3 coupled_inertia;

@@ -17,7 +17,6 @@ struct StaticPortDescriptor {
     std::string port_id;
     std::string contract_id;
     StaticPortDirection direction = StaticPortDirection::Input;
-    bool required = true;
 };
 
 // Package-owned description of a model that can be read without preparing or
@@ -35,7 +34,6 @@ struct StaticModelDescriptor {
 struct StaticAlgorithmDescriptor {
     std::string algorithm_id;
     std::string algorithm_version;
-    std::string composition_model_id;
     std::vector<StaticPortDescriptor> ports;
 };
 

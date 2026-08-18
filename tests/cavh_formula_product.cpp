@@ -101,7 +101,8 @@ ParabolicEnvelopeDefinition mach_polar() {
 GlideEnvelopeDefinition envelope_definition(
     ParabolicEnvelopeDefinition polar) {
     return {
-        {std::string(kGlideEnvelopeModelIdentity), "0.1.0",
+        {std::string(kGlideEnvelopeModelIdentity),
+         std::string(kGlideEnvelopeModelVersion),
          gnc::model_sdk::ModelExecutionForm::PureQuery},
         polar,
     };
@@ -238,7 +239,8 @@ ProbeBundle run_probe() {
         eq18_model.glide_envelope_model().metadata();
     require(prepared_metadata.definition.model_id ==
                 kGlideEnvelopeModelIdentity &&
-                prepared_metadata.definition.model_version == "0.1.0" &&
+                prepared_metadata.definition.model_version ==
+                    kGlideEnvelopeModelVersion &&
                 prepared_metadata.definition.execution_form ==
                     gnc::model_sdk::ModelExecutionForm::PureQuery &&
                 prepared_metadata.preparation_algorithm_id ==
@@ -423,6 +425,15 @@ ProbeBundle run_probe() {
                    NumericalStatus::DomainError, "definition-identity",
                    "reference model identity prepared as a product model");
     checks.emplace_back("definition-identity-rejection");
+
+    GlideEnvelopeDefinition invalid_version = fixture_definition(
+        GammaReferenceEquation::Eq18MachIndependent).envelope;
+    invalid_version.metadata.model_version = "0.1.1";
+    expect_failure(
+        prepare_glide_envelope_model(std::move(invalid_version)),
+        NumericalStatus::DomainError, "definition-identity",
+        "wrong GlideEnvelope model version prepared");
+    checks.emplace_back("definition-version-rejection");
 
     CavhFormulaDefinition invalid_metadata = fixture_definition(
         GammaReferenceEquation::Eq18MachIndependent);

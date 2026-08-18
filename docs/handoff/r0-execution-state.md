@@ -2,7 +2,7 @@
 
 - 更新日期：2026-08-18
 - 当前 gate：`R2`
-- 产品状态：R0 科学/性能基线与 G2 已闭合；R1 Foundation、窄范围 in-process Contracts、GlideEnvelope PureQuery、ForceMomentClosure、四个 YYZ 产品切片和 CAVH 公式产品切片已完成；首个 typed SourceTree 静态编译纵向切片已完成，尚无 plan linker、RuntimeComponent、产品级 CAVH guidance command 或 Session 仿真运行能力
+- 产品状态：R0 科学/性能基线与 G2 已闭合；R1 Foundation、窄范围 in-process Contracts、GlideEnvelope PureQuery、ForceMomentClosure、四个 YYZ 产品切片和 CAVH 公式产品切片已完成；首个 identity/binding 静态纵向切片已完成，尚无 syntax-neutral SourceTree、完整 PreparedModel 重建、plan linker、RuntimeComponent、产品级 CAVH guidance command 或 Session 仿真运行能力
 - 当前分支：`codex/r0-governance-reset`
 - 分支基线：`origin/main@dfedf27`
 
@@ -59,13 +59,13 @@
 - `R1-MOD-001` 已完成。公共 metadata 收敛为 stable model id/version、`PureQuery | Closure` 和 preparation identity；CAVH 仅 `GlideEnvelopePreparedModel` 使用 PureQuery，YYZ 仅 `ForceMomentClosure` 使用 Closure。clock/configuration expectation 留在 package-specific definition，`RuntimeComponent` 已退出当前公共有效形式。
 - `R1-ALG-001` 已完成。`AlgorithmEvaluation<Output, Telemetry>` 被 GlideEnvelope query、Eq17/Eq18、TDCT、ForceMomentClosure 与 rigid-step 正式路径消费；C++ 类型级守卫限制 telemetry 字段进入正式 output。YYZ `RigidStepKernel` 从 Closure output 取得 held `RigidFormInput` 并用于全部 RK4 stages；两个 package 保持无跨调用状态，stateless kernel 省略 State。
 - `R1-GATE-001` 已完成，G2 结果为 `Passed`。仓库所有者的条件式接受已满足：真实 GlideEnvelope query 与 ForceMomentClosure 均有直接 consumer，`RuntimeComponent` 残缺声明已退出，既有 R0 oracle 与全量 Debug/Release/仓库检查通过，Kernel source 没有增加 package-specific 分支。R2 已解锁。
-- `R2-SRC-001` 已完成首个静态编译纵向切片。programmatic typed `SourceTree` 经 package-owned YYZ/CAVH static descriptors 进入只读 Catalog 和最小 Mission IR；`GlideEnvelope` output 到 CAVH formula、`ForceMomentClosure` output 到 rigid-step 的两条 exact-contract binding 生成带直接 source refs 的 proof，并 lower 为两项静态 query/closure obligation。dry-run descriptor 固定两份 package lock、真实 model/algorithm/preparation identity，且不携带 runtime instance、函数地址、Session identity 或 mutable state。直接负例覆盖 unknown definition、missing/multiple binding、contract mismatch、duplicate occurrence/catalog identity 和 invalid execution form。Compiler production source 没有引用具体 package，Kernel source 保持不变。
+- `R2-SRC-001` 已完成首个 identity/binding 静态纵向切片。programmatic `TypedStaticCompositionSource` 经 package-owned YYZ/CAVH descriptors 进入只读 Catalog 和 `StaticCompositionIr`；`GlideEnvelope` output 到 CAVH formula algorithm、`ForceMomentClosure` output 到 rigid-step algorithm 的两条 exact-contract binding 生成带直接 source refs 的 proof，并 lower 为两项静态 query/closure obligation。Catalog 只接受 model Output 与 algorithm Input，全部 consumer input 强制恰好一个 provider；未经验证的 `composition_model_id` 已从 descriptor、plan 与 explain 移除。package prepare 同时 exact 检查 model id/version/form。当前 plan 只固定 package、model、algorithm 与 preparation identity，没有 canonical config 或 asset，无法重建完整 PreparedModel。直接负例覆盖错误 model version、unknown definition、missing/multiple binding、contract mismatch、duplicate occurrence/catalog identity、invalid execution form、反向端口和非法 port-direction enum。Compiler production source 没有引用具体 package，Kernel source 保持不变。
 
 ## 下一条开发主线
 
-1. 下一项为首个真实 YYZ `RuntimeComponent` descriptor-to-plan 纵向切片，优先使用既有 rigid/mass atomic boundary，贯通 package descriptor、recipe/profile、ports/state、execution obligations、lifecycle 与静态 plan section。
-2. 该切片只实现 Compiler 直接读取并能在 dry-run 中证明的字段；继续复用当前 typed `SourceTree`、Catalog、IR 与 exact binding 路径。
-3. YAML/INI、多端 adapter、Session、mini runtime、manager、runtime registry、serializer、StateFragment、Artifact、Workflow、前端与 R3+ 能力继续保持关闭。
+1. `R2-CAT-001` 保持 `planned`。首个 `RuntimeComponent` 等待具备独立 state ownership、调度、命令或 lifecycle obligation 的真实模型选择，再与 recipe/profile、ports/state、execution obligations、lifecycle 和 Compiler consumer 同切片实现。
+2. 既有 rigid/mass atomic boundary 归入未来 `IntegrationScopePlan` 与 `StepTransaction` 的多 owner 原子协调，不预选为单一 `RuntimeComponent`。
+3. JSON/YAML/INI、完整 SourceTree/SourceMap、config/asset system、多端 adapter、Session、mini runtime、manager、runtime registry、serializer、StateFragment、Artifact、Workflow、前端与 R3+ 能力继续保持关闭。
 
 ## 保留与恢复
 

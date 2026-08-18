@@ -139,7 +139,7 @@ RigidStepModelDefinition fixture_rigid_definition() {
     RigidStepModelDefinition definition;
     definition.force_moment_closure.metadata = {
         std::string(kForceMomentClosureModelIdentity),
-        "0.2.0",
+        std::string(kForceMomentClosureModelVersion),
         gnc::model_sdk::ModelExecutionForm::Closure,
     };
     definition.inertial_frame = FrameIdentity{std::string(kInertialFrame)};
@@ -194,7 +194,6 @@ SuppliedPropulsionDefinition fixture_propulsion_definition() {
 
 RigidStepModelDefinition mission_rigid_definition() {
     RigidStepModelDefinition definition = fixture_rigid_definition();
-    definition.force_moment_closure.metadata.model_version = "0.3.0";
     auto& aero = definition.aerodynamics;
     aero.source_id = "aero.body";
     aero.table_id = "aero-table.fixture.yyz.multiaffine@1";

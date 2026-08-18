@@ -23,9 +23,12 @@ using gnc::compiler::SourceAlgorithmOccurrence;
 using gnc::compiler::SourceBinding;
 using gnc::compiler::SourceModelOccurrence;
 using gnc::compiler::SourceRef;
-using gnc::compiler::SourceTree;
 using gnc::compiler::StaticCompilation;
+using gnc::compiler::TypedStaticCompositionSource;
 using gnc::model_sdk::ModelExecutionForm;
+using gnc::model_sdk::StaticAlgorithmDescriptor;
+using gnc::model_sdk::StaticPortDescriptor;
+using gnc::model_sdk::StaticPortDirection;
 
 constexpr std::string_view kMissionId =
     "mission.r2.yyz-cavh-static-composition@1";
@@ -39,9 +42,33 @@ static_assert(
                    std::vector<gnc::compiler::CompiledObligation>>,
     "the static descriptor must expose typed compiled obligations");
 static_assert(
-    std::is_same_v<decltype(gnc::compiler::PreparedModelPlan::execution_form),
-                   ModelExecutionForm>,
+    std::is_same_v<
+        decltype(gnc::compiler::ModelPreparationIdentityPlan::execution_form),
+        ModelExecutionForm>,
     "prepared entries must preserve the accepted execution-form type");
+
+template <typename Value, typename = void>
+struct has_required_member : std::false_type {};
+
+template <typename Value>
+struct has_required_member<
+    Value, std::void_t<decltype(std::declval<Value>().required)>>
+    : std::true_type {};
+
+template <typename Value, typename = void>
+struct has_composition_model_id_member : std::false_type {};
+
+template <typename Value>
+struct has_composition_model_id_member<
+    Value,
+    std::void_t<decltype(std::declval<Value>().composition_model_id)>>
+    : std::true_type {};
+
+static_assert(!has_required_member<StaticPortDescriptor>::value,
+              "the current static composition has no optional ports");
+static_assert(
+    !has_composition_model_id_member<StaticAlgorithmDescriptor>::value,
+    "unverified composition model identity must stay outside descriptors");
 
 void require(bool condition, std::string_view message) {
     if (!condition) {
@@ -105,10 +132,10 @@ package_descriptors() {
     return {std::move(cavh_package), std::move(yyz_package)};
 }
 
-[[nodiscard]] SourceTree source_tree() {
-    SourceTree source;
-    source.source_tree_version =
-        std::string(gnc::compiler::kTypedSourceTreeVersion);
+[[nodiscard]] TypedStaticCompositionSource composition_source() {
+    TypedStaticCompositionSource source;
+    source.source_version = std::string(
+        gnc::compiler::kTypedStaticCompositionSourceVersion);
     source.mission_id = std::string(kMissionId);
     source.plan_id = std::string(kPlanId);
     source.models = {
@@ -187,14 +214,14 @@ void verify_success_product(const StaticCompilation& compilation) {
     require(plan.plan_id == kPlanId && plan.mission_id == kMissionId,
             "static plan identity changed");
     require(plan.dependency_lock.size() == 2U &&
-                plan.prepared_models.size() == 2U &&
+                plan.model_preparation_identities.size() == 2U &&
                 plan.algorithms.size() == 2U &&
                 plan.bindings.size() == 2U &&
                 plan.binding_proofs.size() == 2U &&
                 plan.obligations.size() == 2U,
             "static plan closure count changed");
 
-    const auto& cavh_model = plan.prepared_models[0U];
+    const auto& cavh_model = plan.model_preparation_identities[0U];
     require(cavh_model.occurrence_id == "cavh.envelope" &&
                 cavh_model.model_id ==
                     gnc::packages::cavh::kGlideEnvelopeModelIdentity &&
@@ -203,7 +230,7 @@ void verify_success_product(const StaticCompilation& compilation) {
                     gnc::packages::cavh::
                         kGlideEnvelopePreparationIdentity.id,
             "CAVH plan entry lost its real query definition");
-    const auto& yyz_model = plan.prepared_models[1U];
+    const auto& yyz_model = plan.model_preparation_identities[1U];
     require(yyz_model.occurrence_id == "yyz.closure" &&
                 yyz_model.model_id ==
                     gnc::packages::yyz::
@@ -214,11 +241,16 @@ void verify_success_product(const StaticCompilation& compilation) {
                         kForceMomentClosurePreparationIdentity.id,
             "YYZ plan entry lost its real closure definition");
 
-    require(plan.algorithms[0U].composition_model_id ==
-                gnc::packages::cavh::kCavhFormulaModelIdentity &&
-                plan.algorithms[1U].composition_model_id ==
-                    gnc::packages::yyz::kRigidStepModelIdentity,
-            "algorithm consumers lost their product-model identities");
+    require(plan.algorithms[0U].algorithm_id ==
+                gnc::packages::cavh::kCavhFormulaKernelIdentity.id &&
+                plan.algorithms[0U].algorithm_version ==
+                    gnc::packages::cavh::
+                        kCavhFormulaKernelIdentity.version &&
+                plan.algorithms[1U].algorithm_id ==
+                    gnc::packages::yyz::kRigidStepKernelIdentity.id &&
+                plan.algorithms[1U].algorithm_version ==
+                    gnc::packages::yyz::kRigidStepKernelIdentity.version,
+            "algorithm consumers lost exact identities");
     require(plan.bindings[0U].contract_id ==
                 gnc::packages::cavh::
                     kGlideEnvelopeOutputContractIdentity &&
@@ -251,7 +283,7 @@ void verify_deterministic_order(std::string_view expected_explain) {
     const auto& catalog =
         require_value(catalog_outcome, "reordered Catalog build failed");
 
-    auto source = source_tree();
+    auto source = composition_source();
     std::reverse(source.models.begin(), source.models.end());
     std::reverse(source.algorithms.begin(), source.algorithms.end());
     std::reverse(source.bindings.begin(), source.bindings.end());
@@ -261,7 +293,7 @@ void verify_deterministic_order(std::string_view expected_explain) {
         compile_outcome, "reordered typed source compilation failed");
     require(gnc::compiler::explain_static_plan(compilation.plan) ==
                 expected_explain,
-            "Catalog or SourceTree insertion order changed the static plan");
+        "Catalog or composition-source insertion order changed the plan");
 }
 
 void verify_negative_cases() {
@@ -269,7 +301,7 @@ void verify_negative_cases() {
     const auto& catalog =
         require_value(catalog_outcome, "fixture Catalog build failed");
 
-    auto unknown = source_tree();
+    auto unknown = composition_source();
     unknown.models[0U].model_id += ".missing";
     const auto unknown_outcome =
         gnc::compiler::compile_static_plan(unknown, catalog);
@@ -282,7 +314,7 @@ void verify_negative_cases() {
                 "/models/cavh.envelope",
             "unknown definition diagnostic lost its source path");
 
-    auto missing = source_tree();
+    auto missing = composition_source();
     missing.bindings.erase(missing.bindings.begin() + 1);
     const auto missing_outcome =
         gnc::compiler::compile_static_plan(missing, catalog);
@@ -291,7 +323,7 @@ void verify_negative_cases() {
                                DiagnosticCode::MissingRequiredBinding),
             "missing closure consumer binding produced a static plan");
 
-    auto duplicate_target = source_tree();
+    auto duplicate_target = composition_source();
     auto second = duplicate_target.bindings[1U];
     second.binding_id = "yyz.second-closure-to-rigid";
     second.source = ref("/bindings/yyz.second-closure-to-rigid");
@@ -304,7 +336,7 @@ void verify_negative_cases() {
                     DiagnosticCode::MultipleRequiredBindings),
             "ambiguous rigid-step input produced a static plan");
 
-    auto duplicate_occurrence = source_tree();
+    auto duplicate_occurrence = composition_source();
     duplicate_occurrence.algorithms[0U].occurrence_id =
         duplicate_occurrence.models[0U].occurrence_id;
     const auto duplicate_occurrence_outcome =
@@ -323,7 +355,7 @@ void verify_negative_cases() {
         incompatible_catalog_outcome,
         "incompatible-contract Catalog setup failed");
     const auto incompatible_outcome = gnc::compiler::compile_static_plan(
-        source_tree(), incompatible_catalog);
+        composition_source(), incompatible_catalog);
     const auto& incompatible_diagnostic = require_diagnostic(
         incompatible_outcome.diagnostics, DiagnosticCode::ContractMismatch,
         "contract mismatch diagnostic missing");
@@ -341,6 +373,38 @@ void verify_negative_cases() {
                                DiagnosticCode::DuplicateCatalogIdentity),
             "duplicate package contribution produced a Catalog");
 
+    auto model_input_packages = package_descriptors();
+    model_input_packages[0U].models[0U].ports[0U].direction =
+        StaticPortDirection::Input;
+    const auto model_input_outcome =
+        Catalog::build(std::move(model_input_packages));
+    require(!model_input_outcome.value.has_value() &&
+                has_diagnostic(model_input_outcome.diagnostics,
+                               DiagnosticCode::InvalidCatalogDescriptor),
+            "model Input entered the output-only static composition");
+
+    auto algorithm_output_packages = package_descriptors();
+    algorithm_output_packages[0U].algorithms[0U].ports[0U].direction =
+        StaticPortDirection::Output;
+    const auto algorithm_output_outcome =
+        Catalog::build(std::move(algorithm_output_packages));
+    require(!algorithm_output_outcome.value.has_value() &&
+                has_diagnostic(
+                    algorithm_output_outcome.diagnostics,
+                    DiagnosticCode::InvalidCatalogDescriptor),
+            "algorithm Output entered the input-only static composition");
+
+    auto invalid_direction_packages = package_descriptors();
+    invalid_direction_packages[0U].models[0U].ports[0U].direction =
+        static_cast<StaticPortDirection>(255U);
+    const auto invalid_direction_outcome =
+        Catalog::build(std::move(invalid_direction_packages));
+    require(!invalid_direction_outcome.value.has_value() &&
+                has_diagnostic(
+                    invalid_direction_outcome.diagnostics,
+                    DiagnosticCode::InvalidCatalogDescriptor),
+            "invalid port-direction enum entered the Catalog");
+
     auto invalid_form_packages = package_descriptors();
     invalid_form_packages[0U].models[0U].definition.execution_form =
         ModelExecutionForm::Unspecified;
@@ -357,7 +421,7 @@ void verify_negative_cases() {
     const auto& catalog =
         require_value(catalog_outcome, "fixture Catalog build failed");
     const auto compile_outcome =
-        gnc::compiler::compile_static_plan(source_tree(), catalog);
+        gnc::compiler::compile_static_plan(composition_source(), catalog);
     const auto& compilation = require_value(
         compile_outcome, "typed source compilation failed");
     verify_success_product(compilation);
@@ -369,19 +433,18 @@ void verify_negative_cases() {
         "mission.r2.yyz-cavh-static-composition@1\n"
         "lock gnc.package.cavh-formula.experimental@1@0.1.0\n"
         "lock gnc.package.yyz-rigid-step.experimental@1@0.1.0\n"
-        "prepare cavh.envelope "
+        "model cavh.envelope "
         "gnc.package.cavh.glide-envelope.parabolic.experimental@1@0.1.0 "
-        "PureQuery gnc.package.cavh.glide-envelope.prepare@1@0.1.0\n"
-        "prepare yyz.closure "
+        "PureQuery preparation "
+        "gnc.package.cavh.glide-envelope.prepare@1@0.1.0\n"
+        "model yyz.closure "
         "gnc.package.yyz.force-moment-closure.frozen-interval.experimental@1"
-        "@0.1.0 Closure "
+        "@0.1.0 Closure preparation "
         "gnc.package.yyz.force-moment-closure.prepare@1@0.1.0\n"
-        "algorithm cavh.formula "
-        "gnc.package.cavh.formula.composite@1@0.1.0 model "
-        "gnc.package.cavh.formula.legacy-transcribed.experimental@1\n"
-        "algorithm yyz.rigid-step "
-        "gnc.package.yyz.rigid-step.kernel@1@0.1.0 model "
-        "gnc.package.yyz.rigid-step.frozen-interval.experimental@1\n"
+        "consumer cavh.formula "
+        "gnc.package.cavh.formula.composite@1@0.1.0\n"
+        "consumer yyz.rigid-step "
+        "gnc.package.yyz.rigid-step.kernel@1@0.1.0\n"
         "bind cavh.envelope-to-formula cavh.envelope.envelope -> "
         "cavh.formula.glide-envelope "
         "gnc.contract.cavh.glide-envelope-query-output@1\n"
@@ -417,7 +480,7 @@ int main(int argc, char** argv) {
         if (std::string_view(argv[1]) == "--explain") {
             std::cout << explain;
         } else {
-            std::cout << "R2 typed SourceTree static plan self-check passed\n";
+            std::cout << "R2 typed static composition self-check passed\n";
         }
         return 0;
     } catch (const std::exception& error) {

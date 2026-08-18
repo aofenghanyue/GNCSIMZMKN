@@ -188,17 +188,16 @@ describe_cavh_formula_package() {
         std::string(kGlideEnvelopePreparationIdentity.version);
     envelope.ports.push_back(
         {"envelope", std::string(kGlideEnvelopeOutputContractIdentity),
-         gnc::model_sdk::StaticPortDirection::Output, true});
+         gnc::model_sdk::StaticPortDirection::Output});
 
     gnc::model_sdk::StaticAlgorithmDescriptor formula;
     formula.algorithm_id = std::string(kCavhFormulaKernelIdentity.id);
     formula.algorithm_version =
         std::string(kCavhFormulaKernelIdentity.version);
-    formula.composition_model_id = std::string(kCavhFormulaModelIdentity);
     formula.ports.push_back(
         {"glide-envelope",
          std::string(kGlideEnvelopeOutputContractIdentity),
-         gnc::model_sdk::StaticPortDirection::Input, true});
+         gnc::model_sdk::StaticPortDirection::Input});
 
     gnc::model_sdk::StaticPackageDescriptor package;
     package.package_id = std::string(kCavhFormulaPackageIdentity);
