@@ -169,6 +169,15 @@ if(GNC_BUILD_TESTS)
         gnc_cavh_formula_product_probe PRIVATE cavh_formula)
     gnc_enable_warnings(gnc_cavh_formula_product_probe)
 
+    # R2 first compiler slice: typed source through a static YYZ/CAVH plan.
+    add_executable(
+        gnc_compiler_static_plan_probe
+        tests/compiler_static_plan.cpp)
+    target_link_libraries(
+        gnc_compiler_static_plan_probe
+        PRIVATE compiler yyz_rigid_step cavh_formula)
+    gnc_enable_warnings(gnc_compiler_static_plan_probe)
+
     # R0 validation spike: intentionally isolated from product modules and Legacy.
     add_executable(
         gnc_scientific_conventions
@@ -386,6 +395,9 @@ if(GNC_BUILD_TESTS)
     add_test(
         NAME r1.cavh-formula.probe
         COMMAND gnc_cavh_formula_product_probe --self-check)
+    add_test(
+        NAME r2.compiler-static-plan.probe
+        COMMAND gnc_compiler_static_plan_probe --self-check)
     add_test(
         NAME r0.scientific-conventions.properties
         COMMAND gnc_scientific_conventions --self-check)

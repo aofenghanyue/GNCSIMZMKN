@@ -2,6 +2,8 @@
 
 职责：ModelDefinition、Algorithm six-piece、RuntimeCellRecipe、State/Port/Telemetry schema、execution obligations 和 behavior composition。
 
+当前已交付的 descriptor 仅覆盖真实 `PureQuery`、`Closure` 与 stateless AlgorithmKernel composition：package 提供静态 model/algorithm/port/preparation 描述，R2 Compiler 以只读方式消费。`RuntimeComponent`、recipe、profile、state 与 lifecycle descriptor 等待首个真实 runtime component 编译切片。
+
 允许依赖：foundation、contracts。
 
 禁止依赖：Compiler、Kernel、Session、Artifact Store、adapter 和具体项目。

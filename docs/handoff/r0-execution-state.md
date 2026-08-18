@@ -2,7 +2,7 @@
 
 - 更新日期：2026-08-18
 - 当前 gate：`R2`
-- 产品状态：R0 科学/性能基线与 G2 已闭合；R1 Foundation、窄范围 in-process Contracts、GlideEnvelope PureQuery、ForceMomentClosure、四个 YYZ 产品切片和 CAVH 公式产品切片已完成；首个静态编译纵向切片已解锁，尚无产品级 CAVH guidance command 或 Session 仿真运行能力
+- 产品状态：R0 科学/性能基线与 G2 已闭合；R1 Foundation、窄范围 in-process Contracts、GlideEnvelope PureQuery、ForceMomentClosure、四个 YYZ 产品切片和 CAVH 公式产品切片已完成；首个 typed SourceTree 静态编译纵向切片已完成，尚无 plan linker、RuntimeComponent、产品级 CAVH guidance command 或 Session 仿真运行能力
 - 当前分支：`codex/r0-governance-reset`
 - 分支基线：`origin/main@dfedf27`
 
@@ -59,11 +59,12 @@
 - `R1-MOD-001` 已完成。公共 metadata 收敛为 stable model id/version、`PureQuery | Closure` 和 preparation identity；CAVH 仅 `GlideEnvelopePreparedModel` 使用 PureQuery，YYZ 仅 `ForceMomentClosure` 使用 Closure。clock/configuration expectation 留在 package-specific definition，`RuntimeComponent` 已退出当前公共有效形式。
 - `R1-ALG-001` 已完成。`AlgorithmEvaluation<Output, Telemetry>` 被 GlideEnvelope query、Eq17/Eq18、TDCT、ForceMomentClosure 与 rigid-step 正式路径消费；C++ 类型级守卫限制 telemetry 字段进入正式 output。YYZ `RigidStepKernel` 从 Closure output 取得 held `RigidFormInput` 并用于全部 RK4 stages；两个 package 保持无跨调用状态，stateless kernel 省略 State。
 - `R1-GATE-001` 已完成，G2 结果为 `Passed`。仓库所有者的条件式接受已满足：真实 GlideEnvelope query 与 ForceMomentClosure 均有直接 consumer，`RuntimeComponent` 残缺声明已退出，既有 R0 oracle 与全量 Debug/Release/仓库检查通过，Kernel source 没有增加 package-specific 分支。R2 已解锁。
+- `R2-SRC-001` 已完成首个静态编译纵向切片。programmatic typed `SourceTree` 经 package-owned YYZ/CAVH static descriptors 进入只读 Catalog 和最小 Mission IR；`GlideEnvelope` output 到 CAVH formula、`ForceMomentClosure` output 到 rigid-step 的两条 exact-contract binding 生成带直接 source refs 的 proof，并 lower 为两项静态 query/closure obligation。dry-run descriptor 固定两份 package lock、真实 model/algorithm/preparation identity，且不携带 runtime instance、函数地址、Session identity 或 mutable state。直接负例覆盖 unknown definition、missing/multiple binding、contract mismatch、duplicate occurrence/catalog identity 和 invalid execution form。Compiler production source 没有引用具体 package，Kernel source 保持不变。
 
 ## 下一条开发主线
 
-1. 下一项为 R2 首个静态编译纵向切片：单一 canonical JSON 或 typed SourceTree 入口贯通真实 YYZ/CAVH definition、Catalog、最小 IR、binding proof 和静态 ExecutionPlan。
-2. `RuntimeCellRecipe`、`RuntimeCellProfile` 与 execution-obligation descriptor 只实现该编译路径直接消费的字段；Compiler 是首个真实 consumer。
+1. 下一项为首个真实 YYZ `RuntimeComponent` descriptor-to-plan 纵向切片，优先使用既有 rigid/mass atomic boundary，贯通 package descriptor、recipe/profile、ports/state、execution obligations、lifecycle 与静态 plan section。
+2. 该切片只实现 Compiler 直接读取并能在 dry-run 中证明的字段；继续复用当前 typed `SourceTree`、Catalog、IR 与 exact binding 路径。
 3. YAML/INI、多端 adapter、Session、mini runtime、manager、runtime registry、serializer、StateFragment、Artifact、Workflow、前端与 R3+ 能力继续保持关闭。
 
 ## 保留与恢复

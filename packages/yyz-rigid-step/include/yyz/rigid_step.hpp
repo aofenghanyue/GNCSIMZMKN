@@ -8,6 +8,7 @@
 #include "gnc/foundation/trilinear_table.hpp"
 #include "gnc/model_sdk/algorithm_evaluation.hpp"
 #include "gnc/model_sdk/model_metadata.hpp"
+#include "gnc/model_sdk/static_descriptor.hpp"
 
 #include <array>
 #include <cstddef>
@@ -15,16 +16,23 @@
 #include <memory>
 #include <string>
 #include <string_view>
+#include <utility>
 #include <vector>
 
 namespace gnc::packages::yyz {
 
 inline constexpr std::string_view kRigidStepContractIdentity =
     "gnc.package.yyz.rigid-step.contract.experimental@1";
+inline constexpr std::string_view kYyzRigidStepPackageIdentity =
+    "gnc.package.yyz-rigid-step.experimental@1";
+inline constexpr std::string_view kYyzRigidStepPackageVersion = "0.1.0";
 inline constexpr std::string_view kRigidStepModelIdentity =
     "gnc.package.yyz.rigid-step.frozen-interval.experimental@1";
 inline constexpr std::string_view kForceMomentClosureModelIdentity =
     "gnc.package.yyz.force-moment-closure.frozen-interval.experimental@1";
+inline constexpr std::string_view kForceMomentClosureModelVersion = "0.1.0";
+inline constexpr std::string_view kRigidFormInputContractIdentity =
+    "gnc.contract.yyz.rigid-form-input@1";
 inline constexpr gnc::foundation::AlgorithmIdentity
     kRigidStepPreparationIdentity{
         "gnc.package.yyz.rigid-step.prepare@1", "0.1.0"};
@@ -210,6 +218,38 @@ struct RigidStepModelDefinition {
     RigidStepAlgorithmDefinition algorithm;
     AerodynamicTableDefinition aerodynamics;
 };
+
+[[nodiscard]] inline gnc::model_sdk::StaticPackageDescriptor
+describe_yyz_rigid_step_package() {
+    gnc::model_sdk::StaticModelDescriptor closure;
+    closure.definition = {
+        std::string(kForceMomentClosureModelIdentity),
+        std::string(kForceMomentClosureModelVersion),
+        gnc::model_sdk::ModelExecutionForm::Closure};
+    closure.preparation_algorithm_id =
+        std::string(kForceMomentClosurePreparationIdentity.id);
+    closure.preparation_algorithm_version =
+        std::string(kForceMomentClosurePreparationIdentity.version);
+    closure.ports.push_back(
+        {"form-input", std::string(kRigidFormInputContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Output, true});
+
+    gnc::model_sdk::StaticAlgorithmDescriptor rigid_step;
+    rigid_step.algorithm_id = std::string(kRigidStepKernelIdentity.id);
+    rigid_step.algorithm_version =
+        std::string(kRigidStepKernelIdentity.version);
+    rigid_step.composition_model_id = std::string(kRigidStepModelIdentity);
+    rigid_step.ports.push_back(
+        {"form-input", std::string(kRigidFormInputContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Input, true});
+
+    gnc::model_sdk::StaticPackageDescriptor package;
+    package.package_id = std::string(kYyzRigidStepPackageIdentity);
+    package.package_version = std::string(kYyzRigidStepPackageVersion);
+    package.models.push_back(std::move(closure));
+    package.algorithms.push_back(std::move(rigid_step));
+    return package;
+}
 
 class PreparedRigidStepModel {
   public:
