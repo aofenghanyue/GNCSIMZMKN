@@ -64,12 +64,12 @@ template <typename Value>
     const CavhFormulaDefinition& definition,
     const SampleContext& context) noexcept {
     if (context.frame != definition.navigation_frame ||
-        context.clock_domain != definition.metadata.clock_domain) {
+        context.clock_domain != definition.clock_domain) {
         return ValidationFailure{NumericalStatus::DomainError,
                                  "sample-frame-or-clock"};
     }
     if (context.configuration_revision !=
-            definition.metadata.configuration_revision ||
+            definition.configuration_revision ||
         context.quality != DataQuality::Valid) {
         return ValidationFailure{NumericalStatus::DomainError,
                                  "sample-revision-or-quality"};
@@ -85,25 +85,25 @@ template <typename Value>
     return std::nullopt;
 }
 
-[[nodiscard]] NumericalOutcome<CavhEnvelopeOutput> solve_envelope(
-    const CavhFormulaDefinition& definition,
-    double mach) {
-    const auto& polar = definition.envelope;
+[[nodiscard]] NumericalOutcome<GlideEnvelopeQueryEvaluation>
+solve_envelope(const GlideEnvelopeDefinition& definition,
+               double mach) {
+    const auto& polar = definition.polar;
     if (!std::isfinite(mach)) {
-        return product_failure<CavhEnvelopeOutput>(
-            kCavhGammaReferenceIdentity,
+        return product_failure<GlideEnvelopeQueryEvaluation>(
+            kGlideEnvelopeQueryIdentity,
             NumericalStatus::NonFiniteInput, "envelope-mach");
     }
     const double cd0 =
         polar.cd0_base + polar.cd0_slope_per_mach * mach;
     if (!std::isfinite(cd0)) {
-        return product_failure<CavhEnvelopeOutput>(
-            kCavhGammaReferenceIdentity,
+        return product_failure<GlideEnvelopeQueryEvaluation>(
+            kGlideEnvelopeQueryIdentity,
             NumericalStatus::NonFiniteIntermediate, "envelope-cd0");
     }
     if (cd0 <= 0.0) {
-        return product_failure<CavhEnvelopeOutput>(
-            kCavhGammaReferenceIdentity, NumericalStatus::DomainError,
+        return product_failure<GlideEnvelopeQueryEvaluation>(
+            kGlideEnvelopeQueryIdentity, NumericalStatus::DomainError,
             "envelope-domain");
     }
 
@@ -113,15 +113,15 @@ template <typename Value>
         (cl_star - polar.cl_intercept) /
         polar.cl_slope_per_radian;
     if (!finite({cl_star, alpha_star})) {
-        return product_failure<CavhEnvelopeOutput>(
-            kCavhGammaReferenceIdentity,
+        return product_failure<GlideEnvelopeQueryEvaluation>(
+            kGlideEnvelopeQueryIdentity,
             NumericalStatus::NonFiniteIntermediate,
             "envelope-optimum");
     }
     if (alpha_star < polar.alpha_min_radians ||
         alpha_star > polar.alpha_max_radians) {
-        return product_failure<CavhEnvelopeOutput>(
-            kCavhGammaReferenceIdentity, NumericalStatus::OutOfRange,
+        return product_failure<GlideEnvelopeQueryEvaluation>(
+            kGlideEnvelopeQueryIdentity, NumericalStatus::OutOfRange,
             "envelope-alpha-domain");
     }
 
@@ -132,16 +132,19 @@ template <typename Value>
                               (2.0 * std::sqrt(
                                   polar.induced_drag_factor * cd0));
     if (!finite({cd_star, lift_to_drag, derivative})) {
-        return product_failure<CavhEnvelopeOutput>(
-            kCavhGammaReferenceIdentity,
+        return product_failure<GlideEnvelopeQueryEvaluation>(
+            kGlideEnvelopeQueryIdentity,
             NumericalStatus::NonFiniteOutput, "envelope-output");
     }
 
-    return NumericalOutcome<CavhEnvelopeOutput>::with_value(
+    return NumericalOutcome<GlideEnvelopeQueryEvaluation>::with_value(
         NumericalStatus::Success,
-        CavhEnvelopeOutput{cd0, cl_star, cd_star, lift_to_drag,
-                           alpha_star, derivative},
-        product_evidence(kCavhGammaReferenceIdentity, "envelope", 0U,
+        GlideEnvelopeQueryEvaluation{
+            GlideEnvelopeQueryOutput{cd0, cl_star, cd_star,
+                                     lift_to_drag, alpha_star,
+                                     derivative},
+            GlideEnvelopeQueryTelemetry{}},
+        product_evidence(kGlideEnvelopeQueryIdentity, "envelope", 0U,
                          1U));
 }
 
@@ -205,19 +208,89 @@ validate_operating_point_common(
 
 } // namespace
 
-PreparedCavhFormulaModel::PreparedCavhFormulaModel(
-    std::shared_ptr<const CavhFormulaDefinition> definition,
+GlideEnvelopePreparedModel::GlideEnvelopePreparedModel(
+    std::shared_ptr<const GlideEnvelopeDefinition> definition,
     gnc::model_sdk::PreparedModelMetadata metadata) noexcept
     : definition_(std::move(definition)), metadata_(std::move(metadata)) {}
+
+const GlideEnvelopeDefinition& GlideEnvelopePreparedModel::definition()
+    const noexcept {
+    return *definition_;
+}
+
+const gnc::model_sdk::PreparedModelMetadata&
+GlideEnvelopePreparedModel::metadata() const noexcept {
+    return metadata_;
+}
+
+NumericalOutcome<GlideEnvelopePreparedModel>
+prepare_glide_envelope_model(GlideEnvelopeDefinition definition) {
+    const auto failure = [](NumericalStatus status,
+                            std::string_view detail) {
+        return NumericalOutcome<GlideEnvelopePreparedModel>::failure(
+            status,
+            product_evidence(kGlideEnvelopePreparationIdentity, detail));
+    };
+
+    auto metadata = gnc::model_sdk::prepare_model_metadata(
+        definition.metadata, kGlideEnvelopePreparationIdentity);
+    if (!metadata.has_value()) {
+        return NumericalOutcome<GlideEnvelopePreparedModel>::failure(
+            metadata.status(), metadata.evidence());
+    }
+    if (definition.metadata.model_id != kGlideEnvelopeModelIdentity ||
+        definition.metadata.execution_form !=
+            gnc::model_sdk::ModelExecutionForm::PureQuery) {
+        return failure(NumericalStatus::DomainError,
+                       "definition-identity");
+    }
+
+    const auto& polar = definition.polar;
+    if (!finite({polar.cl_intercept,
+                 polar.cl_slope_per_radian,
+                 polar.cd0_base,
+                 polar.cd0_slope_per_mach,
+                 polar.induced_drag_factor,
+                 polar.alpha_min_radians,
+                 polar.alpha_max_radians}) ||
+        polar.cl_slope_per_radian <= 0.0 ||
+        polar.induced_drag_factor <= 0.0 ||
+        polar.alpha_max_radians <= polar.alpha_min_radians) {
+        return failure(NumericalStatus::DomainError,
+                       "envelope-definition");
+    }
+
+    return NumericalOutcome<GlideEnvelopePreparedModel>::with_value(
+        NumericalStatus::Success,
+        GlideEnvelopePreparedModel{
+            std::make_shared<const GlideEnvelopeDefinition>(
+                std::move(definition)),
+            std::move(metadata.value())},
+        product_evidence(kGlideEnvelopePreparationIdentity, "prepared", 0U,
+                         1U));
+}
+
+NumericalOutcome<GlideEnvelopeQueryEvaluation>
+GlideEnvelopeQueryKernel::evaluate(
+    const GlideEnvelopePreparedModel& model,
+    const GlideEnvelopeQueryInput& input) {
+    return solve_envelope(model.definition(), input.mach);
+}
+
+PreparedCavhFormulaModel::PreparedCavhFormulaModel(
+    std::shared_ptr<const CavhFormulaDefinition> definition,
+    GlideEnvelopePreparedModel glide_envelope_model) noexcept
+    : definition_(std::move(definition)),
+      glide_envelope_model_(std::move(glide_envelope_model)) {}
 
 const CavhFormulaDefinition& PreparedCavhFormulaModel::definition()
     const noexcept {
     return *definition_;
 }
 
-const gnc::model_sdk::PreparedModelMetadata&
-PreparedCavhFormulaModel::metadata() const noexcept {
-    return metadata_;
+const GlideEnvelopePreparedModel&
+PreparedCavhFormulaModel::glide_envelope_model() const noexcept {
+    return glide_envelope_model_;
 }
 
 NumericalOutcome<PreparedCavhFormulaModel> prepare_cavh_formula_model(
@@ -229,20 +302,17 @@ NumericalOutcome<PreparedCavhFormulaModel> prepare_cavh_formula_model(
             product_evidence(kCavhFormulaPreparationIdentity, detail));
     };
 
-    auto metadata = gnc::model_sdk::prepare_model_metadata(
-        definition.metadata, kCavhFormulaPreparationIdentity);
-    if (!metadata.has_value()) {
+    auto envelope = prepare_glide_envelope_model(definition.envelope);
+    if (!envelope.has_value()) {
         return NumericalOutcome<PreparedCavhFormulaModel>::failure(
-            metadata.status(), metadata.evidence());
+            envelope.status(), envelope.evidence());
     }
 
-    if (definition.metadata.model_id != kCavhFormulaModelIdentity ||
-        definition.metadata.execution_form !=
-            gnc::model_sdk::ModelExecutionForm::PureQuery ||
-        definition.navigation_frame.id.empty() ||
-        definition.metadata.clock_domain.id.empty()) {
+    if (definition.navigation_frame.id.empty() ||
+        definition.clock_domain.id.empty() ||
+        definition.configuration_revision < 0) {
         return failure(NumericalStatus::DomainError,
-                       "definition-identity");
+                       "definition-context-policy");
     }
     if (!valid_equation(definition.algorithm.equation) ||
         !gnc::foundation::valid_numerical_policy(
@@ -256,21 +326,6 @@ NumericalOutcome<PreparedCavhFormulaModel> prepare_cavh_formula_model(
             0.0) {
         return failure(NumericalStatus::DomainError,
                        "definition-algorithm");
-    }
-
-    const auto& polar = definition.envelope;
-    if (!finite({polar.cl_intercept,
-                 polar.cl_slope_per_radian,
-                 polar.cd0_base,
-                 polar.cd0_slope_per_mach,
-                 polar.induced_drag_factor,
-                 polar.alpha_min_radians,
-                 polar.alpha_max_radians}) ||
-        polar.cl_slope_per_radian <= 0.0 ||
-        polar.induced_drag_factor <= 0.0 ||
-        polar.alpha_max_radians <= polar.alpha_min_radians) {
-        return failure(NumericalStatus::DomainError,
-                       "envelope-definition");
     }
 
     const auto& tdct = definition.tdct;
@@ -287,7 +342,7 @@ NumericalOutcome<PreparedCavhFormulaModel> prepare_cavh_formula_model(
         PreparedCavhFormulaModel{
             std::make_shared<const CavhFormulaDefinition>(
                 std::move(definition)),
-            std::move(metadata.value())},
+            std::move(envelope.value())},
         product_evidence(kCavhFormulaPreparationIdentity, "prepared", 0U,
                          1U));
 }
@@ -295,28 +350,30 @@ NumericalOutcome<PreparedCavhFormulaModel> prepare_cavh_formula_model(
 NumericalOutcome<GammaReferenceEvaluation>
 CavhFormulaKernel::evaluate_gamma_reference(
     const PreparedCavhFormulaModel& model,
-    const CavhFormulaInput& input) {
+    const GammaReferenceInput& input) {
     const auto& definition = model.definition();
-    if (const auto failure = validate_context(definition, input.context)) {
+    const auto& formula = input.formula;
+    const auto& envelope = input.envelope;
+    if (const auto failure = validate_context(definition, formula.context)) {
         return product_failure<GammaReferenceEvaluation>(
             kCavhGammaReferenceIdentity, failure->status,
             failure->detail);
     }
     if (const auto failure =
-            validate_operating_point_common(input.operating_point)) {
+            validate_operating_point_common(formula.operating_point)) {
         return product_failure<GammaReferenceEvaluation>(
             kCavhGammaReferenceIdentity, failure->status,
             failure->detail);
     }
-
-    const auto envelope_outcome =
-        solve_envelope(definition, input.operating_point.mach);
-    if (!envelope_outcome.has_value()) {
-        return NumericalOutcome<GammaReferenceEvaluation>::failure(
-            envelope_outcome.status(), envelope_outcome.evidence());
+    if (!finite({envelope.cd0, envelope.cl_star, envelope.cd_star,
+                 envelope.lift_to_drag_maximum,
+                 envelope.alpha_star_radians,
+                 envelope.dcl_star_dmach})) {
+        return product_failure<GammaReferenceEvaluation>(
+            kCavhGammaReferenceIdentity, NumericalStatus::NonFiniteInput,
+            "envelope-query-output");
     }
-    const auto& envelope = envelope_outcome.value();
-    const auto& point = input.operating_point;
+    const auto& point = formula.operating_point;
     const double bank_cosine = std::cos(point.bank_angle_radians);
     const double cl_vertical = envelope.cl_star * bank_cosine;
     const double dcl_vertical_dmach =
@@ -475,7 +532,7 @@ CavhFormulaKernel::evaluate_gamma_reference(
     return NumericalOutcome<GammaReferenceEvaluation>::with_value(
         NumericalStatus::Success,
         GammaReferenceEvaluation{
-            GammaReferenceOutput{input.context,
+            GammaReferenceOutput{formula.context,
                                  definition.algorithm.equation,
                                  envelope.alpha_star_radians,
                                  gamma_reference},
@@ -486,7 +543,7 @@ CavhFormulaKernel::evaluate_gamma_reference(
                     GammaReferenceEquation::Eq17MachDependent
                 ? "eq17"
                 : "eq18",
-            0U, 2U));
+            0U, 1U));
 }
 
 NumericalOutcome<TdctFormulaEvaluation> CavhFormulaKernel::evaluate_tdct(
@@ -539,7 +596,15 @@ NumericalOutcome<TdctFormulaEvaluation> CavhFormulaKernel::evaluate_tdct(
 NumericalOutcome<CavhFormulaEvaluation> CavhFormulaKernel::evaluate(
     const PreparedCavhFormulaModel& model,
     const CavhFormulaInput& input) {
-    const auto reference = evaluate_gamma_reference(model, input);
+    const auto envelope = GlideEnvelopeQueryKernel::evaluate(
+        model.glide_envelope_model(),
+        GlideEnvelopeQueryInput{input.operating_point.mach});
+    if (!envelope.has_value()) {
+        return NumericalOutcome<CavhFormulaEvaluation>::failure(
+            envelope.status(), envelope.evidence());
+    }
+    const auto reference = evaluate_gamma_reference(
+        model, GammaReferenceInput{input, envelope.value().output});
     if (!reference.has_value()) {
         return NumericalOutcome<CavhFormulaEvaluation>::failure(
             reference.status(), reference.evidence());
@@ -565,9 +630,10 @@ NumericalOutcome<CavhFormulaEvaluation> CavhFormulaKernel::evaluate(
             CavhFormulaTelemetry{reference.value().telemetry,
                                  tdct.value().telemetry}},
         product_evidence(kCavhFormulaKernelIdentity, "formula-tdct",
-                         flags,
-                         reference.evidence().evaluations +
-                             tdct.evidence().evaluations));
+                          flags,
+                          envelope.evidence().evaluations +
+                              reference.evidence().evaluations +
+                              tdct.evidence().evaluations));
 }
 
 } // namespace gnc::packages::cavh

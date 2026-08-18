@@ -61,6 +61,15 @@ template <typename Value>
         status, product_evidence(kRigidStepKernelIdentity, detail, flags));
 }
 
+template <typename Value>
+[[nodiscard]] NumericalOutcome<Value> closure_failure(
+    NumericalStatus status, std::string_view detail,
+    NumericalFlags flags = 0U) {
+    return NumericalOutcome<Value>::failure(
+        status,
+        product_evidence(kForceMomentClosureKernelIdentity, detail, flags));
+}
+
 [[nodiscard]] bool finite(const Vec3& value) noexcept {
     return std::isfinite(value(0)) && std::isfinite(value(1)) &&
            std::isfinite(value(2));
@@ -140,14 +149,15 @@ template <typename Value>
     const RigidStepInput& input) {
     const auto& policy = definition.algorithm.numerical_policy;
     const auto& step = input.context;
+    const auto& closure = definition.force_moment_closure;
     if (step.inertial_frame != definition.inertial_frame ||
-        step.body_frame != definition.body_frame ||
-        step.clock_domain != definition.metadata.clock_domain) {
+        step.body_frame != closure.body_frame ||
+        step.clock_domain != closure.clock_domain) {
         return ValidationFailure{NumericalStatus::DomainError,
                                  "step-frame-or-clock"};
     }
     if (step.configuration_revision !=
-            definition.metadata.configuration_revision ||
+            closure.configuration_revision ||
         step.quality != DataQuality::Valid) {
         return ValidationFailure{NumericalStatus::DomainError,
                                  "step-revision-or-quality"};
@@ -173,18 +183,18 @@ template <typename Value>
     }
     if (!valid_sample_context(
             input.environment.context, definition.inertial_frame,
-            definition.metadata.clock_domain, step.interval_start,
-            definition.metadata.configuration_revision, policy)) {
+            closure.clock_domain, step.interval_start,
+            closure.configuration_revision, policy)) {
         return ValidationFailure{NumericalStatus::DomainError,
                                  "environment-context"};
     }
     if (!valid_interval_context(input.mass_properties.context,
-                                definition.body_frame, step, policy)) {
+                                closure.body_frame, step, policy)) {
         return ValidationFailure{NumericalStatus::DomainError,
                                  "mass-context"};
     }
     if (!valid_interval_context(input.supplied_wrench.context,
-                                definition.body_frame, step, policy)) {
+                                closure.body_frame, step, policy)) {
         return ValidationFailure{NumericalStatus::DomainError,
                                  "wrench-context"};
     }
@@ -487,21 +497,174 @@ template <typename Value>
 
 } // namespace
 
+PreparedForceMomentClosureModel::PreparedForceMomentClosureModel(
+    std::shared_ptr<const ForceMomentClosureDefinition> definition,
+    gnc::model_sdk::PreparedModelMetadata metadata) noexcept
+    : definition_(std::move(definition)), metadata_(std::move(metadata)) {}
+
+const ForceMomentClosureDefinition&
+PreparedForceMomentClosureModel::definition() const noexcept {
+    return *definition_;
+}
+
+const gnc::model_sdk::PreparedModelMetadata&
+PreparedForceMomentClosureModel::metadata() const noexcept {
+    return metadata_;
+}
+
+NumericalOutcome<PreparedForceMomentClosureModel>
+prepare_force_moment_closure_model(
+    ForceMomentClosureDefinition definition) {
+    const auto failure = [](NumericalStatus status,
+                            std::string_view detail) {
+        return NumericalOutcome<PreparedForceMomentClosureModel>::failure(
+            status, product_evidence(
+                        kForceMomentClosurePreparationIdentity, detail));
+    };
+
+    auto metadata = gnc::model_sdk::prepare_model_metadata(
+        definition.metadata, kForceMomentClosurePreparationIdentity);
+    if (!metadata.has_value()) {
+        return NumericalOutcome<PreparedForceMomentClosureModel>::failure(
+            metadata.status(), metadata.evidence());
+    }
+    if (definition.metadata.model_id !=
+            kForceMomentClosureModelIdentity ||
+        definition.metadata.execution_form !=
+            gnc::model_sdk::ModelExecutionForm::Closure ||
+        definition.body_frame.id.empty() ||
+        definition.clock_domain.id.empty() ||
+        definition.configuration_revision < 0) {
+        return failure(NumericalStatus::DomainError,
+                       "definition-identity-or-context");
+    }
+    if (!gnc::foundation::valid_numerical_policy(
+            definition.numerical_policy)) {
+        return failure(NumericalStatus::DomainError,
+                       "definition-numerical-policy");
+    }
+
+    return NumericalOutcome<PreparedForceMomentClosureModel>::with_value(
+        NumericalStatus::Success,
+        PreparedForceMomentClosureModel{
+            std::make_shared<const ForceMomentClosureDefinition>(
+                std::move(definition)),
+            std::move(metadata.value())},
+        product_evidence(kForceMomentClosurePreparationIdentity,
+                         "prepared", 0U));
+}
+
+NumericalOutcome<ForceMomentClosureEvaluation>
+ForceMomentClosureKernel::evaluate(
+    const PreparedForceMomentClosureModel& model,
+    const ForceMomentClosureInput& input) {
+    const auto& definition = model.definition();
+    const auto& policy = definition.numerical_policy;
+    if (!finite(input.body_origin_to_center_of_mass.value)) {
+        return closure_failure<ForceMomentClosureEvaluation>(
+            NumericalStatus::NonFiniteInput, "center-of-mass");
+    }
+    if (input.contributions.empty()) {
+        return closure_failure<ForceMomentClosureEvaluation>(
+            NumericalStatus::DomainError, "empty-closure");
+    }
+
+    std::vector<AppliedBodyWrenchInput> ordered = input.contributions;
+    std::sort(ordered.begin(), ordered.end(),
+              [](const AppliedBodyWrenchInput& lhs,
+                 const AppliedBodyWrenchInput& rhs) {
+                  return lhs.source_id < rhs.source_id;
+              });
+
+    const auto& reference = ordered.front().context;
+    const auto valid_context = [&](const IntervalSampleContext& context) {
+        return context.sample.frame == definition.body_frame &&
+               context.sample.clock_domain == definition.clock_domain &&
+               context.sample.configuration_revision ==
+                   definition.configuration_revision &&
+               context.sample.quality == DataQuality::Valid &&
+               context.sample.sample_time.tick >= 0 &&
+               std::isfinite(context.sample.sample_time.seconds) &&
+               std::isfinite(context.validity.effective_from.seconds) &&
+               std::isfinite(context.validity.effective_until.seconds) &&
+               same_instant(context.sample.sample_time,
+                            context.validity.effective_from, policy) &&
+               context.validity.effective_until.tick >
+                   context.validity.effective_from.tick &&
+               context.validity.effective_until.seconds >
+                   context.validity.effective_from.seconds &&
+               same_instant(context.sample.sample_time,
+                            reference.sample.sample_time, policy) &&
+               same_instant(context.validity.effective_from,
+                            reference.validity.effective_from, policy) &&
+               same_instant(context.validity.effective_until,
+                            reference.validity.effective_until, policy);
+    };
+
+    Vec3 force_total = Vec3::Zero();
+    Vec3 moment_total = Vec3::Zero();
+    ForceMomentClosureTelemetry telemetry;
+    telemetry.contributions.reserve(ordered.size());
+    std::string_view previous_source;
+    for (const auto& contribution : ordered) {
+        if (contribution.source_id.empty() ||
+            contribution.source_id == previous_source ||
+            !valid_context(contribution.context)) {
+            return closure_failure<ForceMomentClosureEvaluation>(
+                NumericalStatus::DomainError,
+                "contribution-identity-or-context");
+        }
+        if (!finite(contribution.force.value) ||
+            !finite(contribution.body_origin_to_application.value) ||
+            !finite(contribution.intrinsic_moment_at_application.value)) {
+            return closure_failure<ForceMomentClosureEvaluation>(
+                NumericalStatus::NonFiniteInput,
+                "contribution-wrench");
+        }
+
+        BodyWrenchContribution transported = make_contribution(
+            contribution.source_id, contribution.force.value,
+            contribution.body_origin_to_application.value,
+            input.body_origin_to_center_of_mass.value,
+            contribution.intrinsic_moment_at_application.value);
+        force_total += transported.force.value;
+        moment_total += transported.moment_about_center_of_mass.value;
+        telemetry.contributions.push_back(std::move(transported));
+        previous_source = contribution.source_id;
+    }
+    if (!finite(force_total) || !finite(moment_total)) {
+        return closure_failure<ForceMomentClosureEvaluation>(
+            NumericalStatus::NonFiniteOutput, "force-moment-closure");
+    }
+
+    NumericalEvidence evidence = product_evidence(
+        kForceMomentClosureKernelIdentity, "force-moment-closure");
+    evidence.evaluations = ordered.size();
+    return NumericalOutcome<ForceMomentClosureEvaluation>::with_value(
+        NumericalStatus::Success,
+        ForceMomentClosureEvaluation{
+            ForceMomentClosureOutput{
+                BodyForceNewtons{force_total},
+                BodyMomentNewtonMeters{moment_total}},
+            std::move(telemetry)},
+        evidence);
+}
+
 PreparedRigidStepModel::PreparedRigidStepModel(
     std::shared_ptr<const RigidStepModelDefinition> definition,
     PreparedTrilinearTableView<6U> table,
-    gnc::model_sdk::PreparedModelMetadata metadata) noexcept
+    PreparedForceMomentClosureModel force_moment_closure_model) noexcept
     : definition_(std::move(definition)), table_(std::move(table)),
-      metadata_(std::move(metadata)) {}
+      force_moment_closure_model_(std::move(force_moment_closure_model)) {}
 
 const RigidStepModelDefinition& PreparedRigidStepModel::definition()
     const noexcept {
     return *definition_;
 }
 
-const gnc::model_sdk::PreparedModelMetadata&
-PreparedRigidStepModel::metadata() const noexcept {
-    return metadata_;
+const PreparedForceMomentClosureModel&
+PreparedRigidStepModel::force_moment_closure_model() const noexcept {
+    return force_moment_closure_model_;
 }
 
 NumericalOutcome<PreparedRigidStepModel> prepare_rigid_step_model(
@@ -512,19 +675,16 @@ NumericalOutcome<PreparedRigidStepModel> prepare_rigid_step_model(
             product_evidence(kRigidStepPreparationIdentity, detail));
     };
 
-    auto metadata = gnc::model_sdk::prepare_model_metadata(
-        definition.metadata, kRigidStepPreparationIdentity);
-    if (!metadata.has_value()) {
+    auto closure = prepare_force_moment_closure_model(
+        definition.force_moment_closure);
+    if (!closure.has_value()) {
         return NumericalOutcome<PreparedRigidStepModel>::failure(
-            metadata.status(), metadata.evidence());
+            closure.status(), closure.evidence());
     }
 
-    if (definition.metadata.model_id != kRigidStepModelIdentity ||
-        definition.metadata.execution_form !=
-            gnc::model_sdk::ModelExecutionForm::Closure ||
-        definition.inertial_frame.id.empty() ||
-        definition.body_frame.id.empty() ||
-        definition.inertial_frame == definition.body_frame ||
+    if (definition.inertial_frame.id.empty() ||
+        definition.inertial_frame ==
+            definition.force_moment_closure.body_frame ||
         definition.aerodynamics.source_id.empty() ||
         definition.aerodynamics.table_id.empty() ||
         definition.aerodynamics.configuration_id.empty()) {
@@ -582,7 +742,7 @@ NumericalOutcome<PreparedRigidStepModel> prepare_rigid_step_model(
     return NumericalOutcome<PreparedRigidStepModel>::with_value(
         table.status(),
         PreparedRigidStepModel{std::move(owned_definition), table.value(),
-                               std::move(metadata.value())},
+                               std::move(closure.value())},
         evidence);
 }
 
@@ -649,27 +809,41 @@ NumericalOutcome<RigidStepEvaluation> RigidStepKernel::evaluate(
             "aero-dimensionalization", flags);
     }
 
-    BodyWrenchContribution aerodynamic = make_contribution(
-        definition.aerodynamics.source_id, aerodynamic_force,
-        definition.aerodynamics.body_origin_to_application.value,
-        input.mass_properties.body_origin_to_center_of_mass.value,
-        aerodynamic_moment_at_application);
-    BodyWrenchContribution supplied = make_contribution(
-        input.supplied_wrench.source_id,
-        input.supplied_wrench.force.value,
-        input.supplied_wrench.body_origin_to_application.value,
-        input.mass_properties.body_origin_to_center_of_mass.value,
-        input.supplied_wrench.intrinsic_moment_at_application.value);
-    const Vec3 force_total =
-        aerodynamic.force.value + supplied.force.value;
-    const Vec3 moment_total =
-        aerodynamic.moment_about_center_of_mass.value +
-        supplied.moment_about_center_of_mass.value;
-    if (!finite(force_total) || !finite(moment_total)) {
+    AppliedBodyWrenchInput aerodynamic_wrench;
+    aerodynamic_wrench.context = {
+        SampleContext{
+            definition.force_moment_closure.body_frame,
+            definition.force_moment_closure.clock_domain,
+            input.context.interval_start,
+            definition.force_moment_closure.configuration_revision,
+            input.context.quality},
+        gnc::contracts::HalfOpenValidityInterval{
+            input.context.interval_start, input.context.interval_end}};
+    aerodynamic_wrench.source_id = definition.aerodynamics.source_id;
+    aerodynamic_wrench.force.value = aerodynamic_force;
+    aerodynamic_wrench.body_origin_to_application =
+        definition.aerodynamics.body_origin_to_application;
+    aerodynamic_wrench.intrinsic_moment_at_application.value =
+        aerodynamic_moment_at_application;
+
+    ForceMomentClosureInput closure_input;
+    closure_input.body_origin_to_center_of_mass =
+        input.mass_properties.body_origin_to_center_of_mass;
+    closure_input.contributions = {aerodynamic_wrench,
+                                   input.supplied_wrench};
+    const auto closure = ForceMomentClosureKernel::evaluate(
+        model.force_moment_closure_model(), closure_input);
+    if (!closure.has_value()) {
         return product_failure<RigidStepEvaluation>(
-            NumericalStatus::NonFiniteIntermediate,
-            "force-moment-closure", flags);
+            closure.status(), closure.evidence().detail,
+            flags | closure.evidence().flags);
     }
+    flags |= closure.evidence().flags;
+    approximate = approximate || approximate_status(closure.status());
+    const RigidFormInput form_input = closure.value().output.form_input();
+    const Vec3& force_total = form_input.force_total.value;
+    const Vec3& moment_total =
+        form_input.moment_total_about_center_of_mass.value;
 
     const auto initial_derivative = evaluate_derivative(
         definition.algorithm, input.committed_state,
@@ -734,10 +908,7 @@ NumericalOutcome<RigidStepEvaluation> RigidStepKernel::evaluate(
     RigidStepTelemetry telemetry;
     telemetry.air_data = air;
     telemetry.aerodynamic_lookup = lookup;
-    telemetry.aerodynamic_contribution = std::move(aerodynamic);
-    telemetry.supplied_contribution = std::move(supplied);
-    telemetry.force_total.value = force_total;
-    telemetry.moment_total_about_center_of_mass.value = moment_total;
+    telemetry.force_moment_closure = closure.value();
     telemetry.derivative_at_interval_start = initial_derivative.value();
     RigidStepOutput output;
     output.candidate.effective_at = input.context.interval_end;
@@ -745,7 +916,8 @@ NumericalOutcome<RigidStepEvaluation> RigidStepKernel::evaluate(
     NumericalEvidence evidence = product_evidence(
         kRigidStepKernelIdentity, "one-step-candidate", flags);
     evidence.evaluations = integrated.evidence().evaluations +
-                           air_lookup.evidence().evaluations;
+                           air_lookup.evidence().evaluations +
+                           closure.evidence().evaluations;
     evidence.last_step = definition.algorithm.fixed_step_seconds;
     return NumericalOutcome<RigidStepEvaluation>::with_value(
         approximate ? NumericalStatus::Approximate

@@ -10,6 +10,7 @@
 #include <stdexcept>
 #include <string>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -94,15 +95,19 @@ QuaternionPolicy fixture_quaternion_policy() {
 
 RigidStepModelDefinition fixture_definition() {
     RigidStepModelDefinition definition;
-    definition.metadata = {
-        std::string(kRigidStepModelIdentity),
+    definition.force_moment_closure.metadata = {
+        std::string(kForceMomentClosureModelIdentity),
         "0.1.0",
         gnc::model_sdk::ModelExecutionForm::Closure,
-        ClockDomainIdentity{std::string(kClock)},
-        11,
     };
     definition.inertial_frame = FrameIdentity{std::string(kInertialFrame)};
-    definition.body_frame = FrameIdentity{std::string(kBodyFrame)};
+    definition.force_moment_closure.body_frame =
+        FrameIdentity{std::string(kBodyFrame)};
+    definition.force_moment_closure.clock_domain =
+        ClockDomainIdentity{std::string(kClock)};
+    definition.force_moment_closure.configuration_revision = 11;
+    definition.force_moment_closure.numerical_policy =
+        fixture_numerical_policy();
     definition.algorithm.fixed_step_seconds = 0.1;
     definition.algorithm.numerical_policy = fixture_numerical_policy();
     definition.algorithm.attitude_evaluation_policy =
@@ -203,8 +208,31 @@ void expect_failure(const NumericalOutcome<Value>& outcome,
     require(!outcome.has_value() && outcome.status() == expected, message);
 }
 
+template <typename Value, typename = void>
+struct has_air_data_member : std::false_type {};
+
+template <typename Value>
+struct has_air_data_member<
+    Value, std::void_t<decltype(std::declval<Value>().air_data)>>
+    : std::true_type {};
+
+template <typename Value, typename = void>
+struct has_contributions_member : std::false_type {};
+
+template <typename Value>
+struct has_contributions_member<
+    Value, std::void_t<decltype(std::declval<Value>().contributions)>>
+    : std::true_type {};
+
+static_assert(!has_air_data_member<RigidStepOutput>::value,
+              "rigid telemetry must stay outside RigidStepOutput");
+static_assert(!has_contributions_member<ForceMomentClosureOutput>::value,
+              "closure telemetry must stay outside its formal output");
+
 struct ProbeBundle {
     gnc::model_sdk::PreparedModelMetadata metadata;
+    ClockDomainIdentity clock_domain;
+    std::int64_t configuration_revision = -1;
     RigidStepEvaluation accepted;
     std::vector<std::string> direct_checks;
 };
@@ -214,18 +242,21 @@ ProbeBundle run_probe() {
         prepare_rigid_step_model(fixture_definition());
     const PreparedRigidStepModel& prepared = require_value(
         prepared_outcome, "YYZ product model preparation failed");
-    const auto& prepared_metadata = prepared.metadata();
+    const auto& prepared_metadata =
+        prepared.force_moment_closure_model().metadata();
     require(prepared_metadata.definition.model_id ==
-                kRigidStepModelIdentity &&
+                kForceMomentClosureModelIdentity &&
                 prepared_metadata.definition.model_version == "0.1.0" &&
                 prepared_metadata.definition.execution_form ==
                     gnc::model_sdk::ModelExecutionForm::Closure &&
-                prepared_metadata.definition.clock_domain.id == kClock &&
-                prepared_metadata.definition.configuration_revision == 11 &&
                 prepared_metadata.preparation_algorithm_id ==
-                    kRigidStepPreparationIdentity.id &&
+                    kForceMomentClosurePreparationIdentity.id &&
                 prepared_metadata.preparation_algorithm_version ==
-                    kRigidStepPreparationIdentity.version,
+                    kForceMomentClosurePreparationIdentity.version &&
+                prepared.definition().force_moment_closure.clock_domain.id ==
+                    kClock &&
+                prepared.definition().force_moment_closure
+                        .configuration_revision == 11,
             "YYZ prepared-model metadata differs");
     const RigidStepInput accepted_input = fixture_input();
     const auto accepted_outcome =
@@ -249,20 +280,134 @@ ProbeBundle run_probe() {
                 near(accepted.telemetry.aerodynamic_lookup
                          .coefficients_ca_cy_cn_cl_cm_cn[4],
                      -3.0 / 68.0) &&
-                near(accepted.telemetry.force_total.value,
+                near(accepted.telemetry.force_moment_closure.output
+                         .force_total.value,
                      Vec3{-3215.0 / 34.0, 0.0, 0.0}) &&
-                near(accepted.telemetry
+                near(accepted.telemetry.force_moment_closure.output
                          .moment_total_about_center_of_mass.value,
                      Vec3::Zero()) &&
+                accepted.telemetry.force_moment_closure.telemetry
+                        .contributions.size() == 2U &&
+                accepted.telemetry.force_moment_closure.telemetry
+                        .contributions[0].source_id == "aero.body" &&
+                accepted.telemetry.force_moment_closure.telemetry
+                        .contributions[1].source_id == "propulsion.main" &&
                 near(accepted.output.candidate.state.position.value,
                      Vec3{10.995272058823529, 0.0, 999.95096675}) &&
                 near(accepted.output.candidate.state.velocity.value,
                      Vec3{109.90544117647059, 0.0, -0.980665}),
             "YYZ product accepted result differs from oracle anchors");
 
+    const RigidFormInput accepted_form =
+        accepted.telemetry.force_moment_closure.output.form_input();
+    require(near(accepted_form.force_total.value,
+                 accepted.telemetry.derivative_at_interval_start
+                     .force_total_inertial.value),
+            "rigid derivative did not consume closure form input");
+
     std::vector<std::string> checks{
         "prepared-model-metadata", "formal-output-telemetry-separation",
-        "accepted-oracle-anchors"};
+        "accepted-oracle-anchors",
+        "rigid-step-consumes-force-moment-closure-output"};
+
+    ForceMomentClosureDefinition direct_closure_definition =
+        fixture_definition().force_moment_closure;
+    direct_closure_definition.configuration_revision = 7;
+    const auto direct_closure_prepared =
+        prepare_force_moment_closure_model(direct_closure_definition);
+    const auto& direct_closure_model = require_value(
+        direct_closure_prepared,
+        "direct force-moment closure preparation failed");
+    const IntervalSampleContext direct_context{
+        SampleContext{
+            FrameIdentity{std::string(kBodyFrame)},
+            ClockDomainIdentity{std::string(kClock)},
+            SimulationInstant{10, 2.5}, 7, DataQuality::Valid},
+        HalfOpenValidityInterval{SimulationInstant{10, 2.5},
+                                 SimulationInstant{11, 2.75}}};
+    ForceMomentClosureInput direct_closure_input;
+    direct_closure_input.body_origin_to_center_of_mass.value = Vec3::Zero();
+    direct_closure_input.contributions = {
+        AppliedBodyWrenchInput{
+            direct_context, "aero.body",
+            BodyForceNewtons{Vec3{10.0, -20.0, 30.0}},
+            BodyPointMeters{Vec3{2.0, -1.0, 0.5}},
+            BodyMomentNewtonMeters{Vec3{1.0, 2.0, 3.0}}},
+        AppliedBodyWrenchInput{
+            direct_context, "propulsion.main",
+            BodyForceNewtons{Vec3{-5.0, 4.0, 2.0}},
+            BodyPointMeters{Vec3{-1.0, 0.25, 3.0}},
+            BodyMomentNewtonMeters{Vec3{-2.0, 1.0, 0.5}}},
+    };
+    const auto direct_closure = ForceMomentClosureKernel::evaluate(
+        direct_closure_model, direct_closure_input);
+    const auto& direct_closure_value = require_value(
+        direct_closure, "direct force-moment closure failed");
+    require(near(direct_closure_value.output.force_total.value,
+                 Vec3{5.0, -16.0, 32.0}) &&
+                near(direct_closure_value.output
+                         .moment_total_about_center_of_mass.value,
+                     Vec3{-32.5, -65.0, -29.25}) &&
+                direct_closure_value.telemetry.contributions.size() == 2U &&
+                direct_closure_value.telemetry.contributions[0].source_id ==
+                    "aero.body",
+            "direct closure differs from the accepted R0 oracle");
+    std::reverse(direct_closure_input.contributions.begin(),
+                 direct_closure_input.contributions.end());
+    const auto reversed_closure = ForceMomentClosureKernel::evaluate(
+        direct_closure_model, direct_closure_input);
+    const auto& reversed_closure_value = require_value(
+        reversed_closure, "reversed closure evaluation failed");
+    require(near(reversed_closure_value.output.force_total.value,
+                 direct_closure_value.output.force_total.value) &&
+                near(reversed_closure_value.output
+                         .moment_total_about_center_of_mass.value,
+                     direct_closure_value.output
+                         .moment_total_about_center_of_mass.value) &&
+                reversed_closure_value.telemetry.contributions[0].source_id ==
+                    "aero.body",
+            "closure contribution order changed canonical result");
+    checks.emplace_back("force-moment-closure-r0-oracle-anchors");
+    checks.emplace_back("force-moment-closure-order-equivalence");
+
+    std::reverse(direct_closure_input.contributions.begin(),
+                 direct_closure_input.contributions.end());
+    ForceMomentClosureInput invalid_closure = direct_closure_input;
+    invalid_closure.contributions[1].source_id =
+        invalid_closure.contributions[0].source_id;
+    expect_failure(ForceMomentClosureKernel::evaluate(
+                       direct_closure_model, invalid_closure),
+                   NumericalStatus::DomainError,
+                   "duplicate closure source survived");
+    invalid_closure = direct_closure_input;
+    invalid_closure.contributions[1].context.sample.frame.id =
+        "frame.fixture.yyz.other@1";
+    expect_failure(ForceMomentClosureKernel::evaluate(
+                       direct_closure_model, invalid_closure),
+                   NumericalStatus::DomainError,
+                   "closure frame mismatch survived");
+    invalid_closure = direct_closure_input;
+    invalid_closure.contributions[1].context.sample
+        .configuration_revision = 8;
+    expect_failure(ForceMomentClosureKernel::evaluate(
+                       direct_closure_model, invalid_closure),
+                   NumericalStatus::DomainError,
+                   "closure revision mismatch survived");
+    invalid_closure = direct_closure_input;
+    invalid_closure.contributions[1].context.validity.effective_until =
+        SimulationInstant{12, 3.0};
+    expect_failure(ForceMomentClosureKernel::evaluate(
+                       direct_closure_model, invalid_closure),
+                   NumericalStatus::DomainError,
+                   "closure interval mismatch survived");
+    invalid_closure = direct_closure_input;
+    invalid_closure.contributions[1].force.value(0) =
+        std::numeric_limits<double>::infinity();
+    expect_failure(ForceMomentClosureKernel::evaluate(
+                       direct_closure_model, invalid_closure),
+                   NumericalStatus::NonFiniteInput,
+                   "non-finite closure force survived");
+    checks.emplace_back("force-moment-closure-five-invalid-rejections");
 
     const auto repeated_outcome =
         RigidStepKernel::evaluate(prepared, accepted_input);
@@ -377,7 +522,7 @@ ProbeBundle run_probe() {
     checks.emplace_back("table-preparation-rejection");
 
     RigidStepModelDefinition invalid_metadata = fixture_definition();
-    invalid_metadata.metadata.execution_form =
+    invalid_metadata.force_moment_closure.metadata.execution_form =
         gnc::model_sdk::ModelExecutionForm::Unspecified;
     const auto invalid_metadata_outcome =
         prepare_rigid_step_model(std::move(invalid_metadata));
@@ -423,7 +568,11 @@ ProbeBundle run_probe() {
                    "RK4 stage failure retained a candidate");
     checks.emplace_back("rk4-stage-discards-candidate");
 
-    return {prepared_metadata, accepted, std::move(checks)};
+    return {prepared_metadata,
+            prepared.definition().force_moment_closure.clock_domain,
+            prepared.definition().force_moment_closure
+                .configuration_revision,
+            accepted, std::move(checks)};
 }
 
 void write_number(double value) {
@@ -468,6 +617,9 @@ void write_json(const ProbeBundle& bundle) {
     const auto& output = bundle.accepted;
     const auto& formal_output = output.output;
     const auto& telemetry = output.telemetry;
+    const auto& closure = telemetry.force_moment_closure;
+    const auto& aerodynamic = closure.telemetry.contributions[0];
+    const auto& supplied = closure.telemetry.contributions[1];
     std::cout << std::setprecision(17)
               << "{\"schema_version\":\"gnczmkn.yyz-rigid-step-product-probe/1\""
               << ",\"product_model_id\":\"" << kRigidStepModelIdentity
@@ -482,15 +634,15 @@ void write_json(const ProbeBundle& bundle) {
               << "\",\"execution_form\":\""
               << gnc::model_sdk::to_string(
                      bundle.metadata.definition.execution_form)
-              << "\",\"clock_domain_id\":\""
-              << bundle.metadata.definition.clock_domain.id
-              << "\",\"configuration_revision\":"
-              << bundle.metadata.definition.configuration_revision
-              << ",\"preparation_algorithm_id\":\""
+              << "\",\"preparation_algorithm_id\":\""
               << bundle.metadata.preparation_algorithm_id
               << "\",\"preparation_algorithm_version\":\""
               << bundle.metadata.preparation_algorithm_version
-              << "\"},\"accepted\":{";
+              << "\"},\"context_policy\":{\"clock_domain_id\":\""
+              << bundle.clock_domain.id
+              << "\",\"configuration_revision\":"
+              << bundle.configuration_revision
+              << "},\"accepted\":{";
     std::cout << "\"air_data\":{\"velocity_relative_I_mps\":";
     write_vec3(telemetry.air_data.velocity_relative_inertial.value);
     std::cout << ",\"velocity_relative_B_mps\":";
@@ -514,23 +666,21 @@ void write_json(const ProbeBundle& bundle) {
     write_array(telemetry.aerodynamic_lookup
                     .coefficients_ca_cy_cn_cl_cm_cn);
     std::cout << "},\"aero_contribution\":{\"source_id\":\""
-              << telemetry.aerodynamic_contribution.source_id
+              << aerodynamic.source_id
               << "\",\"force_B_N\":";
-    write_vec3(telemetry.aerodynamic_contribution.force.value);
+    write_vec3(aerodynamic.force.value);
     std::cout << ",\"moment_about_CoM_B_Nm\":";
-    write_vec3(telemetry.aerodynamic_contribution
-                   .moment_about_center_of_mass.value);
+    write_vec3(aerodynamic.moment_about_center_of_mass.value);
     std::cout << "},\"supplied_contribution\":{\"source_id\":\""
-              << telemetry.supplied_contribution.source_id
+              << supplied.source_id
               << "\",\"force_B_N\":";
-    write_vec3(telemetry.supplied_contribution.force.value);
+    write_vec3(supplied.force.value);
     std::cout << ",\"moment_about_CoM_B_Nm\":";
-    write_vec3(telemetry.supplied_contribution
-                   .moment_about_center_of_mass.value);
+    write_vec3(supplied.moment_about_center_of_mass.value);
     std::cout << "},\"closure\":{\"force_total_B_N\":";
-    write_vec3(telemetry.force_total.value);
+    write_vec3(closure.output.force_total.value);
     std::cout << ",\"moment_total_about_CoM_B_Nm\":";
-    write_vec3(telemetry.moment_total_about_center_of_mass.value);
+    write_vec3(closure.output.moment_total_about_center_of_mass.value);
     std::cout << "},\"rigid_derivative_at_tick0\":{\"force_total_I_N\":";
     write_vec3(telemetry.derivative_at_interval_start
                    .force_total_inertial.value);

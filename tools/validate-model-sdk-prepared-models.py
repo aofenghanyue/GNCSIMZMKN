@@ -13,26 +13,36 @@ import sys
 EXPECTED = {
     "yyz": {
         "model_id":
-            "gnc.package.yyz.rigid-step.frozen-interval.experimental@1",
+            "gnc.package.yyz.force-moment-closure.frozen-interval.experimental@1",
         "model_version": "0.1.0",
         "execution_form": "Closure",
-        "clock_domain_id": "clock.fixture.yyz.simulation@1",
-        "configuration_revision": 11,
         "preparation_algorithm_id":
-            "gnc.package.yyz.rigid-step.prepare@1",
+            "gnc.package.yyz.force-moment-closure.prepare@1",
         "preparation_algorithm_version": "0.1.0",
     },
     "cavh": {
         "model_id":
-            "gnc.package.cavh.formula.legacy-transcribed.experimental@1",
+            "gnc.package.cavh.glide-envelope.parabolic.experimental@1",
         "model_version": "0.1.0",
         "execution_form": "PureQuery",
-        "clock_domain_id": "clock.fixture.cavh.simulation@1",
-        "configuration_revision": 4,
         "preparation_algorithm_id":
-            "gnc.package.cavh.formula.prepare@1",
+            "gnc.package.cavh.glide-envelope.prepare@1",
         "preparation_algorithm_version": "0.1.0",
     },
+}
+EXPECTED_CONTEXT = {
+    "yyz": {
+        "clock_domain_id": "clock.fixture.yyz.simulation@1",
+        "configuration_revision": 11,
+    },
+    "cavh": {
+        "clock_domain_id": "clock.fixture.cavh.simulation@1",
+        "configuration_revision": 4,
+    },
+}
+CONSUMER_CHECK = {
+    "yyz": "rigid-step-consumes-force-moment-closure-output",
+    "cavh": "formula-consumes-glide-envelope-query-output",
 }
 FORBIDDEN_RUNTIME_KEYS = {
     "session_id",
@@ -80,13 +90,16 @@ def verify_probe(name: str, path: Path) -> dict:
             f"{name} prepared-model metadata is missing")
     require(metadata == EXPECTED[name],
             f"{name} prepared-model metadata differs")
-    require(first.get("product_model_id") == metadata["model_id"],
-            f"{name} root/model metadata identity differs")
+    require(first.get("context_policy") == EXPECTED_CONTEXT[name],
+            f"{name} package context policy differs")
+    require(first.get("product_model_id") != metadata["model_id"],
+            f"{name} composition and prepared-model identities alias")
     checks = first.get("direct_checks")
     require(isinstance(checks, list) and
             "prepared-model-metadata" in checks and
             "deterministic-independent-evaluation" in checks and
-            "model-metadata-rejection" in checks,
+            "model-metadata-rejection" in checks and
+            CONSUMER_CHECK[name] in checks,
             f"{name} model conformance checks are incomplete")
     runtime_keys = collect_keys(first) & FORBIDDEN_RUNTIME_KEYS
     require(not runtime_keys,

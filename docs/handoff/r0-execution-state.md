@@ -1,8 +1,8 @@
-# R1 当前执行状态
+# R2 当前执行状态
 
-- 更新日期：2026-08-17
-- 当前 gate：`R1`
-- 产品状态：R0 科学/性能基线已闭合；R1 Foundation、当前 in-process Contracts、四个 YYZ 产品切片和 CAVH 公式产品切片已完成；双 consumer Model 与 Algorithm 独立求值能力进入 review，尚无产品级 guidance command 或 Session 仿真运行能力
+- 更新日期：2026-08-18
+- 当前 gate：`R2`
+- 产品状态：R0 科学/性能基线与 G2 已闭合；R1 Foundation、窄范围 in-process Contracts、GlideEnvelope PureQuery、ForceMomentClosure、四个 YYZ 产品切片和 CAVH 公式产品切片已完成；首个静态编译纵向切片已解锁，尚无产品级 CAVH guidance command 或 Session 仿真运行能力
 - 当前分支：`codex/r0-governance-reset`
 - 分支基线：`origin/main@dfedf27`
 
@@ -10,7 +10,7 @@
 
 仓库所有者已停止原有多智能体执行，并要求改为单一实现智能体、可执行交付优先的工作方式。2026-08-12 的机器角色授权已撤销。仓库所有者已授权当前阶段内的正常工程判断直接推进；科学口径、公共时间/frame/ownership 语义、阶段门、发布和明显扩大范围的选择仍保留给仓库所有者。
 
-阶段顺序固定为：R1 交付 Definition、PreparedModel 和 Kernel 的无 Session 独立求值；R2 交付 MissionSource 到 proven/linked ExecutionPlan 的静态编译；R3 由正式 Session、StepTransaction 和 IntegrationScopePlan 形成首个正常 YYZ run。R1/R2 不建设 mini Session、临时 runner 或 package-local 影子 runtime。公共 framework abstraction 需要 YYZ 与 CAVH 两个真实 consumer。
+阶段顺序固定为：R1 已交付 Definition、PreparedModel 和 Kernel 的无 Session 独立求值；R2 交付 MissionSource 到 proven/linked ExecutionPlan 的静态编译；R3 由正式 Session、StepTransaction 和 IntegrationScopePlan 形成首个正常 YYZ run。R2 不建设 mini Session、临时 runner 或 package-local 影子 runtime。公共 framework abstraction 需要 YYZ 与 CAVH 两个真实 consumer。
 
 当前规则以以下文件为准：
 
@@ -54,16 +54,17 @@
 - `R1-YYZ-002` 已由仓库所有者于 2026-08-17 接受提交 `ee0a0e4` 并完成。`ScalarBurnMassKernel` 以 committed `MassState` 和 typed `MassFlowIntervalInput` 生成 constant-geometry candidate；`FrozenRigidMassStepKernel` 只在刚体与质量两项成功后返回 `AtomicRigidMassCandidate`；`TwoIntervalMassCommitKernel` 令 interval 1 读取 interval 0 的完整 closing boundary。独立 comparator 与 `ORACLE-YYZ-TWO-INTERVAL-MASS-COMMIT-001` 的最大数值差为 `1e-14`，姿态差为零。
 - `R1-YYZ-003` 已由仓库所有者于 2026-08-17 接受提交 `738f4dc` 并完成。`SuppliedPropulsionKernel` 从 definition/input 产生带 `CoM→作用点` 几何和作用点本征力矩的 body wrench，同时产生 `MassFlowIntervalInput`；`PropelledFrozenRigidMassStepKernel` 从 committed `MassState` 取得 body-origin-to-CoM 几何后接入既有 rigid/mass atomic consumer。三组公式案例、区间分割等价和十组无效输入均匹配 `ORACLE-YYZ-PROPULSION-RESPONSE-001`，最大数值差为 `7e-15`；偏心推力 consumer 只搬移一次力矩并生成 `119.95 kg` candidate。
 - `R1-YYZ-004` 已由仓库所有者于 2026-08-17 接受提交 `8e2b512`、`39dceee` 与 `dede13a` 并完成。当前 committed rigid observation 依次进入 altitude/pitch guidance、pitch-moment controller、unit-gain ideal body-moment actuator、typed propulsion 和既有 rigid/mass atomic consumer；第二个区间只读取 tick 1 新提交的刚体状态与质量并完整重算控制、推进、气动、刚体和燃耗；`CommittedMissionResultKernel` 从三份 committed boundaries 计算指标并按 inclusive predicate 和优先级选择绑定 tick 2 terminal boundary 的 `Completed` 结果。产品 probe 直接复用 `ORACLE-YYZ-MISSION-COMPOSITION-001`；控制链与两区间轨迹最大数值差约 `4.62e-14`，mission result 最大数值差约 `5.08e-14`。
-- `R1-CAVH-001` 已由仓库所有者于 2026-08-17 接受提交 `7890f18` 并完成。`PreparedCavhFormulaModel` 固定 product model identity、frame/clock/revision、包络参数、Eq17/Eq18 identity、科学阈值和 TDCT 限幅；`CavhFormulaKernel` 从显式 operating point 计算解析包络与 gamma reference，再把 typed gamma reference 与 `alpha*` 直接交给 TDCT。单一 probe 覆盖三组方程、四组 TDCT、十一条既有科学失败、`SampleContext` 拒绝和真实 formula-to-TDCT consumer；comparator 直接复用 `ORACLE-CAVH-FORMULA-001`，gamma 最大误差约 `2.80e-18 rad`，TDCT 最大误差为 `6e-17 rad`。Eq17 阈值字段已更名为 `derivative_minimum_absolute_seconds_per_meter`；guidance-command 映射等待真实 vehicle/controller consumer。
-- `R1-CTR-001` 已按当前 R1 in-process 范围完成。`SampleContext` 由 YYZ 与 CAVH 两个独立产品 consumer 共同验证 frame、clock、sample/effective time、configuration revision 和 data quality；wire compatibility、迁移与序列化 fixture 等待真实 serialization consumer。
-- `R1-MOD-001` 已形成 review 切片。提交 `ff35e29` 增加 immutable `ModelDefinitionMetadata`、`PreparedModelMetadata` 和封闭 execution form；YYZ Closure 与 CAVH PureQuery 均在正式 prepare/evaluate 路径消费该类型。`r1.model-sdk-prepared-model.conformance` 重复运行两个既有 product probe，验证确定性、独立求值、不同执行形式和无 Session/runtime key；prepare failure 继续返回 `NumericalOutcome`。
-- `R1-ALG-001` 已形成 review 切片。`AlgorithmEvaluation<Output, Telemetry>` 被 YYZ 与 CAVH 的正式 kernel 共同消费；YYZ formal output 只包含 rigid candidate，CAVH formal output 包含 gamma reference、TDCT 所需 `alpha*` 和 limited alpha，气动闭合量、公式中间量与饱和解释保留在 telemetry。`r1.model-sdk-algorithm-evaluation.conformance` 复用两个 product probe，验证确定性、双 consumer 和无 Session/runtime key；两个 kernel 均无跨调用状态，State 六件套项按架构规则省略。
+- `R1-CAVH-001` 已由仓库所有者于 2026-08-17 接受提交 `7890f18` 并完成。纠正切片进一步形成独立 `GlideEnvelopePreparedModel` 与 pure query；Eq17/Eq18 显式消费 `GlideEnvelopeQueryOutput`，TDCT 继续消费 typed gamma reference 与 `alpha*`。单一 probe 覆盖三组方程、四组 TDCT、十一条既有科学失败、`SampleContext` 拒绝和真实 envelope → formula → TDCT consumer；comparator 继续匹配 `ORACLE-CAVH-FORMULA-001`。guidance-command 映射等待真实 vehicle/controller consumer。
+- `R1-CTR-001` 已按窄范围 R1 in-process 语义完成。`SampleContext` 由 YYZ 与 CAVH 两个独立产品 consumer 共同验证 frame、clock、sample/effective time、configuration revision 和 data quality。wire compatibility 等待 R2 consumer，migration 等待 R3 consumer，serialization 与完整 runtime diagnostics 等待 R4 consumer。
+- `R1-MOD-001` 已完成。公共 metadata 收敛为 stable model id/version、`PureQuery | Closure` 和 preparation identity；CAVH 仅 `GlideEnvelopePreparedModel` 使用 PureQuery，YYZ 仅 `ForceMomentClosure` 使用 Closure。clock/configuration expectation 留在 package-specific definition，`RuntimeComponent` 已退出当前公共有效形式。
+- `R1-ALG-001` 已完成。`AlgorithmEvaluation<Output, Telemetry>` 被 GlideEnvelope query、Eq17/Eq18、TDCT、ForceMomentClosure 与 rigid-step 正式路径消费；C++ 类型级守卫限制 telemetry 字段进入正式 output。YYZ `RigidStepKernel` 从 Closure output 取得 held `RigidFormInput` 并用于全部 RK4 stages；两个 package 保持无跨调用状态，stateless kernel 省略 State。
+- `R1-GATE-001` 已完成，G2 结果为 `Passed`。仓库所有者的条件式接受已满足：真实 GlideEnvelope query 与 ForceMomentClosure 均有直接 consumer，`RuntimeComponent` 残缺声明已退出，既有 R0 oracle 与全量 Debug/Release/仓库检查通过，Kernel source 没有增加 package-specific 分支。R2 已解锁。
 
 ## 下一条开发主线
 
-1. 先由仓库所有者复核 `R1-MOD-001` 与 `R1-ALG-001`；二者只声明双 consumer 已执行的最小公共语义，prepare cache、serializer、registry、factory 和 runtime handle 均未进入范围。
-2. 下一项正式 R1 能力为 `R1-BEH-001`。当前 YYZ/CAVH kernel 都是无跨调用状态的纯求值，尚无需要 mode、conditioning 或 fault-latch `StateFragment` 的两个真实 host；在真实 owner reducer consumer 出现前不构造虚拟 behavior fixture。`R1-REC-001` 继续等待 Model、Algorithm 与 Behavior 闭合。
-3. `R1-GATE-001` 已修正为等待 Foundation、Contracts、Model、Algorithm、Behavior、Recipe、YYZ 和 CAVH package conformance。R1 gate 通过后才能解锁 R2；R2 完成 Source/Catalog/Graph/Proof/Plan/Link 后才能解锁 R3。Compiler、Session、Artifact、Workflow、前端和其他 R2+ 能力保持锁定。
+1. 下一项为 R2 首个静态编译纵向切片：单一 canonical JSON 或 typed SourceTree 入口贯通真实 YYZ/CAVH definition、Catalog、最小 IR、binding proof 和静态 ExecutionPlan。
+2. `RuntimeCellRecipe`、`RuntimeCellProfile` 与 execution-obligation descriptor 只实现该编译路径直接消费的字段；Compiler 是首个真实 consumer。
+3. YAML/INI、多端 adapter、Session、mini runtime、manager、runtime registry、serializer、StateFragment、Artifact、Workflow、前端与 R3+ 能力继续保持关闭。
 
 ## 保留与恢复
 

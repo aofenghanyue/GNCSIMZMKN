@@ -1,7 +1,7 @@
 {
   "schema_version": "gnczmkn.task-backlog/1",
-  "current_gate": "R1",
-  "updated_at": "2026-08-17",
+  "current_gate": "R2",
+  "updated_at": "2026-08-18",
   "status_values": ["planned", "ready", "in_progress", "blocked", "review", "done"],
   "tasks": [
     {
@@ -279,7 +279,7 @@
     {
       "id": "R1-CTR-001",
       "stage": "R1",
-      "title": "Implement stable domain, time, quality and diagnostic contracts",
+      "title": "Implement narrow in-process frame, time, revision and quality contracts",
       "status": "done",
       "priority": "P0",
       "size": "XL",
@@ -288,68 +288,38 @@
       "depends_on": ["R0-GATE-001"],
       "deliverables": ["In-process frame, clock, sample/effective-time, configuration-revision and quality contracts", "YYZ and CAVH dual-consumer product conformance"],
       "acceptance": ["YYZ and CAVH high-risk inputs carry typed frame, clock, sample/effective time, configuration revision and quality, and both packages reject mismatches through NumericalOutcome"],
-      "evidence": ["framework/include/gnc/contracts/sample_context.hpp is consumed independently by packages/yyz-rigid-step and packages/cavh-formula", "Both product packages reject frame, clock, sample-time, configuration-revision and data-quality mismatches through NumericalOutcome", "Repository owner accepted this in-process R1 contract scope on 2026-08-17; wire compatibility, migration and serialization fixtures remain deferred until a real serialization consumer exists"],
+      "evidence": ["framework/include/gnc/contracts/sample_context.hpp is consumed independently by packages/yyz-rigid-step and packages/cavh-formula", "Both product packages reject frame, clock, sample/effective-time, configuration-revision and data-quality mismatches through NumericalOutcome", "Repository owner accepted this narrow in-process scope on 2026-08-18; wire compatibility waits for an R2 consumer, migration waits for an R3 consumer, and serialization plus complete runtime diagnostics wait for R4 consumers"],
       "architecture_refs": ["04", "07"]
     },
     {
       "id": "R1-MOD-001",
       "stage": "R1",
       "title": "Implement ModelDefinition, PreparedModel and execution forms",
-      "status": "review",
+      "status": "done",
       "priority": "P0",
       "size": "L",
       "owner_role": "model_sdk_lead",
       "assignee": null,
       "depends_on": ["R1-FND-001", "R1-CTR-001"],
-      "deliverables": ["Immutable ModelDefinitionMetadata and PreparedModelMetadata", "PureQuery and Closure package consumers", "Dual-consumer independent-evaluation conformance"],
-      "acceptance": ["YYZ and CAVH definitions and prepared metadata are immutable, deterministic and directly testable without Session"],
-      "evidence": ["Commit ff35e29 adds framework/include/gnc/model_sdk/model_metadata.hpp and makes both product packages consume it", "r1.model-sdk-prepared-model.conformance executes the existing YYZ and CAVH probes twice, verifies distinct PureQuery/Closure identities and rejects Session/runtime keys", "Package prepare failures remain typed NumericalOutcome values; registry, factory, serializer and cache-manager capability remain absent"],
+      "deliverables": ["Minimal ModelDefinitionMetadata and PreparedModelMetadata", "CAVH GlideEnvelope PureQuery consumer", "YYZ ForceMomentClosure consumer"],
+      "acceptance": ["Only the real GlideEnvelope and ForceMomentClosure prepared models carry current execution-form metadata, and both are immutable, deterministic and directly testable without Session"],
+      "evidence": ["Commit ff35e29 introduced the shared metadata types; the 2026-08-18 correction narrows them to stable model id/version, PureQuery/Closure and preparation identity", "GlideEnvelopePreparedModel is consumed by Eq17/Eq18 composition and PreparedForceMomentClosureModel is consumed by RigidStepKernel", "RuntimeComponent, clock-domain expectation and configuration-revision expectation are absent from common metadata; package context policies retain the current checks", "Repository owner conditionally accepted this corrected scope on 2026-08-18 subject to the recorded G2 regression"],
       "architecture_refs": ["12 §2–§8"]
     },
     {
       "id": "R1-ALG-001",
       "stage": "R1",
       "title": "Implement the algorithm six-piece scaffold and verification harness",
-      "status": "review",
+      "status": "done",
       "priority": "P0",
       "size": "L",
       "owner_role": "model_sdk_lead",
       "assignee": null,
       "depends_on": ["R1-FND-001", "R1-CTR-001"],
-      "deliverables": ["AlgorithmEvaluation output/telemetry contract", "YYZ rigid-step and CAVH formula six-piece realizations with State omitted for stateless kernels", "Dual-consumer algorithm harness tests"],
-      "acceptance": ["YYZ and CAVH kernels independently return formal downstream output plus telemetry without Mission, Session, filesystem or logger"],
-      "evidence": ["framework/include/gnc/model_sdk/algorithm_evaluation.hpp is consumed by both packages", "YYZ exposes only its rigid candidate as formal output while CAVH exposes gamma reference, alpha-star and limited alpha; closure, formula and saturation intermediates remain telemetry", "r1.model-sdk-algorithm-evaluation.conformance reuses both executable product probes and verifies deterministic two-consumer evaluation with no Session/runtime keys"],
+      "deliverables": ["AlgorithmEvaluation output/telemetry contract", "GlideEnvelope query, Eq17/Eq18, TDCT, ForceMomentClosure and rigid-step stateless kernel evaluations", "C++ output-shape guards and executable consumer tests"],
+      "acceptance": ["YYZ and CAVH kernels independently return formal downstream output plus telemetry, composition consumes formal query/closure output, and stateless kernels omit State"],
+      "evidence": ["framework/include/gnc/model_sdk/algorithm_evaluation.hpp is consumed by both packages", "CAVH tests pass real GlideEnvelopeQueryOutput into Eq17/Eq18 and YYZ RigidStepKernel consumes ForceMomentClosureOutput.form_input() for every RK4 stage", "C++17 detection guards reject known telemetry members on GammaReferenceOutput, TdctFormulaOutput, RigidStepOutput and ForceMomentClosureOutput", "Existing CAVH, rigid-step, two-interval, propulsion and mission oracle results remain unchanged; repository owner conditionally accepted this corrected scope on 2026-08-18"],
       "architecture_refs": ["12 §3.5–§3.8", "12 §7–§8", "15 §5/§10"]
-    },
-    {
-      "id": "R1-BEH-001",
-      "stage": "R1",
-      "title": "Implement StateFragment and embedded behavior composition",
-      "status": "planned",
-      "priority": "P1",
-      "size": "L",
-      "owner_role": "model_sdk_lead",
-      "assignee": null,
-      "depends_on": ["R1-ALG-001"],
-      "deliverables": ["Mode, conditioning and fault-latch fixtures", "owner reducer composition"],
-      "acceptance": ["Mechanisms have no runtime identity and roll back with their owner"],
-      "evidence": ["Two-host behavior conformance suite"],
-      "architecture_refs": ["13"]
-    },
-    {
-      "id": "R1-REC-001",
-      "stage": "R1",
-      "title": "Implement RuntimeCellRecipe and execution obligation descriptors",
-      "status": "planned",
-      "priority": "P0",
-      "size": "XL",
-      "owner_role": "model_sdk_lead",
-      "assignee": null,
-      "depends_on": ["R1-MOD-001", "R1-ALG-001", "R1-BEH-001"],
-      "deliverables": ["Recipe schema", "profiles", "state/port/telemetry descriptors"],
-      "acceptance": ["Recipes expand without runtime profile switches"],
-      "evidence": ["Recipe expansion fixtures"],
-      "architecture_refs": ["12 §11–§14", "13"]
     },
     {
       "id": "R1-YYZ-001",
@@ -430,31 +400,31 @@
       "id": "R1-GATE-001",
       "stage": "R1",
       "title": "Conduct the G2 Model Ecosystem gate",
-      "status": "planned",
+      "status": "done",
       "priority": "P0",
       "size": "M",
       "owner_role": "architecture_lead",
       "assignee": null,
-      "depends_on": ["R1-FND-001", "R1-CTR-001", "R1-MOD-001", "R1-ALG-001", "R1-BEH-001", "R1-REC-001", "R1-YYZ-001", "R1-CAVH-001"],
+      "depends_on": ["R1-FND-001", "R1-CTR-001", "R1-MOD-001", "R1-ALG-001", "R1-YYZ-001", "R1-CAVH-001"],
       "deliverables": ["G2 decision and R2 unlock"],
       "acceptance": ["Model and algorithm growth leaves Kernel source unchanged"],
-      "evidence": ["Repository-owner G2 decision backed by executable R1 evidence"],
+      "evidence": ["docs/quality/gate-decisions/G2-2026-08-18-passed.md records the repository-owner conditional acceptance and complete executable regression", "Kernel source gained no package-specific branch while YYZ and CAVH package models grew"],
       "architecture_refs": ["11 §6"]
     },
 
     {
       "id": "R2-SRC-001",
       "stage": "R2",
-      "title": "Implement SourceBlob, SourceTree, SourceMap and JSON/YAML frontends",
-      "status": "planned",
+      "title": "Implement the canonical JSON SourceTree entry",
+      "status": "ready",
       "priority": "P0",
       "size": "XL",
       "owner_role": "compiler_lead",
       "assignee": null,
       "depends_on": ["R1-GATE-001"],
-      "deliverables": ["Versioned source model", "JSON/YAML conformance", "path diagnostics"],
-      "acceptance": ["Equivalent JSON/YAML produce identical semantic source trees"],
-      "evidence": ["Frontend conformance suite"],
+      "deliverables": ["Canonical JSON SourceBlob", "Typed SourceTree and SourceMap", "Path diagnostics for the first YYZ/CAVH compile fixture"],
+      "acceptance": ["One canonical JSON entry produces a deterministic typed SourceTree without YAML, INI or adapter surfaces"],
+      "evidence": ["First source-to-static-plan vertical fixture"],
       "architecture_refs": ["05 §2–§4"]
     },
     {
@@ -467,10 +437,10 @@
       "owner_role": "compiler_lead",
       "assignee": null,
       "depends_on": ["R1-GATE-001"],
-      "deliverables": ["Catalog view", "package lock", "deterministic schema/doc export"],
-      "acceptance": ["Catalog discovery uses typed static descriptors and stable identities"],
+      "deliverables": ["Catalog view", "package lock", "YYZ/CAVH static descriptors", "Minimal RuntimeCellRecipe, RuntimeCellProfile and execution-obligation descriptors consumed by the first Compiler path"],
+      "acceptance": ["Catalog discovery uses typed static descriptors and stable identities, and Compiler is the first consumer of the recipe/profile subset"],
       "evidence": ["Catalog snapshot tests"],
-      "architecture_refs": ["05 §5–§7", "10 §4"]
+      "architecture_refs": ["05 §5–§7", "10 §4", "12 §11–§14", "13"]
     },
     {
       "id": "R2-IR-001",
@@ -512,10 +482,10 @@
       "owner_role": "compiler_lead",
       "assignee": null,
       "depends_on": ["R2-BIND-001"],
-      "deliverables": ["Region, state, schedule, closure, transaction and observation plans", "layered hashes"],
-      "acceptance": ["Descriptor contains no function address or Session identity and is deterministically serializable"],
+      "deliverables": ["Static execution obligations required by the first YYZ/CAVH plan", "Expanded recipe/profile records", "Layered plan identities"],
+      "acceptance": ["The first static descriptor consumes only compiled obligations, contains no function address or Session identity, and introduces no RuntimeComponent capability outside that Compiler path"],
       "evidence": ["Descriptor hash fixtures"],
-      "architecture_refs": ["05 §12–§15", "14"]
+      "architecture_refs": ["05 §12–§15", "12 §11–§14", "14"]
     },
     {
       "id": "R2-PRF-001",
@@ -693,10 +663,10 @@
       "owner_role": "validation_lead",
       "assignee": null,
       "depends_on": ["R3-YYZ-001"],
-      "deliverables": ["Two-entity causal fixture", "fault-to-impact fixture", "atomic activation fixture"],
-      "acceptance": ["No global truth, cross-owner write or runtime topology creation shortcut appears"],
+      "deliverables": ["Two-entity causal fixture", "Stuck-actuator configuration/fault fixture", "StateFragment fault latch and owner reducer", "StepTransaction rollback and attribution checks", "Atomic activation fixture"],
+      "acceptance": ["Fault state rolls back with its owner, attribution follows the committed StepTransaction, and no global truth, cross-owner write or runtime topology creation shortcut appears"],
       "evidence": ["Vertical fixture reports"],
-      "architecture_refs": ["15 §17–§18"]
+      "architecture_refs": ["13", "14", "15 §17–§18"]
     },
     {
       "id": "R3-GATE-001",

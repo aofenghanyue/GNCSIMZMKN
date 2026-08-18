@@ -1,6 +1,6 @@
 # AGENTS.md
 
-本仓库是 GNCZMKN 目标架构的全新实现。G0/G1 已通过，当前处于 R1；产品代码从 Foundation 和 Contracts 起始切片开始实现。蓝图描述目标语义，已交付能力只以当前源码、fixture、oracle 和自动测试为准。
+本仓库是 GNCZMKN 目标架构的全新实现。G0/G1/G2 已通过，当前处于 R2；产品代码已完成 R1 Foundation、Contracts 与首批 YYZ/CAVH 模型切片。蓝图描述目标语义，已交付能力只以当前源码、fixture、oracle 和自动测试为准。
 
 ## 每次开始
 
@@ -26,9 +26,9 @@
 
 ## 当前阶段
 
-- 当前 gate 为 R1。
-- `R1-FND-001` 与 `R1-CTR-001` 已解锁；实施仍按单一纵向切片和真实 consumer 推进。
-- 其余 R1 任务服从 backlog 依赖，R2～R8 保持锁定，直到对应 gate 通过。
+- 当前 gate 为 R2。
+- R1 已通过 G2；当前从单一 canonical source 到静态 ExecutionPlan 的纵向 Compiler 切片开始。
+- R3～R8 保持锁定，直到对应 gate 通过。
 - 文档中的 `V1` 表示目标范围，不代表当前实现状态。
 
 ## 核心边界

@@ -18,9 +18,17 @@ inline constexpr std::string_view kCavhFormulaContractIdentity =
     "gnc.package.cavh.formula.contract.experimental@1";
 inline constexpr std::string_view kCavhFormulaModelIdentity =
     "gnc.package.cavh.formula.legacy-transcribed.experimental@1";
+inline constexpr std::string_view kGlideEnvelopeModelIdentity =
+    "gnc.package.cavh.glide-envelope.parabolic.experimental@1";
 inline constexpr gnc::foundation::AlgorithmIdentity
     kCavhFormulaPreparationIdentity{
         "gnc.package.cavh.formula.prepare@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kGlideEnvelopePreparationIdentity{
+        "gnc.package.cavh.glide-envelope.prepare@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kGlideEnvelopeQueryIdentity{
+        "gnc.package.cavh.glide-envelope.query@1", "0.1.0"};
 inline constexpr gnc::foundation::AlgorithmIdentity
     kCavhGammaReferenceIdentity{
         "gnc.package.cavh.formula.gamma-reference@1", "0.1.0"};
@@ -75,6 +83,67 @@ struct ParabolicEnvelopeDefinition {
     double alpha_max_radians = 0.0;
 };
 
+struct GlideEnvelopeDefinition {
+    gnc::model_sdk::ModelDefinitionMetadata metadata;
+    ParabolicEnvelopeDefinition polar;
+};
+
+class GlideEnvelopePreparedModel {
+  public:
+    GlideEnvelopePreparedModel(const GlideEnvelopePreparedModel&) = default;
+    GlideEnvelopePreparedModel(GlideEnvelopePreparedModel&&) noexcept =
+        default;
+    GlideEnvelopePreparedModel& operator=(
+        const GlideEnvelopePreparedModel&) = default;
+    GlideEnvelopePreparedModel& operator=(
+        GlideEnvelopePreparedModel&&) noexcept = default;
+
+    [[nodiscard]] const GlideEnvelopeDefinition& definition() const noexcept;
+    [[nodiscard]] const gnc::model_sdk::PreparedModelMetadata& metadata()
+        const noexcept;
+
+  private:
+    explicit GlideEnvelopePreparedModel(
+        std::shared_ptr<const GlideEnvelopeDefinition> definition,
+        gnc::model_sdk::PreparedModelMetadata metadata) noexcept;
+
+    std::shared_ptr<const GlideEnvelopeDefinition> definition_;
+    gnc::model_sdk::PreparedModelMetadata metadata_;
+
+    friend gnc::foundation::NumericalOutcome<GlideEnvelopePreparedModel>
+    prepare_glide_envelope_model(GlideEnvelopeDefinition definition);
+};
+
+[[nodiscard]] gnc::foundation::NumericalOutcome<GlideEnvelopePreparedModel>
+prepare_glide_envelope_model(GlideEnvelopeDefinition definition);
+
+struct GlideEnvelopeQueryInput {
+    double mach = 0.0;
+};
+
+struct GlideEnvelopeQueryOutput {
+    double cd0 = 0.0;
+    double cl_star = 0.0;
+    double cd_star = 0.0;
+    double lift_to_drag_maximum = 0.0;
+    double alpha_star_radians = 0.0;
+    double dcl_star_dmach = 0.0;
+};
+
+struct GlideEnvelopeQueryTelemetry {};
+
+using GlideEnvelopeQueryEvaluation =
+    gnc::model_sdk::AlgorithmEvaluation<GlideEnvelopeQueryOutput,
+                                        GlideEnvelopeQueryTelemetry>;
+
+class GlideEnvelopeQueryKernel {
+  public:
+    [[nodiscard]] static gnc::foundation::NumericalOutcome<
+        GlideEnvelopeQueryEvaluation>
+    evaluate(const GlideEnvelopePreparedModel& model,
+             const GlideEnvelopeQueryInput& input);
+};
+
 struct CavhFormulaAlgorithmDefinition {
     GammaReferenceEquation equation =
         GammaReferenceEquation::Eq18MachIndependent;
@@ -90,9 +159,10 @@ struct TdctFormulaDefinition {
 };
 
 struct CavhFormulaDefinition {
-    gnc::model_sdk::ModelDefinitionMetadata metadata;
     gnc::contracts::FrameIdentity navigation_frame;
-    ParabolicEnvelopeDefinition envelope;
+    gnc::contracts::ClockDomainIdentity clock_domain;
+    std::int64_t configuration_revision = -1;
+    GlideEnvelopeDefinition envelope;
     CavhFormulaAlgorithmDefinition algorithm;
     TdctFormulaDefinition tdct;
 };
@@ -107,16 +177,16 @@ class PreparedCavhFormulaModel {
         PreparedCavhFormulaModel&&) noexcept = default;
 
     [[nodiscard]] const CavhFormulaDefinition& definition() const noexcept;
-    [[nodiscard]] const gnc::model_sdk::PreparedModelMetadata& metadata()
+    [[nodiscard]] const GlideEnvelopePreparedModel& glide_envelope_model()
         const noexcept;
 
   private:
     explicit PreparedCavhFormulaModel(
         std::shared_ptr<const CavhFormulaDefinition> definition,
-        gnc::model_sdk::PreparedModelMetadata metadata) noexcept;
+        GlideEnvelopePreparedModel glide_envelope_model) noexcept;
 
     std::shared_ptr<const CavhFormulaDefinition> definition_;
-    gnc::model_sdk::PreparedModelMetadata metadata_;
+    GlideEnvelopePreparedModel glide_envelope_model_;
 
     friend gnc::foundation::NumericalOutcome<PreparedCavhFormulaModel>
     prepare_cavh_formula_model(CavhFormulaDefinition definition);
@@ -149,14 +219,12 @@ struct CavhFormulaInput {
     double gamma_measured_radians = 0.0;
 };
 
-struct CavhEnvelopeOutput {
-    double cd0 = 0.0;
-    double cl_star = 0.0;
-    double cd_star = 0.0;
-    double lift_to_drag_maximum = 0.0;
-    double alpha_star_radians = 0.0;
-    double dcl_star_dmach = 0.0;
+struct GammaReferenceInput {
+    CavhFormulaInput formula;
+    GlideEnvelopeQueryOutput envelope;
 };
+
+using CavhEnvelopeOutput = GlideEnvelopeQueryOutput;
 
 struct GammaReferenceIntermediates {
     double density_kilograms_per_cubic_meter = 0.0;
@@ -184,7 +252,7 @@ struct GammaReferenceOutput {
 };
 
 struct GammaReferenceTelemetry {
-    CavhEnvelopeOutput envelope;
+    GlideEnvelopeQueryOutput envelope;
     GammaReferenceIntermediates intermediates;
 };
 
@@ -234,7 +302,7 @@ class CavhFormulaKernel {
     [[nodiscard]] static gnc::foundation::NumericalOutcome<
         GammaReferenceEvaluation>
     evaluate_gamma_reference(const PreparedCavhFormulaModel& model,
-                             const CavhFormulaInput& input);
+                             const GammaReferenceInput& input);
 
     [[nodiscard]] static gnc::foundation::NumericalOutcome<
         TdctFormulaEvaluation>

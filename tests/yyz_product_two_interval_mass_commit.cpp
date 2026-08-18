@@ -83,6 +83,19 @@ void require(bool condition, std::string_view message) {
            near(actual(2), expected(2));
 }
 
+const BodyWrenchContribution& supplied_contribution(
+    const RigidStepTelemetry& telemetry) {
+    require(telemetry.force_moment_closure.telemetry.contributions.size() ==
+                2U,
+            "rigid closure contribution count differs");
+    return telemetry.force_moment_closure.telemetry.contributions.back();
+}
+
+const ForceMomentClosureOutput& closure_output(
+    const RigidStepTelemetry& telemetry) {
+    return telemetry.force_moment_closure.output;
+}
+
 template <typename Value>
 const Value& require_value(const NumericalOutcome<Value>& outcome,
                            std::string_view message) {
@@ -124,15 +137,19 @@ NumericalPolicy propulsion_numerical_policy() {
 
 RigidStepModelDefinition fixture_rigid_definition() {
     RigidStepModelDefinition definition;
-    definition.metadata = {
-        std::string(kRigidStepModelIdentity),
+    definition.force_moment_closure.metadata = {
+        std::string(kForceMomentClosureModelIdentity),
         "0.2.0",
         gnc::model_sdk::ModelExecutionForm::Closure,
-        ClockDomainIdentity{std::string(kClock)},
-        11,
     };
     definition.inertial_frame = FrameIdentity{std::string(kInertialFrame)};
-    definition.body_frame = FrameIdentity{std::string(kBodyFrame)};
+    definition.force_moment_closure.body_frame =
+        FrameIdentity{std::string(kBodyFrame)};
+    definition.force_moment_closure.clock_domain =
+        ClockDomainIdentity{std::string(kClock)};
+    definition.force_moment_closure.configuration_revision = 11;
+    definition.force_moment_closure.numerical_policy =
+        fixture_numerical_policy();
     definition.algorithm.fixed_step_seconds = 0.1;
     definition.algorithm.numerical_policy = fixture_numerical_policy();
     definition.algorithm.attitude_evaluation_policy =
@@ -177,7 +194,7 @@ SuppliedPropulsionDefinition fixture_propulsion_definition() {
 
 RigidStepModelDefinition mission_rigid_definition() {
     RigidStepModelDefinition definition = fixture_rigid_definition();
-    definition.metadata.model_version = "0.3.0";
+    definition.force_moment_closure.metadata.model_version = "0.3.0";
     auto& aero = definition.aerodynamics;
     aero.source_id = "aero.body";
     aero.table_id = "aero-table.fixture.yyz.multiaffine@1";
@@ -804,11 +821,12 @@ struct PropulsionProbeBundle {
                  Vec3{300.0, 400.0, 0.0}) &&
                 near(consumer.propulsion.moment_about_center_of_mass.value,
                      Vec3{-39.0, 28.0, -272.0}) &&
-                near(consumer.atomic_boundary.rigid_step.telemetry
-                         .supplied_contribution.force.value,
+                near(supplied_contribution(
+                         consumer.atomic_boundary.rigid_step.telemetry)
+                         .force.value,
                      Vec3{300.0, 400.0, 0.0}) &&
-                near(consumer.atomic_boundary.rigid_step.telemetry
-                         .supplied_contribution
+                near(supplied_contribution(
+                         consumer.atomic_boundary.rigid_step.telemetry)
                          .moment_about_center_of_mass.value,
                      Vec3{-39.0, 28.0, -272.0}) &&
                 near(consumer.atomic_boundary.mass_evolution
@@ -894,13 +912,13 @@ struct MissionControlProbeBundle {
     const auto& boundary = accepted.atomic_boundary;
     require(near(accepted.propulsion.moment_about_center_of_mass.value,
                  Vec3::Zero()) &&
-                near(boundary.rigid_step.telemetry.supplied_contribution
+                near(supplied_contribution(boundary.rigid_step.telemetry)
                          .force.value,
                      Vec3{100.0, 0.0, 0.0}) &&
-                near(boundary.rigid_step.telemetry.supplied_contribution
+                near(supplied_contribution(boundary.rigid_step.telemetry)
                          .moment_about_center_of_mass.value,
                      Vec3{0.0, 20.0, 0.0}) &&
-                near(boundary.rigid_step.telemetry
+                near(closure_output(boundary.rigid_step.telemetry)
                          .moment_total_about_center_of_mass.value,
                      Vec3{0.0, 36.766216427351054, 0.0}) &&
                 near(boundary.mass_evolution.candidate.state.mass_kilograms,
@@ -1548,11 +1566,12 @@ void write_propulsion(const PropulsionProbeBundle& propulsion) {
     }
     const auto& consumer = propulsion.consumer;
     std::cout << "],\"atomic_boundary_consumer\":{\"force_B_N\":";
-    write_vec3(consumer.atomic_boundary.rigid_step.telemetry
-                   .supplied_contribution.force.value);
+    write_vec3(supplied_contribution(
+                   consumer.atomic_boundary.rigid_step.telemetry)
+                   .force.value);
     std::cout << ",\"moment_about_CoM_B_Nm\":";
-    write_vec3(consumer.atomic_boundary.rigid_step.telemetry
-                   .supplied_contribution
+    write_vec3(supplied_contribution(
+                   consumer.atomic_boundary.rigid_step.telemetry)
                    .moment_about_center_of_mass.value);
     std::cout << ",\"consumed_fuel_mass_kg\":";
     write_number(consumer.atomic_boundary.mass_evolution
@@ -1618,13 +1637,13 @@ void write_mission_control(
               << ",\"moment_about_CoM_B_Nm\":";
     write_vec3(value.actuator.moment_about_center_of_mass.value);
     std::cout << "},\"atomic_boundary\":{\"supplied_force_B_N\":";
-    write_vec3(boundary.rigid_step.telemetry.supplied_contribution
+    write_vec3(supplied_contribution(boundary.rigid_step.telemetry)
                    .force.value);
     std::cout << ",\"supplied_moment_about_CoM_B_Nm\":";
-    write_vec3(boundary.rigid_step.telemetry.supplied_contribution
+    write_vec3(supplied_contribution(boundary.rigid_step.telemetry)
                    .moment_about_center_of_mass.value);
     std::cout << ",\"total_moment_about_CoM_B_Nm\":";
-    write_vec3(boundary.rigid_step.telemetry
+    write_vec3(closure_output(boundary.rigid_step.telemetry)
                    .moment_total_about_center_of_mass.value);
     std::cout << ",\"candidate_tick\":"
               << boundary.candidate.effective_at.tick
@@ -1660,10 +1679,10 @@ void write_mission_two_interval_entry(
     std::cout << ",\"consumed_mass_kg\":";
     write_number(boundary.mass_evolution.consumed_mass_kilograms);
     std::cout << ",\"supplied_moment_about_CoM_B_Nm\":";
-    write_vec3(boundary.rigid_step.telemetry.supplied_contribution
+    write_vec3(supplied_contribution(boundary.rigid_step.telemetry)
                    .moment_about_center_of_mass.value);
     std::cout << ",\"total_moment_about_CoM_B_Nm\":";
-    write_vec3(boundary.rigid_step.telemetry
+    write_vec3(closure_output(boundary.rigid_step.telemetry)
                    .moment_total_about_center_of_mass.value);
     std::cout << ",\"closing_tick\":"
               << interval.closing_commit.rigid_context.sample_time.tick

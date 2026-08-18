@@ -23,9 +23,17 @@ inline constexpr std::string_view kRigidStepContractIdentity =
     "gnc.package.yyz.rigid-step.contract.experimental@1";
 inline constexpr std::string_view kRigidStepModelIdentity =
     "gnc.package.yyz.rigid-step.frozen-interval.experimental@1";
+inline constexpr std::string_view kForceMomentClosureModelIdentity =
+    "gnc.package.yyz.force-moment-closure.frozen-interval.experimental@1";
 inline constexpr gnc::foundation::AlgorithmIdentity
     kRigidStepPreparationIdentity{
         "gnc.package.yyz.rigid-step.prepare@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kForceMomentClosurePreparationIdentity{
+        "gnc.package.yyz.force-moment-closure.prepare@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kForceMomentClosureKernelIdentity{
+        "gnc.package.yyz.force-moment-closure.kernel@1", "0.1.0"};
 inline constexpr gnc::foundation::AlgorithmIdentity kRigidStepKernelIdentity{
     "gnc.package.yyz.rigid-step.kernel@1", "0.1.0"};
 
@@ -153,10 +161,52 @@ struct AerodynamicTableDefinition {
         coefficient_rows_ca_cy_cn_cl_cm_cn;
 };
 
-struct RigidStepModelDefinition {
+struct ForceMomentClosureDefinition {
     gnc::model_sdk::ModelDefinitionMetadata metadata;
-    gnc::contracts::FrameIdentity inertial_frame;
     gnc::contracts::FrameIdentity body_frame;
+    gnc::contracts::ClockDomainIdentity clock_domain;
+    std::int64_t configuration_revision = -1;
+    gnc::foundation::NumericalPolicy numerical_policy;
+};
+
+class PreparedForceMomentClosureModel {
+  public:
+    PreparedForceMomentClosureModel(
+        const PreparedForceMomentClosureModel&) = default;
+    PreparedForceMomentClosureModel(
+        PreparedForceMomentClosureModel&&) noexcept = default;
+    PreparedForceMomentClosureModel& operator=(
+        const PreparedForceMomentClosureModel&) = default;
+    PreparedForceMomentClosureModel& operator=(
+        PreparedForceMomentClosureModel&&) noexcept = default;
+
+    [[nodiscard]] const ForceMomentClosureDefinition& definition()
+        const noexcept;
+    [[nodiscard]] const gnc::model_sdk::PreparedModelMetadata& metadata()
+        const noexcept;
+
+  private:
+    PreparedForceMomentClosureModel(
+        std::shared_ptr<const ForceMomentClosureDefinition> definition,
+        gnc::model_sdk::PreparedModelMetadata metadata) noexcept;
+
+    std::shared_ptr<const ForceMomentClosureDefinition> definition_;
+    gnc::model_sdk::PreparedModelMetadata metadata_;
+
+    friend gnc::foundation::NumericalOutcome<
+        PreparedForceMomentClosureModel>
+    prepare_force_moment_closure_model(
+        ForceMomentClosureDefinition definition);
+};
+
+[[nodiscard]] gnc::foundation::NumericalOutcome<
+    PreparedForceMomentClosureModel>
+prepare_force_moment_closure_model(
+    ForceMomentClosureDefinition definition);
+
+struct RigidStepModelDefinition {
+    gnc::contracts::FrameIdentity inertial_frame;
+    ForceMomentClosureDefinition force_moment_closure;
     RigidStepAlgorithmDefinition algorithm;
     AerodynamicTableDefinition aerodynamics;
 };
@@ -170,18 +220,19 @@ class PreparedRigidStepModel {
         default;
 
     [[nodiscard]] const RigidStepModelDefinition& definition() const noexcept;
-    [[nodiscard]] const gnc::model_sdk::PreparedModelMetadata& metadata()
+    [[nodiscard]] const PreparedForceMomentClosureModel&
+    force_moment_closure_model()
         const noexcept;
 
   private:
     PreparedRigidStepModel(
         std::shared_ptr<const RigidStepModelDefinition> definition,
         gnc::foundation::PreparedTrilinearTableView<6U> table,
-        gnc::model_sdk::PreparedModelMetadata metadata) noexcept;
+        PreparedForceMomentClosureModel force_moment_closure_model) noexcept;
 
     std::shared_ptr<const RigidStepModelDefinition> definition_;
     gnc::foundation::PreparedTrilinearTableView<6U> table_;
-    gnc::model_sdk::PreparedModelMetadata metadata_;
+    PreparedForceMomentClosureModel force_moment_closure_model_;
 
     friend gnc::foundation::NumericalOutcome<PreparedRigidStepModel>
     prepare_rigid_step_model(RigidStepModelDefinition definition);
@@ -222,6 +273,41 @@ struct BodyWrenchContribution {
     BodyMomentNewtonMeters moment_about_center_of_mass;
 };
 
+struct RigidFormInput {
+    BodyForceNewtons force_total;
+    BodyMomentNewtonMeters moment_total_about_center_of_mass;
+};
+
+struct ForceMomentClosureInput {
+    BodyPointMeters body_origin_to_center_of_mass;
+    std::vector<AppliedBodyWrenchInput> contributions;
+};
+
+struct ForceMomentClosureOutput {
+    BodyForceNewtons force_total;
+    BodyMomentNewtonMeters moment_total_about_center_of_mass;
+
+    [[nodiscard]] RigidFormInput form_input() const noexcept {
+        return {force_total, moment_total_about_center_of_mass};
+    }
+};
+
+struct ForceMomentClosureTelemetry {
+    std::vector<BodyWrenchContribution> contributions;
+};
+
+using ForceMomentClosureEvaluation =
+    gnc::model_sdk::AlgorithmEvaluation<ForceMomentClosureOutput,
+                                        ForceMomentClosureTelemetry>;
+
+class ForceMomentClosureKernel {
+  public:
+    [[nodiscard]] static gnc::foundation::NumericalOutcome<
+        ForceMomentClosureEvaluation>
+    evaluate(const PreparedForceMomentClosureModel& model,
+             const ForceMomentClosureInput& input);
+};
+
 struct RigidDerivativeOutput {
     InertialForceNewtons force_total_inertial;
     InertialAccelerationMetersPerSecondSquared acceleration;
@@ -244,10 +330,7 @@ struct RigidStepOutput {
 struct RigidStepTelemetry {
     AirDataOutput air_data;
     AerodynamicLookupOutput aerodynamic_lookup;
-    BodyWrenchContribution aerodynamic_contribution;
-    BodyWrenchContribution supplied_contribution;
-    BodyForceNewtons force_total;
-    BodyMomentNewtonMeters moment_total_about_center_of_mass;
+    ForceMomentClosureEvaluation force_moment_closure;
     RigidDerivativeOutput derivative_at_interval_start;
 };
 

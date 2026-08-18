@@ -10,12 +10,13 @@ typed committed rigid state
 + prepared Mach/alpha/beta aerodynamic table
 + supplied body wrench
 → strict trilinear query
-→ aerodynamic dimensionalization and CoM closure
-→ full-inertia rigid derivative
+→ aerodynamic dimensionalization
+→ pure ForceMomentClosure output and RigidFormInput
+→ full-inertia rigid derivative consumes the held form input
 → fixed RK4 interval candidate
 ```
 
-`RigidStepModelDefinition` 在准备边界校验固定步长、数值策略、frame/clock identity、气动几何和表格；`PreparedRigidStepModel` 持有不可变定义与表格存储。`RigidStepKernel` 只接收显式 typed 输入并返回 candidate，不读取 Session、Mission、文件系统、logger 或全局 registry。
+`PreparedForceMomentClosureModel` 是当前唯一使用 `Closure` execution form 的 YYZ 模型。`ForceMomentClosureKernel` 规范化 contribution 顺序，拒绝重复 source 与 frame/clock/revision/interval 不一致，逐项完成 CoM 力矩搬移，并以正式 output 提供 total force/moment 和 `RigidFormInput`。`RigidStepModelDefinition` 在准备边界校验固定步长、数值策略、frame/clock identity、气动几何和表格；`PreparedRigidStepModel` 持有不可变定义、Closure model 与表格存储。`RigidStepKernel` 只接收显式 typed 输入并返回 candidate，不读取 Session、Mission、文件系统、logger 或全局 registry。
 
 两段边界调用链：
 
