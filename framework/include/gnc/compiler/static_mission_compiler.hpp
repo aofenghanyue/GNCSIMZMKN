@@ -19,7 +19,7 @@
 namespace gnc::compiler {
 
 inline constexpr std::string_view kTypedStaticCompositionSourceVersion =
-    "gnc.typed-static-composition-source/1";
+    "gnc.typed-static-composition-source/2";
 
 struct SourceRef {
     std::string document_uri;
@@ -102,9 +102,13 @@ enum class DiagnosticCode : std::uint8_t {
     DuplicateOccurrence,
     UnknownDefinition,
     UnknownAlgorithm,
+    MissingSourceReference,
     UnknownEndpoint,
     PortDirectionMismatch,
     ContractMismatch,
+    BindingKindMismatch,
+    BindingScopeMismatch,
+    BindingTemporalMismatch,
     MissingRequiredBinding,
     MultipleRequiredBindings,
     NonCanonicalIr,
@@ -153,12 +157,20 @@ enum class DiagnosticCode : std::uint8_t {
         return "GNC-CAT-UNKNOWN-DEFINITION";
     case DiagnosticCode::UnknownAlgorithm:
         return "GNC-CAT-UNKNOWN-ALGORITHM";
+    case DiagnosticCode::MissingSourceReference:
+        return "GNC-BIND-MISSING-SOURCE-REFERENCE";
     case DiagnosticCode::UnknownEndpoint:
         return "GNC-BIND-UNKNOWN-ENDPOINT";
     case DiagnosticCode::PortDirectionMismatch:
         return "GNC-BIND-PORT-DIRECTION";
     case DiagnosticCode::ContractMismatch:
         return "GNC-BIND-CONTRACT-MISMATCH";
+    case DiagnosticCode::BindingKindMismatch:
+        return "GNC-BIND-KIND-MISMATCH";
+    case DiagnosticCode::BindingScopeMismatch:
+        return "GNC-BIND-SCOPE-MISMATCH";
+    case DiagnosticCode::BindingTemporalMismatch:
+        return "GNC-BIND-TEMPORAL-MISMATCH";
     case DiagnosticCode::MissingRequiredBinding:
         return "GNC-BIND-MISSING-REQUIRED";
     case DiagnosticCode::MultipleRequiredBindings:
@@ -248,6 +260,44 @@ inline void validate_ports(
                  catalog_source(package_id, owner), port.port_id,
                  "current static composition supports model Output ports "
                  "and algorithm Input ports only"});
+        }
+        if (!gnc::model_sdk::valid_binding_kind(port.binding_kind) ||
+            port.binding_kind ==
+                gnc::model_sdk::BindingKind::AssetBinding ||
+            !gnc::model_sdk::valid_port_cardinality(port.cardinality) ||
+            !gnc::model_sdk::valid_temporal_relation(
+                port.temporal_relation)) {
+            diagnostics.push_back(
+                {DiagnosticCode::InvalidCatalogDescriptor,
+                 catalog_source(package_id, owner), port.port_id,
+                 "port binding kind, cardinality, and temporal relation "
+                 "must use the supported typed descriptor values"});
+        }
+        const auto expected_cardinality =
+            supported_direction ==
+                    gnc::model_sdk::StaticPortDirection::Output
+                ? gnc::model_sdk::PortCardinality::OneOrMore
+                : gnc::model_sdk::PortCardinality::ExactlyOne;
+        if (port.cardinality != expected_cardinality) {
+            diagnostics.push_back(
+                {DiagnosticCode::InvalidCatalogDescriptor,
+                 catalog_source(package_id, owner), port.port_id,
+                 "model outputs require one-or-more consumers and current "
+                 "algorithm inputs require exactly one provider"});
+        }
+        if ((port.binding_kind ==
+                 gnc::model_sdk::BindingKind::PureQuery &&
+             port.temporal_relation !=
+                 gnc::model_sdk::TemporalRelation::NotApplicable) ||
+            (port.binding_kind ==
+                 gnc::model_sdk::BindingKind::ContinuousClosureLink &&
+             port.temporal_relation ==
+                 gnc::model_sdk::TemporalRelation::NotApplicable)) {
+            diagnostics.push_back(
+                {DiagnosticCode::InvalidCatalogDescriptor,
+                 catalog_source(package_id, owner), port.port_id,
+                 "PureQuery has no compiled temporal relation while a "
+                 "ContinuousClosureLink requires one"});
         }
     }
 }
@@ -361,6 +411,8 @@ class Catalog {
                 for (const auto& slot : model.asset_slots) {
                     if (slot.role.empty() ||
                         slot.asset_schema_id.empty() ||
+                        slot.cardinality !=
+                            gnc::model_sdk::PortCardinality::ExactlyOne ||
                         (!previous_asset_role.empty() &&
                          slot.role <= previous_asset_role)) {
                         outcome.diagnostics.push_back(
@@ -368,8 +420,8 @@ class Catalog {
                              detail::catalog_source(package.package_id,
                                                     definition.model_id),
                              slot.role,
-                             "asset slots must have identities and unique "
-                             "canonical order"});
+                             "asset slots must have identities, exactly-one "
+                             "cardinality, and unique canonical order"});
                     }
                     previous_asset_role = slot.role;
                 }
@@ -377,6 +429,23 @@ class Catalog {
                     model.ports, package.package_id, definition.model_id,
                     gnc::model_sdk::StaticPortDirection::Output,
                     outcome.diagnostics);
+                const auto expected_binding_kind =
+                    definition.execution_form ==
+                            gnc::model_sdk::ModelExecutionForm::PureQuery
+                        ? gnc::model_sdk::BindingKind::PureQuery
+                        : gnc::model_sdk::BindingKind::
+                              ContinuousClosureLink;
+                for (const auto& port : model.ports) {
+                    if (port.binding_kind != expected_binding_kind) {
+                        outcome.diagnostics.push_back(
+                            {DiagnosticCode::InvalidCatalogDescriptor,
+                             detail::catalog_source(package.package_id,
+                                                    definition.model_id),
+                             port.port_id,
+                             "model output binding kind differs from its "
+                             "execution form"});
+                    }
+                }
                 models.push_back({lock, std::move(model)});
             }
 
@@ -561,6 +630,8 @@ struct SourceAlgorithmConsumer {
     std::string algorithm_id;
     std::string algorithm_version;
     SourceRef source;
+    std::optional<ScopeKey> scope;
+    SourceRef scope_source;
 };
 
 struct SourceBinding {
@@ -590,6 +661,12 @@ struct TypedStaticCompositionSource {
 struct CanonicalPort {
     std::string port_id;
     std::string contract_id;
+    gnc::model_sdk::BindingKind binding_kind =
+        gnc::model_sdk::BindingKind::Unspecified;
+    gnc::model_sdk::PortCardinality cardinality =
+        gnc::model_sdk::PortCardinality::Unspecified;
+    gnc::model_sdk::TemporalRelation temporal_relation =
+        gnc::model_sdk::TemporalRelation::NotApplicable;
 };
 
 struct CanonicalEntity {
@@ -613,6 +690,8 @@ struct CanonicalAssetBinding {
     std::string role;
     std::string asset_schema_id;
     std::string asset_id;
+    gnc::model_sdk::PortCardinality cardinality =
+        gnc::model_sdk::PortCardinality::ExactlyOne;
     SourceRef source;
 };
 
@@ -648,6 +727,8 @@ struct CanonicalAlgorithmConsumer {
     std::string algorithm_version;
     std::vector<CanonicalPort> input_ports;
     SourceRef source;
+    std::optional<ScopeKey> scope;
+    SourceRef scope_source;
 };
 
 struct CanonicalBindingIntent {
@@ -663,7 +744,7 @@ struct CanonicalBindingIntent {
 // while semantic encoding excludes representation-specific locations and
 // plan identity. Topology, activation and runtime instances remain outside.
 struct CanonicalMissionIr {
-    std::uint32_t revision = 1U;
+    std::uint32_t revision = 2U;
     std::string mission_id;
     SourceRef mission_source;
     std::vector<CanonicalEntity> entities;
@@ -677,11 +758,133 @@ enum class BindingProofResult : std::uint8_t {
     Proven,
 };
 
+enum class BindingEndpointKind : std::uint8_t {
+    Asset,
+    PreparedModel,
+    ModelOccurrence,
+    AlgorithmConsumer,
+};
+
+[[nodiscard]] constexpr std::string_view to_string(
+    BindingEndpointKind kind) noexcept {
+    switch (kind) {
+    case BindingEndpointKind::Asset:
+        return "Asset";
+    case BindingEndpointKind::PreparedModel:
+        return "PreparedModel";
+    case BindingEndpointKind::ModelOccurrence:
+        return "ModelOccurrence";
+    case BindingEndpointKind::AlgorithmConsumer:
+        return "AlgorithmConsumer";
+    }
+    return "Unknown";
+}
+
+struct BindingEndpoint {
+    BindingEndpointKind kind = BindingEndpointKind::ModelOccurrence;
+    std::string owner_id;
+    std::string port_or_role_id;
+};
+
+enum class BindingPhase : std::uint8_t {
+    PrepareTime,
+    Evaluation,
+};
+
+[[nodiscard]] constexpr std::string_view to_string(
+    BindingPhase phase) noexcept {
+    switch (phase) {
+    case BindingPhase::PrepareTime:
+        return "prepare-time";
+    case BindingPhase::Evaluation:
+        return "evaluation";
+    }
+    return "Unknown";
+}
+
+struct BindingScopeResolution {
+    ScopeKey resolved_scope;
+};
+
+struct AssetBindingFacts {
+    std::string role;
+    std::string asset_schema_id;
+    std::string asset_id;
+};
+
+struct BindingPlanEntry {
+    std::string binding_id;
+    gnc::model_sdk::BindingKind binding_kind =
+        gnc::model_sdk::BindingKind::Unspecified;
+    BindingEndpoint provider_endpoint;
+    BindingEndpoint consumer_endpoint;
+    std::string exact_contract_id;
+    gnc::model_sdk::PortCardinality provider_cardinality =
+        gnc::model_sdk::PortCardinality::Unspecified;
+    gnc::model_sdk::PortCardinality consumer_cardinality =
+        gnc::model_sdk::PortCardinality::Unspecified;
+    BindingPhase phase = BindingPhase::Evaluation;
+    std::optional<BindingScopeResolution> scope_resolution;
+    std::optional<AssetBindingFacts> asset_binding;
+    SourceRef source;
+};
+
+struct BindingPlan {
+    std::vector<BindingPlanEntry> entries;
+};
+
+struct TemporalBindingPlanEntry {
+    std::string binding_id;
+    gnc::model_sdk::TemporalRelation relation =
+        gnc::model_sdk::TemporalRelation::NotApplicable;
+    SourceRef source;
+};
+
+struct TemporalBindingPlan {
+    std::vector<TemporalBindingPlanEntry> entries;
+};
+
+enum class BindingProofAssertion : std::uint8_t {
+    EndpointsResolved,
+    KindCompatible,
+    ContractExact,
+    CardinalitySatisfied,
+    AssetIdentityExact,
+    ScopeExact,
+    TemporalCompatible,
+    SourceLocated,
+};
+
+[[nodiscard]] constexpr std::string_view to_string(
+    BindingProofAssertion assertion) noexcept {
+    switch (assertion) {
+    case BindingProofAssertion::EndpointsResolved:
+        return "EndpointsResolved";
+    case BindingProofAssertion::KindCompatible:
+        return "KindCompatible";
+    case BindingProofAssertion::ContractExact:
+        return "ContractExact";
+    case BindingProofAssertion::CardinalitySatisfied:
+        return "CardinalitySatisfied";
+    case BindingProofAssertion::AssetIdentityExact:
+        return "AssetIdentityExact";
+    case BindingProofAssertion::ScopeExact:
+        return "ScopeExact";
+    case BindingProofAssertion::TemporalCompatible:
+        return "TemporalCompatible";
+    case BindingProofAssertion::SourceLocated:
+        return "SourceLocated";
+    }
+    return "Unknown";
+}
+
 struct BindingProof {
     std::string proof_id;
-    std::string assertion_code;
     std::string binding_id;
-    std::string contract_id;
+    gnc::model_sdk::BindingKind binding_kind =
+        gnc::model_sdk::BindingKind::Unspecified;
+    std::string exact_contract_id;
+    std::vector<BindingProofAssertion> assertions;
     std::vector<SourceRef> source_refs;
     BindingProofResult result = BindingProofResult::Proven;
 };
@@ -704,15 +907,8 @@ struct AlgorithmConsumerPlan {
     std::string algorithm_id;
     std::string algorithm_version;
     SourceRef source;
-};
-
-struct BindingPlanEntry {
-    std::string binding_id;
-    std::string provider_occurrence_id;
-    std::string provider_port_id;
-    std::string consumer_id;
-    std::string consumer_port_id;
-    std::string contract_id;
+    std::optional<ScopeKey> scope;
+    SourceRef scope_source;
 };
 
 enum class CompiledObligationKind : std::uint8_t {
@@ -736,24 +932,26 @@ struct CompiledObligation {
     std::size_t ordinal = 0U;
     CompiledObligationKind kind =
         CompiledObligationKind::PureQueryEvaluation;
-    std::string provider_occurrence_id;
-    std::string consumer_id;
+    BindingEndpoint provider_endpoint;
+    BindingEndpoint consumer_endpoint;
     std::string binding_id;
 };
 
-// This narrow, in-process descriptor freezes only exact identities, one-way
-// bindings, and query/closure obligations. It has no canonical model config,
-// asset binding, runtime instance, function address, Session identity, or
-// mutable state, so it cannot reconstruct a complete PreparedModel.
+// This narrow, in-process descriptor freezes exact identities, typed binding
+// and temporal facts, prepare-time asset identity, and query/closure
+// obligations. It does not copy canonical model configuration payloads or
+// provide runtime instances, function addresses, Session identity, or mutable
+// state, so it cannot reconstruct a complete PreparedModel.
 struct ExecutionPlanDescriptor {
-    std::uint32_t revision = 1U;
+    std::uint32_t revision = 2U;
     std::string plan_id;
     std::string mission_id;
     std::vector<PackageLock> dependency_lock;
     std::vector<ModelPreparationIdentityPlan>
         model_preparation_identities;
     std::vector<AlgorithmConsumerPlan> algorithms;
-    std::vector<BindingPlanEntry> bindings;
+    BindingPlan binding_plan;
+    TemporalBindingPlan temporal_binding_plan;
     std::vector<BindingProof> binding_proofs;
     std::vector<CompiledObligation> obligations;
 };
@@ -770,7 +968,9 @@ namespace detail {
     std::vector<CanonicalPort> result;
     result.reserve(ports.size());
     for (const auto& port : ports) {
-        result.push_back({port.port_id, port.contract_id});
+        result.push_back({port.port_id, port.contract_id,
+                          port.binding_kind, port.cardinality,
+                          port.temporal_relation});
     }
     std::sort(result.begin(), result.end(),
               [](const CanonicalPort& lhs, const CanonicalPort& rhs) {
@@ -782,6 +982,17 @@ namespace detail {
 [[nodiscard]] inline bool valid_source_ref(
     const SourceRef& source) noexcept {
     return !source.document_uri.empty() && !source.node_path.empty();
+}
+
+[[nodiscard]] inline SourceRef diagnostic_source(
+    const SourceRef& preferred, const SourceRef& fallback) {
+    if (valid_source_ref(preferred)) {
+        return preferred;
+    }
+    if (valid_source_ref(fallback)) {
+        return fallback;
+    }
+    return {"typed://mission", "/"};
 }
 
 [[nodiscard]] inline bool valid_canonical_config_value(
@@ -809,7 +1020,8 @@ inline bool canonicalize_configuration(
     const auto fail = [&](const SourceRef& location,
                           std::string detail) {
         diagnostics.push_back(
-            {DiagnosticCode::InvalidConfiguration, location,
+            {DiagnosticCode::InvalidConfiguration,
+             diagnostic_source(location, source.source),
              source.occurrence_id, std::move(detail)});
     };
     configuration = source.configuration;
@@ -894,7 +1106,8 @@ inline bool canonicalize_assets(
         if (bindings[index - 1U].role == bindings[index].role) {
             diagnostics.push_back(
                 {DiagnosticCode::DuplicateAssetBinding,
-                 bindings[index].source, source.occurrence_id,
+                 diagnostic_source(bindings[index].source, source.source),
+                 source.occurrence_id,
                  "an asset role is bound more than once"});
             return false;
         }
@@ -909,7 +1122,9 @@ inline bool canonicalize_assets(
     if (bindings.size() > descriptor.asset_slots.size()) {
         diagnostics.push_back(
             {DiagnosticCode::UnknownAssetRole,
-             bindings[descriptor.asset_slots.size()].source,
+             diagnostic_source(
+                 bindings[descriptor.asset_slots.size()].source,
+                 source.source),
              source.occurrence_id,
              "the source binds an asset role absent from the package "
              "descriptor"});
@@ -922,14 +1137,16 @@ inline bool canonicalize_assets(
         const auto& slot = descriptor.asset_slots[index];
         if (binding.role != slot.role) {
             diagnostics.push_back(
-                {DiagnosticCode::UnknownAssetRole, binding.source,
+                {DiagnosticCode::UnknownAssetRole,
+                 diagnostic_source(binding.source, source.source),
                  source.occurrence_id,
                  "the source asset role differs from the package slot"});
             return false;
         }
         if (binding.asset_schema_id != slot.asset_schema_id) {
             diagnostics.push_back(
-                {DiagnosticCode::AssetSchemaMismatch, binding.source,
+                {DiagnosticCode::AssetSchemaMismatch,
+                 diagnostic_source(binding.source, source.source),
                  source.occurrence_id,
                  "the asset schema differs from the package slot"});
             return false;
@@ -937,13 +1154,15 @@ inline bool canonicalize_assets(
         if (binding.asset_id.empty() ||
             !valid_source_ref(binding.source)) {
             diagnostics.push_back(
-                {DiagnosticCode::AssetSchemaMismatch, binding.source,
+                {DiagnosticCode::MissingSourceReference,
+                 diagnostic_source(binding.source, source.source),
                  source.occurrence_id,
                  "asset identity and provenance are required"});
             return false;
         }
         assets.push_back({binding.role, binding.asset_schema_id,
-                          binding.asset_id, binding.source});
+                          binding.asset_id, slot.cardinality,
+                          binding.source});
     }
     return true;
 }
@@ -961,6 +1180,13 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
              {"typed://mission", "/"}, source.mission_id,
              "static composition source version and mission identity are "
              "required"});
+        return outcome;
+    }
+    if (!detail::valid_source_ref(source.mission_source)) {
+        outcome.diagnostics.push_back(
+            {DiagnosticCode::MissingSourceReference,
+             {"typed://mission", "/mission_source"}, source.mission_id,
+             "mission source location is required"});
         return outcome;
     }
     if (source.model_occurrences.empty() &&
@@ -986,6 +1212,15 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
                          return lhs.entity_id < rhs.entity_id;
                      });
     for (const auto& entity : entity_sources) {
+        if (!detail::valid_source_ref(entity.identity_source) ||
+            !detail::valid_source_ref(entity.lifecycle_source)) {
+            outcome.diagnostics.push_back(
+                {DiagnosticCode::MissingSourceReference,
+                 source.mission_source, entity.entity_id,
+                 "entity identity and lifecycle source locations are "
+                 "required"});
+            continue;
+        }
         if (entity.entity_id.empty()) {
             outcome.diagnostics.push_back(
                 {DiagnosticCode::InvalidEntity, entity.identity_source,
@@ -1017,6 +1252,13 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
                   return lhs.key < rhs.key;
               });
     for (const auto& scope : scope_sources) {
+        if (!detail::valid_source_ref(scope.source)) {
+            outcome.diagnostics.push_back(
+                {DiagnosticCode::MissingSourceReference,
+                 source.mission_source, scope.key.subject_entity_id,
+                 "scope source location is required"});
+            continue;
+        }
         if (scope.key.kind != ScopeKind::Vehicle ||
             scope.key.subject_entity_id.empty()) {
             outcome.diagnostics.push_back(
@@ -1053,6 +1295,21 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
                   return lhs.occurrence_id < rhs.occurrence_id;
               });
     for (const auto& model : model_sources) {
+        if (!detail::valid_source_ref(model.source) ||
+            (!model.subject_entity_id.empty() &&
+             !detail::valid_source_ref(model.subject_source)) ||
+            (model.scope.has_value() &&
+             !detail::valid_source_ref(model.scope_source)) ||
+            (model.placement !=
+                 gnc::model_sdk::ModelPlacement::Unspecified &&
+             !detail::valid_source_ref(model.placement_source))) {
+            outcome.diagnostics.push_back(
+                {DiagnosticCode::MissingSourceReference,
+                 source.mission_source, model.occurrence_id,
+                 "model, subject, scope, and explicit placement source "
+                 "locations are required when those facts are present"});
+            continue;
+        }
         if (model.occurrence_id.empty() ||
             !composition_node_ids.insert(model.occurrence_id).second) {
             outcome.diagnostics.push_back(
@@ -1162,12 +1419,31 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
                   return lhs.consumer_id < rhs.consumer_id;
               });
     for (const auto& algorithm : algorithm_sources) {
+        if (!detail::valid_source_ref(algorithm.source) ||
+            (algorithm.scope.has_value() &&
+             !detail::valid_source_ref(algorithm.scope_source))) {
+            outcome.diagnostics.push_back(
+                {DiagnosticCode::MissingSourceReference,
+                 source.mission_source, algorithm.consumer_id,
+                 "algorithm consumer and declared scope source locations "
+                 "are required"});
+            continue;
+        }
         if (algorithm.consumer_id.empty() ||
             !composition_node_ids.insert(algorithm.consumer_id).second) {
             outcome.diagnostics.push_back(
                 {DiagnosticCode::DuplicateOccurrence, algorithm.source,
                  algorithm.consumer_id,
                  "composition node identity is empty or duplicated"});
+            continue;
+        }
+        if (algorithm.scope.has_value() &&
+            scope_keys.find(*algorithm.scope) == scope_keys.end()) {
+            outcome.diagnostics.push_back(
+                {DiagnosticCode::UnknownScope, algorithm.scope_source,
+                 algorithm.consumer_id,
+                 "algorithm consumer references an undeclared typed "
+                 "scope"});
             continue;
         }
         const auto* catalog_algorithm = catalog.find_algorithm(
@@ -1186,7 +1462,8 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
              descriptor.algorithm_id,
              descriptor.algorithm_version,
              detail::canonical_ports(descriptor.ports),
-             algorithm.source});
+             algorithm.source, algorithm.scope,
+             algorithm.scope_source});
     }
 
     auto binding_sources = source.binding_intents;
@@ -1196,6 +1473,14 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
               });
     std::set<std::string> binding_ids;
     for (const auto& binding : binding_sources) {
+        if (!detail::valid_source_ref(binding.source)) {
+            outcome.diagnostics.push_back(
+                {DiagnosticCode::MissingSourceReference,
+                 source.mission_source, binding.binding_id,
+                 "every source-authored binding requires a direct source "
+                 "location"});
+            continue;
+        }
         if (binding.binding_id.empty() ||
             !binding_ids.insert(binding.binding_id).second) {
             outcome.diagnostics.push_back(
@@ -1203,6 +1488,7 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
                  binding.source,
                  binding.binding_id,
                  "binding identity is empty or duplicated"});
+            continue;
         }
         ir.binding_intents.push_back(
             {binding.binding_id,
@@ -1281,11 +1567,23 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
         for (const auto& asset : model.asset_bindings) {
             stream << "asset " << model.occurrence_id << '.'
                    << asset.role << ' ' << asset.asset_schema_id << ' '
-                   << asset.asset_id << '\n';
+                   << asset.asset_id << " cardinality "
+                   << gnc::model_sdk::to_string(asset.cardinality)
+                   << '\n';
         }
         for (const auto& port : model.output_ports) {
             stream << "output " << model.occurrence_id << '.'
-                   << port.port_id << ' ' << port.contract_id << '\n';
+                   << port.port_id << ' ' << port.contract_id << ' '
+                   << gnc::model_sdk::to_string(port.binding_kind)
+                   << " cardinality "
+                   << gnc::model_sdk::to_string(port.cardinality);
+            if (port.temporal_relation !=
+                gnc::model_sdk::TemporalRelation::NotApplicable) {
+                stream << " temporal "
+                       << gnc::model_sdk::to_string(
+                              port.temporal_relation);
+            }
+            stream << '\n';
         }
     }
     for (const auto& algorithm : ir.algorithm_consumers) {
@@ -1293,10 +1591,25 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
                << algorithm.package.package_id << '@'
                << algorithm.package.package_version << ' '
                << algorithm.algorithm_id << '@'
-               << algorithm.algorithm_version << '\n';
+               << algorithm.algorithm_version;
+        if (algorithm.scope.has_value()) {
+            stream << " scope " << to_string(algorithm.scope->kind)
+                   << ':' << algorithm.scope->subject_entity_id;
+        }
+        stream << '\n';
         for (const auto& port : algorithm.input_ports) {
             stream << "input " << algorithm.consumer_id << '.'
-                   << port.port_id << ' ' << port.contract_id << '\n';
+                   << port.port_id << ' ' << port.contract_id << ' '
+                   << gnc::model_sdk::to_string(port.binding_kind)
+                   << " cardinality "
+                   << gnc::model_sdk::to_string(port.cardinality);
+            if (port.temporal_relation !=
+                gnc::model_sdk::TemporalRelation::NotApplicable) {
+                stream << " temporal "
+                       << gnc::model_sdk::to_string(
+                              port.temporal_relation);
+            }
+            stream << '\n';
         }
     }
     for (const auto& binding : ir.binding_intents) {
@@ -1337,12 +1650,85 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
     }
 
     std::vector<BindingPlanEntry> resolved_bindings;
+    std::vector<TemporalBindingPlanEntry> temporal_bindings;
     std::vector<BindingProof> proofs;
     std::map<std::string, std::size_t> provider_counts;
     std::map<std::string, std::size_t> consumer_counts;
+    std::set<std::string> resolved_binding_ids;
+
+    const auto append_source = [](std::vector<SourceRef>& refs,
+                                  const SourceRef& source_ref) {
+        const auto found = std::find_if(
+            refs.begin(), refs.end(),
+            [&source_ref](const SourceRef& existing) {
+                return existing.document_uri == source_ref.document_uri &&
+                       existing.node_path == source_ref.node_path;
+            });
+        if (found == refs.end()) {
+            refs.push_back(source_ref);
+        }
+    };
+
+    // Asset slots are first-class prepare-time bindings. Their source facts
+    // are already canonicalized against package-owned role/schema metadata.
+    for (const auto& model : ir.model_occurrences) {
+        for (const auto& asset : model.asset_bindings) {
+            const std::string binding_id =
+                "asset." + model.occurrence_id + "." + asset.role;
+            if (!resolved_binding_ids.insert(binding_id).second) {
+                outcome.diagnostics.push_back(
+                    {DiagnosticCode::InvalidStaticCompositionSource,
+                     asset.source, binding_id,
+                     "resolved asset binding identity is duplicated"});
+                continue;
+            }
+
+            BindingPlanEntry entry;
+            entry.binding_id = binding_id;
+            entry.binding_kind =
+                gnc::model_sdk::BindingKind::AssetBinding;
+            entry.provider_endpoint = {
+                BindingEndpointKind::Asset, asset.asset_id, asset.role};
+            entry.consumer_endpoint = {
+                BindingEndpointKind::PreparedModel,
+                model.occurrence_id, asset.role};
+            entry.exact_contract_id = asset.asset_schema_id;
+            entry.provider_cardinality = asset.cardinality;
+            entry.consumer_cardinality = asset.cardinality;
+            entry.phase = BindingPhase::PrepareTime;
+            entry.asset_binding = AssetBindingFacts{
+                asset.role, asset.asset_schema_id, asset.asset_id};
+            entry.source = asset.source;
+            resolved_bindings.push_back(std::move(entry));
+
+            std::vector<SourceRef> source_refs;
+            append_source(source_refs, asset.source);
+            append_source(source_refs, model.source);
+            proofs.push_back(
+                {"proof.binding." + binding_id,
+                 binding_id,
+                 gnc::model_sdk::BindingKind::AssetBinding,
+                 asset.asset_schema_id,
+                 {BindingProofAssertion::EndpointsResolved,
+                  BindingProofAssertion::KindCompatible,
+                  BindingProofAssertion::ContractExact,
+                  BindingProofAssertion::CardinalitySatisfied,
+                  BindingProofAssertion::AssetIdentityExact,
+                  BindingProofAssertion::SourceLocated},
+                 std::move(source_refs),
+                 BindingProofResult::Proven});
+        }
+    }
 
     for (const auto& intent : ir.binding_intents) {
         const auto& binding = intent;
+        if (!resolved_binding_ids.insert(binding.binding_id).second) {
+            outcome.diagnostics.push_back(
+                {DiagnosticCode::InvalidStaticCompositionSource,
+                 binding.source, binding.binding_id,
+                 "binding identity collides with another resolved binding"});
+            continue;
+        }
         const auto model_found =
             model_by_id.find(binding.provider_occurrence_id);
         const auto algorithm_found =
@@ -1377,6 +1763,50 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
                  "provider and consumer contract identities differ"});
             continue;
         }
+        if (provider_port->binding_kind !=
+            consumer_port->binding_kind) {
+            outcome.diagnostics.push_back(
+                {DiagnosticCode::BindingKindMismatch, binding.source,
+                 binding.binding_id,
+                 "provider and consumer binding kinds differ"});
+            continue;
+        }
+        if (provider_port->binding_kind !=
+                gnc::model_sdk::BindingKind::PureQuery &&
+            provider_port->binding_kind !=
+                gnc::model_sdk::BindingKind::ContinuousClosureLink) {
+            outcome.diagnostics.push_back(
+                {DiagnosticCode::BindingKindMismatch, binding.source,
+                 binding.binding_id,
+                 "source-authored model-to-algorithm binding requires a "
+                 "PureQuery or ContinuousClosureLink"});
+            continue;
+        }
+        if (provider_port->temporal_relation !=
+            consumer_port->temporal_relation) {
+            outcome.diagnostics.push_back(
+                {DiagnosticCode::BindingTemporalMismatch, binding.source,
+                 binding.binding_id,
+                 "provider and consumer temporal relations differ"});
+            continue;
+        }
+
+        std::optional<BindingScopeResolution> scope_resolution;
+        const auto& provider_scope = model_found->second->scope;
+        const auto& consumer_scope = algorithm_found->second->scope;
+        if (provider_scope.has_value() != consumer_scope.has_value() ||
+            (provider_scope.has_value() &&
+             !(*provider_scope == *consumer_scope))) {
+            outcome.diagnostics.push_back(
+                {DiagnosticCode::BindingScopeMismatch, binding.source,
+                 binding.binding_id,
+                 "provider and consumer endpoint scopes differ"});
+            continue;
+        }
+        if (provider_scope.has_value()) {
+            scope_resolution =
+                BindingScopeResolution{*provider_scope};
+        }
 
         const auto provider_key = detail::endpoint_key(
             binding.provider_occurrence_id, binding.provider_port_id);
@@ -1384,16 +1814,56 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
             binding.consumer_id, binding.consumer_port_id);
         ++provider_counts[provider_key];
         ++consumer_counts[consumer_key];
-        resolved_bindings.push_back(
-            {binding.binding_id, binding.provider_occurrence_id,
-             binding.provider_port_id, binding.consumer_id,
-             binding.consumer_port_id, provider_port->contract_id});
+        BindingPlanEntry entry;
+        entry.binding_id = binding.binding_id;
+        entry.binding_kind = provider_port->binding_kind;
+        entry.provider_endpoint = {
+            BindingEndpointKind::ModelOccurrence,
+            binding.provider_occurrence_id, binding.provider_port_id};
+        entry.consumer_endpoint = {
+            BindingEndpointKind::AlgorithmConsumer,
+            binding.consumer_id, binding.consumer_port_id};
+        entry.exact_contract_id = provider_port->contract_id;
+        entry.provider_cardinality = provider_port->cardinality;
+        entry.consumer_cardinality = consumer_port->cardinality;
+        entry.phase = BindingPhase::Evaluation;
+        entry.scope_resolution = scope_resolution;
+        entry.source = binding.source;
+        resolved_bindings.push_back(std::move(entry));
+
+        std::vector<BindingProofAssertion> assertions{
+            BindingProofAssertion::EndpointsResolved,
+            BindingProofAssertion::KindCompatible,
+            BindingProofAssertion::ContractExact,
+            BindingProofAssertion::CardinalitySatisfied,
+            BindingProofAssertion::SourceLocated,
+        };
+        std::vector<SourceRef> source_refs;
+        append_source(source_refs, model_found->second->source);
+        append_source(source_refs, binding.source);
+        append_source(source_refs, algorithm_found->second->source);
+        if (scope_resolution.has_value()) {
+            assertions.push_back(BindingProofAssertion::ScopeExact);
+            append_source(source_refs,
+                          model_found->second->scope_source);
+            append_source(source_refs,
+                          algorithm_found->second->scope_source);
+        }
+        if (provider_port->binding_kind ==
+            gnc::model_sdk::BindingKind::ContinuousClosureLink) {
+            assertions.push_back(
+                BindingProofAssertion::TemporalCompatible);
+            temporal_bindings.push_back(
+                {binding.binding_id,
+                 provider_port->temporal_relation,
+                 binding.source});
+        }
         proofs.push_back(
             {"proof.binding." + binding.binding_id,
-             "GNC.PLAN.BINDING.CONTRACT.EXACT", binding.binding_id,
+             binding.binding_id,
+             provider_port->binding_kind,
              provider_port->contract_id,
-             {model_found->second->source, binding.source,
-              algorithm_found->second->source},
+             std::move(assertions), std::move(source_refs),
              BindingProofResult::Proven});
     }
 
@@ -1431,6 +1901,15 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
         return outcome;
     }
 
+    const auto by_binding_id = [](const auto& lhs, const auto& rhs) {
+        return lhs.binding_id < rhs.binding_id;
+    };
+    std::sort(resolved_bindings.begin(), resolved_bindings.end(),
+              by_binding_id);
+    std::sort(temporal_bindings.begin(), temporal_bindings.end(),
+              by_binding_id);
+    std::sort(proofs.begin(), proofs.end(), by_binding_id);
+
     ExecutionPlanDescriptor plan;
     plan.plan_id = source.plan_id;
     plan.mission_id = source.mission_id;
@@ -1458,25 +1937,34 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
             {algorithm.consumer_id, algorithm.package,
              algorithm.algorithm_id,
              algorithm.algorithm_version,
-             algorithm.source});
+             algorithm.source, algorithm.scope,
+             algorithm.scope_source});
     }
     for (const auto& dependency : dependency_locks) {
         plan.dependency_lock.push_back(dependency.second);
     }
 
-    plan.bindings = std::move(resolved_bindings);
+    plan.binding_plan.entries = std::move(resolved_bindings);
+    plan.temporal_binding_plan.entries =
+        std::move(temporal_bindings);
     plan.binding_proofs = std::move(proofs);
-    for (std::size_t index = 0U; index < plan.bindings.size(); ++index) {
-        const auto& binding = plan.bindings[index];
-        const auto provider = model_by_id.at(binding.provider_occurrence_id);
-        const auto form = provider->execution_form;
-        const auto kind = form == gnc::model_sdk::ModelExecutionForm::PureQuery
-                              ? CompiledObligationKind::PureQueryEvaluation
-                              : CompiledObligationKind::ClosureEvaluation;
+    std::size_t obligation_ordinal = 0U;
+    for (const auto& binding : plan.binding_plan.entries) {
+        if (binding.binding_kind ==
+            gnc::model_sdk::BindingKind::AssetBinding) {
+            continue;
+        }
+        const auto kind =
+            binding.binding_kind ==
+                    gnc::model_sdk::BindingKind::PureQuery
+                ? CompiledObligationKind::PureQueryEvaluation
+                : CompiledObligationKind::ClosureEvaluation;
         plan.obligations.push_back(
-            {"obligation." + binding.binding_id, index, kind,
-             binding.provider_occurrence_id,
-             binding.consumer_id, binding.binding_id});
+            {"obligation." + binding.binding_id,
+             obligation_ordinal++, kind,
+             binding.provider_endpoint,
+             binding.consumer_endpoint,
+             binding.binding_id});
     }
 
     outcome.value.emplace(
@@ -1504,26 +1992,68 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
     for (const auto& algorithm : plan.algorithms) {
         stream << "consumer " << algorithm.consumer_id << ' '
                << algorithm.algorithm_id << '@'
-               << algorithm.algorithm_version << '\n';
+               << algorithm.algorithm_version;
+        if (algorithm.scope.has_value()) {
+            stream << " scope " << to_string(algorithm.scope->kind)
+                   << ':' << algorithm.scope->subject_entity_id;
+        }
+        stream << '\n';
     }
-    for (const auto& binding : plan.bindings) {
+    const auto write_endpoint = [&stream](const BindingEndpoint& endpoint) {
+        stream << to_string(endpoint.kind) << ':' << endpoint.owner_id
+               << '.' << endpoint.port_or_role_id;
+    };
+    for (const auto& binding : plan.binding_plan.entries) {
         stream << "bind " << binding.binding_id << ' '
-               << binding.provider_occurrence_id << '.'
-               << binding.provider_port_id << " -> "
-               << binding.consumer_id << '.'
-               << binding.consumer_port_id << ' '
-               << binding.contract_id << '\n';
+               << gnc::model_sdk::to_string(binding.binding_kind) << ' ';
+        write_endpoint(binding.provider_endpoint);
+        stream << " -> ";
+        write_endpoint(binding.consumer_endpoint);
+        stream << " contract " << binding.exact_contract_id
+               << " cardinality "
+               << gnc::model_sdk::to_string(
+                      binding.provider_cardinality)
+               << '/'
+               << gnc::model_sdk::to_string(
+                      binding.consumer_cardinality)
+               << " phase " << to_string(binding.phase);
+        if (binding.scope_resolution.has_value()) {
+            stream << " scope "
+                   << to_string(
+                          binding.scope_resolution->resolved_scope.kind)
+                   << ':'
+                   << binding.scope_resolution->resolved_scope
+                          .subject_entity_id;
+        }
+        if (binding.asset_binding.has_value()) {
+            stream << " asset " << binding.asset_binding->role << ' '
+                   << binding.asset_binding->asset_schema_id << ' '
+                   << binding.asset_binding->asset_id;
+        }
+        stream << '\n';
+    }
+    for (const auto& temporal :
+         plan.temporal_binding_plan.entries) {
+        stream << "temporal " << temporal.binding_id << ' '
+               << gnc::model_sdk::to_string(temporal.relation) << '\n';
     }
     for (const auto& proof : plan.binding_proofs) {
         stream << "prove " << proof.proof_id << ' '
-               << proof.assertion_code << ' ' << proof.contract_id << '\n';
+               << gnc::model_sdk::to_string(proof.binding_kind)
+               << " contract " << proof.exact_contract_id;
+        for (const auto assertion : proof.assertions) {
+            stream << ' ' << to_string(assertion);
+        }
+        stream << '\n';
     }
     for (const auto& obligation : plan.obligations) {
         stream << "obligation " << obligation.ordinal << ' '
                << obligation.obligation_id << ' '
-               << to_string(obligation.kind) << ' '
-               << obligation.provider_occurrence_id << " -> "
-               << obligation.consumer_id << '\n';
+               << to_string(obligation.kind) << ' ';
+        write_endpoint(obligation.provider_endpoint);
+        stream << " -> ";
+        write_endpoint(obligation.consumer_endpoint);
+        stream << '\n';
     }
     return stream.str();
 }

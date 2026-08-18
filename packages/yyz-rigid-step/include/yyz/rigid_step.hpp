@@ -372,7 +372,10 @@ describe_yyz_rigid_step_package() {
     };
     closure.ports.push_back(
         {"form-input", std::string(kRigidFormInputContractIdentity),
-         gnc::model_sdk::StaticPortDirection::Output});
+         gnc::model_sdk::StaticPortDirection::Output,
+         gnc::model_sdk::BindingKind::ContinuousClosureLink,
+         gnc::model_sdk::PortCardinality::OneOrMore,
+         gnc::model_sdk::TemporalRelation::IntervalModel});
 
     gnc::model_sdk::StaticModelDescriptor aerodynamics;
     aerodynamics.definition = {
@@ -409,11 +412,15 @@ describe_yyz_rigid_step_package() {
     };
     aerodynamics.asset_slots.push_back(
         {"aerodynamics",
-         std::string(kAerodynamicTableAssetSchemaIdentity)});
+         std::string(kAerodynamicTableAssetSchemaIdentity),
+         gnc::model_sdk::PortCardinality::ExactlyOne});
     aerodynamics.ports.push_back(
         {"coefficients",
          std::string(kAerodynamicCoefficientsContractIdentity),
-         gnc::model_sdk::StaticPortDirection::Output});
+         gnc::model_sdk::StaticPortDirection::Output,
+         gnc::model_sdk::BindingKind::PureQuery,
+         gnc::model_sdk::PortCardinality::OneOrMore,
+         gnc::model_sdk::TemporalRelation::NotApplicable});
 
     gnc::model_sdk::StaticAlgorithmDescriptor rigid_step;
     rigid_step.algorithm_id = std::string(kRigidStepKernelIdentity.id);
@@ -422,10 +429,16 @@ describe_yyz_rigid_step_package() {
     rigid_step.ports.push_back(
         {"aerodynamic-coefficients",
          std::string(kAerodynamicCoefficientsContractIdentity),
-         gnc::model_sdk::StaticPortDirection::Input});
+         gnc::model_sdk::StaticPortDirection::Input,
+         gnc::model_sdk::BindingKind::PureQuery,
+         gnc::model_sdk::PortCardinality::ExactlyOne,
+         gnc::model_sdk::TemporalRelation::NotApplicable});
     rigid_step.ports.push_back(
         {"form-input", std::string(kRigidFormInputContractIdentity),
-         gnc::model_sdk::StaticPortDirection::Input});
+         gnc::model_sdk::StaticPortDirection::Input,
+         gnc::model_sdk::BindingKind::ContinuousClosureLink,
+         gnc::model_sdk::PortCardinality::ExactlyOne,
+         gnc::model_sdk::TemporalRelation::IntervalModel});
 
     gnc::model_sdk::StaticPackageDescriptor package;
     package.package_id = std::string(kYyzRigidStepPackageIdentity);

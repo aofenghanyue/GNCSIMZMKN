@@ -2,7 +2,7 @@
 
 - 更新日期：2026-08-18
 - 当前 gate：`R2`
-- 产品状态：R0 科学/性能基线与 G2 已闭合；R1 Foundation、窄范围 in-process Contracts、四个 YYZ 产品切片和 CAVH 公式产品切片已完成；R2 canonical Mission IR 已闭合真实 YYZ entity/Vehicle scope/subject、package-owned placement、typed config、独立 aero PureQuery/asset binding 与 source-independent SHA-256。syntax-neutral SourceTree、完整 PreparedModel plan 重建、plan linker、RuntimeComponent、产品级 CAVH guidance command 和 Session 仿真运行能力仍未实现
+- 产品状态：R0 科学/性能基线与 G2 已闭合；R1 Foundation、窄范围 in-process Contracts、四个 YYZ 产品切片和 CAVH 公式产品切片已完成；R2 canonical Mission IR 与首个 typed BindingPlan 已闭合真实 YYZ entity/Vehicle scope/subject、package-owned placement、typed config、独立 aero PureQuery/asset binding、query/closure endpoint proof、`IntervalModel` temporal binding 与 source-independent SHA-256。syntax-neutral SourceTree、完整 PreparedModel plan 重建、plan linker、RuntimeComponent、产品级 CAVH guidance command 和 Session 仿真运行能力仍未实现
 - 当前分支：`codex/r0-governance-reset`
 - 分支基线：`origin/main@dfedf27`
 
@@ -63,12 +63,13 @@
 - `R2-IR-001` 已完成。REF-YYZ-001 typed source 将 `vehicle.fixture.yyz@1` 固定为 `Vehicle + subject_entity_id` scope，并让 aero/closure occurrence 保留同一 subject；YYZ AerodynamicTable 位于 `vehicle.output`，ForceMomentClosure 位于 `interaction/closure`，CAVH GlideEnvelope 提供无虚构 entity/scope 的第二个 `vehicle.output` descriptor consumer。Compiler 通用检查直接拒绝 scope unknown entity、occurrence unknown scope、subject/scope mismatch 与 source/package placement mismatch。
 - ForceMomentClosure canonical config 已覆盖 body frame、clock domain、configuration revision 和完整 `NumericalPolicy`；AerodynamicTable 与 GlideEnvelope 使用相同的 string/int64/enum/canonical-binary64 block 边界。三个 package builder 从 block 确定性重建 typed definition，字段 source/default provenance 随 IR 保留。`ADR-0013` 固定 schema/version 与排除范围。
 - 原 rigid-step 内嵌表已形成独立 `AerodynamicTableDefinition`、真实 `AerodynamicTableAsset`、`PreparedAerodynamicTableModel` 与 formal PureQuery output/telemetry。RigidStep 直接消费 query output，资产 `aero-table.fixture.yyz.multiaffine@1` 以 `gnc.asset.yyz.aerodynamic-table.multiaffine@1` 进入 canonical asset binding；既有 aero lookup、dimensionalization、frozen interval 和 rigid/mass 产品结果保持通过。
-- `hash_canonical_mission_ir` 依照 `ADR-0014` 对 canonical graph 生成 tagged、length-prefixed、big-endian semantic bytes 与 SHA-256。source URI/path、声明顺序和 plan id 不进入 digest；entity、scope relation、placement、model、config 与 asset 变化都会改变 digest。C++ 与独立 Python reference 共同固定 YYZ qualification vector `cf7676b9764d95157cd473e0b429c63b8c48e2c6f0bbd79fbe21e12dffb6c259`，noncanonical order 与负零在 SHA-256 前失败。
+- `hash_canonical_mission_ir` 依照 `ADR-0014` 对 canonical graph 生成 `semantic-bytes@2` tagged、length-prefixed、big-endian bytes 与 SHA-256。source URI/path、声明顺序和 plan id 不进入 digest；entity、model/algorithm scope relation、placement、model、typed port、config、asset 与 binding intent 变化都会改变 digest。C++ 与独立 Python reference 共同固定包含真实 RigidStep consumer/bindings 的 YYZ qualification vector `b29dc67f2a9e0bb36cb18a5e54a8c4830bdb0cae718fbf856646ba903892511b`，noncanonical order 与负零在 SHA-256 前失败。
+- `R2-BIND-001` 已完成当前真实 YYZ/CAVH 图的首个 typed BindingPlan。aero table asset 以 exactly-one `AssetBinding` 在 prepare-time 进入 prepared model；CAVH GlideEnvelope 与 YYZ AerodynamicTable 分别以 exact `PureQuery` 进入 formula/rigid-step；ForceMomentClosure 以 `ContinuousClosureLink + IntervalModel` 进入 RigidStep。每条 entry 保留 tagged endpoint、exact contract、两端 cardinality、有效 SourceRef 和适用的 asset/scope/temporal facts。CAVH 不生成 scope proof；YYZ query/closure 在 provider 与 consumer 都声明同一 Vehicle scope 时生成 exact resolution。结构化 proof 与 deterministic explain 已闭合 missing/multiple、contract/kind/scope/temporal incompatibility、asset role/schema/identity 和 missing source location 负例。
 
-## 下一条开发主线
+## 后续阶段边界
 
-1. 下一切片选择 `R2-BIND-001` 的首个真实静态 proof pass，只消费当前 YYZ/CAVH canonical graph 与 binding intents；具体边界需在开始前按该任务的直接 architecture refs 收窄。
-2. `R2-CAT-001` 保持 `planned`。`RuntimeComponent` 在 runtime plan lowering 前加入；首个真实模型需要具备独立 state ownership、调度、命令或 lifecycle obligation，并与 recipe/profile、ports/state、execution obligations、lifecycle 和 Compiler consumer 同切片实现。既有 rigid/mass atomic boundary 继续归入未来 `IntegrationScopePlan` 与 `StepTransaction` 的多 owner 原子协调。
+1. `R2-CAT-001` 与 `R2-PLAN-001` 保持 `planned`。首个真实 RuntimeComponent 必须同时带来独立 state ownership、调度、command/lifecycle 或 topology consumer；届时只冻结该 consumer 直接需要的 recipe/profile、ports/state、obligation、lifecycle、owner/authority/topology 字段与 sampled graph analysis。
+2. StateOwner、DecisionAuthority、entity activation/topology、intervention/fault routing 和 RuntimeComponent sampled graph cycle analysis 均未由当前 PureQuery/Closure 图触发。既有 rigid/mass atomic boundary 继续归入未来 `IntegrationScopePlan` 与 `StepTransaction` 的多 owner 原子协调。
 3. JSON/YAML/INI、多端 adapter、Session、mini runtime、manager、runtime registry、serializer、StateFragment、Artifact、Workflow、前端与 R3+ 能力继续保持关闭。
 
 ## 保留与恢复

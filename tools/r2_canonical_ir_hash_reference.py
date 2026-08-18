@@ -14,7 +14,7 @@ import subprocess
 from typing import Any, Dict, List
 
 
-ENCODING_ID = "gnc.canonical-mission-ir.semantic-bytes@1"
+ENCODING_ID = "gnc.canonical-mission-ir.semantic-bytes@2"
 ASSET_SCHEMA_ID = "gnc.asset.yyz.aerodynamic-table.multiaffine@1"
 
 
@@ -93,7 +93,7 @@ def require_unique_order(values: List[Dict[str, Any]], key: str,
 
 
 def validate_canonical(ir: Dict[str, Any]) -> None:
-    require(ir["revision"] == 1 and ir["mission_id"],
+    require(ir["revision"] == 2 and ir["mission_id"],
             "mission semantics are invalid")
     require_unique_order(ir["entities"], "entity_id", "entities")
     entity_ids = {item["entity_id"] for item in ir["entities"]}
@@ -108,6 +108,7 @@ def validate_canonical(ir: Dict[str, Any]) -> None:
                 for kind, subject in scope_keys),
             "Vehicle scope is invalid or unanchored")
     require_unique_order(ir["models"], "occurrence_id", "models")
+    models: Dict[str, Dict[str, Any]] = {}
     for model in ir["models"]:
         require(model["package_id"] and model["package_version"] and
                 model["model_id"] and model["model_version"] and
@@ -126,6 +127,16 @@ def validate_canonical(ir: Dict[str, Any]) -> None:
                 "model scope and subject are inconsistent")
         require_unique_order(model["output_ports"], "port_id",
                              "model ports")
+        expected_kind = 2 if model["execution_form"] == 1 else 3
+        require(all(port["port_id"] and port["contract_id"] and
+                    port["binding_kind"] == expected_kind and
+                    port["cardinality"] == 2 and
+                    ((expected_kind == 2 and
+                      port["temporal_relation"] == 0) or
+                     (expected_kind == 3 and
+                      port["temporal_relation"] in (1, 2)))
+                    for port in model["output_ports"]),
+                "model output port binding semantics are invalid")
         configuration = model["configuration"]
         require(configuration["schema_id"] and
                 configuration["schema_version"] == 1,
@@ -151,11 +162,55 @@ def validate_canonical(ir: Dict[str, Any]) -> None:
                              math.copysign(1.0, float(value)) < 0.0),
                         "canonical float64 is invalid")
         require_unique_order(model["assets"], "role", "asset bindings")
-        require(all(item["asset_schema_id"] and item["asset_id"]
+        require(all(item["asset_schema_id"] and item["asset_id"] and
+                    item["cardinality"] == 1
                     for item in model["assets"]),
                 "asset identity is invalid")
+        models[model["occurrence_id"]] = model
     require_unique_order(ir["algorithms"], "consumer_id", "algorithms")
+    algorithms: Dict[str, Dict[str, Any]] = {}
+    for algorithm in ir["algorithms"]:
+        require(algorithm["package_id"] and algorithm["package_version"] and
+                algorithm["algorithm_id"] and
+                algorithm["algorithm_version"],
+                "algorithm consumer identity is invalid")
+        scope = algorithm.get("scope")
+        require(not scope or
+                (scope["kind"], scope["subject_entity_id"]) in scope_keys,
+                "algorithm consumer scope is undeclared")
+        require_unique_order(algorithm["input_ports"], "port_id",
+                             "algorithm ports")
+        require(all(port["port_id"] and port["contract_id"] and
+                    port["binding_kind"] in (2, 3) and
+                    port["cardinality"] == 1 and
+                    ((port["binding_kind"] == 2 and
+                      port["temporal_relation"] == 0) or
+                     (port["binding_kind"] == 3 and
+                      port["temporal_relation"] in (1, 2)))
+                    for port in algorithm["input_ports"]),
+                "algorithm input port binding semantics are invalid")
+        algorithms[algorithm["consumer_id"]] = algorithm
     require_unique_order(ir["bindings"], "binding_id", "bindings")
+    for binding in ir["bindings"]:
+        require(binding["provider_occurrence_id"] in models and
+                binding["consumer_id"] in algorithms,
+                "binding endpoint owner is absent")
+        provider_model = models[binding["provider_occurrence_id"]]
+        consumer_algorithm = algorithms[binding["consumer_id"]]
+        provider = next(
+            (port for port in provider_model["output_ports"]
+             if port["port_id"] == binding["provider_port_id"]), None)
+        consumer = next(
+            (port for port in consumer_algorithm["input_ports"]
+             if port["port_id"] == binding["consumer_port_id"]), None)
+        require(provider is not None and consumer is not None and
+                provider["contract_id"] == consumer["contract_id"] and
+                provider["binding_kind"] == consumer["binding_kind"] and
+                provider["temporal_relation"] ==
+                consumer["temporal_relation"] and
+                provider_model.get("scope") ==
+                consumer_algorithm.get("scope"),
+                "binding contract, kind, scope, or time differs")
 
 
 def encode_config_value(encoder: Encoder, field: Dict[str, Any]) -> None:
@@ -217,6 +272,9 @@ def encode_canonical(ir: Dict[str, Any]) -> bytes:
             encoder.record(5)
             encoder.string(port["port_id"])
             encoder.string(port["contract_id"])
+            encoder.enumeration(5, port["binding_kind"])
+            encoder.enumeration(6, port["cardinality"])
+            encoder.enumeration(7, port["temporal_relation"])
         configuration = model["configuration"]
         encoder.record(6)
         encoder.string(configuration["schema_id"])
@@ -232,6 +290,7 @@ def encode_canonical(ir: Dict[str, Any]) -> bytes:
             encoder.string(asset["role"])
             encoder.string(asset["asset_schema_id"])
             encoder.string(asset["asset_id"])
+            encoder.enumeration(6, asset["cardinality"])
 
     encoder.collection(len(ir["algorithms"]))
     for algorithm in ir["algorithms"]:
@@ -239,11 +298,19 @@ def encode_canonical(ir: Dict[str, Any]) -> bytes:
         for key in ("consumer_id", "package_id", "package_version",
                     "algorithm_id", "algorithm_version"):
             encoder.string(algorithm[key])
+        scope = algorithm.get("scope")
+        encoder.optional(scope is not None)
+        if scope is not None:
+            encoder.enumeration(2, scope["kind"])
+            encoder.string(scope["subject_entity_id"])
         encoder.collection(len(algorithm["input_ports"]))
         for port in algorithm["input_ports"]:
             encoder.record(5)
             encoder.string(port["port_id"])
             encoder.string(port["contract_id"])
+            encoder.enumeration(5, port["binding_kind"])
+            encoder.enumeration(6, port["cardinality"])
+            encoder.enumeration(7, port["temporal_relation"])
 
     encoder.collection(len(ir["bindings"]))
     for binding in ir["bindings"]:
@@ -283,6 +350,11 @@ def verify_provenance(source: Dict[str, Any],
             "canonical mission/scope/closure facts diverge from source.json")
     payload = aero_asset["payload"]
     asset_binding = models["aero_lookup"]["assets"][0]
+    algorithm = ir["algorithms"][0]
+    bindings = {item["binding_id"]: item for item in ir["bindings"]}
+    numerical_asset = next(
+        item for item in asset_index["selected_assets"]
+        if item["role"] == "numerical_policy")
     require(aero_asset["asset_schema_id"] == ASSET_SCHEMA_ID and
             asset_binding["asset_schema_id"] == ASSET_SCHEMA_ID and
             asset_binding["asset_id"] == aero_asset["asset_id"] and
@@ -295,7 +367,16 @@ def verify_provenance(source: Dict[str, Any],
             payload["reference_span_m"] and
             [aero_fields[f"body_origin_to_application.{axis}_m"]
              for axis in ("x", "y", "z")] ==
-            payload["r_body_origin_to_application_B_m"],
+            payload["r_body_origin_to_application_B_m"] and
+            algorithm["algorithm_id"] ==
+            "gnc.package.yyz.rigid-step.kernel@1" and
+            algorithm["scope"]["subject_entity_id"] == vehicle["subject"] and
+            bindings["yyz.aero-to-rigid"]["provider_occurrence_id"] ==
+            "aero_lookup" and
+            bindings["yyz.closure-to-rigid"]["provider_occurrence_id"] ==
+            "force_moment_closure" and
+            numerical_asset["payload"]["integration_strategy"] ==
+            "FrozenInterval",
             "canonical aero config/asset diverges from asset-index.json")
 
 
@@ -310,6 +391,10 @@ def verify_mutations(base: Dict[str, Any], expected: str) -> int:
         model["output_ports"].reverse()
         model["configuration"]["fields"].reverse()
         model["assets"].reverse()
+    equivalent["algorithms"].reverse()
+    for algorithm in equivalent["algorithms"]:
+        algorithm["input_ports"].reverse()
+    equivalent["bindings"].reverse()
     require(digest(normalize_ir(equivalent)) == expected,
             "representation order or source location changed reference hash")
 
@@ -321,6 +406,9 @@ def verify_mutations(base: Dict[str, Any], expected: str) -> int:
     for model in entity["models"]:
         model["subject_entity_id"] = entity["entities"][0]["entity_id"]
         model["scope"]["subject_entity_id"] = \
+            entity["entities"][0]["entity_id"]
+    for algorithm in entity["algorithms"]:
+        algorithm["scope"]["subject_entity_id"] = \
             entity["entities"][0]["entity_id"]
     mutations.append(entity)
 
@@ -337,6 +425,16 @@ def verify_mutations(base: Dict[str, Any], expected: str) -> int:
     asset["models"][0]["assets"][0]["asset_id"] = \
         "aero-table.fixture.yyz.alternate@1"
     mutations.append(asset)
+    temporal = copy.deepcopy(base)
+    temporal["models"][1]["output_ports"][0]["temporal_relation"] = 2
+    closure_input = next(
+        port for port in temporal["algorithms"][0]["input_ports"]
+        if port["port_id"] == "form-input")
+    closure_input["temporal_relation"] = 2
+    mutations.append(temporal)
+    binding_identity = copy.deepcopy(base)
+    binding_identity["bindings"][0]["binding_id"] += ".renamed"
+    mutations.append(binding_identity)
     require(all(digest(normalize_ir(item)) != expected for item in mutations),
             "a semantic mutation retained the reference hash")
 
@@ -348,10 +446,13 @@ def verify_mutations(base: Dict[str, Any], expected: str) -> int:
         "subject_entity_id": "vehicle.fixture.yyz.alternate@1"})
     scope_base = normalize_ir(scope_base)
     scope_changed = copy.deepcopy(scope_base)
-    scope_changed["models"][0]["subject_entity_id"] = \
-        "vehicle.fixture.yyz.alternate@1"
-    scope_changed["models"][0]["scope"]["subject_entity_id"] = \
-        "vehicle.fixture.yyz.alternate@1"
+    for model in scope_changed["models"]:
+        model["subject_entity_id"] = "vehicle.fixture.yyz.alternate@1"
+        model["scope"]["subject_entity_id"] = \
+            "vehicle.fixture.yyz.alternate@1"
+    for algorithm in scope_changed["algorithms"]:
+        algorithm["scope"]["subject_entity_id"] = \
+            "vehicle.fixture.yyz.alternate@1"
     require(digest(scope_base) != digest(scope_changed),
             "scope semantic mutation retained the reference hash")
 

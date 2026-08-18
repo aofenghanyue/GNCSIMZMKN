@@ -19,7 +19,7 @@
 namespace gnc::compiler {
 
 inline constexpr std::string_view kCanonicalSemanticEncodingIdentity =
-    "gnc.canonical-mission-ir.semantic-bytes@1";
+    "gnc.canonical-mission-ir.semantic-bytes@2";
 inline constexpr std::string_view kCanonicalSemanticHashAlgorithm =
     "SHA-256";
 
@@ -242,7 +242,7 @@ template <typename Value, typename Key>
 
 [[nodiscard]] inline std::optional<std::string> validate_canonical_ir(
     const CanonicalMissionIr& ir) {
-    if (ir.revision != 1U || ir.mission_id.empty()) {
+    if (ir.revision != 2U || ir.mission_id.empty()) {
         return "mission revision and identity must be canonical";
     }
     if (!strictly_sorted_by(
@@ -315,8 +315,28 @@ template <typename Value, typename Key>
             return "model output ports are not in unique canonical order";
         }
         for (const auto& port : model.output_ports) {
-            if (port.port_id.empty() || port.contract_id.empty()) {
-                return "model output port identity is invalid";
+            const auto expected_kind =
+                model.execution_form ==
+                        gnc::model_sdk::ModelExecutionForm::PureQuery
+                    ? gnc::model_sdk::BindingKind::PureQuery
+                    : gnc::model_sdk::BindingKind::
+                          ContinuousClosureLink;
+            if (port.port_id.empty() || port.contract_id.empty() ||
+                port.binding_kind != expected_kind ||
+                port.cardinality !=
+                    gnc::model_sdk::PortCardinality::OneOrMore ||
+                !gnc::model_sdk::valid_temporal_relation(
+                    port.temporal_relation) ||
+                (port.binding_kind ==
+                         gnc::model_sdk::BindingKind::PureQuery &&
+                 port.temporal_relation !=
+                     gnc::model_sdk::TemporalRelation::NotApplicable) ||
+                (port.binding_kind ==
+                         gnc::model_sdk::BindingKind::
+                             ContinuousClosureLink &&
+                 port.temporal_relation ==
+                     gnc::model_sdk::TemporalRelation::NotApplicable)) {
+                return "model output port binding semantics are invalid";
             }
         }
         const auto& configuration = model.configuration;
@@ -345,7 +365,9 @@ template <typename Value, typename Key>
         }
         for (const auto& asset : model.asset_bindings) {
             if (asset.role.empty() || asset.asset_schema_id.empty() ||
-                asset.asset_id.empty()) {
+                asset.asset_id.empty() ||
+                asset.cardinality !=
+                    gnc::model_sdk::PortCardinality::ExactlyOne) {
                 return "asset binding identity is invalid";
             }
         }
@@ -373,9 +395,30 @@ template <typename Value, typename Key>
                 })) {
             return "algorithm consumer identity or ports are noncanonical";
         }
+        if (algorithm.scope.has_value() &&
+            scopes.find(*algorithm.scope) == scopes.end()) {
+            return "algorithm consumer scope is undeclared";
+        }
         for (const auto& port : algorithm.input_ports) {
-            if (port.port_id.empty() || port.contract_id.empty()) {
-                return "algorithm input port identity is invalid";
+            if (port.port_id.empty() || port.contract_id.empty() ||
+                !gnc::model_sdk::valid_binding_kind(
+                    port.binding_kind) ||
+                port.binding_kind ==
+                    gnc::model_sdk::BindingKind::AssetBinding ||
+                port.cardinality !=
+                    gnc::model_sdk::PortCardinality::ExactlyOne ||
+                !gnc::model_sdk::valid_temporal_relation(
+                    port.temporal_relation) ||
+                (port.binding_kind ==
+                         gnc::model_sdk::BindingKind::PureQuery &&
+                 port.temporal_relation !=
+                     gnc::model_sdk::TemporalRelation::NotApplicable) ||
+                (port.binding_kind ==
+                         gnc::model_sdk::BindingKind::
+                             ContinuousClosureLink &&
+                 port.temporal_relation ==
+                     gnc::model_sdk::TemporalRelation::NotApplicable)) {
+                return "algorithm input port binding semantics are invalid";
             }
         }
         algorithms.emplace(algorithm.consumer_id, &algorithm);
@@ -391,13 +434,35 @@ template <typename Value, typename Key>
     for (const auto& binding : ir.binding_intents) {
         const auto model = models.find(binding.provider_occurrence_id);
         const auto algorithm = algorithms.find(binding.consumer_id);
+        const CanonicalPort* provider_port = nullptr;
+        const CanonicalPort* consumer_port = nullptr;
+        if (model != models.end()) {
+            provider_port = detail::find_port(
+                model->second->output_ports,
+                binding.provider_port_id);
+        }
+        if (algorithm != algorithms.end()) {
+            consumer_port = detail::find_port(
+                algorithm->second->input_ports,
+                binding.consumer_port_id);
+        }
         if (binding.binding_id.empty() || model == models.end() ||
             algorithm == algorithms.end() ||
-            detail::find_port(model->second->output_ports,
-                              binding.provider_port_id) == nullptr ||
-            detail::find_port(algorithm->second->input_ports,
-                              binding.consumer_port_id) == nullptr) {
+            provider_port == nullptr || consumer_port == nullptr) {
             return "binding endpoints are invalid";
+        }
+        if (provider_port->contract_id != consumer_port->contract_id ||
+            provider_port->binding_kind != consumer_port->binding_kind ||
+            provider_port->temporal_relation !=
+                consumer_port->temporal_relation) {
+            return "binding contract, kind, or temporal semantics differ";
+        }
+        if (model->second->scope.has_value() !=
+                algorithm->second->scope.has_value() ||
+            (model->second->scope.has_value() &&
+             !(*model->second->scope ==
+               *algorithm->second->scope))) {
+            return "binding endpoint scopes differ";
         }
     }
     return std::nullopt;
@@ -472,6 +537,13 @@ inline void encode_config_value(
             encoder.record(5U);
             encoder.string(port.port_id);
             encoder.string(port.contract_id);
+            encoder.enumeration(
+                5U, static_cast<std::uint32_t>(port.binding_kind));
+            encoder.enumeration(
+                6U, static_cast<std::uint32_t>(port.cardinality));
+            encoder.enumeration(
+                7U, static_cast<std::uint32_t>(
+                        port.temporal_relation));
         }
         encoder.record(6U);
         encoder.string(model.configuration.schema_id);
@@ -488,6 +560,8 @@ inline void encode_config_value(
             encoder.string(asset.role);
             encoder.string(asset.asset_schema_id);
             encoder.string(asset.asset_id);
+            encoder.enumeration(
+                6U, static_cast<std::uint32_t>(asset.cardinality));
         }
     }
 
@@ -499,11 +573,25 @@ inline void encode_config_value(
         encoder.string(algorithm.package.package_version);
         encoder.string(algorithm.algorithm_id);
         encoder.string(algorithm.algorithm_version);
+        encoder.optional(algorithm.scope.has_value());
+        if (algorithm.scope.has_value()) {
+            encoder.enumeration(
+                2U, static_cast<std::uint32_t>(
+                        algorithm.scope->kind));
+            encoder.string(algorithm.scope->subject_entity_id);
+        }
         encoder.collection(algorithm.input_ports.size());
         for (const auto& port : algorithm.input_ports) {
             encoder.record(5U);
             encoder.string(port.port_id);
             encoder.string(port.contract_id);
+            encoder.enumeration(
+                5U, static_cast<std::uint32_t>(port.binding_kind));
+            encoder.enumeration(
+                6U, static_cast<std::uint32_t>(port.cardinality));
+            encoder.enumeration(
+                7U, static_cast<std::uint32_t>(
+                        port.temporal_relation));
         }
     }
 

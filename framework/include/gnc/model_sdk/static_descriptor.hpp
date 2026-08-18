@@ -15,6 +15,92 @@ enum class StaticPortDirection : std::uint8_t {
     Output,
 };
 
+// Connection semantics owned by the package descriptor. The R2 binding
+// slice exposes only the three kinds exercised by current YYZ/CAVH product
+// code.
+enum class BindingKind : std::uint8_t {
+    Unspecified,
+    AssetBinding,
+    PureQuery,
+    ContinuousClosureLink,
+};
+
+[[nodiscard]] constexpr std::string_view to_string(
+    BindingKind kind) noexcept {
+    switch (kind) {
+    case BindingKind::Unspecified:
+        return "Unspecified";
+    case BindingKind::AssetBinding:
+        return "AssetBinding";
+    case BindingKind::PureQuery:
+        return "PureQuery";
+    case BindingKind::ContinuousClosureLink:
+        return "ContinuousClosureLink";
+    }
+    return "Unknown";
+}
+
+[[nodiscard]] constexpr bool valid_binding_kind(
+    BindingKind kind) noexcept {
+    return kind == BindingKind::AssetBinding ||
+           kind == BindingKind::PureQuery ||
+           kind == BindingKind::ContinuousClosureLink;
+}
+
+enum class PortCardinality : std::uint8_t {
+    Unspecified,
+    ExactlyOne,
+    OneOrMore,
+};
+
+[[nodiscard]] constexpr std::string_view to_string(
+    PortCardinality cardinality) noexcept {
+    switch (cardinality) {
+    case PortCardinality::Unspecified:
+        return "Unspecified";
+    case PortCardinality::ExactlyOne:
+        return "exactly-one";
+    case PortCardinality::OneOrMore:
+        return "one-or-more";
+    }
+    return "Unknown";
+}
+
+[[nodiscard]] constexpr bool valid_port_cardinality(
+    PortCardinality cardinality) noexcept {
+    return cardinality == PortCardinality::ExactlyOne ||
+           cardinality == PortCardinality::OneOrMore;
+}
+
+// Pure queries have no sampled/closure time relation. The two closure
+// relations below are recognized so the Compiler can reject an accidental
+// candidate-state declaration on the current frozen-interval YYZ path.
+enum class TemporalRelation : std::uint8_t {
+    NotApplicable,
+    IntervalModel,
+    CandidateStateQuery,
+};
+
+[[nodiscard]] constexpr std::string_view to_string(
+    TemporalRelation relation) noexcept {
+    switch (relation) {
+    case TemporalRelation::NotApplicable:
+        return "NotApplicable";
+    case TemporalRelation::IntervalModel:
+        return "IntervalModel";
+    case TemporalRelation::CandidateStateQuery:
+        return "CandidateStateQuery";
+    }
+    return "Unknown";
+}
+
+[[nodiscard]] constexpr bool valid_temporal_relation(
+    TemporalRelation relation) noexcept {
+    return relation == TemporalRelation::NotApplicable ||
+           relation == TemporalRelation::IntervalModel ||
+           relation == TemporalRelation::CandidateStateQuery;
+}
+
 // Package-owned placement policy for the model forms that have real R1
 // consumers. Runtime placement and lifecycle remain outside this descriptor.
 enum class ModelPlacement : std::uint8_t {
@@ -128,12 +214,17 @@ struct StaticConfigSchemaDescriptor {
 struct StaticAssetSlotDescriptor {
     std::string role;
     std::string asset_schema_id;
+    PortCardinality cardinality = PortCardinality::ExactlyOne;
 };
 
 struct StaticPortDescriptor {
     std::string port_id;
     std::string contract_id;
     StaticPortDirection direction = StaticPortDirection::Input;
+    BindingKind binding_kind = BindingKind::Unspecified;
+    PortCardinality cardinality = PortCardinality::Unspecified;
+    TemporalRelation temporal_relation =
+        TemporalRelation::NotApplicable;
 };
 
 // Package-owned description of a model that can be read without preparing or

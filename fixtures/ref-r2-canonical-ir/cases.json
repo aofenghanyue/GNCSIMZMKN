@@ -1,11 +1,11 @@
 {
-  "schema_version": "gnc.r2-canonical-semantic-hash-fixture/1",
+  "schema_version": "gnc.r2-canonical-semantic-hash-fixture/2",
   "case_id": "CASE-R2-IR-YYZ-QUALIFICATION-SEMANTICS",
-  "encoding_id": "gnc.canonical-mission-ir.semantic-bytes@1",
+  "encoding_id": "gnc.canonical-mission-ir.semantic-bytes@2",
   "hash_algorithm": "SHA-256",
-  "expected_sha256": "cf7676b9764d95157cd473e0b429c63b8c48e2c6f0bbd79fbe21e12dffb6c259",
+  "expected_sha256": "b29dc67f2a9e0bb36cb18a5e54a8c4830bdb0cae718fbf856646ba903892511b",
   "ir": {
-    "revision": 1,
+    "revision": 2,
     "mission_id": "mission.fixture.yyz.lookup-altitude-hold@1",
     "entities": [
       {
@@ -38,7 +38,10 @@
         "output_ports": [
           {
             "port_id": "coefficients",
-            "contract_id": "gnc.contract.yyz.aerodynamic-coefficients@1"
+            "contract_id": "gnc.contract.yyz.aerodynamic-coefficients@1",
+            "binding_kind": 2,
+            "cardinality": 2,
+            "temporal_relation": 0
           }
         ],
         "configuration": {
@@ -91,7 +94,8 @@
           {
             "role": "aerodynamics",
             "asset_schema_id": "gnc.asset.yyz.aerodynamic-table.multiaffine@1",
-            "asset_id": "aero-table.fixture.yyz.multiaffine@1"
+            "asset_id": "aero-table.fixture.yyz.multiaffine@1",
+            "cardinality": 1
           }
         ]
       },
@@ -113,7 +117,10 @@
         "output_ports": [
           {
             "port_id": "form-input",
-            "contract_id": "gnc.contract.yyz.rigid-form-input@1"
+            "contract_id": "gnc.contract.yyz.rigid-form-input@1",
+            "binding_kind": 3,
+            "cardinality": 2,
+            "temporal_relation": 1
           }
         ],
         "configuration": {
@@ -165,7 +172,50 @@
         "assets": []
       }
     ],
-    "algorithms": [],
-    "bindings": []
+    "algorithms": [
+      {
+        "consumer_id": "yyz.rigid-step",
+        "package_id": "gnc.package.yyz-rigid-step.experimental@1",
+        "package_version": "0.1.0",
+        "algorithm_id": "gnc.package.yyz.rigid-step.kernel@1",
+        "algorithm_version": "0.1.0",
+        "scope": {
+          "kind": 1,
+          "subject_entity_id": "vehicle.fixture.yyz@1"
+        },
+        "input_ports": [
+          {
+            "port_id": "aerodynamic-coefficients",
+            "contract_id": "gnc.contract.yyz.aerodynamic-coefficients@1",
+            "binding_kind": 2,
+            "cardinality": 1,
+            "temporal_relation": 0
+          },
+          {
+            "port_id": "form-input",
+            "contract_id": "gnc.contract.yyz.rigid-form-input@1",
+            "binding_kind": 3,
+            "cardinality": 1,
+            "temporal_relation": 1
+          }
+        ]
+      }
+    ],
+    "bindings": [
+      {
+        "binding_id": "yyz.aero-to-rigid",
+        "provider_occurrence_id": "aero_lookup",
+        "provider_port_id": "coefficients",
+        "consumer_id": "yyz.rigid-step",
+        "consumer_port_id": "aerodynamic-coefficients"
+      },
+      {
+        "binding_id": "yyz.closure-to-rigid",
+        "provider_occurrence_id": "force_moment_closure",
+        "provider_port_id": "form-input",
+        "consumer_id": "yyz.rigid-step",
+        "consumer_port_id": "form-input"
+      }
+    ]
   }
 }

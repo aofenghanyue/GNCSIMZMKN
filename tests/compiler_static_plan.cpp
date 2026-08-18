@@ -5,6 +5,7 @@
 
 #include <algorithm>
 #include <iostream>
+#include <optional>
 #include <stdexcept>
 #include <string>
 #include <string_view>
@@ -15,6 +16,9 @@
 namespace {
 
 using gnc::compiler::Catalog;
+using gnc::compiler::BindingEndpointKind;
+using gnc::compiler::BindingPhase;
+using gnc::compiler::BindingProofAssertion;
 using gnc::compiler::CanonicalMissionIr;
 using gnc::compiler::CompileOutcome;
 using gnc::compiler::CompiledObligationKind;
@@ -36,9 +40,12 @@ using gnc::compiler::StaticCompilation;
 using gnc::compiler::TypedStaticCompositionSource;
 using gnc::model_sdk::ModelExecutionForm;
 using gnc::model_sdk::ModelPlacement;
+using gnc::model_sdk::BindingKind;
+using gnc::model_sdk::PortCardinality;
 using gnc::model_sdk::StaticAlgorithmDescriptor;
 using gnc::model_sdk::StaticPortDescriptor;
 using gnc::model_sdk::StaticPortDirection;
+using gnc::model_sdk::TemporalRelation;
 
 constexpr std::string_view kMissionId =
     "mission.r2.yyz-cavh-static-composition@1";
@@ -64,6 +71,21 @@ static_assert(
         decltype(gnc::compiler::ModelPreparationIdentityPlan::execution_form),
         ModelExecutionForm>,
     "prepared entries must preserve the accepted execution-form type");
+static_assert(
+    std::is_same_v<decltype(StaticPortDescriptor::binding_kind),
+                   BindingKind> &&
+        std::is_same_v<decltype(StaticPortDescriptor::cardinality),
+                       PortCardinality> &&
+        std::is_same_v<decltype(StaticPortDescriptor::temporal_relation),
+                       TemporalRelation>,
+    "package ports must expose typed binding semantics");
+static_assert(
+    std::is_same_v<decltype(ExecutionPlanDescriptor::binding_plan),
+                   gnc::compiler::BindingPlan> &&
+        std::is_same_v<
+            decltype(ExecutionPlanDescriptor::temporal_binding_plan),
+            gnc::compiler::TemporalBindingPlan>,
+    "the execution descriptor must own typed binding plans");
 
 template <typename Value, typename = void>
 struct has_required_member : std::false_type {};
@@ -236,7 +258,11 @@ package_descriptors() {
                     cavh.envelope.metadata.model_version &&
                 cavh_envelope.definition.execution_form ==
                     cavh.envelope.metadata.execution_form &&
-                cavh_envelope.placement == ModelPlacement::VehicleOutput,
+                cavh_envelope.placement == ModelPlacement::VehicleOutput &&
+                cavh_envelope.ports[0U].binding_kind ==
+                    BindingKind::PureQuery &&
+                cavh_envelope.ports[0U].cardinality ==
+                    PortCardinality::OneOrMore,
             "CAVH package descriptor diverged from the real definition");
     require(yyz_closure.definition.model_id ==
                 yyz.force_moment_closure.metadata.model_id &&
@@ -254,7 +280,15 @@ package_descriptors() {
                 yyz_aero.asset_slots.size() == 1U &&
                 yyz_aero.asset_slots[0U].asset_schema_id ==
                     gnc::packages::yyz::
-                        kAerodynamicTableAssetSchemaIdentity,
+                        kAerodynamicTableAssetSchemaIdentity &&
+                yyz_aero.asset_slots[0U].cardinality ==
+                    PortCardinality::ExactlyOne &&
+                yyz_aero.ports[0U].binding_kind ==
+                    BindingKind::PureQuery &&
+                yyz_closure.ports[0U].binding_kind ==
+                    BindingKind::ContinuousClosureLink &&
+                yyz_closure.ports[0U].temporal_relation ==
+                    TemporalRelation::IntervalModel,
             "YYZ package descriptor diverged from the real definition");
     return {std::move(cavh_package), std::move(yyz_package)};
 }
@@ -266,6 +300,19 @@ package_descriptors() {
     source.mission_id = std::string(kMissionId);
     source.mission_source = ref("/mission_id");
     source.plan_id = std::string(kPlanId);
+    const ScopeKey yyz_vehicle_scope{
+        ScopeKind::Vehicle, std::string(kYyzQualificationSubject)};
+    source.entities = {
+        SourceEntity{
+            std::string(kYyzQualificationSubject),
+            EntityLifecycle::ActiveAtInitialize,
+            ref("/entities/vehicle.fixture.yyz@1/id"),
+            ref("/entities/vehicle.fixture.yyz@1/lifecycle")},
+    };
+    source.scopes = {
+        SourceScope{yyz_vehicle_scope,
+                    ref("/scopes/vehicle.fixture.yyz@1")},
+    };
     source.model_occurrences = {
         SourceModelOccurrence{
             "cavh.envelope",
@@ -317,6 +364,13 @@ package_descriptors() {
             yyz.aerodynamics.table_asset_id,
             ref("/models/yyz.aerodynamics/assets/aerodynamics")},
     };
+    source.model_occurrences[1U].subject_entity_id =
+        std::string(kYyzQualificationSubject);
+    source.model_occurrences[1U].subject_source =
+        ref("/models/yyz.aerodynamics/subject");
+    source.model_occurrences[1U].scope = yyz_vehicle_scope;
+    source.model_occurrences[1U].scope_source =
+        ref("/models/yyz.aerodynamics/scope");
     attach_configuration(
         source.model_occurrences[2U],
         gnc::packages::yyz::canonical_force_moment_closure_config(
@@ -328,6 +382,13 @@ package_descriptors() {
         ModelPlacement::InteractionClosure;
     source.model_occurrences[2U].placement_source =
         ref("/models/yyz.closure/placement");
+    source.model_occurrences[2U].subject_entity_id =
+        std::string(kYyzQualificationSubject);
+    source.model_occurrences[2U].subject_source =
+        ref("/models/yyz.closure/subject");
+    source.model_occurrences[2U].scope = yyz_vehicle_scope;
+    source.model_occurrences[2U].scope_source =
+        ref("/models/yyz.closure/scope");
     source.algorithm_consumers = {
         SourceAlgorithmConsumer{
             "cavh.formula",
@@ -335,13 +396,14 @@ package_descriptors() {
                 gnc::packages::cavh::kCavhFormulaKernelIdentity.id),
             std::string(
                 gnc::packages::cavh::kCavhFormulaKernelIdentity.version),
-            ref("/algorithms/cavh.formula")},
+            ref("/algorithms/cavh.formula"), std::nullopt, {}},
         SourceAlgorithmConsumer{
             "yyz.rigid-step",
             std::string(gnc::packages::yyz::kRigidStepKernelIdentity.id),
             std::string(
                 gnc::packages::yyz::kRigidStepKernelIdentity.version),
-            ref("/algorithms/yyz.rigid-step")},
+            ref("/algorithms/yyz.rigid-step"), yyz_vehicle_scope,
+            ref("/algorithms/yyz.rigid-step/scope")},
     };
     source.binding_intents = {
         SourceBinding{
@@ -370,6 +432,7 @@ package_descriptors() {
     source.mission_id = std::string(kYyzQualificationMissionId);
     source.mission_source = {
         std::string(kYyzQualificationSourceUri), "/source_id"};
+    source.plan_id = "plan.fixture.yyz.lookup-altitude-hold@1";
     source.entities = {
         SourceEntity{
             std::string(kYyzQualificationSubject),
@@ -503,6 +566,30 @@ package_descriptors() {
             {std::string(kYyzQualificationAssetIndexUri),
              "/selected_assets/2/asset_id"}},
     };
+    source.algorithm_consumers = {
+        SourceAlgorithmConsumer{
+            "yyz.rigid-step",
+            std::string(gnc::packages::yyz::kRigidStepKernelIdentity.id),
+            std::string(
+                gnc::packages::yyz::kRigidStepKernelIdentity.version),
+            {"repo://packages/yyz-rigid-step/src/rigid_step.cpp",
+             "/RigidStepKernel/evaluate"},
+            vehicle_scope,
+            {std::string(kYyzQualificationSourceUri),
+             "/profiles/qualification/vehicle/subject"}},
+    };
+    source.binding_intents = {
+        SourceBinding{
+            "yyz.aero-to-rigid", "aero_lookup", "coefficients",
+            "yyz.rigid-step", "aerodynamic-coefficients",
+            {std::string(kYyzQualificationAssetIndexUri),
+             "/component_bindings/4/role"}},
+        SourceBinding{
+            "yyz.closure-to-rigid", "force_moment_closure",
+            "form-input", "yyz.rigid-step", "form-input",
+            {std::string(kYyzQualificationAssetIndexUri),
+             "/selected_assets/5/payload/integration_strategy"}},
+    };
     return source;
 }
 
@@ -554,8 +641,12 @@ const Diagnostic& require_diagnostic(
                 ir.scopes[0U].key.subject_entity_id ==
                     kYyzQualificationSubject &&
                 ir.model_occurrences.size() == 2U &&
-                ir.algorithm_consumers.empty() &&
-                ir.binding_intents.empty(),
+                ir.algorithm_consumers.size() == 1U &&
+                ir.binding_intents.size() == 2U &&
+                ir.algorithm_consumers[0U].consumer_id ==
+                    "yyz.rigid-step" &&
+                ir.algorithm_consumers[0U].scope.has_value() &&
+                *ir.algorithm_consumers[0U].scope == ir.scopes[0U].key,
             "YYZ canonical entity/scope/model partition changed");
     const auto& aero = ir.model_occurrences[0U];
     const auto& closure = ir.model_occurrences[1U];
@@ -575,6 +666,8 @@ const Diagnostic& require_diagnostic(
                         kAerodynamicTableAssetSchemaIdentity &&
                 aero.asset_bindings[0U].asset_id ==
                     "aero-table.fixture.yyz.multiaffine@1" &&
+                aero.asset_bindings[0U].cardinality ==
+                    PortCardinality::ExactlyOne &&
                 aero.asset_bindings[0U].source.node_path ==
                     "/selected_assets/2/asset_id",
             "YYZ aero query lost its real scope, placement, or asset");
@@ -596,7 +689,11 @@ const Diagnostic& require_diagnostic(
                 closure.subject_source.document_uri ==
                     kYyzQualificationSourceUri &&
                 closure.subject_source.node_path ==
-                    "/profiles/qualification/vehicle/subject",
+                    "/profiles/qualification/vehicle/subject" &&
+                closure.output_ports[0U].binding_kind ==
+                    BindingKind::ContinuousClosureLink &&
+                closure.output_ports[0U].temporal_relation ==
+                    TemporalRelation::IntervalModel,
             "YYZ closure occurrence lost its real definition, role, or "
             "subject relation");
     const auto rebuilt_closure =
@@ -637,6 +734,34 @@ const Diagnostic& require_diagnostic(
                         rebuilt_aero_again.value()).fields,
             "canonical YYZ config did not rebuild typed definitions");
 
+    const auto qualification_compilation_outcome =
+        gnc::compiler::compile_static_plan(source, catalog);
+    const auto& qualification_plan = require_value(
+        qualification_compilation_outcome,
+        "REF-YYZ-001 typed BindingPlan compilation failed").plan;
+    require(qualification_plan.binding_plan.entries.size() == 3U &&
+                qualification_plan.binding_plan.entries[0U].binding_id ==
+                    "asset.aero_lookup.aerodynamics" &&
+                qualification_plan.binding_plan.entries[0U].phase ==
+                    BindingPhase::PrepareTime &&
+                qualification_plan.binding_plan.entries[1U].binding_id ==
+                    "yyz.aero-to-rigid" &&
+                qualification_plan.binding_plan.entries[1U]
+                    .scope_resolution.has_value() &&
+                qualification_plan.binding_plan.entries[2U].binding_id ==
+                    "yyz.closure-to-rigid" &&
+                qualification_plan.binding_plan.entries[2U].binding_kind ==
+                    BindingKind::ContinuousClosureLink &&
+                qualification_plan.binding_plan.entries[2U]
+                    .scope_resolution.has_value() &&
+                qualification_plan.temporal_binding_plan.entries.size() ==
+                    1U &&
+                qualification_plan.temporal_binding_plan.entries[0U]
+                        .relation ==
+                    TemporalRelation::IntervalModel &&
+                qualification_plan.obligations.size() == 2U,
+            "REF-YYZ-001 binding proof lost asset, scope, or frozen time");
+
     const auto explain =
         gnc::compiler::explain_canonical_mission_ir(ir);
     require(explain.find(
@@ -650,7 +775,14 @@ const Diagnostic& require_diagnostic(
                 explain.find(
                     "asset aero_lookup.aerodynamics "
                     "gnc.asset.yyz.aerodynamic-table.multiaffine@1 "
-                    "aero-table.fixture.yyz.multiaffine@1\n") !=
+                    "aero-table.fixture.yyz.multiaffine@1 cardinality "
+                    "exactly-one\n") !=
+                    std::string::npos &&
+                explain.find(
+                    "algorithm-consumer yyz.rigid-step "
+                    "gnc.package.yyz-rigid-step.experimental@1@0.1.0 "
+                    "gnc.package.yyz.rigid-step.kernel@1@0.1.0 scope "
+                    "Vehicle:vehicle.fixture.yyz@1\n") !=
                     std::string::npos,
             "YYZ canonical explain omitted scope, placement, or asset");
 
@@ -698,6 +830,16 @@ const Diagnostic& require_diagnostic(
             asset.source = {"repo://relocated/assets.json",
                             "/assets/" + asset.role};
         }
+    }
+    for (auto& algorithm : relocated.algorithm_consumers) {
+        algorithm.source = {"repo://relocated/algorithm.cpp",
+                            "/algorithm"};
+        algorithm.scope_source = {
+            "repo://relocated/qualification.json", "/algorithm/scope"};
+    }
+    for (auto& binding : relocated.binding_intents) {
+        binding.source = {"repo://relocated/bindings.json",
+                          "/bindings/" + binding.binding_id};
     }
     const auto relocated_outcome =
         gnc::compiler::build_canonical_mission_ir(relocated, catalog);
@@ -835,6 +977,22 @@ void verify_yyz_entity_subject_negative_cases(const Catalog& catalog) {
                                DiagnosticCode::MissingAssetBinding),
             "asset-bearing aero model entered IR without its asset");
 
+    auto duplicate_asset = yyz_qualification_source();
+    auto duplicate_asset_binding =
+        duplicate_asset.model_occurrences[1U].asset_bindings[0U];
+    duplicate_asset_binding.source.node_path =
+        "/selected_assets/2/duplicate-asset-id";
+    duplicate_asset.model_occurrences[1U].asset_bindings.push_back(
+        std::move(duplicate_asset_binding));
+    const auto duplicate_asset_outcome =
+        gnc::compiler::build_canonical_mission_ir(
+            duplicate_asset, catalog);
+    require(!duplicate_asset_outcome.value.has_value() &&
+                has_diagnostic(
+                    duplicate_asset_outcome.diagnostics,
+                    DiagnosticCode::DuplicateAssetBinding),
+            "multiple assets satisfied an exactly-one prepared-model slot");
+
     auto incompatible_asset_schema = yyz_qualification_source();
     incompatible_asset_schema.model_occurrences[1U]
         .asset_bindings[0U]
@@ -852,10 +1010,10 @@ void verify_yyz_entity_subject_negative_cases(const Catalog& catalog) {
 void verify_success_product(const StaticCompilation& compilation) {
     const auto& ir = compilation.ir;
     const auto& plan = compilation.plan;
-    require(ir.revision == 1U && ir.mission_id == kMissionId,
+    require(ir.revision == 2U && ir.mission_id == kMissionId,
             "typed source did not produce the expected minimal IR");
-    require(ir.entities.empty() &&
-                ir.scopes.empty() &&
+    require(ir.entities.size() == 1U &&
+                ir.scopes.size() == 1U &&
                 ir.model_occurrences.size() == 3U &&
                 ir.algorithm_consumers.size() == 2U &&
                 ir.binding_intents.size() == 3U,
@@ -872,6 +1030,9 @@ void verify_success_product(const StaticCompilation& compilation) {
                 ir.model_occurrences[0U].subject_entity_id.empty() &&
                 !ir.model_occurrences[0U].scope.has_value() &&
                 ir.model_occurrences[0U]
+                        .output_ports[0U]
+                        .binding_kind == BindingKind::PureQuery &&
+                ir.model_occurrences[0U]
                         .placement_source.document_uri ==
                     "catalog://gnc.package.cavh-formula.experimental@1" &&
                 ir.model_occurrences[1U].occurrence_id ==
@@ -880,6 +1041,9 @@ void verify_success_product(const StaticCompilation& compilation) {
                     gnc::packages::yyz::kAerodynamicTableModelIdentity &&
                 ir.model_occurrences[1U].placement ==
                     ModelPlacement::VehicleOutput &&
+                ir.model_occurrences[1U].scope.has_value() &&
+                ir.model_occurrences[1U].scope->subject_entity_id ==
+                    kYyzQualificationSubject &&
                 ir.model_occurrences[1U].asset_bindings.size() == 1U &&
                 ir.model_occurrences[2U].occurrence_id == "yyz.closure" &&
                 ir.model_occurrences[2U].model_id ==
@@ -887,9 +1051,18 @@ void verify_success_product(const StaticCompilation& compilation) {
                         kForceMomentClosureModelIdentity &&
                 ir.model_occurrences[2U].placement ==
                     ModelPlacement::InteractionClosure &&
+                ir.model_occurrences[2U].scope.has_value() &&
                 ir.model_occurrences[2U].output_ports.size() == 1U &&
                 ir.model_occurrences[2U].output_ports[0U].contract_id ==
-                    gnc::packages::yyz::kRigidFormInputContractIdentity,
+                    gnc::packages::yyz::kRigidFormInputContractIdentity &&
+                ir.model_occurrences[2U]
+                        .output_ports[0U]
+                        .binding_kind ==
+                    BindingKind::ContinuousClosureLink &&
+                ir.model_occurrences[2U]
+                        .output_ports[0U]
+                        .temporal_relation ==
+                    TemporalRelation::IntervalModel,
             "canonical IR lost exact model or output identities");
     require(ir.algorithm_consumers[0U].consumer_id == "cavh.formula" &&
                 ir.algorithm_consumers[0U].input_ports.size() == 1U &&
@@ -898,6 +1071,9 @@ void verify_success_product(const StaticCompilation& compilation) {
                         kGlideEnvelopeOutputContractIdentity &&
                 ir.algorithm_consumers[1U].consumer_id ==
                     "yyz.rigid-step" &&
+                ir.algorithm_consumers[1U].scope.has_value() &&
+                ir.algorithm_consumers[1U].scope->subject_entity_id ==
+                    kYyzQualificationSubject &&
                 ir.algorithm_consumers[1U].input_ports.size() == 2U &&
                 ir.algorithm_consumers[1U]
                         .input_ports[0U]
@@ -915,13 +1091,15 @@ void verify_success_product(const StaticCompilation& compilation) {
                 ir.binding_intents[2U].binding_id ==
                     "yyz.closure-to-rigid",
             "canonical IR lost exact algorithm inputs or binding intents");
-    require(plan.plan_id == kPlanId && plan.mission_id == kMissionId,
+    require(plan.revision == 2U && plan.plan_id == kPlanId &&
+                plan.mission_id == kMissionId,
             "static plan identity changed");
     require(plan.dependency_lock.size() == 2U &&
                 plan.model_preparation_identities.size() == 3U &&
                 plan.algorithms.size() == 2U &&
-                plan.bindings.size() == 3U &&
-                plan.binding_proofs.size() == 3U &&
+                plan.binding_plan.entries.size() == 4U &&
+                plan.temporal_binding_plan.entries.size() == 1U &&
+                plan.binding_proofs.size() == 4U &&
                 plan.obligations.size() == 3U,
             "static plan closure count changed");
 
@@ -964,39 +1142,160 @@ void verify_success_product(const StaticCompilation& compilation) {
                 plan.algorithms[1U].algorithm_id ==
                     gnc::packages::yyz::kRigidStepKernelIdentity.id &&
                 plan.algorithms[1U].algorithm_version ==
-                    gnc::packages::yyz::kRigidStepKernelIdentity.version,
+                    gnc::packages::yyz::kRigidStepKernelIdentity.version &&
+                plan.algorithms[1U].scope.has_value() &&
+                plan.algorithms[1U].scope->subject_entity_id ==
+                    kYyzQualificationSubject,
             "algorithm consumers lost exact identities");
-    require(plan.bindings[0U].contract_id ==
-                gnc::packages::cavh::
-                    kGlideEnvelopeOutputContractIdentity &&
-                plan.bindings[1U].contract_id ==
+
+    const auto& asset_binding = plan.binding_plan.entries[0U];
+    const auto& cavh_binding = plan.binding_plan.entries[1U];
+    const auto& aero_binding = plan.binding_plan.entries[2U];
+    const auto& closure_binding = plan.binding_plan.entries[3U];
+    require(std::all_of(
+                plan.binding_plan.entries.begin(),
+                plan.binding_plan.entries.end(),
+                [](const auto& binding) {
+                    return !binding.source.document_uri.empty() &&
+                           !binding.source.node_path.empty();
+                }) &&
+                std::all_of(
+                    plan.temporal_binding_plan.entries.begin(),
+                    plan.temporal_binding_plan.entries.end(),
+                    [](const auto& binding) {
+                        return !binding.source.document_uri.empty() &&
+                               !binding.source.node_path.empty();
+                    }),
+            "BindingPlan wrote an invalid direct SourceRef");
+    require(asset_binding.binding_id ==
+                "asset.yyz.aerodynamics.aerodynamics" &&
+                asset_binding.binding_kind == BindingKind::AssetBinding &&
+                asset_binding.provider_endpoint.kind ==
+                    BindingEndpointKind::Asset &&
+                asset_binding.provider_endpoint.owner_id ==
+                    "aero-table.fixture.yyz.multiaffine@1" &&
+                asset_binding.consumer_endpoint.kind ==
+                    BindingEndpointKind::PreparedModel &&
+                asset_binding.consumer_endpoint.owner_id ==
+                    "yyz.aerodynamics" &&
+                asset_binding.exact_contract_id ==
+                    gnc::packages::yyz::
+                        kAerodynamicTableAssetSchemaIdentity &&
+                asset_binding.provider_cardinality ==
+                    PortCardinality::ExactlyOne &&
+                asset_binding.consumer_cardinality ==
+                    PortCardinality::ExactlyOne &&
+                asset_binding.phase == BindingPhase::PrepareTime &&
+                asset_binding.asset_binding.has_value() &&
+                asset_binding.asset_binding->role == "aerodynamics" &&
+                !asset_binding.scope_resolution.has_value(),
+            "YYZ asset binding lost prepare-time asset/schema identity");
+    require(cavh_binding.binding_id ==
+                "cavh.envelope-to-formula" &&
+                cavh_binding.binding_kind == BindingKind::PureQuery &&
+                cavh_binding.provider_endpoint.kind ==
+                    BindingEndpointKind::ModelOccurrence &&
+                cavh_binding.consumer_endpoint.kind ==
+                    BindingEndpointKind::AlgorithmConsumer &&
+                cavh_binding.exact_contract_id ==
+                    gnc::packages::cavh::
+                        kGlideEnvelopeOutputContractIdentity &&
+                cavh_binding.provider_cardinality ==
+                    PortCardinality::OneOrMore &&
+                cavh_binding.consumer_cardinality ==
+                    PortCardinality::ExactlyOne &&
+                !cavh_binding.scope_resolution.has_value(),
+            "CAVH definition-level PureQuery binding changed");
+    require(aero_binding.binding_id == "yyz.aero-to-rigid" &&
+                aero_binding.binding_kind == BindingKind::PureQuery &&
+                aero_binding.exact_contract_id ==
                     gnc::packages::yyz::
                         kAerodynamicCoefficientsContractIdentity &&
-                plan.bindings[2U].contract_id ==
-                    gnc::packages::yyz::kRigidFormInputContractIdentity,
-            "formal query or closure output contract changed");
-    require(plan.binding_proofs[0U].assertion_code ==
-                "GNC.PLAN.BINDING.CONTRACT.EXACT" &&
-                plan.binding_proofs[0U].source_refs.size() == 3U &&
-                plan.binding_proofs[0U].source_refs[1U].node_path ==
-                    "/bindings/cavh.envelope-to-formula" &&
+                aero_binding.scope_resolution.has_value() &&
+                aero_binding.scope_resolution->resolved_scope
+                        .subject_entity_id ==
+                    kYyzQualificationSubject,
+            "YYZ aerodynamic PureQuery lost exact contract or scope");
+    require(closure_binding.binding_id ==
+                "yyz.closure-to-rigid" &&
+                closure_binding.binding_kind ==
+                    BindingKind::ContinuousClosureLink &&
+                closure_binding.exact_contract_id ==
+                    gnc::packages::yyz::kRigidFormInputContractIdentity &&
+                closure_binding.scope_resolution.has_value() &&
+                closure_binding.scope_resolution->resolved_scope
+                        .subject_entity_id ==
+                    kYyzQualificationSubject &&
+                plan.temporal_binding_plan.entries[0U].binding_id ==
+                    closure_binding.binding_id &&
+                plan.temporal_binding_plan.entries[0U].relation ==
+                    TemporalRelation::IntervalModel,
+            "YYZ frozen-interval closure binding changed");
+
+    const auto has_assertion = [](const auto& proof,
+                                  BindingProofAssertion assertion) {
+        return std::find(proof.assertions.begin(), proof.assertions.end(),
+                         assertion) != proof.assertions.end();
+    };
+    for (const auto& proof : plan.binding_proofs) {
+        require(!proof.proof_id.empty() &&
+                    !proof.binding_id.empty() &&
+                    !proof.exact_contract_id.empty() &&
+                    has_assertion(proof,
+                                  BindingProofAssertion::EndpointsResolved) &&
+                    has_assertion(proof,
+                                  BindingProofAssertion::KindCompatible) &&
+                    has_assertion(proof,
+                                  BindingProofAssertion::ContractExact) &&
+                    has_assertion(
+                        proof,
+                        BindingProofAssertion::CardinalitySatisfied) &&
+                    has_assertion(proof,
+                                  BindingProofAssertion::SourceLocated) &&
+                    !proof.source_refs.empty() &&
+                    std::all_of(
+                        proof.source_refs.begin(), proof.source_refs.end(),
+                        [](const SourceRef& source_ref) {
+                            return !source_ref.document_uri.empty() &&
+                                   !source_ref.node_path.empty();
+                        }),
+                "structured binding proof is incomplete or unlocated");
+    }
+    require(has_assertion(
+                plan.binding_proofs[0U],
+                BindingProofAssertion::AssetIdentityExact) &&
+                !has_assertion(
+                    plan.binding_proofs[1U],
+                    BindingProofAssertion::ScopeExact) &&
+                has_assertion(
+                    plan.binding_proofs[2U],
+                    BindingProofAssertion::ScopeExact) &&
+                has_assertion(
+                    plan.binding_proofs[3U],
+                    BindingProofAssertion::ScopeExact) &&
+                has_assertion(
+                    plan.binding_proofs[3U],
+                    BindingProofAssertion::TemporalCompatible) &&
                 plan.binding_proofs[1U].source_refs[1U].node_path ==
-                    "/bindings/yyz.aero-to-rigid" &&
+                    "/bindings/cavh.envelope-to-formula" &&
                 plan.binding_proofs[2U].source_refs[1U].node_path ==
+                    "/bindings/yyz.aero-to-rigid" &&
+                plan.binding_proofs[3U].source_refs[1U].node_path ==
                     "/bindings/yyz.closure-to-rigid",
-            "binding proof lost direct source locations");
+            "binding proof lost scoped, temporal, asset, or source facts");
     require(plan.obligations[0U].kind ==
                 CompiledObligationKind::PureQueryEvaluation &&
-                plan.obligations[0U].consumer_id ==
+                plan.obligations[0U].consumer_endpoint.owner_id ==
                     "cavh.formula" &&
                 plan.obligations[1U].kind ==
                     CompiledObligationKind::PureQueryEvaluation &&
-                plan.obligations[1U].provider_occurrence_id ==
+                plan.obligations[1U].provider_endpoint.owner_id ==
                     "yyz.aerodynamics" &&
-                plan.obligations[1U].consumer_id == "yyz.rigid-step" &&
+                plan.obligations[1U].consumer_endpoint.owner_id ==
+                    "yyz.rigid-step" &&
                 plan.obligations[2U].kind ==
                     CompiledObligationKind::ClosureEvaluation &&
-                plan.obligations[2U].consumer_id ==
+                plan.obligations[2U].consumer_endpoint.owner_id ==
                     "yyz.rigid-step",
             "compiled obligations no longer express true package consumers");
 }
@@ -1010,12 +1309,25 @@ void verify_deterministic_order(std::string_view expected_ir_explain,
         require_value(catalog_outcome, "reordered Catalog build failed");
 
     auto source = composition_source();
+    std::reverse(source.entities.begin(), source.entities.end());
+    std::reverse(source.scopes.begin(), source.scopes.end());
     std::reverse(source.model_occurrences.begin(),
                  source.model_occurrences.end());
     std::reverse(source.algorithm_consumers.begin(),
                  source.algorithm_consumers.end());
     std::reverse(source.binding_intents.begin(),
                  source.binding_intents.end());
+    source.mission_source = {"typed://alternate/source.yaml",
+                             "/mission"};
+    for (auto& entity : source.entities) {
+        entity.identity_source = {"typed://alternate/source.yaml",
+                                  "/entities/id"};
+        entity.lifecycle_source = {"typed://alternate/source.yaml",
+                                   "/entities/lifecycle"};
+    }
+    for (auto& scope : source.scopes) {
+        scope.source = {"typed://alternate/source.yaml", "/scopes"};
+    }
     for (std::size_t index = 0U;
          index < source.model_occurrences.size(); ++index) {
         auto& model = source.model_occurrences[index];
@@ -1044,12 +1356,25 @@ void verify_deterministic_order(std::string_view expected_ir_explain,
                 {"typed://alternate/source.yaml",
                  "/placements/" + std::to_string(index)};
         }
+        if (!model.subject_entity_id.empty()) {
+            model.subject_source = {"typed://alternate/source.yaml",
+                                    "/subjects/" + model.occurrence_id};
+        }
+        if (model.scope.has_value()) {
+            model.scope_source = {"typed://alternate/source.yaml",
+                                  "/scopes/" + model.occurrence_id};
+        }
     }
     for (std::size_t index = 0U;
          index < source.algorithm_consumers.size(); ++index) {
         source.algorithm_consumers[index].source =
             {"typed://alternate/source.yaml",
              "/algorithm_consumers/" + std::to_string(index)};
+        if (source.algorithm_consumers[index].scope.has_value()) {
+            source.algorithm_consumers[index].scope_source =
+                {"typed://alternate/source.yaml",
+                 "/algorithm_scopes/" + std::to_string(index)};
+        }
     }
     for (std::size_t index = 0U;
          index < source.binding_intents.size(); ++index) {
@@ -1076,7 +1401,7 @@ void verify_deterministic_order(std::string_view expected_ir_explain,
     require(gnc::compiler::explain_static_plan(compilation.plan) ==
                 expected_plan_explain,
         "Catalog or composition-source insertion order changed the plan");
-    require(compilation.plan.binding_proofs[0U]
+    require(compilation.plan.binding_proofs[1U]
                 .source_refs[0U]
                 .document_uri == "typed://alternate/source.yaml",
             "canonical semantics discarded source provenance");
@@ -1204,6 +1529,90 @@ void verify_negative_cases() {
                     "/bindings/cavh.envelope-to-formula",
             "contract mismatch produced a plan or lost its source path");
 
+    auto incompatible_kind_packages = package_descriptors();
+    auto& cavh_input =
+        incompatible_kind_packages[0U].algorithms[0U].ports[0U];
+    cavh_input.binding_kind = BindingKind::ContinuousClosureLink;
+    cavh_input.temporal_relation = TemporalRelation::IntervalModel;
+    const auto incompatible_kind_catalog_outcome =
+        Catalog::build(std::move(incompatible_kind_packages));
+    const auto& incompatible_kind_catalog = require_value(
+        incompatible_kind_catalog_outcome,
+        "incompatible-kind Catalog setup failed");
+    const auto incompatible_kind_outcome =
+        gnc::compiler::compile_static_plan(
+            composition_source(), incompatible_kind_catalog);
+    const auto& kind_diagnostic = require_diagnostic(
+        incompatible_kind_outcome.diagnostics,
+        DiagnosticCode::BindingKindMismatch,
+        "binding kind mismatch diagnostic missing");
+    require(!incompatible_kind_outcome.value.has_value() &&
+                kind_diagnostic.source.node_path ==
+                    "/bindings/cavh.envelope-to-formula",
+            "incompatible query/closure kind produced a plan");
+
+    auto incompatible_temporal_packages = package_descriptors();
+    incompatible_temporal_packages[1U]
+        .algorithms[0U]
+        .ports[1U]
+        .temporal_relation = TemporalRelation::CandidateStateQuery;
+    const auto incompatible_temporal_catalog_outcome =
+        Catalog::build(std::move(incompatible_temporal_packages));
+    const auto& incompatible_temporal_catalog = require_value(
+        incompatible_temporal_catalog_outcome,
+        "incompatible-temporal Catalog setup failed");
+    const auto incompatible_temporal_outcome =
+        gnc::compiler::compile_static_plan(
+            composition_source(), incompatible_temporal_catalog);
+    const auto& temporal_diagnostic = require_diagnostic(
+        incompatible_temporal_outcome.diagnostics,
+        DiagnosticCode::BindingTemporalMismatch,
+        "binding temporal mismatch diagnostic missing");
+    require(!incompatible_temporal_outcome.value.has_value() &&
+                temporal_diagnostic.source.node_path ==
+                    "/bindings/yyz.closure-to-rigid",
+            "candidate-state relation entered the frozen interval closure");
+
+    auto incompatible_scope = composition_source();
+    const ScopeKey alternate_scope{
+        ScopeKind::Vehicle, "vehicle.fixture.yyz.alternate@1"};
+    incompatible_scope.entities.push_back(
+        {alternate_scope.subject_entity_id,
+         EntityLifecycle::ActiveAtInitialize,
+         ref("/entities/vehicle.fixture.yyz.alternate@1/id"),
+         ref("/entities/vehicle.fixture.yyz.alternate@1/lifecycle")});
+    incompatible_scope.scopes.push_back(
+        {alternate_scope,
+         ref("/scopes/vehicle.fixture.yyz.alternate@1")});
+    incompatible_scope.algorithm_consumers[1U].scope = alternate_scope;
+    incompatible_scope.algorithm_consumers[1U].scope_source =
+        ref("/algorithms/yyz.rigid-step/alternate-scope");
+    const auto incompatible_scope_outcome =
+        gnc::compiler::compile_static_plan(incompatible_scope, catalog);
+    const auto& scope_diagnostic = require_diagnostic(
+        incompatible_scope_outcome.diagnostics,
+        DiagnosticCode::BindingScopeMismatch,
+        "binding scope mismatch diagnostic missing");
+    require(!incompatible_scope_outcome.value.has_value() &&
+                scope_diagnostic.source.node_path ==
+                    "/bindings/yyz.aero-to-rigid",
+            "cross-vehicle query binding produced a plan");
+
+    auto missing_binding_source = composition_source();
+    missing_binding_source.binding_intents[0U].source = {};
+    const auto missing_binding_source_outcome =
+        gnc::compiler::compile_static_plan(
+            missing_binding_source, catalog);
+    const auto& missing_source_diagnostic = require_diagnostic(
+        missing_binding_source_outcome.diagnostics,
+        DiagnosticCode::MissingSourceReference,
+        "missing binding source diagnostic missing");
+    require(!missing_binding_source_outcome.value.has_value() &&
+                !missing_source_diagnostic.source.document_uri.empty() &&
+                !missing_source_diagnostic.source.node_path.empty() &&
+                missing_source_diagnostic.source.node_path == "/mission_id",
+            "empty SourceBinding source entered proof or diagnostic output");
+
     auto duplicate_packages = package_descriptors();
     duplicate_packages.push_back(duplicate_packages[0U]);
     const auto duplicate_catalog_outcome =
@@ -1307,6 +1716,15 @@ require_hash(
             asset.source = {"repo://relocated/assets.json", "/asset"};
         }
     }
+    for (auto& algorithm : relocated_ir.algorithm_consumers) {
+        algorithm.source = {"repo://relocated/algorithm.cpp",
+                            "/algorithm"};
+        algorithm.scope_source = {"repo://relocated/source.json",
+                                  "/algorithm/scope"};
+    }
+    for (auto& binding : relocated_ir.binding_intents) {
+        binding.source = {"repo://relocated/bindings.json", "/binding"};
+    }
     const auto relocated_hash = require_hash(
         gnc::compiler::hash_canonical_mission_ir(relocated_ir),
         "relocated IR semantic hashing failed");
@@ -1321,6 +1739,10 @@ require_hash(
                  reordered_source.scopes.end());
     std::reverse(reordered_source.model_occurrences.begin(),
                  reordered_source.model_occurrences.end());
+    std::reverse(reordered_source.algorithm_consumers.begin(),
+                 reordered_source.algorithm_consumers.end());
+    std::reverse(reordered_source.binding_intents.begin(),
+                 reordered_source.binding_intents.end());
     for (auto& model : reordered_source.model_occurrences) {
         std::reverse(model.configuration.fields.begin(),
                      model.configuration.fields.end());
@@ -1357,6 +1779,12 @@ require_hash(
         model.scope->subject_entity_id =
             entity_changed.entities[0U].entity_id;
     }
+    for (auto& algorithm : entity_changed.algorithm_consumers) {
+        if (algorithm.scope.has_value()) {
+            algorithm.scope->subject_entity_id =
+                entity_changed.entities[0U].entity_id;
+        }
+    }
     expect_changed(std::move(entity_changed),
                    "entity semantic mutation did not change hash");
 
@@ -1382,10 +1810,15 @@ require_hash(
         gnc::compiler::hash_canonical_mission_ir(scope_baseline),
         "two-scope baseline hashing failed");
     auto scope_changed = scope_baseline;
-    scope_changed.model_occurrences[0U].subject_entity_id =
-        "vehicle.fixture.yyz.alternate@1";
-    scope_changed.model_occurrences[0U].scope = ScopeKey{
-        ScopeKind::Vehicle, "vehicle.fixture.yyz.alternate@1"};
+    for (auto& model : scope_changed.model_occurrences) {
+        model.subject_entity_id = "vehicle.fixture.yyz.alternate@1";
+        model.scope = ScopeKey{
+            ScopeKind::Vehicle, "vehicle.fixture.yyz.alternate@1"};
+    }
+    for (auto& algorithm : scope_changed.algorithm_consumers) {
+        algorithm.scope = ScopeKey{
+            ScopeKind::Vehicle, "vehicle.fixture.yyz.alternate@1"};
+    }
     const auto scope_changed_hash = require_hash(
         gnc::compiler::hash_canonical_mission_ir(scope_changed),
         "scope semantic mutation hashing failed");
@@ -1424,6 +1857,33 @@ require_hash(
         .asset_id = "aero-table.fixture.yyz.alternate@1";
     expect_changed(std::move(asset_changed),
                    "asset semantic mutation did not change hash");
+
+    auto closure_temporal_changed = base_ir;
+    auto& closure_output =
+        closure_temporal_changed.model_occurrences[1U].output_ports[0U];
+    closure_output.temporal_relation =
+        TemporalRelation::CandidateStateQuery;
+    auto closure_input = std::find_if(
+        closure_temporal_changed.algorithm_consumers[0U]
+            .input_ports.begin(),
+        closure_temporal_changed.algorithm_consumers[0U]
+            .input_ports.end(),
+        [](const auto& port) {
+            return port.port_id == "form-input";
+        });
+    require(closure_input !=
+                closure_temporal_changed.algorithm_consumers[0U]
+                    .input_ports.end(),
+            "closure consumer port is absent from semantic hash fixture");
+    closure_input->temporal_relation =
+        TemporalRelation::CandidateStateQuery;
+    expect_changed(std::move(closure_temporal_changed),
+                   "closure temporal mutation did not change hash");
+
+    auto binding_identity_changed = base_ir;
+    binding_identity_changed.binding_intents[0U].binding_id += ".renamed";
+    expect_changed(std::move(binding_identity_changed),
+                   "binding intent mutation did not change hash");
 
     auto noncanonical_order = base_ir;
     std::reverse(noncanonical_order.model_occurrences.begin(),
@@ -1490,11 +1950,15 @@ require_hash(
         gnc::compiler::explain_static_plan(compilation.plan);
     require(explain.find(
                 "obligation 1 obligation.yyz.aero-to-rigid "
-                "PureQueryEvaluation yyz.aerodynamics -> "
-                "yyz.rigid-step\n") != std::string::npos &&
+                "PureQueryEvaluation "
+                "ModelOccurrence:yyz.aerodynamics.coefficients -> "
+                "AlgorithmConsumer:yyz.rigid-step."
+                "aerodynamic-coefficients\n") != std::string::npos &&
                 explain.find(
                     "obligation 2 obligation.yyz.closure-to-rigid "
-                    "ClosureEvaluation yyz.closure -> yyz.rigid-step\n") !=
+                    "ClosureEvaluation "
+                    "ModelOccurrence:yyz.closure.form-input -> "
+                    "AlgorithmConsumer:yyz.rigid-step.form-input\n") !=
                     std::string::npos,
             "static dry-run explain lost query/closure obligations");
     require(gnc::compiler::explain_canonical_mission_ir(compilation.ir) ==
