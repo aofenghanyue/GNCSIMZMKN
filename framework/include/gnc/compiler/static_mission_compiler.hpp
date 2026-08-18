@@ -150,15 +150,15 @@ inline void validate_ports(
     }
 }
 
-template <typename Descriptor>
-[[nodiscard]] inline const gnc::model_sdk::StaticPortDescriptor* find_port(
-    const Descriptor& descriptor, std::string_view port_id) {
+template <typename Port>
+[[nodiscard]] inline const Port* find_port(
+    const std::vector<Port>& ports, std::string_view port_id) {
     const auto found = std::find_if(
-        descriptor.ports.begin(), descriptor.ports.end(),
-        [port_id](const gnc::model_sdk::StaticPortDescriptor& port) {
+        ports.begin(), ports.end(),
+        [port_id](const Port& port) {
             return port.port_id == port_id;
         });
-    return found == descriptor.ports.end() ? nullptr : &*found;
+    return found == ports.end() ? nullptr : &*found;
 }
 
 [[nodiscard]] inline std::string endpoint_key(
@@ -375,30 +375,52 @@ struct TypedStaticCompositionSource {
     std::vector<SourceBinding> bindings;
 };
 
-struct ResolvedModelOccurrence {
+struct CanonicalPort {
+    std::string port_id;
+    std::string contract_id;
+};
+
+struct CanonicalModelOccurrence {
     std::string occurrence_id;
     PackageLock package;
-    gnc::model_sdk::StaticModelDescriptor descriptor;
+    std::string model_id;
+    std::string model_version;
+    gnc::model_sdk::ModelExecutionForm execution_form =
+        gnc::model_sdk::ModelExecutionForm::Unspecified;
+    std::string preparation_algorithm_id;
+    std::string preparation_algorithm_version;
+    std::vector<CanonicalPort> output_ports;
     SourceRef source;
 };
 
-struct ResolvedAlgorithmOccurrence {
+struct CanonicalAlgorithmOccurrence {
     std::string occurrence_id;
     PackageLock package;
-    gnc::model_sdk::StaticAlgorithmDescriptor descriptor;
+    std::string algorithm_id;
+    std::string algorithm_version;
+    std::vector<CanonicalPort> input_ports;
     SourceRef source;
 };
 
-struct BindingIntent {
-    SourceBinding source_binding;
+struct CanonicalBindingIntent {
+    std::string binding_id;
+    std::string provider_occurrence_id;
+    std::string provider_port_id;
+    std::string consumer_occurrence_id;
+    std::string consumer_port_id;
+    SourceRef source;
 };
 
-struct StaticCompositionIr {
+// The executable R2-IR identity/binding slice. Source locations remain as
+// provenance, while its semantic explanation excludes representation-specific
+// locations and plan identity. Config, assets, entities, scopes, and hashes
+// remain outside this deliberately narrow slice.
+struct CanonicalMissionIr {
     std::uint32_t revision = 1U;
     std::string mission_id;
-    std::vector<ResolvedModelOccurrence> models;
-    std::vector<ResolvedAlgorithmOccurrence> algorithms;
-    std::vector<BindingIntent> binding_intents;
+    std::vector<CanonicalModelOccurrence> models;
+    std::vector<CanonicalAlgorithmOccurrence> algorithms;
+    std::vector<CanonicalBindingIntent> binding_intents;
 };
 
 enum class BindingProofResult : std::uint8_t {
@@ -487,24 +509,52 @@ struct ExecutionPlanDescriptor {
 };
 
 struct StaticCompilation {
-    StaticCompositionIr ir;
+    CanonicalMissionIr ir;
     ExecutionPlanDescriptor plan;
 };
 
-[[nodiscard]] inline CompileOutcome<StaticCompilation> compile_static_plan(
-    const TypedStaticCompositionSource& source, const Catalog& catalog) {
-    CompileOutcome<StaticCompilation> outcome;
+namespace detail {
+
+[[nodiscard]] inline std::vector<CanonicalPort> canonical_ports(
+    const std::vector<gnc::model_sdk::StaticPortDescriptor>& ports) {
+    std::vector<CanonicalPort> result;
+    result.reserve(ports.size());
+    for (const auto& port : ports) {
+        result.push_back({port.port_id, port.contract_id});
+    }
+    std::sort(result.begin(), result.end(),
+              [](const CanonicalPort& lhs, const CanonicalPort& rhs) {
+                  return lhs.port_id < rhs.port_id;
+              });
+    return result;
+}
+
+} // namespace detail
+
+[[nodiscard]] inline CompileOutcome<CanonicalMissionIr>
+build_canonical_mission_ir(const TypedStaticCompositionSource& source,
+                           const Catalog& catalog) {
+    CompileOutcome<CanonicalMissionIr> outcome;
     if (source.source_version != kTypedStaticCompositionSourceVersion ||
-        source.mission_id.empty() || source.plan_id.empty()) {
+        source.mission_id.empty()) {
         outcome.diagnostics.push_back(
             {DiagnosticCode::InvalidStaticCompositionSource,
              {"typed://mission", "/"}, source.mission_id,
-             "static composition source version, mission identity, and "
-             "plan identity are required"});
+             "static composition source version and mission identity are "
+             "required"});
+        return outcome;
+    }
+    if (source.models.empty() && source.algorithms.empty() &&
+        source.bindings.empty()) {
+        outcome.diagnostics.push_back(
+            {DiagnosticCode::InvalidStaticCompositionSource,
+             {"typed://mission", "/"}, source.mission_id,
+             "static composition must contain at least one model, "
+             "algorithm, or binding"});
         return outcome;
     }
 
-    StaticCompositionIr ir;
+    CanonicalMissionIr ir;
     ir.mission_id = source.mission_id;
     std::set<std::string> occurrence_ids;
 
@@ -523,17 +573,26 @@ struct StaticCompilation {
                  "occurrence identity is empty or duplicated"});
             continue;
         }
-        const auto* descriptor =
+        const auto* catalog_model =
             catalog.find_model(model.model_id, model.model_version);
-        if (descriptor == nullptr) {
+        if (catalog_model == nullptr) {
             outcome.diagnostics.push_back(
                 {DiagnosticCode::UnknownDefinition, model.source,
                  model.occurrence_id,
                  "exact model definition is absent from the Catalog"});
             continue;
         }
-        ir.models.push_back({model.occurrence_id, descriptor->package,
-                             descriptor->descriptor, model.source});
+        const auto& descriptor = catalog_model->descriptor;
+        ir.models.push_back(
+            {model.occurrence_id,
+             catalog_model->package,
+             descriptor.definition.model_id,
+             descriptor.definition.model_version,
+             descriptor.definition.execution_form,
+             descriptor.preparation_algorithm_id,
+             descriptor.preparation_algorithm_version,
+             detail::canonical_ports(descriptor.ports),
+             model.source});
     }
 
     auto algorithm_sources = source.algorithms;
@@ -551,18 +610,23 @@ struct StaticCompilation {
                  "occurrence identity is empty or duplicated"});
             continue;
         }
-        const auto* descriptor = catalog.find_algorithm(
+        const auto* catalog_algorithm = catalog.find_algorithm(
             algorithm.algorithm_id, algorithm.algorithm_version);
-        if (descriptor == nullptr) {
+        if (catalog_algorithm == nullptr) {
             outcome.diagnostics.push_back(
                 {DiagnosticCode::UnknownAlgorithm, algorithm.source,
                  algorithm.occurrence_id,
                  "exact algorithm descriptor is absent from the Catalog"});
             continue;
         }
+        const auto& descriptor = catalog_algorithm->descriptor;
         ir.algorithms.push_back(
-            {algorithm.occurrence_id, descriptor->package,
-             descriptor->descriptor, algorithm.source});
+            {algorithm.occurrence_id,
+             catalog_algorithm->package,
+             descriptor.algorithm_id,
+             descriptor.algorithm_version,
+             detail::canonical_ports(descriptor.ports),
+             algorithm.source});
     }
 
     auto binding_sources = source.bindings;
@@ -580,18 +644,85 @@ struct StaticCompilation {
                  binding.binding_id,
                  "binding identity is empty or duplicated"});
         }
-        ir.binding_intents.push_back({binding});
+        ir.binding_intents.push_back(
+            {binding.binding_id,
+             binding.provider_occurrence_id,
+             binding.provider_port_id,
+             binding.consumer_occurrence_id,
+             binding.consumer_port_id,
+             binding.source});
     }
 
-    if (!outcome.diagnostics.empty()) {
+    if (outcome.diagnostics.empty()) {
+        outcome.value.emplace(std::move(ir));
+    }
+    return outcome;
+}
+
+// Human-readable canonical semantic view for direct IR regression tests and
+// dry-run inspection. This is not a persistence or wire serialization format.
+[[nodiscard]] inline std::string explain_canonical_mission_ir(
+    const CanonicalMissionIr& ir) {
+    std::ostringstream stream;
+    stream << "mission-ir " << ir.revision << " mission " << ir.mission_id
+           << '\n';
+    for (const auto& model : ir.models) {
+        stream << "model " << model.occurrence_id << ' '
+               << model.package.package_id << '@'
+               << model.package.package_version << ' ' << model.model_id
+               << '@' << model.model_version << ' '
+               << gnc::model_sdk::to_string(model.execution_form)
+               << " preparation " << model.preparation_algorithm_id << '@'
+               << model.preparation_algorithm_version << '\n';
+        for (const auto& port : model.output_ports) {
+            stream << "output " << model.occurrence_id << '.'
+                   << port.port_id << ' ' << port.contract_id << '\n';
+        }
+    }
+    for (const auto& algorithm : ir.algorithms) {
+        stream << "algorithm " << algorithm.occurrence_id << ' '
+               << algorithm.package.package_id << '@'
+               << algorithm.package.package_version << ' '
+               << algorithm.algorithm_id << '@'
+               << algorithm.algorithm_version << '\n';
+        for (const auto& port : algorithm.input_ports) {
+            stream << "input " << algorithm.occurrence_id << '.'
+                   << port.port_id << ' ' << port.contract_id << '\n';
+        }
+    }
+    for (const auto& binding : ir.binding_intents) {
+        stream << "intent " << binding.binding_id << ' '
+               << binding.provider_occurrence_id << '.'
+               << binding.provider_port_id << " -> "
+               << binding.consumer_occurrence_id << '.'
+               << binding.consumer_port_id << '\n';
+    }
+    return stream.str();
+}
+
+[[nodiscard]] inline CompileOutcome<StaticCompilation> compile_static_plan(
+    const TypedStaticCompositionSource& source, const Catalog& catalog) {
+    CompileOutcome<StaticCompilation> outcome;
+    auto ir_outcome = build_canonical_mission_ir(source, catalog);
+    if (!ir_outcome.succeeded()) {
+        outcome.diagnostics = std::move(ir_outcome.diagnostics);
+        return outcome;
+    }
+    auto ir = std::move(*ir_outcome.value);
+    if (source.plan_id.empty()) {
+        outcome.diagnostics.push_back(
+            {DiagnosticCode::InvalidStaticCompositionSource,
+             {"typed://mission", "/plan_id"}, source.mission_id,
+             "plan identity is required for static plan lowering"});
         return outcome;
     }
 
-    std::map<std::string, const ResolvedModelOccurrence*> model_by_id;
+    std::map<std::string, const CanonicalModelOccurrence*> model_by_id;
     for (const auto& model : ir.models) {
         model_by_id.emplace(model.occurrence_id, &model);
     }
-    std::map<std::string, const ResolvedAlgorithmOccurrence*> algorithm_by_id;
+    std::map<std::string, const CanonicalAlgorithmOccurrence*>
+        algorithm_by_id;
     for (const auto& algorithm : ir.algorithms) {
         algorithm_by_id.emplace(algorithm.occurrence_id, &algorithm);
     }
@@ -602,7 +733,7 @@ struct StaticCompilation {
     std::map<std::string, std::size_t> consumer_counts;
 
     for (const auto& intent : ir.binding_intents) {
-        const auto& binding = intent.source_binding;
+        const auto& binding = intent;
         const auto model_found =
             model_by_id.find(binding.provider_occurrence_id);
         const auto algorithm_found =
@@ -618,24 +749,16 @@ struct StaticCompilation {
         }
 
         const auto* provider_port = detail::find_port(
-            model_found->second->descriptor, binding.provider_port_id);
+            model_found->second->output_ports,
+            binding.provider_port_id);
         const auto* consumer_port = detail::find_port(
-            algorithm_found->second->descriptor, binding.consumer_port_id);
+            algorithm_found->second->input_ports,
+            binding.consumer_port_id);
         if (provider_port == nullptr || consumer_port == nullptr) {
             outcome.diagnostics.push_back(
                 {DiagnosticCode::UnknownEndpoint, binding.source,
                  binding.binding_id,
                  "binding references an unknown provider or consumer port"});
-            continue;
-        }
-        if (provider_port->direction !=
-                gnc::model_sdk::StaticPortDirection::Output ||
-            consumer_port->direction !=
-                gnc::model_sdk::StaticPortDirection::Input) {
-            outcome.diagnostics.push_back(
-                {DiagnosticCode::PortDirectionMismatch, binding.source,
-                 binding.binding_id,
-                 "binding direction must be output to input"});
             continue;
         }
         if (provider_port->contract_id != consumer_port->contract_id) {
@@ -666,7 +789,7 @@ struct StaticCompilation {
     }
 
     for (const auto& model : ir.models) {
-        for (const auto& port : model.descriptor.ports) {
+        for (const auto& port : model.output_ports) {
             if (provider_counts[detail::endpoint_key(
                     model.occurrence_id, port.port_id)] == 0U) {
                 outcome.diagnostics.push_back(
@@ -677,7 +800,7 @@ struct StaticCompilation {
         }
     }
     for (const auto& algorithm : ir.algorithms) {
-        for (const auto& port : algorithm.descriptor.ports) {
+        for (const auto& port : algorithm.input_ports) {
             const auto count = consumer_counts[detail::endpoint_key(
                 algorithm.occurrence_id, port.port_id)];
             if (count == 0U) {
@@ -711,11 +834,11 @@ struct StaticCompilation {
             model.package);
         plan.model_preparation_identities.push_back(
             {model.occurrence_id, model.package,
-             model.descriptor.definition.model_id,
-             model.descriptor.definition.model_version,
-             model.descriptor.definition.execution_form,
-             model.descriptor.preparation_algorithm_id,
-             model.descriptor.preparation_algorithm_version, model.source});
+             model.model_id,
+             model.model_version,
+             model.execution_form,
+             model.preparation_algorithm_id,
+             model.preparation_algorithm_version, model.source});
     }
     for (const auto& algorithm : ir.algorithms) {
         dependency_locks.emplace(
@@ -724,8 +847,8 @@ struct StaticCompilation {
             algorithm.package);
         plan.algorithms.push_back(
             {algorithm.occurrence_id, algorithm.package,
-             algorithm.descriptor.algorithm_id,
-             algorithm.descriptor.algorithm_version,
+             algorithm.algorithm_id,
+             algorithm.algorithm_version,
              algorithm.source});
     }
     for (const auto& dependency : dependency_locks) {
@@ -737,7 +860,7 @@ struct StaticCompilation {
     for (std::size_t index = 0U; index < plan.bindings.size(); ++index) {
         const auto& binding = plan.bindings[index];
         const auto provider = model_by_id.at(binding.provider_occurrence_id);
-        const auto form = provider->descriptor.definition.execution_form;
+        const auto form = provider->execution_form;
         const auto kind = form == gnc::model_sdk::ModelExecutionForm::PureQuery
                               ? CompiledObligationKind::PureQueryEvaluation
                               : CompiledObligationKind::ClosureEvaluation;

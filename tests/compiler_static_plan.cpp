@@ -14,6 +14,7 @@
 namespace {
 
 using gnc::compiler::Catalog;
+using gnc::compiler::CanonicalMissionIr;
 using gnc::compiler::CompileOutcome;
 using gnc::compiler::CompiledObligationKind;
 using gnc::compiler::Diagnostic;
@@ -64,11 +65,24 @@ struct has_composition_model_id_member<
     std::void_t<decltype(std::declval<Value>().composition_model_id)>>
     : std::true_type {};
 
+template <typename Value, typename = void>
+struct has_runtime_instance_id_member : std::false_type {};
+
+template <typename Value>
+struct has_runtime_instance_id_member<
+    Value,
+    std::void_t<decltype(std::declval<Value>().runtime_instance_id)>>
+    : std::true_type {};
+
 static_assert(!has_required_member<StaticPortDescriptor>::value,
               "the current static composition has no optional ports");
 static_assert(
     !has_composition_model_id_member<StaticAlgorithmDescriptor>::value,
     "unverified composition model identity must stay outside descriptors");
+static_assert(
+    !has_runtime_instance_id_member<
+        gnc::compiler::CanonicalModelOccurrence>::value,
+    "canonical PureQuery/Closure IR must not allocate runtime instances");
 
 void require(bool condition, std::string_view message) {
     if (!condition) {
@@ -211,6 +225,35 @@ void verify_success_product(const StaticCompilation& compilation) {
     require(ir.models.size() == 2U && ir.algorithms.size() == 2U &&
                 ir.binding_intents.size() == 2U,
             "minimal IR occurrence or binding count changed");
+    require(ir.models[0U].occurrence_id == "cavh.envelope" &&
+                ir.models[0U].model_id ==
+                    gnc::packages::cavh::kGlideEnvelopeModelIdentity &&
+                ir.models[0U].output_ports.size() == 1U &&
+                ir.models[0U].output_ports[0U].contract_id ==
+                    gnc::packages::cavh::
+                        kGlideEnvelopeOutputContractIdentity &&
+                ir.models[1U].occurrence_id == "yyz.closure" &&
+                ir.models[1U].model_id ==
+                    gnc::packages::yyz::
+                        kForceMomentClosureModelIdentity &&
+                ir.models[1U].output_ports.size() == 1U &&
+                ir.models[1U].output_ports[0U].contract_id ==
+                    gnc::packages::yyz::kRigidFormInputContractIdentity,
+            "canonical IR lost exact model or output identities");
+    require(ir.algorithms[0U].occurrence_id == "cavh.formula" &&
+                ir.algorithms[0U].input_ports.size() == 1U &&
+                ir.algorithms[0U].input_ports[0U].contract_id ==
+                    gnc::packages::cavh::
+                        kGlideEnvelopeOutputContractIdentity &&
+                ir.algorithms[1U].occurrence_id == "yyz.rigid-step" &&
+                ir.algorithms[1U].input_ports.size() == 1U &&
+                ir.algorithms[1U].input_ports[0U].contract_id ==
+                    gnc::packages::yyz::kRigidFormInputContractIdentity &&
+                ir.binding_intents[0U].binding_id ==
+                    "cavh.envelope-to-formula" &&
+                ir.binding_intents[1U].binding_id ==
+                    "yyz.closure-to-rigid",
+            "canonical IR lost exact algorithm inputs or binding intents");
     require(plan.plan_id == kPlanId && plan.mission_id == kMissionId,
             "static plan identity changed");
     require(plan.dependency_lock.size() == 2U &&
@@ -276,7 +319,8 @@ void verify_success_product(const StaticCompilation& compilation) {
             "compiled obligations no longer express true package consumers");
 }
 
-void verify_deterministic_order(std::string_view expected_explain) {
+void verify_deterministic_order(std::string_view expected_ir_explain,
+                                std::string_view expected_plan_explain) {
     auto packages = package_descriptors();
     std::reverse(packages.begin(), packages.end());
     const auto catalog_outcome = Catalog::build(std::move(packages));
@@ -287,19 +331,103 @@ void verify_deterministic_order(std::string_view expected_explain) {
     std::reverse(source.models.begin(), source.models.end());
     std::reverse(source.algorithms.begin(), source.algorithms.end());
     std::reverse(source.bindings.begin(), source.bindings.end());
+    for (std::size_t index = 0U; index < source.models.size(); ++index) {
+        source.models[index].source =
+            {"typed://alternate/source.yaml",
+             "/model_occurrences/" + std::to_string(index)};
+    }
+    for (std::size_t index = 0U; index < source.algorithms.size(); ++index) {
+        source.algorithms[index].source =
+            {"typed://alternate/source.yaml",
+             "/algorithm_occurrences/" + std::to_string(index)};
+    }
+    for (std::size_t index = 0U; index < source.bindings.size(); ++index) {
+        source.bindings[index].source =
+            {"typed://alternate/source.yaml",
+             "/binding_intents/" + std::to_string(index)};
+    }
+
+    auto ir_source = source;
+    ir_source.plan_id = "plan.representation-local-alternate@1";
+    const auto ir_outcome =
+        gnc::compiler::build_canonical_mission_ir(ir_source, catalog);
+    const auto& ir = require_value(
+        ir_outcome, "reordered canonical Mission IR build failed");
+    require(gnc::compiler::explain_canonical_mission_ir(ir) ==
+                expected_ir_explain,
+            "source order, locations, or plan identity changed canonical IR "
+            "semantics");
+
     const auto compile_outcome =
         gnc::compiler::compile_static_plan(source, catalog);
     const auto& compilation = require_value(
         compile_outcome, "reordered typed source compilation failed");
     require(gnc::compiler::explain_static_plan(compilation.plan) ==
-                expected_explain,
+                expected_plan_explain,
         "Catalog or composition-source insertion order changed the plan");
+    require(compilation.plan.binding_proofs[0U]
+                .source_refs[0U]
+                .document_uri == "typed://alternate/source.yaml",
+            "canonical semantics discarded source provenance");
 }
 
 void verify_negative_cases() {
     const auto catalog_outcome = Catalog::build(package_descriptors());
     const auto& catalog =
         require_value(catalog_outcome, "fixture Catalog build failed");
+
+    auto empty = composition_source();
+    empty.models.clear();
+    empty.algorithms.clear();
+    empty.bindings.clear();
+    const auto empty_ir_outcome =
+        gnc::compiler::build_canonical_mission_ir(empty, catalog);
+    require(!empty_ir_outcome.value.has_value() &&
+                has_diagnostic(
+                    empty_ir_outcome.diagnostics,
+                    DiagnosticCode::InvalidStaticCompositionSource),
+            "fully empty typed source produced canonical Mission IR");
+    const auto empty_compile_outcome =
+        gnc::compiler::compile_static_plan(empty, catalog);
+    require(!empty_compile_outcome.value.has_value() &&
+                has_diagnostic(
+                    empty_compile_outcome.diagnostics,
+                    DiagnosticCode::InvalidStaticCompositionSource),
+            "fully empty typed source produced a static plan");
+
+    auto model_only = composition_source();
+    model_only.algorithms.clear();
+    model_only.bindings.clear();
+    const auto model_only_ir_outcome =
+        gnc::compiler::build_canonical_mission_ir(model_only, catalog);
+    require(model_only_ir_outcome.succeeded(),
+            "nonempty model-only source hit the fully empty-source guard");
+    const auto model_only_compile_outcome =
+        gnc::compiler::compile_static_plan(model_only, catalog);
+    require(!model_only_compile_outcome.value.has_value() &&
+                has_diagnostic(
+                    model_only_compile_outcome.diagnostics,
+                    DiagnosticCode::MissingRequiredBinding) &&
+                !has_diagnostic(
+                    model_only_compile_outcome.diagnostics,
+                    DiagnosticCode::InvalidStaticCompositionSource),
+            "partial source did not reach normal binding validation");
+
+    auto missing_plan_identity = composition_source();
+    missing_plan_identity.plan_id.clear();
+    const auto mission_ir_without_plan =
+        gnc::compiler::build_canonical_mission_ir(
+            missing_plan_identity, catalog);
+    require(mission_ir_without_plan.succeeded(),
+            "descriptor plan identity contaminated canonical Mission IR");
+    const auto missing_plan_outcome =
+        gnc::compiler::compile_static_plan(
+            missing_plan_identity, catalog);
+    require(!missing_plan_outcome.value.has_value() &&
+                has_diagnostic(
+                    missing_plan_outcome.diagnostics,
+                    DiagnosticCode::InvalidStaticCompositionSource),
+            "static plan lowering accepted an empty plan identity");
 
     auto unknown = composition_source();
     unknown.models[0U].model_id += ".missing";
@@ -420,8 +548,49 @@ void verify_negative_cases() {
     const auto catalog_outcome = Catalog::build(package_descriptors());
     const auto& catalog =
         require_value(catalog_outcome, "fixture Catalog build failed");
+    const auto source = composition_source();
+    const auto ir_outcome =
+        gnc::compiler::build_canonical_mission_ir(source, catalog);
+    const CanonicalMissionIr& ir = require_value(
+        ir_outcome, "canonical Mission IR build failed");
+    const auto ir_explain =
+        gnc::compiler::explain_canonical_mission_ir(ir);
+    const std::string expected_ir =
+        "mission-ir 1 mission "
+        "mission.r2.yyz-cavh-static-composition@1\n"
+        "model cavh.envelope "
+        "gnc.package.cavh-formula.experimental@1@0.1.0 "
+        "gnc.package.cavh.glide-envelope.parabolic.experimental@1@0.1.0 "
+        "PureQuery preparation "
+        "gnc.package.cavh.glide-envelope.prepare@1@0.1.0\n"
+        "output cavh.envelope.envelope "
+        "gnc.contract.cavh.glide-envelope-query-output@1\n"
+        "model yyz.closure "
+        "gnc.package.yyz-rigid-step.experimental@1@0.1.0 "
+        "gnc.package.yyz.force-moment-closure.frozen-interval.experimental@1"
+        "@0.1.0 Closure preparation "
+        "gnc.package.yyz.force-moment-closure.prepare@1@0.1.0\n"
+        "output yyz.closure.form-input "
+        "gnc.contract.yyz.rigid-form-input@1\n"
+        "algorithm cavh.formula "
+        "gnc.package.cavh-formula.experimental@1@0.1.0 "
+        "gnc.package.cavh.formula.composite@1@0.1.0\n"
+        "input cavh.formula.glide-envelope "
+        "gnc.contract.cavh.glide-envelope-query-output@1\n"
+        "algorithm yyz.rigid-step "
+        "gnc.package.yyz-rigid-step.experimental@1@0.1.0 "
+        "gnc.package.yyz.rigid-step.kernel@1@0.1.0\n"
+        "input yyz.rigid-step.form-input "
+        "gnc.contract.yyz.rigid-form-input@1\n"
+        "intent cavh.envelope-to-formula cavh.envelope.envelope -> "
+        "cavh.formula.glide-envelope\n"
+        "intent yyz.closure-to-rigid yyz.closure.form-input -> "
+        "yyz.rigid-step.form-input\n";
+    require(ir_explain == expected_ir,
+            "canonical Mission IR golden changed");
+
     const auto compile_outcome =
-        gnc::compiler::compile_static_plan(composition_source(), catalog);
+        gnc::compiler::compile_static_plan(source, catalog);
     const auto& compilation = require_value(
         compile_outcome, "typed source compilation failed");
     verify_success_product(compilation);
@@ -461,7 +630,10 @@ void verify_negative_cases() {
         "obligation 1 obligation.yyz.closure-to-rigid "
         "ClosureEvaluation yyz.closure -> yyz.rigid-step\n";
     require(explain == expected, "static dry-run explain changed");
-    verify_deterministic_order(explain);
+    require(gnc::compiler::explain_canonical_mission_ir(compilation.ir) ==
+                ir_explain,
+            "static plan did not consume the standalone canonical IR result");
+    verify_deterministic_order(ir_explain, explain);
     verify_negative_cases();
     return explain;
 }
