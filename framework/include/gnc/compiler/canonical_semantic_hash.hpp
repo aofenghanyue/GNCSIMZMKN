@@ -245,7 +245,6 @@ template <typename Value, typename Key>
     if (ir.revision != 2U || ir.mission_id.empty()) {
         return "mission revision and identity must be canonical";
     }
-    std::set<std::string> composition_node_ids;
     if (!strictly_sorted_by(
             ir.entities,
             [](const CanonicalEntity& value) {
@@ -278,6 +277,7 @@ template <typename Value, typename Key>
             return "Vehicle scope is invalid, duplicated, or unanchored";
         }
     }
+    std::set<std::string> composition_node_ids;
     if (!strictly_sorted_by(
             ir.model_occurrences,
             [](const CanonicalModelOccurrence& value) {
@@ -292,9 +292,14 @@ template <typename Value, typename Key>
             model.package.package_id.empty() ||
             model.package.package_version.empty() || model.model_id.empty() ||
             model.model_version.empty() ||
-            !gnc::model_sdk::valid_model_execution_form(
-                model.execution_form) ||
-            !gnc::model_sdk::valid_model_placement(model.placement) ||
+            (model.execution_form !=
+                 gnc::model_sdk::ModelExecutionForm::PureQuery &&
+             model.execution_form !=
+                 gnc::model_sdk::ModelExecutionForm::Closure) ||
+            (model.placement !=
+                 gnc::model_sdk::ModelPlacement::VehicleOutput &&
+             model.placement !=
+                 gnc::model_sdk::ModelPlacement::InteractionClosure) ||
             model.preparation_algorithm_id.empty() ||
             model.preparation_algorithm_version.empty()) {
             return "model occurrence identity or package policy is invalid";
@@ -329,17 +334,18 @@ template <typename Value, typename Key>
                 port.binding_kind != expected_kind ||
                 port.cardinality !=
                     gnc::model_sdk::PortCardinality::OneOrMore ||
-                !gnc::model_sdk::valid_temporal_relation(
-                    port.temporal_relation) ||
-                (port.binding_kind ==
-                         gnc::model_sdk::BindingKind::PureQuery &&
-                 port.temporal_relation !=
-                     gnc::model_sdk::TemporalRelation::NotApplicable) ||
-                (port.binding_kind ==
-                         gnc::model_sdk::BindingKind::
-                             ContinuousClosureLink &&
-                 port.temporal_relation ==
-                     gnc::model_sdk::TemporalRelation::NotApplicable)) {
+                ((port.binding_kind ==
+                      gnc::model_sdk::BindingKind::PureQuery &&
+                  port.temporal_relation !=
+                      gnc::model_sdk::TemporalRelation::NotApplicable) ||
+                 (port.binding_kind ==
+                      gnc::model_sdk::BindingKind::
+                          ContinuousClosureLink &&
+                  port.temporal_relation !=
+                      gnc::model_sdk::TemporalRelation::IntervalModel &&
+                  port.temporal_relation !=
+                      gnc::model_sdk::TemporalRelation::
+                          CandidateStateQuery))) {
                 return "model output port binding semantics are invalid";
             }
         }
@@ -407,23 +413,25 @@ template <typename Value, typename Key>
         }
         for (const auto& port : algorithm.input_ports) {
             if (port.port_id.empty() || port.contract_id.empty() ||
-                !gnc::model_sdk::valid_binding_kind(
-                    port.binding_kind) ||
-                port.binding_kind ==
-                    gnc::model_sdk::BindingKind::AssetBinding ||
+                (port.binding_kind !=
+                     gnc::model_sdk::BindingKind::PureQuery &&
+                 port.binding_kind !=
+                     gnc::model_sdk::BindingKind::
+                         ContinuousClosureLink) ||
                 port.cardinality !=
                     gnc::model_sdk::PortCardinality::ExactlyOne ||
-                !gnc::model_sdk::valid_temporal_relation(
-                    port.temporal_relation) ||
-                (port.binding_kind ==
-                         gnc::model_sdk::BindingKind::PureQuery &&
-                 port.temporal_relation !=
-                     gnc::model_sdk::TemporalRelation::NotApplicable) ||
-                (port.binding_kind ==
-                         gnc::model_sdk::BindingKind::
-                             ContinuousClosureLink &&
-                 port.temporal_relation ==
-                     gnc::model_sdk::TemporalRelation::NotApplicable)) {
+                ((port.binding_kind ==
+                      gnc::model_sdk::BindingKind::PureQuery &&
+                  port.temporal_relation !=
+                      gnc::model_sdk::TemporalRelation::NotApplicable) ||
+                 (port.binding_kind ==
+                      gnc::model_sdk::BindingKind::
+                          ContinuousClosureLink &&
+                  port.temporal_relation !=
+                      gnc::model_sdk::TemporalRelation::IntervalModel &&
+                  port.temporal_relation !=
+                      gnc::model_sdk::TemporalRelation::
+                          CandidateStateQuery))) {
                 return "algorithm input port binding semantics are invalid";
             }
         }

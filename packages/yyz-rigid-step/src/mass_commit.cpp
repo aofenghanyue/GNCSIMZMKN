@@ -3,8 +3,10 @@
 #include "gnc/foundation/spd_cholesky_3x3.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
+#include <optional>
 #include <string_view>
 #include <utility>
 
@@ -132,6 +134,62 @@ template <typename Value>
            status == NumericalStatus::Extrapolated;
 }
 
+[[nodiscard]] std::string finite_check_token(
+    gnc::foundation::FiniteCheck value) {
+    switch (value) {
+    case gnc::foundation::FiniteCheck::Disabled:
+        return "disabled";
+    case gnc::foundation::FiniteCheck::InputAndOutput:
+        return "input-and-output";
+    case gnc::foundation::FiniteCheck::EveryStage:
+        return "every-stage";
+    }
+    return {};
+}
+
+[[nodiscard]] std::optional<gnc::foundation::FiniteCheck>
+parse_finite_check(std::string_view token) {
+    if (token == "disabled") {
+        return gnc::foundation::FiniteCheck::Disabled;
+    }
+    if (token == "input-and-output") {
+        return gnc::foundation::FiniteCheck::InputAndOutput;
+    }
+    if (token == "every-stage") {
+        return gnc::foundation::FiniteCheck::EveryStage;
+    }
+    return std::nullopt;
+}
+
+[[nodiscard]] std::string normalization_token(
+    gnc::foundation::QuaternionNormalizationPolicy value) {
+    switch (value) {
+    case gnc::foundation::QuaternionNormalizationPolicy::Error:
+        return "error";
+    case gnc::foundation::QuaternionNormalizationPolicy::NormalizeWithFlag:
+        return "normalize-with-flag";
+    }
+    return {};
+}
+
+[[nodiscard]] std::optional<
+    gnc::foundation::QuaternionNormalizationPolicy>
+parse_normalization(std::string_view token) {
+    if (token == "error") {
+        return gnc::foundation::QuaternionNormalizationPolicy::Error;
+    }
+    if (token == "normalize-with-flag") {
+        return gnc::foundation::QuaternionNormalizationPolicy::
+            NormalizeWithFlag;
+    }
+    return std::nullopt;
+}
+
+[[nodiscard]] bool canonical_double(double value) noexcept {
+    return std::isfinite(value) &&
+           !(value == 0.0 && std::signbit(value));
+}
+
 [[nodiscard]] CommittedRigidMassBoundary promote_candidate(
     const RigidStepContext& context,
     const AtomicRigidMassCandidate& candidate) {
@@ -149,6 +207,250 @@ template <typename Value>
 }
 
 } // namespace
+
+gnc::model_sdk::StaticPackageDescriptor
+describe_yyz_rigid_step_package() {
+    auto package = detail::describe_yyz_rigid_step_base_package();
+
+    gnc::model_sdk::StaticModelDescriptor guidance;
+    guidance.definition = {
+        std::string(kAltitudePitchGuidanceModelIdentity),
+        std::string(kAltitudePitchGuidanceModelVersion),
+        gnc::model_sdk::ModelExecutionForm::RuntimeComponent};
+    guidance.placement =
+        gnc::model_sdk::ModelPlacement::VehicleProcess;
+    guidance.configuration.schema_id =
+        std::string(kAltitudePitchGuidanceConfigSchemaIdentity);
+    guidance.configuration.schema_version =
+        kAltitudePitchGuidanceConfigSchemaVersion;
+    guidance.configuration.fields = {
+        {"altitude_error_gain_radians_per_meter",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"attitude.normalization",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"attitude.numerical.absolute_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"attitude.numerical.condition_limit",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"attitude.numerical.finite_check",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"attitude.numerical.relative_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"attitude.numerical.zero_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"clock_domain_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"configuration_revision",
+         gnc::model_sdk::CanonicalConfigValueKind::Integer},
+        {"inertial_frame_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"pitch_command_limit_radians",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"target_altitude_meters",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"vertical_speed_gain_radian_seconds_per_meter",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+    };
+    guidance.ports = {
+        {"committed-rigid-observation",
+         std::string(kCommittedRigidObservationContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Input,
+         gnc::model_sdk::BindingKind::SampledSignal,
+         gnc::model_sdk::PortCardinality::ExactlyOne,
+         gnc::model_sdk::TemporalRelation::CurrentCycle},
+        {"guidance-output",
+         std::string(kAltitudePitchGuidanceOutputContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Output,
+         gnc::model_sdk::BindingKind::SampledSignal,
+         gnc::model_sdk::PortCardinality::OneOrMore,
+         gnc::model_sdk::TemporalRelation::CurrentCycle},
+    };
+    gnc::model_sdk::StaticRuntimeComponentDescriptor runtime;
+    runtime.recipe_id =
+        std::string(kAltitudePitchGuidanceRecipeIdentity);
+    runtime.profile =
+        gnc::model_sdk::RuntimeCellProfile::SampledTransform;
+    runtime.obligations = {
+        gnc::model_sdk::RuntimeExecutionObligation::BoundaryEvaluation};
+    runtime.schedule.phase = gnc::model_sdk::CoarsePhase::Process;
+    runtime.schedule.step_interval = 1U;
+    runtime.schedule.offset = 0U;
+    runtime.schedule.output_hold =
+        gnc::model_sdk::HoldPolicy::ZeroOrderHold;
+    runtime.schedule.max_input_age_steps = 0U;
+    runtime.lifecycle_capabilities = {
+        gnc::model_sdk::RuntimeLifecycleCapability::Instantiate,
+        gnc::model_sdk::RuntimeLifecycleCapability::Dispose};
+    runtime.algorithm_entry_id =
+        std::string(kAltitudePitchGuidanceKernelIdentity.id);
+    runtime.algorithm_entry_version =
+        std::string(kAltitudePitchGuidanceKernelIdentity.version);
+    guidance.runtime_component = std::move(runtime);
+
+    package.models.push_back(std::move(guidance));
+    return package;
+}
+
+gnc::model_sdk::CanonicalConfigBlock
+canonical_altitude_pitch_guidance_config(
+    const AltitudePitchGuidanceDefinition& definition) {
+    const auto& policy = definition.attitude_policy.numerical;
+    return {
+        std::string(kAltitudePitchGuidanceConfigSchemaIdentity),
+        kAltitudePitchGuidanceConfigSchemaVersion,
+        {
+            {"altitude_error_gain_radians_per_meter",
+             definition.altitude_error_gain_radians_per_meter},
+            {"attitude.normalization",
+             gnc::model_sdk::CanonicalEnumValue{
+                 normalization_token(
+                     definition.attitude_policy.normalization)}},
+            {"attitude.numerical.absolute_tolerance",
+             policy.absolute_tolerance},
+            {"attitude.numerical.condition_limit",
+             policy.condition_limit},
+            {"attitude.numerical.finite_check",
+             gnc::model_sdk::CanonicalEnumValue{
+                 finite_check_token(policy.finite_check)}},
+            {"attitude.numerical.relative_tolerance",
+             policy.relative_tolerance},
+            {"attitude.numerical.zero_tolerance",
+             policy.zero_tolerance},
+            {"clock_domain_id", definition.clock_domain.id},
+            {"configuration_revision",
+             definition.configuration_revision},
+            {"inertial_frame_id", definition.inertial_frame.id},
+            {"pitch_command_limit_radians",
+             definition.pitch_command_limit_radians},
+            {"target_altitude_meters",
+             definition.target_altitude_meters},
+            {"vertical_speed_gain_radian_seconds_per_meter",
+             definition.vertical_speed_gain_radian_seconds_per_meter},
+        },
+    };
+}
+
+NumericalOutcome<AltitudePitchGuidanceDefinition>
+build_altitude_pitch_guidance_definition(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration) {
+    const auto failure = [] {
+        return NumericalOutcome<AltitudePitchGuidanceDefinition>::failure(
+            NumericalStatus::DomainError,
+            mass_commit_evidence(kAltitudePitchGuidanceKernelIdentity,
+                                 "canonical-config"));
+    };
+    static constexpr std::array<std::string_view, 13U> kFields{
+        "altitude_error_gain_radians_per_meter",
+        "attitude.normalization",
+        "attitude.numerical.absolute_tolerance",
+        "attitude.numerical.condition_limit",
+        "attitude.numerical.finite_check",
+        "attitude.numerical.relative_tolerance",
+        "attitude.numerical.zero_tolerance",
+        "clock_domain_id",
+        "configuration_revision",
+        "inertial_frame_id",
+        "pitch_command_limit_radians",
+        "target_altitude_meters",
+        "vertical_speed_gain_radian_seconds_per_meter",
+    };
+    if (configuration.schema_id !=
+            kAltitudePitchGuidanceConfigSchemaIdentity ||
+        configuration.schema_version !=
+            kAltitudePitchGuidanceConfigSchemaVersion ||
+        configuration.fields.size() != kFields.size()) {
+        return failure();
+    }
+    for (std::size_t index = 0U; index < kFields.size(); ++index) {
+        if (configuration.fields[index].field_id != kFields[index]) {
+            return failure();
+        }
+    }
+
+    const auto* altitude_gain =
+        std::get_if<double>(&configuration.fields[0U].value);
+    const auto* normalization =
+        std::get_if<gnc::model_sdk::CanonicalEnumValue>(
+            &configuration.fields[1U].value);
+    const auto* absolute =
+        std::get_if<double>(&configuration.fields[2U].value);
+    const auto* condition =
+        std::get_if<double>(&configuration.fields[3U].value);
+    const auto* finite_token =
+        std::get_if<gnc::model_sdk::CanonicalEnumValue>(
+            &configuration.fields[4U].value);
+    const auto* relative =
+        std::get_if<double>(&configuration.fields[5U].value);
+    const auto* zero =
+        std::get_if<double>(&configuration.fields[6U].value);
+    const auto* clock_domain =
+        std::get_if<std::string>(&configuration.fields[7U].value);
+    const auto* revision =
+        std::get_if<std::int64_t>(&configuration.fields[8U].value);
+    const auto* inertial_frame =
+        std::get_if<std::string>(&configuration.fields[9U].value);
+    const auto* command_limit =
+        std::get_if<double>(&configuration.fields[10U].value);
+    const auto* target =
+        std::get_if<double>(&configuration.fields[11U].value);
+    const auto* vertical_gain =
+        std::get_if<double>(&configuration.fields[12U].value);
+    if (altitude_gain == nullptr || normalization == nullptr ||
+        absolute == nullptr || condition == nullptr ||
+        finite_token == nullptr || relative == nullptr || zero == nullptr ||
+        clock_domain == nullptr || clock_domain->empty() ||
+        revision == nullptr || *revision < 0 || inertial_frame == nullptr ||
+        inertial_frame->empty() || command_limit == nullptr ||
+        target == nullptr || vertical_gain == nullptr) {
+        return failure();
+    }
+    const std::array<const double*, 7U> numbers{
+        altitude_gain, absolute, condition, relative, zero,
+        command_limit, target};
+    if (std::any_of(numbers.begin(), numbers.end(),
+                    [](const double* value) {
+                        return !canonical_double(*value);
+                    }) ||
+        !canonical_double(*vertical_gain)) {
+        return failure();
+    }
+    const auto finite_check = parse_finite_check(finite_token->token);
+    const auto normalization_policy =
+        parse_normalization(normalization->token);
+    if (!finite_check.has_value() ||
+        !normalization_policy.has_value()) {
+        return failure();
+    }
+
+    AltitudePitchGuidanceDefinition definition;
+    definition.model_id =
+        std::string(kAltitudePitchGuidanceModelIdentity);
+    definition.model_version =
+        std::string(kAltitudePitchGuidanceModelVersion);
+    definition.inertial_frame.id = *inertial_frame;
+    definition.clock_domain.id = *clock_domain;
+    definition.configuration_revision = *revision;
+    definition.target_altitude_meters = *target;
+    definition.altitude_error_gain_radians_per_meter = *altitude_gain;
+    definition.vertical_speed_gain_radian_seconds_per_meter =
+        *vertical_gain;
+    definition.pitch_command_limit_radians = *command_limit;
+    definition.attitude_policy.numerical = {
+        *absolute, *relative, *finite_check, *zero, *condition};
+    definition.attitude_policy.normalization =
+        *normalization_policy;
+    if (!gnc::foundation::valid_quaternion_policy(
+            definition.attitude_policy) ||
+        definition.altitude_error_gain_radians_per_meter < 0.0 ||
+        definition.vertical_speed_gain_radian_seconds_per_meter < 0.0 ||
+        definition.pitch_command_limit_radians <= 0.0) {
+        return failure();
+    }
+    return NumericalOutcome<AltitudePitchGuidanceDefinition>::with_value(
+        NumericalStatus::Success, std::move(definition),
+        mass_commit_evidence(kAltitudePitchGuidanceKernelIdentity,
+                             "canonical-config"));
+}
 
 NumericalOutcome<SuppliedPropulsionOutput>
 SuppliedPropulsionKernel::evaluate(

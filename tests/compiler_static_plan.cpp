@@ -1996,6 +1996,35 @@ require_hash(
     empty_algorithm_inputs.algorithm_consumers[0U].input_ports.clear();
     expect_noncanonical(empty_algorithm_inputs,
                         "algorithm without inputs reached SHA-256");
+
+    auto runtime_component_form = base_ir;
+    runtime_component_form.model_occurrences[0U].execution_form =
+        ModelExecutionForm::RuntimeComponent;
+    expect_noncanonical(
+        runtime_component_form,
+        "RuntimeComponent entered semantic-bytes@2 without supersession");
+
+    auto runtime_component_placement = base_ir;
+    runtime_component_placement.model_occurrences[0U].placement =
+        gnc::model_sdk::ModelPlacement::VehicleProcess;
+    expect_noncanonical(
+        runtime_component_placement,
+        "RuntimeComponent placement entered semantic-bytes@2");
+
+    auto current_cycle_closure = base_ir;
+    const auto closure = std::find_if(
+        current_cycle_closure.model_occurrences.begin(),
+        current_cycle_closure.model_occurrences.end(),
+        [](const auto& model) {
+            return model.execution_form == ModelExecutionForm::Closure;
+        });
+    require(closure != current_cycle_closure.model_occurrences.end(),
+            "semantic hash fixture omitted its closure model");
+    closure->output_ports[0U].temporal_relation =
+        gnc::model_sdk::TemporalRelation::CurrentCycle;
+    expect_noncanonical(
+        current_cycle_closure,
+        "sampled temporal relation entered semantic-bytes@2 closure");
     return base_hash.hex_digest;
 }
 

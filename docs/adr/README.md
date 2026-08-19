@@ -22,3 +22,4 @@ ADR 记录已经收窄到实现层的关键选择，并连接需求、架构分�
 - [0012 Eigen 3.4.0 canonical numeric storage](0012-eigen-3.4-canonical-numeric-storage.md)
 - [0013 R2 canonical model configuration block v1](0013-r2-canonical-model-configuration.md)
 - [0014 R2 canonical graph semantic bytes and SHA-256](0014-r2-canonical-semantic-hash.md)
+- [0015 R2 stateless sampled RuntimeComponent Catalog boundary](0015-r2-runtime-component-catalog-boundary.md)
