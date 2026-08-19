@@ -1413,6 +1413,20 @@ void verify_negative_cases() {
     const auto& catalog =
         require_value(catalog_outcome, "fixture Catalog build failed");
 
+    auto invalid_config_kind_package =
+        gnc::packages::yyz::describe_yyz_rigid_step_package();
+    invalid_config_kind_package.models[0U]
+        .configuration.fields[0U]
+        .value_kind = static_cast<
+            gnc::model_sdk::CanonicalConfigValueKind>(255U);
+    const auto invalid_config_kind_catalog =
+        Catalog::build({std::move(invalid_config_kind_package)});
+    require(!invalid_config_kind_catalog.value.has_value() &&
+                has_diagnostic(
+                    invalid_config_kind_catalog.diagnostics,
+                    DiagnosticCode::InvalidCatalogDescriptor),
+            "invalid canonical config value kind entered the Catalog");
+
     auto alternate_asset = composition_source();
     constexpr std::string_view kAlternateAssetIdentity =
         "aero-table.fixture.yyz.not-resolved-here@1";
@@ -1982,35 +1996,6 @@ require_hash(
     empty_algorithm_inputs.algorithm_consumers[0U].input_ports.clear();
     expect_noncanonical(empty_algorithm_inputs,
                         "algorithm without inputs reached SHA-256");
-
-    auto runtime_component_form = base_ir;
-    runtime_component_form.model_occurrences[0U].execution_form =
-        ModelExecutionForm::RuntimeComponent;
-    expect_noncanonical(
-        runtime_component_form,
-        "RuntimeComponent entered semantic-bytes@2 without supersession");
-
-    auto runtime_component_placement = base_ir;
-    runtime_component_placement.model_occurrences[0U].placement =
-        gnc::model_sdk::ModelPlacement::VehicleProcess;
-    expect_noncanonical(
-        runtime_component_placement,
-        "RuntimeComponent placement entered semantic-bytes@2");
-
-    auto current_cycle_closure = base_ir;
-    const auto closure = std::find_if(
-        current_cycle_closure.model_occurrences.begin(),
-        current_cycle_closure.model_occurrences.end(),
-        [](const auto& model) {
-            return model.execution_form == ModelExecutionForm::Closure;
-        });
-    require(closure != current_cycle_closure.model_occurrences.end(),
-            "semantic hash fixture omitted its closure model");
-    closure->output_ports[0U].temporal_relation =
-        gnc::model_sdk::TemporalRelation::CurrentCycle;
-    expect_noncanonical(
-        current_cycle_closure,
-        "sampled temporal relation entered semantic-bytes@2 closure");
     return base_hash.hex_digest;
 }
 

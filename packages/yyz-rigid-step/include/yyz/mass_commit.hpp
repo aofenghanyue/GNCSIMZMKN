@@ -3,7 +3,6 @@
 #include <yyz/rigid_step.hpp>
 
 #include <array>
-#include <cstdint>
 #include <string>
 #include <string_view>
 
@@ -23,22 +22,6 @@ inline constexpr std::string_view kSuppliedPropulsionModelIdentity =
     "gnc.package.yyz.propulsion-response.supplied.experimental@1";
 inline constexpr std::string_view kAltitudePitchGuidanceModelIdentity =
     "gnc.package.yyz.guidance.altitude-pitch.experimental@1";
-inline constexpr std::string_view kAltitudePitchGuidanceModelVersion =
-    "0.1.0";
-inline constexpr std::string_view
-    kAltitudePitchGuidanceConfigSchemaIdentity =
-        "gnc.package.yyz.guidance.altitude-pitch.config@1";
-inline constexpr std::uint32_t
-    kAltitudePitchGuidanceConfigSchemaVersion = 1U;
-inline constexpr std::string_view
-    kAltitudePitchGuidanceRecipeIdentity =
-        "gnc.package.yyz.guidance.altitude-pitch.recipe@1";
-inline constexpr std::string_view
-    kCommittedRigidObservationContractIdentity =
-        "gnc.contract.yyz.committed-rigid-observation@1";
-inline constexpr std::string_view
-    kAltitudePitchGuidanceOutputContractIdentity =
-        "gnc.contract.yyz.altitude-pitch-guidance-output@1";
 inline constexpr std::string_view kPitchMomentControllerModelIdentity =
     "gnc.package.yyz.controller.pitch-moment.experimental@1";
 inline constexpr std::string_view kIdealBodyMomentActuatorModelIdentity =
@@ -263,15 +246,6 @@ struct AltitudePitchGuidanceDefinition {
     double pitch_command_limit_radians = 0.0;
     gnc::foundation::QuaternionPolicy attitude_policy;
 };
-
-[[nodiscard]] gnc::model_sdk::CanonicalConfigBlock
-canonical_altitude_pitch_guidance_config(
-    const AltitudePitchGuidanceDefinition& definition);
-
-[[nodiscard]] gnc::foundation::NumericalOutcome<
-    AltitudePitchGuidanceDefinition>
-build_altitude_pitch_guidance_definition(
-    const gnc::model_sdk::CanonicalConfigBlock& configuration);
 
 struct AltitudePitchGuidanceOutput {
     CommittedRigidObservation source_observation;

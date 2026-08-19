@@ -431,7 +431,7 @@
       "id": "R2-CAT-001",
       "stage": "R2",
       "title": "Select and compile the first justified RuntimeComponent descriptor",
-      "status": "review",
+      "status": "planned",
       "priority": "P0",
       "size": "L",
       "owner_role": "compiler_lead",
@@ -439,7 +439,7 @@
       "depends_on": ["R1-GATE-001"],
       "deliverables": ["Catalog query and exact descriptor expansion for the first real RuntimeComponent", "RuntimeCellRecipe, RuntimeCellProfile, ports/state, lifecycle and execution-obligation descriptors consumed by that Compiler path", "StateOwner, DecisionAuthority or topology declarations only when the selected component has the corresponding real state, command or topology consumer"],
       "acceptance": ["The existing PureQuery/Closure Catalog remains package-owned and exact; a RuntimeComponent model is selected only after independent state ownership, scheduling, command, lifecycle or topology obligations create a real consumer", "Descriptor expansion freezes only recipe/profile, ports/state, obligations, lifecycle and conditional owner/authority/topology fields directly consumed by that path; R2-BIND completion does not imply any RuntimeComponent capability"],
-      "evidence": ["r2.compiler-runtime-component-catalog.probe covers the package-owned AltitudePitchGuidance RuntimeComponent snapshot, exact package-independent lookup, canonical config round-trip and declaration-order independence", "The same probe rejects duplicate identity, invalid execution form/profile, missing runtime facts/recipe/obligation/schedule/lifecycle/input and PureQuery carrying runtime-only facts", "ADR-0015 records the proposed stateless SampledTransform Catalog boundary and the unclosed-plan firewall"],
+      "evidence": ["Catalog snapshot tests"],
       "architecture_refs": ["05 §5–§7", "10 §4", "12 §11–§14", "13"]
     },
     {
@@ -469,7 +469,7 @@
       "depends_on": ["R2-IR-001"],
       "deliverables": ["BindingPlan with AssetBinding, PureQuery and ContinuousClosureLink entries plus tagged provider/consumer endpoints", "TemporalBindingPlan with the YYZ frozen-interval closure resolved as IntervalModel", "structured binding proof, deterministic explain and query/closure obligations"],
       "acceptance": ["The real YYZ aero asset binds exactly once at prepare-time and preserves role/schema/identity", "CAVH GlideEnvelope and YYZ AerodynamicTable remain PureQuery connections while ForceMomentClosure remains a ContinuousClosureLink with IntervalModel time semantics", "Scope is proven only for endpoints that both declare the same scope; CAVH remains definition-level and unscoped", "Missing, multiple, contract-incompatible, kind-incompatible, scope-incompatible, temporal-incompatible and source-less bindings fail at their valid source locations", "StateOwner, DecisionAuthority, activation/topology, intervention/fault routing and RuntimeComponent sampled graph cycle analysis remain outside this task"],
-      "evidence": ["r2.compiler-static-plan.probe proves four real bindings, structured facts, deterministic explain, direct negative cases and valid proof SourceRefs; SourceSelectedAssetIdentityPreserved is limited to nonempty source identity preservation and rejects an empty identity at its source path", "r2.compiler-canonical-semantic-hash.reference covers the real scoped RigidStep algorithm consumer and aero/closure binding intents", "R1 YYZ/CAVH product probes and existing R0 aero/frozen-interval/formula oracles preserve product results"],
+      "evidence": ["r2.compiler-static-plan.probe proves four real bindings, structured facts, deterministic explain, direct negative cases and valid proof SourceRefs; SourceSelectedAssetIdentityPreserved is limited to nonempty source identity preservation and rejects an empty identity at its source path", "r2.compiler-canonical-semantic-hash.reference covers the real scoped RigidStep algorithm consumer and aero/closure binding intents, rejects cross-collection composition-node identity collisions and empty required port collections, and preserves the qualification vector", "R1 YYZ/CAVH product probes and existing R0 aero/frozen-interval/formula oracles preserve product results"],
       "architecture_refs": ["04 §7–§8", "05 Pass 7–9", "14 §3–§4"]
     },
     {

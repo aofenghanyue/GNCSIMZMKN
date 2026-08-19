@@ -178,15 +178,6 @@ if(GNC_BUILD_TESTS)
         PRIVATE compiler yyz_rigid_step cavh_formula)
     gnc_enable_warnings(gnc_compiler_static_plan_probe)
 
-    # R2 Catalog slice: first package-owned RuntimeComponent descriptor.
-    add_executable(
-        gnc_compiler_runtime_component_catalog_probe
-        tests/compiler_runtime_component_catalog.cpp)
-    target_link_libraries(
-        gnc_compiler_runtime_component_catalog_probe
-        PRIVATE compiler yyz_rigid_step cavh_formula)
-    gnc_enable_warnings(gnc_compiler_runtime_component_catalog_probe)
-
     # R0 validation spike: intentionally isolated from product modules and Legacy.
     add_executable(
         gnc_scientific_conventions
@@ -407,9 +398,6 @@ if(GNC_BUILD_TESTS)
     add_test(
         NAME r2.compiler-static-plan.probe
         COMMAND gnc_compiler_static_plan_probe --self-check)
-    add_test(
-        NAME r2.compiler-runtime-component-catalog.probe
-        COMMAND gnc_compiler_runtime_component_catalog_probe --self-check)
     add_test(
         NAME r0.scientific-conventions.properties
         COMMAND gnc_scientific_conventions --self-check)

@@ -22,10 +22,6 @@ typed committed rigid state
 
 package descriptor 将 AerodynamicTable 声明为 `vehicle.output + PureQuery`，ForceMomentClosure 声明为 `interaction/closure + ContinuousClosureLink + IntervalModel`，并提供各自 canonical config schema。RigidStep 的两个 required input 分别要求 exact PureQuery 与 closure contract。对应 builder 从稳定 block 重建 typed definition；aero asset slot 以 exactly-one `AssetBinding` 接受 `gnc.asset.yyz.aerodynamic-table.multiaffine@1`。这些字段由通用 Compiler 读取，package id 不进入 Compiler 分支。
 
-同一 package contribution 现在也把真实 `AltitudePitchGuidanceKernel` 描述为首个 RuntimeComponent Catalog 候选。该 kernel 对每份 committed rigid observation 做独立求值，正式 output 被 `PitchMomentControllerKernel` 消费；descriptor 因而冻结 stateless `SampledTransform + BoundaryEvaluation`、process phase 每步 schedule、current-cycle sampled ports、zero-order hold、空 state schema、instantiate/dispose 和 exact kernel identity。canonical config builder 保留 frame、clock、revision、三项 guidance 参数与完整 quaternion policy。
-
-当前 `ControlledPropelledRigidMassStepKernel` 仍在 package wrapper 内构造 observation 并顺序调用 guidance/controller/actuator，package 尚未贡献可独立连接的 committed-observation provider、environment/run-binding provider 或完整 runtime component 图。Catalog descriptor 可以独立审查；Compiler 会拒绝把孤立 guidance occurrence 降为 RuntimeComponent plan。
-
 两段边界调用链：
 
 ```text
@@ -48,7 +44,6 @@ opening committed rigid state + MassState
 ```powershell
 ctest --preset dev -R '^r1\.yyz-rigid-step\.(probe|oracle)$'
 ctest --preset dev -R '^r1\.yyz-two-interval-mass-commit\.(probe|oracle)$'
-ctest --preset dev -R '^r2\.compiler-runtime-component-catalog\.probe$'
 ```
 
 首条 oracle 检查直接读取 `REF-YYZ-FROZEN-INTERVAL-001`；第二条读取 `REF-YYZ-TWO-INTERVAL-MASS-COMMIT-001`。两者都使用原 fixture 声明的容差，reference 与产品 model identity 保持分离。

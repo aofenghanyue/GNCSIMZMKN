@@ -335,10 +335,8 @@ struct RigidStepModelDefinition {
     AerodynamicTableAsset aerodynamic_table;
 };
 
-namespace detail {
-
 [[nodiscard]] inline gnc::model_sdk::StaticPackageDescriptor
-describe_yyz_rigid_step_base_package() {
+describe_yyz_rigid_step_package() {
     gnc::model_sdk::StaticModelDescriptor closure;
     closure.definition = {
         std::string(kForceMomentClosureModelIdentity),
@@ -450,13 +448,6 @@ describe_yyz_rigid_step_base_package() {
     package.algorithms.push_back(std::move(rigid_step));
     return package;
 }
-
-} // namespace detail
-
-// The complete package contribution is defined with the adjacent R1 product
-// kernels so callers keep one stable descriptor entry point.
-[[nodiscard]] gnc::model_sdk::StaticPackageDescriptor
-describe_yyz_rigid_step_package();
 
 class PreparedRigidStepModel {
   public:

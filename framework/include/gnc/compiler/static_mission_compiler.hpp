@@ -103,7 +103,6 @@ enum class DiagnosticCode : std::uint8_t {
     DuplicateOccurrence,
     UnknownDefinition,
     UnknownAlgorithm,
-    RuntimeComponentPlanUnavailable,
     MissingSourceReference,
     UnknownEndpoint,
     PortDirectionMismatch,
@@ -161,8 +160,6 @@ enum class DiagnosticCode : std::uint8_t {
         return "GNC-CAT-UNKNOWN-DEFINITION";
     case DiagnosticCode::UnknownAlgorithm:
         return "GNC-CAT-UNKNOWN-ALGORITHM";
-    case DiagnosticCode::RuntimeComponentPlanUnavailable:
-        return "GNC-PLAN-RUNTIME-COMPONENT-UNAVAILABLE";
     case DiagnosticCode::MissingSourceReference:
         return "GNC-BIND-MISSING-SOURCE-REFERENCE";
     case DiagnosticCode::UnknownEndpoint:
@@ -267,10 +264,9 @@ inline void validate_ports(
                  "current static composition supports model Output ports "
                  "and algorithm Input ports only"});
         }
-        if ((port.binding_kind !=
-                 gnc::model_sdk::BindingKind::PureQuery &&
-             port.binding_kind !=
-                 gnc::model_sdk::BindingKind::ContinuousClosureLink) ||
+        if (!gnc::model_sdk::valid_binding_kind(port.binding_kind) ||
+            port.binding_kind ==
+                gnc::model_sdk::BindingKind::AssetBinding ||
             !gnc::model_sdk::valid_port_cardinality(port.cardinality) ||
             !gnc::model_sdk::valid_temporal_relation(
                 port.temporal_relation)) {
@@ -292,150 +288,20 @@ inline void validate_ports(
                  "model outputs require one-or-more consumers and current "
                  "algorithm inputs require exactly one provider"});
         }
-        const bool valid_relation =
-            (port.binding_kind ==
+        if ((port.binding_kind ==
                  gnc::model_sdk::BindingKind::PureQuery &&
-             port.temporal_relation ==
+             port.temporal_relation !=
                  gnc::model_sdk::TemporalRelation::NotApplicable) ||
             (port.binding_kind ==
                  gnc::model_sdk::BindingKind::ContinuousClosureLink &&
-             (port.temporal_relation ==
-                  gnc::model_sdk::TemporalRelation::IntervalModel ||
-              port.temporal_relation ==
-                  gnc::model_sdk::TemporalRelation::
-                      CandidateStateQuery));
-        if (!valid_relation) {
+             port.temporal_relation ==
+                 gnc::model_sdk::TemporalRelation::NotApplicable)) {
             diagnostics.push_back(
                 {DiagnosticCode::InvalidCatalogDescriptor,
                  catalog_source(package_id, owner), port.port_id,
                  "PureQuery has no compiled temporal relation while a "
                  "ContinuousClosureLink requires one"});
         }
-    }
-}
-
-inline void validate_runtime_component(
-    const gnc::model_sdk::StaticModelDescriptor& model,
-    std::string_view package_id, std::vector<Diagnostic>& diagnostics) {
-    const auto& definition = model.definition;
-    const auto source =
-        catalog_source(package_id, definition.model_id);
-    if (!model.runtime_component.has_value()) {
-        diagnostics.push_back(
-            {DiagnosticCode::InvalidCatalogDescriptor, source,
-             definition.model_id,
-             "RuntimeComponent requires package-owned runtime facts"});
-        return;
-    }
-    const auto& runtime = *model.runtime_component;
-    const auto& schedule = runtime.schedule;
-    if (model.placement !=
-            gnc::model_sdk::ModelPlacement::VehicleProcess ||
-        !model.preparation_algorithm_id.empty() ||
-        !model.preparation_algorithm_version.empty() ||
-        runtime.recipe_id.empty() ||
-        !gnc::model_sdk::valid_runtime_cell_profile(runtime.profile) ||
-        runtime.algorithm_entry_id.empty() ||
-        runtime.algorithm_entry_version.empty()) {
-        diagnostics.push_back(
-            {DiagnosticCode::InvalidCatalogDescriptor, source,
-             definition.model_id,
-             "RuntimeComponent placement, recipe, profile, and algorithm "
-             "entry must be exact; prepare-only fields must be empty"});
-    }
-    if (runtime.profile !=
-            gnc::model_sdk::RuntimeCellProfile::SampledTransform ||
-        runtime.obligations.size() != 1U ||
-        runtime.obligations[0U] !=
-            gnc::model_sdk::RuntimeExecutionObligation::
-                BoundaryEvaluation ||
-        !runtime.state_schemas.empty()) {
-        diagnostics.push_back(
-            {DiagnosticCode::InvalidCatalogDescriptor, source,
-             definition.model_id,
-             "the current SampledTransform requires one "
-             "BoundaryEvaluation obligation and owns no state"});
-    }
-    if (schedule.phase != gnc::model_sdk::CoarsePhase::Process ||
-        schedule.step_interval == 0U ||
-        schedule.offset >= schedule.step_interval ||
-        schedule.output_hold !=
-            gnc::model_sdk::HoldPolicy::ZeroOrderHold ||
-        schedule.max_input_age_steps != 0U) {
-        diagnostics.push_back(
-            {DiagnosticCode::InvalidCatalogDescriptor, source,
-             definition.model_id,
-             "SampledTransform schedule requires process phase, a positive "
-             "integer interval, an in-range offset, zero-order hold, and "
-             "current-cycle input freshness"});
-    }
-    const std::vector<gnc::model_sdk::RuntimeLifecycleCapability>
-        expected_lifecycle{
-            gnc::model_sdk::RuntimeLifecycleCapability::Instantiate,
-            gnc::model_sdk::RuntimeLifecycleCapability::Dispose};
-    if (runtime.lifecycle_capabilities != expected_lifecycle) {
-        diagnostics.push_back(
-            {DiagnosticCode::InvalidCatalogDescriptor, source,
-             definition.model_id,
-             "stateless SampledTransform lifecycle is exactly "
-             "Instantiate and Dispose"});
-    }
-    if (!model.asset_slots.empty()) {
-        diagnostics.push_back(
-            {DiagnosticCode::InvalidCatalogDescriptor, source,
-             definition.model_id,
-             "the current stateless RuntimeComponent cannot own prepare-time "
-             "asset slots"});
-    }
-
-    std::set<std::string> port_ids;
-    std::size_t input_count = 0U;
-    std::size_t output_count = 0U;
-    for (const auto& port : model.ports) {
-        if (port.port_id.empty() || port.contract_id.empty() ||
-            !port_ids.insert(port.port_id).second ||
-            port.binding_kind !=
-                gnc::model_sdk::BindingKind::SampledSignal ||
-            port.temporal_relation !=
-                gnc::model_sdk::TemporalRelation::CurrentCycle) {
-            diagnostics.push_back(
-                {DiagnosticCode::InvalidCatalogDescriptor, source,
-                 port.port_id,
-                 "runtime ports require unique identities and exact "
-                 "CurrentCycle SampledSignal semantics"});
-            continue;
-        }
-        if (port.direction ==
-            gnc::model_sdk::StaticPortDirection::Input) {
-            ++input_count;
-            if (port.cardinality !=
-                gnc::model_sdk::PortCardinality::ExactlyOne) {
-                diagnostics.push_back(
-                    {DiagnosticCode::InvalidCatalogDescriptor, source,
-                     port.port_id,
-                     "runtime input requires exactly-one provider"});
-            }
-        } else if (port.direction ==
-                   gnc::model_sdk::StaticPortDirection::Output) {
-            ++output_count;
-            if (port.cardinality !=
-                gnc::model_sdk::PortCardinality::OneOrMore) {
-                diagnostics.push_back(
-                    {DiagnosticCode::InvalidCatalogDescriptor, source,
-                     port.port_id,
-                     "runtime output requires one-or-more consumers"});
-            }
-        } else {
-            diagnostics.push_back(
-                {DiagnosticCode::InvalidCatalogDescriptor, source,
-                 port.port_id, "runtime port direction is invalid"});
-        }
-    }
-    if (input_count == 0U || output_count == 0U) {
-        diagnostics.push_back(
-            {DiagnosticCode::InvalidCatalogDescriptor, source,
-             definition.model_id,
-             "RuntimeComponent requires at least one typed input and output"});
     }
 }
 
@@ -496,13 +362,16 @@ class Catalog {
                 if (definition.model_id.empty() ||
                     definition.model_version.empty() ||
                     !gnc::model_sdk::valid_model_execution_form(
-                        definition.execution_form)) {
+                        definition.execution_form) ||
+                    model.preparation_algorithm_id.empty() ||
+                    model.preparation_algorithm_version.empty()) {
                     outcome.diagnostics.push_back(
                         {DiagnosticCode::InvalidCatalogDescriptor,
                          detail::catalog_source(package.package_id,
                                                 definition.model_id),
                          definition.model_id,
-                         "model identity and execution form are required"});
+                         "model identity, execution form, and preparation "
+                         "identity are required"});
                 }
                 if (!gnc::model_sdk::valid_model_placement(
                         model.placement)) {
@@ -529,6 +398,9 @@ class Catalog {
                 std::string previous_config_field;
                 for (const auto& field : configuration.fields) {
                     if (field.field_id.empty() ||
+                        !gnc::model_sdk::
+                            valid_canonical_config_value_kind(
+                                field.value_kind) ||
                         (!previous_config_field.empty() &&
                          field.field_id <= previous_config_field)) {
                         outcome.diagnostics.push_back(
@@ -536,8 +408,8 @@ class Catalog {
                              detail::catalog_source(package.package_id,
                                                     definition.model_id),
                              field.field_id,
-                             "configuration fields must have unique "
-                             "canonical order"});
+                             "configuration fields must use supported value "
+                             "kinds and have unique canonical order"});
                     }
                     previous_config_field = field.field_id;
                 }
@@ -559,59 +431,25 @@ class Catalog {
                     }
                     previous_asset_role = slot.role;
                 }
-                if (definition.execution_form ==
-                    gnc::model_sdk::ModelExecutionForm::RuntimeComponent) {
-                    detail::validate_runtime_component(
-                        model, package.package_id, outcome.diagnostics);
-                } else {
-                    if (model.preparation_algorithm_id.empty() ||
-                        model.preparation_algorithm_version.empty() ||
-                        model.runtime_component.has_value()) {
+                detail::validate_ports(
+                    model.ports, package.package_id, definition.model_id,
+                    gnc::model_sdk::StaticPortDirection::Output,
+                    outcome.diagnostics);
+                const auto expected_binding_kind =
+                    definition.execution_form ==
+                            gnc::model_sdk::ModelExecutionForm::PureQuery
+                        ? gnc::model_sdk::BindingKind::PureQuery
+                        : gnc::model_sdk::BindingKind::
+                              ContinuousClosureLink;
+                for (const auto& port : model.ports) {
+                    if (port.binding_kind != expected_binding_kind) {
                         outcome.diagnostics.push_back(
                             {DiagnosticCode::InvalidCatalogDescriptor,
                              detail::catalog_source(package.package_id,
                                                     definition.model_id),
-                             definition.model_id,
-                             "PureQuery/Closure require preparation identity "
-                             "and cannot carry RuntimeComponent facts"});
-                    }
-                    detail::validate_ports(
-                        model.ports, package.package_id,
-                        definition.model_id,
-                        gnc::model_sdk::StaticPortDirection::Output,
-                        outcome.diagnostics);
-                    const auto expected_binding_kind =
-                        definition.execution_form ==
-                                gnc::model_sdk::ModelExecutionForm::PureQuery
-                            ? gnc::model_sdk::BindingKind::PureQuery
-                            : gnc::model_sdk::BindingKind::
-                                  ContinuousClosureLink;
-                    const auto expected_placement =
-                        definition.execution_form ==
-                                gnc::model_sdk::ModelExecutionForm::PureQuery
-                            ? gnc::model_sdk::ModelPlacement::VehicleOutput
-                            : gnc::model_sdk::ModelPlacement::
-                                  InteractionClosure;
-                    if (model.placement != expected_placement) {
-                        outcome.diagnostics.push_back(
-                            {DiagnosticCode::InvalidCatalogDescriptor,
-                             detail::catalog_source(package.package_id,
-                                                    definition.model_id),
-                             definition.model_id,
-                             "PureQuery/Closure placement differs from its "
+                             port.port_id,
+                             "model output binding kind differs from its "
                              "execution form"});
-                    }
-                    for (const auto& port : model.ports) {
-                        if (port.binding_kind != expected_binding_kind) {
-                            outcome.diagnostics.push_back(
-                                {DiagnosticCode::InvalidCatalogDescriptor,
-                                 detail::catalog_source(
-                                     package.package_id,
-                                     definition.model_id),
-                                 port.port_id,
-                                 "model output binding kind differs from its "
-                                 "execution form"});
-                        }
                     }
                 }
                 models.push_back({lock, std::move(model)});
@@ -1529,16 +1367,6 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
             continue;
         }
         const auto& descriptor = catalog_model->descriptor;
-        if (descriptor.definition.execution_form ==
-            gnc::model_sdk::ModelExecutionForm::RuntimeComponent) {
-            outcome.diagnostics.push_back(
-                {DiagnosticCode::RuntimeComponentPlanUnavailable,
-                 model.source, model.occurrence_id,
-                 "Catalog resolved the RuntimeComponent definition, but "
-                 "this compiler slice cannot freeze an unclosed runtime "
-                 "component graph"});
-            continue;
-        }
         if (model.placement !=
                 gnc::model_sdk::ModelPlacement::Unspecified &&
             model.placement != descriptor.placement) {

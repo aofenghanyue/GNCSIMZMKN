@@ -483,7 +483,6 @@ def verify_mutations(base: Dict[str, Any], expected: str) -> int:
         pass
     else:
         raise ValueError("negative zero reached reference SHA-256")
-
     invalid_graphs: List[Dict[str, Any]] = []
     cross_identity = copy.deepcopy(base)
     previous_consumer_id = cross_identity["algorithms"][0]["consumer_id"]
@@ -502,28 +501,13 @@ def verify_mutations(base: Dict[str, Any], expected: str) -> int:
     empty_algorithm_ports["algorithms"][0]["input_ports"] = []
     invalid_graphs.append(empty_algorithm_ports)
 
-    runtime_form = copy.deepcopy(base)
-    runtime_form["models"][0]["execution_form"] = 3
-    invalid_graphs.append(runtime_form)
-
-    runtime_placement = copy.deepcopy(base)
-    runtime_placement["models"][0]["placement"] = 3
-    invalid_graphs.append(runtime_placement)
-
-    sampled_closure = copy.deepcopy(base)
-    closure_model = next(
-        model for model in sampled_closure["models"]
-        if model["execution_form"] == 2)
-    closure_model["output_ports"][0]["temporal_relation"] = 3
-    invalid_graphs.append(sampled_closure)
-
     for invalid in invalid_graphs:
         try:
             encode_canonical(invalid)
         except ValueError:
             continue
         raise ValueError("an incomplete canonical graph reached SHA-256")
-    return len(mutations) + 9
+    return len(mutations) + 6
 
 
 def main() -> int:
