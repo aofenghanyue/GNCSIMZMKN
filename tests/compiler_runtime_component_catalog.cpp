@@ -58,18 +58,6 @@ void require(bool condition, std::string_view message) {
         });
 }
 
-[[nodiscard]] const StaticModelDescriptor& find_model(
-    const StaticPackageDescriptor& package, std::string_view model_id) {
-    const auto found = std::find_if(
-        package.models.begin(), package.models.end(),
-        [model_id](const auto& model) {
-            return model.definition.model_id == model_id;
-        });
-    require(found != package.models.end(),
-            "package contribution omitted the requested model");
-    return *found;
-}
-
 [[nodiscard]] StaticModelDescriptor& find_model(
     StaticPackageDescriptor& package, std::string_view model_id) {
     const auto found = std::find_if(
