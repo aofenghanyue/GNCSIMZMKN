@@ -13,6 +13,7 @@
 #include <sstream>
 #include <string>
 #include <string_view>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -327,6 +328,13 @@ inline void validate_runtime_component(
              "RuntimeComponent requires package-owned runtime facts"});
         return;
     }
+    if (model.pure_query.has_value() || model.closure.has_value()) {
+        diagnostics.push_back(
+            {DiagnosticCode::InvalidCatalogDescriptor, source,
+             definition.model_id,
+             "RuntimeComponent cannot carry PureQuery or Closure execution "
+             "facts"});
+    }
     const auto& runtime = *model.runtime_component;
     const auto& schedule = runtime.schedule;
     if (model.placement !=
@@ -576,6 +584,71 @@ class Catalog {
                              "PureQuery/Closure require preparation identity "
                              "and cannot carry RuntimeComponent facts"});
                     }
+                    if (definition.execution_form ==
+                        gnc::model_sdk::ModelExecutionForm::PureQuery) {
+                        if (!model.pure_query.has_value() ||
+                            model.closure.has_value()) {
+                            outcome.diagnostics.push_back(
+                                {DiagnosticCode::InvalidCatalogDescriptor,
+                                 detail::catalog_source(
+                                     package.package_id,
+                                     definition.model_id),
+                                 definition.model_id,
+                                 "PureQuery requires exactly one matching "
+                                 "execution descriptor"});
+                        } else {
+                            const auto& query = *model.pure_query;
+                            if (query.query_entry_id.empty() ||
+                                query.query_entry_version.empty() ||
+                                !gnc::model_sdk::
+                                    valid_static_workspace_requirement(
+                                        query.workspace_requirement)) {
+                                outcome.diagnostics.push_back(
+                                    {DiagnosticCode::InvalidCatalogDescriptor,
+                                     detail::catalog_source(
+                                         package.package_id,
+                                         definition.model_id),
+                                     definition.model_id,
+                                     "PureQuery requires an exact kernel "
+                                     "entry and explicit workspace fact"});
+                            }
+                        }
+                    } else if (definition.execution_form ==
+                               gnc::model_sdk::ModelExecutionForm::Closure) {
+                        if (!model.closure.has_value() ||
+                            model.pure_query.has_value()) {
+                            outcome.diagnostics.push_back(
+                                {DiagnosticCode::InvalidCatalogDescriptor,
+                                 detail::catalog_source(
+                                     package.package_id,
+                                     definition.model_id),
+                                 definition.model_id,
+                                 "Closure requires exactly one matching "
+                                 "execution descriptor"});
+                        } else {
+                            const auto& closure = *model.closure;
+                            if (closure.closure_entry_id.empty() ||
+                                closure.closure_entry_version.empty() ||
+                                !gnc::contracts::valid_closure_strategy(
+                                    closure.strategy) ||
+                                closure.strategy !=
+                                    gnc::contracts::ClosureStrategy::
+                                        FrozenInterval ||
+                                !gnc::model_sdk::
+                                    valid_static_workspace_requirement(
+                                        closure.workspace_requirement)) {
+                                outcome.diagnostics.push_back(
+                                    {DiagnosticCode::InvalidCatalogDescriptor,
+                                     detail::catalog_source(
+                                         package.package_id,
+                                         definition.model_id),
+                                     definition.model_id,
+                                     "the current Closure slice requires an "
+                                     "exact kernel entry, FrozenInterval "
+                                     "strategy, and explicit workspace fact"});
+                            }
+                        }
+                    }
                     detail::validate_ports(
                         model.ports, package.package_id,
                         definition.model_id,
@@ -612,6 +685,29 @@ class Catalog {
                                  port.port_id,
                                  "model output binding kind differs from its "
                                  "execution form"});
+                        }
+                        if (definition.execution_form ==
+                                gnc::model_sdk::ModelExecutionForm::Closure &&
+                            model.closure.has_value()) {
+                            const auto strategy = model.closure->strategy;
+                            const bool relation_matches_strategy =
+                                strategy == gnc::contracts::
+                                                ClosureStrategy::
+                                                    FrozenInterval &&
+                                port.temporal_relation ==
+                                    gnc::model_sdk::TemporalRelation::
+                                        IntervalModel;
+                            if (!relation_matches_strategy) {
+                                outcome.diagnostics.push_back(
+                                    {DiagnosticCode::InvalidCatalogDescriptor,
+                                     detail::catalog_source(
+                                         package.package_id,
+                                         definition.model_id),
+                                     port.port_id,
+                                     "Closure strategy and output temporal "
+                                     "relation must describe the same "
+                                     "evaluation boundary"});
+                            }
                         }
                     }
                 }
@@ -1058,7 +1154,8 @@ struct BindingProof {
     BindingProofResult result = BindingProofResult::Proven;
 };
 
-struct ModelPreparationIdentityPlan {
+struct PreparedModelPreparationInputs {
+    std::string preparation_input_id;
     std::string occurrence_id;
     PackageLock package;
     std::string model_id;
@@ -1067,7 +1164,61 @@ struct ModelPreparationIdentityPlan {
         gnc::model_sdk::ModelExecutionForm::Unspecified;
     std::string preparation_algorithm_id;
     std::string preparation_algorithm_version;
+    gnc::model_sdk::CanonicalConfigBlock canonical_configuration;
+    std::vector<std::string> asset_binding_ids;
+    std::vector<SourceRef> source_refs;
+};
+
+// These facts describe result flow through an already-resolved BindingPlan.
+// They neither grant a BoundQuery handle nor identify the eventual invocation
+// caller; that authority belongs to a future QueryPlan/link step.
+struct QueryConsumerBindingFacts {
+    std::string binding_id;
+    BindingEndpoint provider_endpoint;
+    BindingEndpoint consumer_endpoint;
+    std::string exact_contract_id;
+    std::optional<BindingScopeResolution> scope_resolution;
     SourceRef source;
+};
+
+struct QueryExecutionSpecInputs {
+    std::string query_execution_input_id;
+    std::string occurrence_id;
+    std::string preparation_input_ref;
+    std::string query_entry_id;
+    std::string query_entry_version;
+    gnc::model_sdk::StaticWorkspaceRequirement workspace_requirement =
+        gnc::model_sdk::StaticWorkspaceRequirement::Unspecified;
+    std::vector<QueryConsumerBindingFacts> consumer_bindings;
+    std::vector<SourceRef> source_refs;
+};
+
+// A closure data consumer is not necessarily the code authorized to invoke a
+// closure handle. Invocation context remains a ClosurePlan/IntegrationScope
+// concern and is intentionally absent from this R2 slice.
+struct ClosureConsumerBindingFacts {
+    std::string binding_id;
+    BindingEndpoint provider_endpoint;
+    BindingEndpoint consumer_endpoint;
+    std::string exact_contract_id;
+    std::optional<BindingScopeResolution> scope_resolution;
+    gnc::model_sdk::TemporalRelation temporal_relation =
+        gnc::model_sdk::TemporalRelation::NotApplicable;
+    SourceRef source;
+};
+
+struct ClosureExecutionSpecInputs {
+    std::string closure_execution_input_id;
+    std::string occurrence_id;
+    std::string preparation_input_ref;
+    std::string closure_entry_id;
+    std::string closure_entry_version;
+    gnc::contracts::ClosureStrategy strategy =
+        gnc::contracts::ClosureStrategy::Unspecified;
+    gnc::model_sdk::StaticWorkspaceRequirement workspace_requirement =
+        gnc::model_sdk::StaticWorkspaceRequirement::Unspecified;
+    std::vector<ClosureConsumerBindingFacts> consumer_bindings;
+    std::vector<SourceRef> source_refs;
 };
 
 struct AlgorithmConsumerPlan {
@@ -1104,20 +1255,21 @@ struct CompiledObligation {
     BindingEndpoint provider_endpoint;
     BindingEndpoint consumer_endpoint;
     std::string binding_id;
+    std::string execution_input_ref;
 };
 
-// This narrow, in-process descriptor freezes exact identities, typed binding
-// and temporal facts, prepare-time asset identity, and query/closure
-// obligations. It does not copy canonical model configuration payloads or
-// provide runtime instances, function addresses, Session identity, or mutable
-// state, so it cannot reconstruct a complete PreparedModel.
+// This portable descriptor shape freezes canonical preparation and execution
+// inputs in addition to typed result-flow bindings and obligations. It does
+// not claim a PreparedModelPlan, QueryPlan, ClosurePlan, handle authorization,
+// numeric slot, ABI layout, linked entry, runtime instance, Session, or state.
 struct ExecutionPlanDescriptor {
-    std::uint32_t revision = 2U;
+    std::uint32_t revision = 3U;
     std::string plan_id;
     std::string mission_id;
     std::vector<PackageLock> dependency_lock;
-    std::vector<ModelPreparationIdentityPlan>
-        model_preparation_identities;
+    std::vector<PreparedModelPreparationInputs> prepared_model_inputs;
+    std::vector<QueryExecutionSpecInputs> query_execution_inputs;
+    std::vector<ClosureExecutionSpecInputs> closure_execution_inputs;
     std::vector<AlgorithmConsumerPlan> algorithms;
     BindingPlan binding_plan;
     TemporalBindingPlan temporal_binding_plan;
@@ -1844,6 +1996,9 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
 
     const auto append_source = [](std::vector<SourceRef>& refs,
                                   const SourceRef& source_ref) {
+        if (!detail::valid_source_ref(source_ref)) {
+            return;
+        }
         const auto found = std::find_if(
             refs.begin(), refs.end(),
             [&source_ref](const SourceRef& existing) {
@@ -1853,6 +2008,13 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
         if (found == refs.end()) {
             refs.push_back(source_ref);
         }
+    };
+    const auto sort_sources = [](std::vector<SourceRef>& refs) {
+        std::sort(refs.begin(), refs.end(),
+                  [](const SourceRef& lhs, const SourceRef& rhs) {
+                      return std::tie(lhs.document_uri, lhs.node_path) <
+                             std::tie(rhs.document_uri, rhs.node_path);
+                  });
     };
 
     // Asset slots are first-class prepare-time bindings. Their source facts
@@ -2100,6 +2262,10 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
     ExecutionPlanDescriptor plan;
     plan.plan_id = source.plan_id;
     plan.mission_id = source.mission_id;
+    plan.binding_plan.entries = std::move(resolved_bindings);
+    plan.temporal_binding_plan.entries =
+        std::move(temporal_bindings);
+    plan.binding_proofs = std::move(proofs);
 
     std::map<std::string, PackageLock> dependency_locks;
     for (const auto& model : ir.model_occurrences) {
@@ -2107,13 +2273,152 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
             detail::exact_key(model.package.package_id,
                               model.package.package_version),
             model.package);
-        plan.model_preparation_identities.push_back(
-            {model.occurrence_id, model.package,
-             model.model_id,
-             model.model_version,
-             model.execution_form,
-             model.preparation_algorithm_id,
-             model.preparation_algorithm_version, model.source});
+        PreparedModelPreparationInputs prepared;
+        prepared.preparation_input_id =
+            "preparation-input." + model.occurrence_id;
+        prepared.occurrence_id = model.occurrence_id;
+        prepared.package = model.package;
+        prepared.model_id = model.model_id;
+        prepared.model_version = model.model_version;
+        prepared.execution_form = model.execution_form;
+        prepared.preparation_algorithm_id =
+            model.preparation_algorithm_id;
+        prepared.preparation_algorithm_version =
+            model.preparation_algorithm_version;
+        prepared.canonical_configuration = model.configuration;
+        append_source(prepared.source_refs, model.source);
+        append_source(prepared.source_refs, model.subject_source);
+        if (model.scope.has_value()) {
+            append_source(prepared.source_refs, model.scope_source);
+        }
+        append_source(prepared.source_refs, model.placement_source);
+        append_source(prepared.source_refs, model.configuration_source);
+        for (const auto& field : model.configuration_field_sources) {
+            append_source(prepared.source_refs, field.source);
+        }
+        for (const auto& asset : model.asset_bindings) {
+            prepared.asset_binding_ids.push_back(
+                "asset." + model.occurrence_id + "." + asset.role);
+            append_source(prepared.source_refs, asset.source);
+        }
+        append_source(
+            prepared.source_refs,
+            detail::catalog_source(model.package.package_id,
+                                   model.model_id));
+        sort_sources(prepared.source_refs);
+        plan.prepared_model_inputs.push_back(std::move(prepared));
+
+        const auto* catalog_model = catalog.find_model(
+            model.model_id, model.model_version);
+        if (catalog_model == nullptr) {
+            outcome.diagnostics.push_back(
+                {DiagnosticCode::UnknownDefinition, model.source,
+                 model.occurrence_id,
+                 "resolved model definition disappeared before plan "
+                 "lowering"});
+            continue;
+        }
+        const auto& static_descriptor = catalog_model->descriptor;
+        if (model.execution_form ==
+            gnc::model_sdk::ModelExecutionForm::PureQuery) {
+            if (!static_descriptor.pure_query.has_value()) {
+                outcome.diagnostics.push_back(
+                    {DiagnosticCode::InvalidCatalogDescriptor,
+                     model.source, model.occurrence_id,
+                     "PureQuery execution descriptor is unavailable during "
+                     "plan lowering"});
+                continue;
+            }
+            const auto& execution = *static_descriptor.pure_query;
+            QueryExecutionSpecInputs query;
+            query.query_execution_input_id =
+                "query-execution-input." + model.occurrence_id;
+            query.occurrence_id = model.occurrence_id;
+            query.preparation_input_ref =
+                "preparation-input." + model.occurrence_id;
+            query.query_entry_id = execution.query_entry_id;
+            query.query_entry_version = execution.query_entry_version;
+            query.workspace_requirement =
+                execution.workspace_requirement;
+            query.source_refs =
+                plan.prepared_model_inputs.back().source_refs;
+            for (const auto& binding : plan.binding_plan.entries) {
+                if (binding.binding_kind ==
+                        gnc::model_sdk::BindingKind::PureQuery &&
+                    binding.provider_endpoint.owner_id ==
+                        model.occurrence_id) {
+                    query.consumer_bindings.push_back(
+                        {binding.binding_id,
+                         binding.provider_endpoint,
+                         binding.consumer_endpoint,
+                         binding.exact_contract_id,
+                         binding.scope_resolution,
+                         binding.source});
+                    append_source(query.source_refs, binding.source);
+                }
+            }
+            sort_sources(query.source_refs);
+            plan.query_execution_inputs.push_back(std::move(query));
+        } else if (model.execution_form ==
+                   gnc::model_sdk::ModelExecutionForm::Closure) {
+            if (!static_descriptor.closure.has_value()) {
+                outcome.diagnostics.push_back(
+                    {DiagnosticCode::InvalidCatalogDescriptor,
+                     model.source, model.occurrence_id,
+                     "Closure execution descriptor is unavailable during "
+                     "plan lowering"});
+                continue;
+            }
+            const auto& execution = *static_descriptor.closure;
+            ClosureExecutionSpecInputs closure;
+            closure.closure_execution_input_id =
+                "closure-execution-input." + model.occurrence_id;
+            closure.occurrence_id = model.occurrence_id;
+            closure.preparation_input_ref =
+                "preparation-input." + model.occurrence_id;
+            closure.closure_entry_id = execution.closure_entry_id;
+            closure.closure_entry_version =
+                execution.closure_entry_version;
+            closure.strategy = execution.strategy;
+            closure.workspace_requirement =
+                execution.workspace_requirement;
+            closure.source_refs =
+                plan.prepared_model_inputs.back().source_refs;
+            for (const auto& binding : plan.binding_plan.entries) {
+                if (binding.binding_kind ==
+                        gnc::model_sdk::BindingKind::
+                            ContinuousClosureLink &&
+                    binding.provider_endpoint.owner_id ==
+                        model.occurrence_id) {
+                    const auto temporal = std::find_if(
+                        plan.temporal_binding_plan.entries.begin(),
+                        plan.temporal_binding_plan.entries.end(),
+                        [&binding](const auto& entry) {
+                            return entry.binding_id == binding.binding_id;
+                        });
+                    if (temporal ==
+                        plan.temporal_binding_plan.entries.end()) {
+                        outcome.diagnostics.push_back(
+                            {DiagnosticCode::InvalidCatalogDescriptor,
+                             binding.source, binding.binding_id,
+                             "resolved closure binding has no temporal "
+                             "plan entry"});
+                        continue;
+                    }
+                    closure.consumer_bindings.push_back(
+                        {binding.binding_id,
+                         binding.provider_endpoint,
+                         binding.consumer_endpoint,
+                         binding.exact_contract_id,
+                         binding.scope_resolution,
+                         temporal->relation,
+                         binding.source});
+                    append_source(closure.source_refs, binding.source);
+                }
+            }
+            sort_sources(closure.source_refs);
+            plan.closure_execution_inputs.push_back(std::move(closure));
+        }
     }
     for (const auto& algorithm : ir.algorithm_consumers) {
         dependency_locks.emplace(
@@ -2131,10 +2436,9 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
         plan.dependency_lock.push_back(dependency.second);
     }
 
-    plan.binding_plan.entries = std::move(resolved_bindings);
-    plan.temporal_binding_plan.entries =
-        std::move(temporal_bindings);
-    plan.binding_proofs = std::move(proofs);
+    if (!outcome.diagnostics.empty()) {
+        return outcome;
+    }
     std::size_t obligation_ordinal = 0U;
     for (const auto& binding : plan.binding_plan.entries) {
         if (binding.binding_kind ==
@@ -2151,7 +2455,11 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
              obligation_ordinal++, kind,
              binding.provider_endpoint,
              binding.consumer_endpoint,
-             binding.binding_id});
+             binding.binding_id,
+             (kind == CompiledObligationKind::PureQueryEvaluation
+                  ? "query-execution-input."
+                  : "closure-execution-input.") +
+                 binding.provider_endpoint.owner_id});
     }
 
     outcome.value.emplace(
@@ -2168,13 +2476,20 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
         stream << "lock " << dependency.package_id << '@'
                << dependency.package_version << '\n';
     }
-    for (const auto& model : plan.model_preparation_identities) {
-        stream << "model " << model.occurrence_id << ' '
+    for (const auto& model : plan.prepared_model_inputs) {
+        stream << "prepare-input " << model.occurrence_id << ' '
                << model.model_id << '@' << model.model_version << ' '
                << gnc::model_sdk::to_string(model.execution_form)
+               << " id " << model.preparation_input_id
                << " preparation "
                << model.preparation_algorithm_id << '@'
-               << model.preparation_algorithm_version << '\n';
+               << model.preparation_algorithm_version << " config "
+               << model.canonical_configuration.schema_id << '@'
+               << model.canonical_configuration.schema_version;
+        for (const auto& asset_binding_id : model.asset_binding_ids) {
+            stream << " asset-binding " << asset_binding_id;
+        }
+        stream << '\n';
     }
     for (const auto& algorithm : plan.algorithms) {
         stream << "consumer " << algorithm.consumer_id << ' '
@@ -2190,6 +2505,53 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
         stream << to_string(endpoint.kind) << ':' << endpoint.owner_id
                << '.' << endpoint.port_or_role_id;
     };
+    for (const auto& query : plan.query_execution_inputs) {
+        stream << "query-execution-input "
+               << query.query_execution_input_id << " occurrence "
+               << query.occurrence_id << " preparation-input "
+               << query.preparation_input_ref << " entry "
+               << query.query_entry_id << '@'
+               << query.query_entry_version << " workspace "
+               << gnc::model_sdk::to_string(
+                      query.workspace_requirement)
+               << '\n';
+        for (const auto& consumer : query.consumer_bindings) {
+            stream << "query-consumer "
+                   << query.query_execution_input_id << ' '
+                   << consumer.binding_id << ' ';
+            write_endpoint(consumer.provider_endpoint);
+            stream << " -> ";
+            write_endpoint(consumer.consumer_endpoint);
+            stream << " contract " << consumer.exact_contract_id << '\n';
+        }
+    }
+    for (const auto& closure : plan.closure_execution_inputs) {
+        stream << "closure-execution-input "
+               << closure.closure_execution_input_id
+               << " occurrence " << closure.occurrence_id
+               << " preparation-input "
+               << closure.preparation_input_ref
+               << " entry " << closure.closure_entry_id << '@'
+               << closure.closure_entry_version << " strategy "
+               << gnc::contracts::to_string(closure.strategy)
+               << " workspace "
+               << gnc::model_sdk::to_string(
+                      closure.workspace_requirement)
+               << '\n';
+        for (const auto& consumer : closure.consumer_bindings) {
+            stream << "closure-consumer "
+                   << closure.closure_execution_input_id << ' '
+                   << consumer.binding_id << ' ';
+            write_endpoint(consumer.provider_endpoint);
+            stream << " -> ";
+            write_endpoint(consumer.consumer_endpoint);
+            stream << " contract " << consumer.exact_contract_id
+                   << " temporal "
+                   << gnc::model_sdk::to_string(
+                          consumer.temporal_relation)
+                   << '\n';
+        }
+    }
     for (const auto& binding : plan.binding_plan.entries) {
         stream << "bind " << binding.binding_id << ' '
                << gnc::model_sdk::to_string(binding.binding_kind) << ' ';
@@ -2240,7 +2602,8 @@ build_canonical_mission_ir(const TypedStaticCompositionSource& source,
         write_endpoint(obligation.provider_endpoint);
         stream << " -> ";
         write_endpoint(obligation.consumer_endpoint);
-        stream << '\n';
+        stream << " execution-input " << obligation.execution_input_ref
+               << '\n';
     }
     return stream.str();
 }

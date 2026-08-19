@@ -68,9 +68,19 @@ static_assert(
     "the static descriptor must expose typed compiled obligations");
 static_assert(
     std::is_same_v<
-        decltype(gnc::compiler::ModelPreparationIdentityPlan::execution_form),
+        decltype(
+            gnc::compiler::PreparedModelPreparationInputs::execution_form),
         ModelExecutionForm>,
-    "prepared entries must preserve the accepted execution-form type");
+    "preparation inputs must preserve the accepted execution-form type");
+static_assert(
+    std::is_same_v<
+        decltype(ExecutionPlanDescriptor::query_execution_inputs),
+        std::vector<gnc::compiler::QueryExecutionSpecInputs>> &&
+        std::is_same_v<
+            decltype(ExecutionPlanDescriptor::closure_execution_inputs),
+            std::vector<gnc::compiler::ClosureExecutionSpecInputs>>,
+    "the portable descriptor must expose query and closure execution "
+    "inputs");
 static_assert(
     std::is_same_v<decltype(StaticPortDescriptor::binding_kind),
                    BindingKind> &&
@@ -121,6 +131,23 @@ struct has_model_id_member<
     Value, std::void_t<decltype(std::declval<Value>().model_id)>>
     : std::true_type {};
 
+template <typename Value, typename = void>
+struct has_authorized_callers_member : std::false_type {};
+
+template <typename Value>
+struct has_authorized_callers_member<
+    Value,
+    std::void_t<decltype(std::declval<Value>().authorized_callers)>>
+    : std::true_type {};
+
+template <typename Value, typename = void>
+struct has_caller_endpoint_member : std::false_type {};
+
+template <typename Value>
+struct has_caller_endpoint_member<
+    Value, std::void_t<decltype(std::declval<Value>().caller_endpoint)>>
+    : std::true_type {};
+
 static_assert(!has_required_member<StaticPortDescriptor>::value,
               "the current static composition has no optional ports");
 static_assert(
@@ -130,6 +157,25 @@ static_assert(
     !has_runtime_instance_id_member<
         gnc::compiler::CanonicalModelOccurrence>::value,
     "canonical PureQuery/Closure IR must not allocate runtime instances");
+static_assert(
+    !has_runtime_instance_id_member<
+        gnc::compiler::PreparedModelPreparationInputs>::value &&
+        !has_runtime_instance_id_member<
+            gnc::compiler::QueryExecutionSpecInputs>::value &&
+        !has_runtime_instance_id_member<
+            gnc::compiler::ClosureExecutionSpecInputs>::value,
+    "portable preparation/query/closure inputs must not allocate runtime "
+    "instances");
+static_assert(
+    !has_authorized_callers_member<
+        gnc::compiler::QueryExecutionSpecInputs>::value &&
+        !has_authorized_callers_member<
+            gnc::compiler::ClosureExecutionSpecInputs>::value &&
+        !has_caller_endpoint_member<
+            gnc::compiler::QueryConsumerBindingFacts>::value &&
+        !has_caller_endpoint_member<
+            gnc::compiler::ClosureConsumerBindingFacts>::value,
+    "result-flow facts must not claim handle caller authorization");
 static_assert(
     !has_model_id_member<gnc::compiler::CanonicalAlgorithmConsumer>::value,
     "a kernel binding consumer must not become a model occurrence");
@@ -1010,6 +1056,35 @@ void verify_yyz_entity_subject_negative_cases(const Catalog& catalog) {
 void verify_success_product(const StaticCompilation& compilation) {
     const auto& ir = compilation.ir;
     const auto& plan = compilation.plan;
+    const auto sources_are_canonical = [](const auto& refs) {
+        if (refs.empty()) {
+            return false;
+        }
+        for (std::size_t index = 0U; index < refs.size(); ++index) {
+            if (refs[index].document_uri.empty() ||
+                refs[index].node_path.empty()) {
+                return false;
+            }
+            if (index != 0U) {
+                const auto& previous = refs[index - 1U];
+                const auto& current = refs[index];
+                if (previous.document_uri > current.document_uri ||
+                    (previous.document_uri == current.document_uri &&
+                     previous.node_path >= current.node_path)) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    };
+    const auto has_source = [](const auto& refs, std::string_view uri,
+                               std::string_view path) {
+        return std::any_of(
+            refs.begin(), refs.end(), [uri, path](const auto& source) {
+                return source.document_uri == uri &&
+                       source.node_path == path;
+            });
+    };
     require(ir.revision == 2U && ir.mission_id == kMissionId,
             "typed source did not produce the expected minimal IR");
     require(ir.entities.size() == 1U &&
@@ -1091,11 +1166,13 @@ void verify_success_product(const StaticCompilation& compilation) {
                 ir.binding_intents[2U].binding_id ==
                     "yyz.closure-to-rigid",
             "canonical IR lost exact algorithm inputs or binding intents");
-    require(plan.revision == 2U && plan.plan_id == kPlanId &&
+    require(plan.revision == 3U && plan.plan_id == kPlanId &&
                 plan.mission_id == kMissionId,
             "static plan identity changed");
     require(plan.dependency_lock.size() == 2U &&
-                plan.model_preparation_identities.size() == 3U &&
+                plan.prepared_model_inputs.size() == 3U &&
+                plan.query_execution_inputs.size() == 2U &&
+                plan.closure_execution_inputs.size() == 1U &&
                 plan.algorithms.size() == 2U &&
                 plan.binding_plan.entries.size() == 4U &&
                 plan.temporal_binding_plan.entries.size() == 1U &&
@@ -1103,36 +1180,242 @@ void verify_success_product(const StaticCompilation& compilation) {
                 plan.obligations.size() == 3U,
             "static plan closure count changed");
 
-    const auto& cavh_model = plan.model_preparation_identities[0U];
+    const auto& cavh_model = plan.prepared_model_inputs[0U];
     require(cavh_model.occurrence_id == "cavh.envelope" &&
+                cavh_model.preparation_input_id ==
+                    "preparation-input.cavh.envelope" &&
                 cavh_model.model_id ==
                     gnc::packages::cavh::kGlideEnvelopeModelIdentity &&
                 cavh_model.execution_form == ModelExecutionForm::PureQuery &&
                 cavh_model.preparation_algorithm_id ==
                     gnc::packages::cavh::
-                        kGlideEnvelopePreparationIdentity.id,
-            "CAVH plan entry lost its real query definition");
+                        kGlideEnvelopePreparationIdentity.id &&
+                cavh_model.canonical_configuration ==
+                    ir.model_occurrences[0U].configuration &&
+                cavh_model.asset_binding_ids.empty(),
+            "CAVH preparation inputs lost the real query definition");
     const auto& yyz_aero_model =
-        plan.model_preparation_identities[1U];
+        plan.prepared_model_inputs[1U];
     require(yyz_aero_model.occurrence_id == "yyz.aerodynamics" &&
+                yyz_aero_model.preparation_input_id ==
+                    "preparation-input.yyz.aerodynamics" &&
                 yyz_aero_model.model_id ==
                     gnc::packages::yyz::kAerodynamicTableModelIdentity &&
                 yyz_aero_model.execution_form ==
                     ModelExecutionForm::PureQuery &&
                 yyz_aero_model.preparation_algorithm_id ==
                     gnc::packages::yyz::
-                        kAerodynamicTablePreparationIdentity.id,
-            "YYZ plan entry lost its real aerodynamic query definition");
-    const auto& yyz_model = plan.model_preparation_identities[2U];
+                        kAerodynamicTablePreparationIdentity.id &&
+                yyz_aero_model.canonical_configuration ==
+                    ir.model_occurrences[1U].configuration &&
+                yyz_aero_model.asset_binding_ids ==
+                    std::vector<std::string>{
+                        "asset.yyz.aerodynamics.aerodynamics"},
+            "YYZ preparation inputs lost the aerodynamic definition");
+    const auto& yyz_model = plan.prepared_model_inputs[2U];
     require(yyz_model.occurrence_id == "yyz.closure" &&
+                yyz_model.preparation_input_id ==
+                    "preparation-input.yyz.closure" &&
                 yyz_model.model_id ==
                     gnc::packages::yyz::
                         kForceMomentClosureModelIdentity &&
                 yyz_model.execution_form == ModelExecutionForm::Closure &&
                 yyz_model.preparation_algorithm_id ==
                     gnc::packages::yyz::
-                        kForceMomentClosurePreparationIdentity.id,
-            "YYZ plan entry lost its real closure definition");
+                        kForceMomentClosurePreparationIdentity.id &&
+                yyz_model.canonical_configuration ==
+                    ir.model_occurrences[2U].configuration &&
+                yyz_model.asset_binding_ids.empty(),
+            "YYZ preparation inputs lost the real closure definition");
+    require(sources_are_canonical(cavh_model.source_refs) &&
+                sources_are_canonical(yyz_aero_model.source_refs) &&
+                sources_are_canonical(yyz_model.source_refs) &&
+                has_source(yyz_aero_model.source_refs, kDocumentUri,
+                           "/models/yyz.aerodynamics/assets/aerodynamics") &&
+                has_source(
+                    yyz_aero_model.source_refs,
+                    "catalog://" + yyz_aero_model.package.package_id,
+                    gnc::packages::yyz::kAerodynamicTableModelIdentity),
+            "prepared inputs lost canonical config, asset, or Catalog "
+            "provenance");
+
+    const auto& cavh_query = plan.query_execution_inputs[0U];
+    const auto& yyz_query = plan.query_execution_inputs[1U];
+    require(cavh_query.query_execution_input_id ==
+                    "query-execution-input.cavh.envelope" &&
+                cavh_query.occurrence_id == "cavh.envelope" &&
+                cavh_query.preparation_input_ref ==
+                    "preparation-input.cavh.envelope" &&
+                cavh_query.query_entry_id ==
+                    gnc::packages::cavh::kGlideEnvelopeQueryIdentity.id &&
+                cavh_query.query_entry_version ==
+                    gnc::packages::cavh::
+                        kGlideEnvelopeQueryIdentity.version &&
+                cavh_query.workspace_requirement ==
+                    gnc::model_sdk::StaticWorkspaceRequirement::None &&
+                cavh_query.consumer_bindings.size() == 1U &&
+                cavh_query.consumer_bindings[0U].binding_id ==
+                    "cavh.envelope-to-formula" &&
+                cavh_query.consumer_bindings[0U]
+                        .provider_endpoint.owner_id == "cavh.envelope" &&
+                cavh_query.consumer_bindings[0U]
+                        .consumer_endpoint.owner_id == "cavh.formula" &&
+                cavh_query.consumer_bindings[0U].exact_contract_id ==
+                    gnc::packages::cavh::
+                        kGlideEnvelopeOutputContractIdentity,
+            "CAVH query execution inputs lost an entry or consumer fact");
+    require(yyz_query.query_execution_input_id ==
+                    "query-execution-input.yyz.aerodynamics" &&
+                yyz_query.occurrence_id == "yyz.aerodynamics" &&
+                yyz_query.preparation_input_ref ==
+                    "preparation-input.yyz.aerodynamics" &&
+                yyz_query.query_entry_id ==
+                    gnc::packages::yyz::kAerodynamicTableQueryIdentity.id &&
+                yyz_query.query_entry_version ==
+                    gnc::packages::yyz::
+                        kAerodynamicTableQueryIdentity.version &&
+                yyz_query.workspace_requirement ==
+                    gnc::model_sdk::StaticWorkspaceRequirement::None &&
+                yyz_query.consumer_bindings.size() == 1U &&
+                yyz_query.consumer_bindings[0U].binding_id ==
+                    "yyz.aero-to-rigid" &&
+                yyz_query.consumer_bindings[0U]
+                        .provider_endpoint.owner_id == "yyz.aerodynamics" &&
+                yyz_query.consumer_bindings[0U]
+                        .consumer_endpoint.owner_id == "yyz.rigid-step" &&
+                yyz_query.consumer_bindings[0U]
+                    .scope_resolution.has_value(),
+            "YYZ query execution inputs lost an entry or consumer fact");
+
+    const auto& yyz_closure = plan.closure_execution_inputs[0U];
+    require(yyz_closure.closure_execution_input_id ==
+                    "closure-execution-input.yyz.closure" &&
+                yyz_closure.occurrence_id == "yyz.closure" &&
+                yyz_closure.preparation_input_ref ==
+                    "preparation-input.yyz.closure" &&
+                yyz_closure.closure_entry_id ==
+                    gnc::packages::yyz::
+                        kForceMomentClosureKernelIdentity.id &&
+                yyz_closure.closure_entry_version ==
+                    gnc::packages::yyz::
+                        kForceMomentClosureKernelIdentity.version &&
+                yyz_closure.strategy ==
+                    gnc::contracts::ClosureStrategy::FrozenInterval &&
+                yyz_closure.workspace_requirement ==
+                    gnc::model_sdk::StaticWorkspaceRequirement::None &&
+                yyz_closure.consumer_bindings.size() == 1U &&
+                yyz_closure.consumer_bindings[0U].binding_id ==
+                    "yyz.closure-to-rigid" &&
+                yyz_closure.consumer_bindings[0U]
+                        .provider_endpoint.owner_id == "yyz.closure" &&
+                yyz_closure.consumer_bindings[0U]
+                        .consumer_endpoint.owner_id == "yyz.rigid-step" &&
+                yyz_closure.consumer_bindings[0U]
+                    .scope_resolution.has_value() &&
+                yyz_closure.consumer_bindings[0U].temporal_relation ==
+                    TemporalRelation::IntervalModel,
+            "YYZ closure execution inputs lost frozen-interval facts");
+    require(sources_are_canonical(cavh_query.source_refs) &&
+                sources_are_canonical(yyz_query.source_refs) &&
+                sources_are_canonical(yyz_closure.source_refs) &&
+                has_source(cavh_query.source_refs, kDocumentUri,
+                           "/bindings/cavh.envelope-to-formula") &&
+                has_source(yyz_query.source_refs, kDocumentUri,
+                           "/bindings/yyz.aero-to-rigid") &&
+                has_source(yyz_closure.source_refs, kDocumentUri,
+                           "/bindings/yyz.closure-to-rigid"),
+            "query or closure inputs lost stable, deduplicated source refs");
+
+    const auto same_endpoint = [](const auto& lhs, const auto& rhs) {
+        return lhs.kind == rhs.kind && lhs.owner_id == rhs.owner_id &&
+               lhs.port_or_role_id == rhs.port_or_role_id;
+    };
+    const auto same_scope = [](const auto& lhs, const auto& rhs) {
+        return lhs.has_value() == rhs.has_value() &&
+               (!lhs.has_value() ||
+                lhs->resolved_scope == rhs->resolved_scope);
+    };
+    for (const auto& prepared : plan.prepared_model_inputs) {
+        for (const auto& asset_ref : prepared.asset_binding_ids) {
+            require(std::count_if(
+                        plan.binding_plan.entries.begin(),
+                        plan.binding_plan.entries.end(),
+                        [&asset_ref](const auto& binding) {
+                            return binding.binding_id == asset_ref &&
+                                   binding.binding_kind ==
+                                       BindingKind::AssetBinding;
+                        }) == 1,
+                    "preparation asset-binding ref did not resolve "
+                    "uniquely");
+        }
+    }
+    for (const auto& query : plan.query_execution_inputs) {
+        require(std::count_if(
+                    plan.prepared_model_inputs.begin(),
+                    plan.prepared_model_inputs.end(),
+                    [&query](const auto& prepared) {
+                        return prepared.preparation_input_id ==
+                               query.preparation_input_ref;
+                    }) == 1,
+                "query preparation-input ref did not resolve uniquely");
+        for (const auto& consumer : query.consumer_bindings) {
+            const auto binding = std::find_if(
+                plan.binding_plan.entries.begin(),
+                plan.binding_plan.entries.end(),
+                [&consumer](const auto& entry) {
+                    return entry.binding_id == consumer.binding_id;
+                });
+            require(binding != plan.binding_plan.entries.end() &&
+                        same_endpoint(binding->provider_endpoint,
+                                      consumer.provider_endpoint) &&
+                        same_endpoint(binding->consumer_endpoint,
+                                      consumer.consumer_endpoint) &&
+                        binding->exact_contract_id ==
+                            consumer.exact_contract_id &&
+                        same_scope(binding->scope_resolution,
+                                   consumer.scope_resolution),
+                    "query consumer facts diverged from their resolved "
+                    "BindingPlan entry");
+        }
+    }
+    for (const auto& closure : plan.closure_execution_inputs) {
+        require(std::count_if(
+                    plan.prepared_model_inputs.begin(),
+                    plan.prepared_model_inputs.end(),
+                    [&closure](const auto& prepared) {
+                        return prepared.preparation_input_id ==
+                               closure.preparation_input_ref;
+                    }) == 1,
+                "closure preparation-input ref did not resolve uniquely");
+        for (const auto& consumer : closure.consumer_bindings) {
+            const auto binding = std::find_if(
+                plan.binding_plan.entries.begin(),
+                plan.binding_plan.entries.end(),
+                [&consumer](const auto& entry) {
+                    return entry.binding_id == consumer.binding_id;
+                });
+            const auto temporal = std::find_if(
+                plan.temporal_binding_plan.entries.begin(),
+                plan.temporal_binding_plan.entries.end(),
+                [&consumer](const auto& entry) {
+                    return entry.binding_id == consumer.binding_id;
+                });
+            require(binding != plan.binding_plan.entries.end() &&
+                        temporal !=
+                            plan.temporal_binding_plan.entries.end() &&
+                        same_endpoint(binding->provider_endpoint,
+                                      consumer.provider_endpoint) &&
+                        same_endpoint(binding->consumer_endpoint,
+                                      consumer.consumer_endpoint) &&
+                        binding->exact_contract_id ==
+                            consumer.exact_contract_id &&
+                        same_scope(binding->scope_resolution,
+                                   consumer.scope_resolution) &&
+                        temporal->relation == consumer.temporal_relation,
+                    "closure consumer facts diverged from their resolved "
+                    "binding or temporal plan entry");
+        }
+    }
 
     require(plan.algorithms[0U].algorithm_id ==
                 gnc::packages::cavh::kCavhFormulaKernelIdentity.id &&
@@ -1288,17 +1571,42 @@ void verify_success_product(const StaticCompilation& compilation) {
                 CompiledObligationKind::PureQueryEvaluation &&
                 plan.obligations[0U].consumer_endpoint.owner_id ==
                     "cavh.formula" &&
+                plan.obligations[0U].execution_input_ref ==
+                    "query-execution-input.cavh.envelope" &&
                 plan.obligations[1U].kind ==
                     CompiledObligationKind::PureQueryEvaluation &&
                 plan.obligations[1U].provider_endpoint.owner_id ==
                     "yyz.aerodynamics" &&
                 plan.obligations[1U].consumer_endpoint.owner_id ==
                     "yyz.rigid-step" &&
+                plan.obligations[1U].execution_input_ref ==
+                    "query-execution-input.yyz.aerodynamics" &&
                 plan.obligations[2U].kind ==
                     CompiledObligationKind::ClosureEvaluation &&
                 plan.obligations[2U].consumer_endpoint.owner_id ==
-                    "yyz.rigid-step",
+                    "yyz.rigid-step" &&
+                plan.obligations[2U].execution_input_ref ==
+                    "closure-execution-input.yyz.closure",
             "compiled obligations no longer express true package consumers");
+    for (const auto& obligation : plan.obligations) {
+        const auto matching_queries = std::count_if(
+            plan.query_execution_inputs.begin(),
+            plan.query_execution_inputs.end(),
+            [&obligation](const auto& query) {
+                return query.query_execution_input_id ==
+                       obligation.execution_input_ref;
+            });
+        const auto matching_closures = std::count_if(
+            plan.closure_execution_inputs.begin(),
+            plan.closure_execution_inputs.end(),
+            [&obligation](const auto& closure) {
+                return closure.closure_execution_input_id ==
+                       obligation.execution_input_ref;
+            });
+        require(matching_queries + matching_closures == 1,
+                "compiled obligation execution-input ref did not resolve "
+                "uniquely");
+    }
 }
 
 void verify_deterministic_order(std::string_view expected_ir_explain,
@@ -1406,12 +1714,42 @@ void verify_deterministic_order(std::string_view expected_ir_explain,
                 .source_refs[0U]
                 .document_uri == "typed://alternate/source.yaml",
             "canonical semantics discarded source provenance");
+    require(std::any_of(
+                compilation.plan.prepared_model_inputs[1U]
+                    .source_refs.begin(),
+                compilation.plan.prepared_model_inputs[1U]
+                    .source_refs.end(),
+                [](const auto& source_ref) {
+                    return source_ref.document_uri ==
+                           "typed://alternate/config.yaml";
+                }) &&
+                std::any_of(
+                    compilation.plan.query_execution_inputs[1U]
+                        .source_refs.begin(),
+                    compilation.plan.query_execution_inputs[1U]
+                        .source_refs.end(),
+                    [](const auto& source_ref) {
+                        return source_ref.document_uri ==
+                               "typed://alternate/source.yaml" &&
+                               source_ref.node_path.find(
+                                   "/binding_intents/") == 0U;
+                    }),
+            "portable preparation/query inputs discarded relocated source "
+            "provenance");
 }
 
 void verify_negative_cases() {
     const auto catalog_outcome = Catalog::build(package_descriptors());
     const auto& catalog =
         require_value(catalog_outcome, "fixture Catalog build failed");
+    const auto expect_invalid_catalog = [](auto packages,
+                                           std::string_view message) {
+        const auto outcome = Catalog::build(std::move(packages));
+        require(!outcome.value.has_value() &&
+                    has_diagnostic(outcome.diagnostics,
+                                   DiagnosticCode::InvalidCatalogDescriptor),
+                message);
+    };
 
     auto invalid_config_kind_package =
         gnc::packages::yyz::describe_yyz_rigid_step_package();
@@ -1713,6 +2051,143 @@ void verify_negative_cases() {
                 has_diagnostic(invalid_form_outcome.diagnostics,
                                DiagnosticCode::InvalidCatalogDescriptor),
             "invalid execution form entered the Catalog");
+
+    auto missing_query_payload = package_descriptors();
+    missing_query_payload[0U].models[0U].pure_query.reset();
+    expect_invalid_catalog(std::move(missing_query_payload),
+                           "PureQuery without execution facts entered the "
+                           "Catalog");
+
+    auto conflicting_query_payload = package_descriptors();
+    conflicting_query_payload[0U].models[0U].closure =
+        conflicting_query_payload[1U].models[0U].closure;
+    expect_invalid_catalog(std::move(conflicting_query_payload),
+                           "PureQuery with Closure facts entered the Catalog");
+
+    auto empty_query_entry = package_descriptors();
+    empty_query_entry[0U].models[0U].pure_query->query_entry_id.clear();
+    expect_invalid_catalog(std::move(empty_query_entry),
+                           "PureQuery with an empty entry entered the Catalog");
+
+    auto unspecified_query_workspace = package_descriptors();
+    unspecified_query_workspace[0U]
+        .models[0U]
+        .pure_query->workspace_requirement =
+        gnc::model_sdk::StaticWorkspaceRequirement::Unspecified;
+    expect_invalid_catalog(
+        std::move(unspecified_query_workspace),
+        "PureQuery with implicit workspace facts entered the Catalog");
+
+    auto missing_closure_payload = package_descriptors();
+    missing_closure_payload[1U].models[0U].closure.reset();
+    expect_invalid_catalog(std::move(missing_closure_payload),
+                           "Closure without execution facts entered the "
+                           "Catalog");
+
+    auto conflicting_closure_payload = package_descriptors();
+    conflicting_closure_payload[1U].models[0U].pure_query =
+        conflicting_closure_payload[1U].models[1U].pure_query;
+    expect_invalid_catalog(
+        std::move(conflicting_closure_payload),
+        "Closure with PureQuery facts entered the Catalog");
+
+    auto empty_closure_version = package_descriptors();
+    empty_closure_version[1U]
+        .models[0U]
+        .closure->closure_entry_version.clear();
+    expect_invalid_catalog(std::move(empty_closure_version),
+                           "Closure with an empty entry version entered the "
+                           "Catalog");
+
+    auto candidate_state_closure = package_descriptors();
+    candidate_state_closure[1U].models[0U].closure->strategy =
+        gnc::contracts::ClosureStrategy::CandidateState;
+    expect_invalid_catalog(std::move(candidate_state_closure),
+                           "CandidateState capability entered the frozen "
+                           "interval slice");
+
+    auto algebraic_closure = package_descriptors();
+    algebraic_closure[1U].models[0U].closure->strategy =
+        gnc::contracts::ClosureStrategy::AlgebraicSolve;
+    expect_invalid_catalog(std::move(algebraic_closure),
+                           "AlgebraicSolve capability entered the frozen "
+                           "interval slice");
+
+    auto frozen_candidate_relation = package_descriptors();
+    frozen_candidate_relation[1U]
+        .models[0U]
+        .ports[0U]
+        .temporal_relation = TemporalRelation::CandidateStateQuery;
+    expect_invalid_catalog(
+        std::move(frozen_candidate_relation),
+        "FrozenInterval closure carried a candidate-state relation");
+
+    auto unspecified_closure_workspace = package_descriptors();
+    unspecified_closure_workspace[1U]
+        .models[0U]
+        .closure->workspace_requirement =
+        gnc::model_sdk::StaticWorkspaceRequirement::Unspecified;
+    expect_invalid_catalog(
+        std::move(unspecified_closure_workspace),
+        "Closure with implicit workspace facts entered the Catalog");
+
+    auto conflicting_runtime_payload = package_descriptors();
+    conflicting_runtime_payload[1U].models[2U].pure_query =
+        conflicting_runtime_payload[1U].models[1U].pure_query;
+    conflicting_runtime_payload[1U].models[2U].closure =
+        conflicting_runtime_payload[1U].models[0U].closure;
+    expect_invalid_catalog(
+        std::move(conflicting_runtime_payload),
+        "RuntimeComponent with query/closure facts entered the Catalog");
+
+    auto changed_query_entry = package_descriptors();
+    constexpr std::string_view kAlternateQueryEntry =
+        "gnc.package.cavh.glide-envelope.query.alternate-fixture@1";
+    const auto baseline_query_plan_outcome =
+        gnc::compiler::compile_static_plan(composition_source(), catalog);
+    const auto& baseline_query_compilation = require_value(
+        baseline_query_plan_outcome,
+        "baseline query entry failed portable lowering");
+    changed_query_entry[0U].models[0U].pure_query->query_entry_id =
+        std::string(kAlternateQueryEntry);
+    const auto changed_query_catalog_outcome =
+        Catalog::build(std::move(changed_query_entry));
+    const auto& changed_query_catalog = require_value(
+        changed_query_catalog_outcome,
+        "alternate nonempty query entry was hard-coded out of the Catalog");
+    const auto changed_query_plan_outcome =
+        gnc::compiler::compile_static_plan(composition_source(),
+                                           changed_query_catalog);
+    const auto& changed_query_compilation = require_value(
+        changed_query_plan_outcome,
+        "alternate nonempty query entry failed portable lowering");
+    require(changed_query_compilation.plan.query_execution_inputs[0U]
+                    .query_entry_id == kAlternateQueryEntry,
+            "Catalog query entry identity was not frozen exactly into the "
+            "portable execution input");
+    const auto baseline_query_hash_outcome =
+        gnc::compiler::hash_canonical_mission_ir(
+            baseline_query_compilation.ir);
+    const auto changed_query_hash_outcome =
+        gnc::compiler::hash_canonical_mission_ir(
+            changed_query_compilation.ir);
+    const auto& baseline_query_hash = require_value(
+        baseline_query_hash_outcome,
+        "baseline query-entry IR hashing failed");
+    const auto& changed_query_hash = require_value(
+        changed_query_hash_outcome,
+        "alternate query-entry IR hashing failed");
+    require(
+        gnc::compiler::explain_canonical_mission_ir(
+            changed_query_compilation.ir) ==
+                gnc::compiler::explain_canonical_mission_ir(
+                    baseline_query_compilation.ir) &&
+            changed_query_hash.encoding_id ==
+                baseline_query_hash.encoding_id &&
+            changed_query_hash.algorithm == baseline_query_hash.algorithm &&
+            changed_query_hash.hex_digest ==
+                baseline_query_hash.hex_digest,
+        "entry identity leaked into canonical source semantics");
 }
 
 [[nodiscard]] const gnc::compiler::CanonicalSemanticHash&
@@ -2073,12 +2548,16 @@ require_hash(
                 "PureQueryEvaluation "
                 "ModelOccurrence:yyz.aerodynamics.coefficients -> "
                 "AlgorithmConsumer:yyz.rigid-step."
-                "aerodynamic-coefficients\n") != std::string::npos &&
+                "aerodynamic-coefficients execution-input "
+                "query-execution-input.yyz.aerodynamics\n") !=
+                std::string::npos &&
                 explain.find(
                     "obligation 2 obligation.yyz.closure-to-rigid "
                     "ClosureEvaluation "
                     "ModelOccurrence:yyz.closure.form-input -> "
-                    "AlgorithmConsumer:yyz.rigid-step.form-input\n") !=
+                    "AlgorithmConsumer:yyz.rigid-step.form-input "
+                    "execution-input "
+                    "closure-execution-input.yyz.closure\n") !=
                     std::string::npos,
             "static dry-run explain lost query/closure obligations");
     require(gnc::compiler::explain_canonical_mission_ir(compilation.ir) ==

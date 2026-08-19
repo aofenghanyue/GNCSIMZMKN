@@ -484,7 +484,7 @@
       "depends_on": ["R2-BIND-001", "R2-CAT-001"],
       "deliverables": ["RuntimeComponent obligations required by the first real runtime plan", "Compiled recipe/profile, ports/state and lifecycle records", "Layered plan identities", "StateOwner/DecisionAuthority, activation/topology, intervention/fault routes and sampled graph analysis only for declarations consumed by the selected RuntimeComponent plan"],
       "acceptance": ["The expanded static descriptor consumes only compiled obligations, contains no function address or Session identity, and introduces no RuntimeComponent capability outside that Compiler path", "Deferred owner, authority, topology, intervention and cycle proofs enter the plan only with their first real descriptor and runtime-plan consumer"],
-      "evidence": ["Descriptor hash fixtures"],
+      "evidence": ["Descriptor hash fixtures", "Portable groundwork: r2.compiler-static-plan.probe freezes PreparedModelPreparationInputs plus exact QueryExecutionSpecInputs/ClosureExecutionSpecInputs entry, workspace, consumer-binding, source and obligation refs; consumer bindings grant no runtime handle authority; ADR-0016 explicitly excludes RuntimeComponent plan completion, PreparedModelPlan/QueryPlan/ClosurePlan, PreparedModelKey, PlanProofIndex and linking"],
       "architecture_refs": ["05 §12–§15", "12 §11–§14", "14"]
     },
     {

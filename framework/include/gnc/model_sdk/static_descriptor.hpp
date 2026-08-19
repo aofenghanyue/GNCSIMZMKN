@@ -1,5 +1,6 @@
 #pragma once
 
+#include "gnc/contracts/execution_semantics.hpp"
 #include "gnc/model_sdk/model_metadata.hpp"
 
 #include <cstdint>
@@ -228,6 +229,30 @@ enum class HoldPolicy : std::uint8_t {
     return "Unknown";
 }
 
+// Query/closure kernels in the current R1 products allocate no caller-visible
+// scratch space. Keeping that fact explicit prevents a later linker from
+// inventing a workspace layout or treating an omitted field as compatible.
+enum class StaticWorkspaceRequirement : std::uint8_t {
+    Unspecified,
+    None,
+};
+
+[[nodiscard]] constexpr std::string_view to_string(
+    StaticWorkspaceRequirement requirement) noexcept {
+    switch (requirement) {
+    case StaticWorkspaceRequirement::Unspecified:
+        return "Unspecified";
+    case StaticWorkspaceRequirement::None:
+        return "None";
+    }
+    return "Unknown";
+}
+
+[[nodiscard]] constexpr bool valid_static_workspace_requirement(
+    StaticWorkspaceRequirement requirement) noexcept {
+    return requirement == StaticWorkspaceRequirement::None;
+}
+
 enum class CanonicalConfigValueKind : std::uint8_t {
     String,
     Integer,
@@ -357,9 +382,28 @@ struct StaticRuntimeComponentDescriptor {
     std::string algorithm_entry_version;
 };
 
+// Stable implementation facts for the existing PreparedModel-backed forms.
+// These are descriptor/link identities only: no function address or prepared
+// instance is stored here.
+struct StaticPureQueryDescriptor {
+    std::string query_entry_id;
+    std::string query_entry_version;
+    StaticWorkspaceRequirement workspace_requirement =
+        StaticWorkspaceRequirement::Unspecified;
+};
+
+struct StaticClosureDescriptor {
+    std::string closure_entry_id;
+    std::string closure_entry_version;
+    gnc::contracts::ClosureStrategy strategy =
+        gnc::contracts::ClosureStrategy::Unspecified;
+    StaticWorkspaceRequirement workspace_requirement =
+        StaticWorkspaceRequirement::Unspecified;
+};
+
 // Package-owned description of a model that can be read without preparing or
-// instantiating it. execution_form is the closed tag: only RuntimeComponent
-// may carry runtime_component facts.
+// instantiating it. execution_form is the closed tag: exactly one matching
+// PureQuery, Closure, or RuntimeComponent payload may be present.
 struct StaticModelDescriptor {
     ModelDefinitionMetadata definition;
     ModelPlacement placement = ModelPlacement::Unspecified;
@@ -368,6 +412,8 @@ struct StaticModelDescriptor {
     StaticConfigSchemaDescriptor configuration;
     std::vector<StaticAssetSlotDescriptor> asset_slots;
     std::vector<StaticPortDescriptor> ports;
+    std::optional<StaticPureQueryDescriptor> pure_query;
+    std::optional<StaticClosureDescriptor> closure;
     std::optional<StaticRuntimeComponentDescriptor> runtime_component;
 };
 

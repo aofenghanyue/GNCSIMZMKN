@@ -372,6 +372,11 @@ describe_yyz_rigid_step_base_package() {
         {"numerical.zero_tolerance",
          gnc::model_sdk::CanonicalConfigValueKind::Float64},
     };
+    closure.closure = gnc::model_sdk::StaticClosureDescriptor{
+        std::string(kForceMomentClosureKernelIdentity.id),
+        std::string(kForceMomentClosureKernelIdentity.version),
+        gnc::contracts::ClosureStrategy::FrozenInterval,
+        gnc::model_sdk::StaticWorkspaceRequirement::None};
     closure.ports.push_back(
         {"form-input", std::string(kRigidFormInputContractIdentity),
          gnc::model_sdk::StaticPortDirection::Output,
@@ -416,6 +421,11 @@ describe_yyz_rigid_step_base_package() {
         {"aerodynamics",
          std::string(kAerodynamicTableAssetSchemaIdentity),
          gnc::model_sdk::PortCardinality::ExactlyOne});
+    aerodynamics.pure_query =
+        gnc::model_sdk::StaticPureQueryDescriptor{
+            std::string(kAerodynamicTableQueryIdentity.id),
+            std::string(kAerodynamicTableQueryIdentity.version),
+            gnc::model_sdk::StaticWorkspaceRequirement::None};
     aerodynamics.ports.push_back(
         {"coefficients",
          std::string(kAerodynamicCoefficientsContractIdentity),

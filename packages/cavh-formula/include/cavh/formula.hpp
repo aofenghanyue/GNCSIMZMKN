@@ -218,6 +218,11 @@ describe_cavh_formula_package() {
         {"induced_drag_factor",
          gnc::model_sdk::CanonicalConfigValueKind::Float64},
     };
+    envelope.pure_query =
+        gnc::model_sdk::StaticPureQueryDescriptor{
+            std::string(kGlideEnvelopeQueryIdentity.id),
+            std::string(kGlideEnvelopeQueryIdentity.version),
+            gnc::model_sdk::StaticWorkspaceRequirement::None};
     envelope.ports.push_back(
         {"envelope", std::string(kGlideEnvelopeOutputContractIdentity),
          gnc::model_sdk::StaticPortDirection::Output,
