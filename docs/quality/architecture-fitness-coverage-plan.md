@@ -10,7 +10,7 @@
 
 本计划把目标蓝图中的 architecture fitness functions 分成三类证据：当前 R0 可由仓库结构证明的规则、需要 R0 治理 artifact 后启用的规则、需要 R1–R5 产品 artifact 后启用的规则。每条规则必须通过真实 source/descriptor/transaction artifact 或与正向 evaluator 相同的 mutation 证明检测能力。
 
-当前产品已具备 R1 PureQuery、Closure 与 stateless AlgorithmKernel，尚无 RuntimeComponent、ExecutionPlanDescriptor 或 StepTransaction。缺少这些 artifact 时不能证明对应语义正确；coverage report 应使用 `not-applicable-awaiting-artifact` 或 `deferred-by-gate` 表达该状态。
+当前产品已具备 R1 PureQuery、Closure 与 stateless AlgorithmKernel，R2 已具备窄静态 `ExecutionPlanDescriptor` 和 Catalog-only RuntimeComponent descriptor；RuntimeComponent plan 与 StepTransaction 尚未形成。缺少这些 artifact 时不能证明对应语义正确；coverage report 应使用 `not-applicable-awaiting-artifact` 或 `deferred-by-gate` 表达该状态。
 
 本计划不定义 runtime schema、不增加生产依赖、不改变 module DAG，也不允许扫描器根据类名推断 state owner、temporal relation 或 commit semantics。
 

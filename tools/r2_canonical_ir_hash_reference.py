@@ -11,7 +11,7 @@ import math
 from pathlib import Path
 import struct
 import subprocess
-from typing import Any, Dict, List
+from typing import Any, Dict, List, Set
 
 
 ENCODING_ID = "gnc.canonical-mission-ir.semantic-bytes@2"
@@ -107,16 +107,20 @@ def validate_canonical(ir: Dict[str, Any]) -> None:
     require(all(kind == 1 and subject in entity_ids
                 for kind, subject in scope_keys),
             "Vehicle scope is invalid or unanchored")
+    composition_node_ids: Set[str] = set()
     require_unique_order(ir["models"], "occurrence_id", "models")
     models: Dict[str, Dict[str, Any]] = {}
     for model in ir["models"]:
-        require(model["package_id"] and model["package_version"] and
+        require(model["occurrence_id"] and
+                model["occurrence_id"] not in composition_node_ids and
+                model["package_id"] and model["package_version"] and
                 model["model_id"] and model["model_version"] and
                 model["execution_form"] in (1, 2) and
                 model["placement"] in (1, 2) and
                 model["preparation_algorithm_id"] and
                 model["preparation_algorithm_version"],
                 "model identity or package policy is invalid")
+        composition_node_ids.add(model["occurrence_id"])
         subject = model.get("subject_entity_id")
         require(not subject or subject in entity_ids,
                 "model subject is absent")
@@ -125,6 +129,8 @@ def validate_canonical(ir: Dict[str, Any]) -> None:
                 ((scope["kind"], scope["subject_entity_id"]) in scope_keys and
                  scope["subject_entity_id"] == subject),
                 "model scope and subject are inconsistent")
+        require(bool(model["output_ports"]),
+                "model output ports are empty")
         require_unique_order(model["output_ports"], "port_id",
                              "model ports")
         expected_kind = 2 if model["execution_form"] == 1 else 3
@@ -170,14 +176,19 @@ def validate_canonical(ir: Dict[str, Any]) -> None:
     require_unique_order(ir["algorithms"], "consumer_id", "algorithms")
     algorithms: Dict[str, Dict[str, Any]] = {}
     for algorithm in ir["algorithms"]:
-        require(algorithm["package_id"] and algorithm["package_version"] and
+        require(algorithm["consumer_id"] and
+                algorithm["consumer_id"] not in composition_node_ids and
+                algorithm["package_id"] and algorithm["package_version"] and
                 algorithm["algorithm_id"] and
                 algorithm["algorithm_version"],
                 "algorithm consumer identity is invalid")
+        composition_node_ids.add(algorithm["consumer_id"])
         scope = algorithm.get("scope")
         require(not scope or
                 (scope["kind"], scope["subject_entity_id"]) in scope_keys,
                 "algorithm consumer scope is undeclared")
+        require(bool(algorithm["input_ports"]),
+                "algorithm input ports are empty")
         require_unique_order(algorithm["input_ports"], "port_id",
                              "algorithm ports")
         require(all(port["port_id"] and port["contract_id"] and
@@ -472,7 +483,47 @@ def verify_mutations(base: Dict[str, Any], expected: str) -> int:
         pass
     else:
         raise ValueError("negative zero reached reference SHA-256")
-    return len(mutations) + 3
+
+    invalid_graphs: List[Dict[str, Any]] = []
+    cross_identity = copy.deepcopy(base)
+    previous_consumer_id = cross_identity["algorithms"][0]["consumer_id"]
+    collision_id = cross_identity["models"][0]["occurrence_id"]
+    cross_identity["algorithms"][0]["consumer_id"] = collision_id
+    for binding in cross_identity["bindings"]:
+        if binding["consumer_id"] == previous_consumer_id:
+            binding["consumer_id"] = collision_id
+    invalid_graphs.append(normalize_ir(cross_identity))
+
+    empty_model_ports = copy.deepcopy(base)
+    empty_model_ports["models"][0]["output_ports"] = []
+    invalid_graphs.append(empty_model_ports)
+
+    empty_algorithm_ports = copy.deepcopy(base)
+    empty_algorithm_ports["algorithms"][0]["input_ports"] = []
+    invalid_graphs.append(empty_algorithm_ports)
+
+    runtime_form = copy.deepcopy(base)
+    runtime_form["models"][0]["execution_form"] = 3
+    invalid_graphs.append(runtime_form)
+
+    runtime_placement = copy.deepcopy(base)
+    runtime_placement["models"][0]["placement"] = 3
+    invalid_graphs.append(runtime_placement)
+
+    sampled_closure = copy.deepcopy(base)
+    closure_model = next(
+        model for model in sampled_closure["models"]
+        if model["execution_form"] == 2)
+    closure_model["output_ports"][0]["temporal_relation"] = 3
+    invalid_graphs.append(sampled_closure)
+
+    for invalid in invalid_graphs:
+        try:
+            encode_canonical(invalid)
+        except ValueError:
+            continue
+        raise ValueError("an incomplete canonical graph reached SHA-256")
+    return len(mutations) + 9
 
 
 def main() -> int:

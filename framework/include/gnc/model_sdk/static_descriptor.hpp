@@ -3,6 +3,7 @@
 #include "gnc/model_sdk/model_metadata.hpp"
 
 #include <cstdint>
+#include <optional>
 #include <string>
 #include <string_view>
 #include <variant>
@@ -15,14 +16,15 @@ enum class StaticPortDirection : std::uint8_t {
     Output,
 };
 
-// Connection semantics owned by the package descriptor. The R2 binding
-// slice exposes only the three kinds exercised by current YYZ/CAVH product
-// code.
+// Connection semantics owned by the package descriptor. SampledSignal is
+// reserved for RuntimeComponent ports; the existing static composition path
+// continues to accept only PureQuery and ContinuousClosureLink.
 enum class BindingKind : std::uint8_t {
     Unspecified,
     AssetBinding,
     PureQuery,
     ContinuousClosureLink,
+    SampledSignal,
 };
 
 [[nodiscard]] constexpr std::string_view to_string(
@@ -36,6 +38,8 @@ enum class BindingKind : std::uint8_t {
         return "PureQuery";
     case BindingKind::ContinuousClosureLink:
         return "ContinuousClosureLink";
+    case BindingKind::SampledSignal:
+        return "SampledSignal";
     }
     return "Unknown";
 }
@@ -44,7 +48,8 @@ enum class BindingKind : std::uint8_t {
     BindingKind kind) noexcept {
     return kind == BindingKind::AssetBinding ||
            kind == BindingKind::PureQuery ||
-           kind == BindingKind::ContinuousClosureLink;
+           kind == BindingKind::ContinuousClosureLink ||
+           kind == BindingKind::SampledSignal;
 }
 
 enum class PortCardinality : std::uint8_t {
@@ -72,13 +77,14 @@ enum class PortCardinality : std::uint8_t {
            cardinality == PortCardinality::OneOrMore;
 }
 
-// Pure queries have no sampled/closure time relation. The two closure
-// relations below are recognized so the Compiler can reject an accidental
-// candidate-state declaration on the current frozen-interval YYZ path.
+// Pure queries have no sampled/closure time relation. Closure relations retain
+// their frozen-interval meaning, while CurrentCycle belongs to sampled runtime
+// ports that must later participate in a closed runtime graph.
 enum class TemporalRelation : std::uint8_t {
     NotApplicable,
     IntervalModel,
     CandidateStateQuery,
+    CurrentCycle,
 };
 
 [[nodiscard]] constexpr std::string_view to_string(
@@ -90,6 +96,8 @@ enum class TemporalRelation : std::uint8_t {
         return "IntervalModel";
     case TemporalRelation::CandidateStateQuery:
         return "CandidateStateQuery";
+    case TemporalRelation::CurrentCycle:
+        return "CurrentCycle";
     }
     return "Unknown";
 }
@@ -98,15 +106,17 @@ enum class TemporalRelation : std::uint8_t {
     TemporalRelation relation) noexcept {
     return relation == TemporalRelation::NotApplicable ||
            relation == TemporalRelation::IntervalModel ||
-           relation == TemporalRelation::CandidateStateQuery;
+           relation == TemporalRelation::CandidateStateQuery ||
+           relation == TemporalRelation::CurrentCycle;
 }
 
-// Package-owned placement policy for the model forms that have real R1
-// consumers. Runtime placement and lifecycle remain outside this descriptor.
+// Package-owned placement policy. VehicleProcess identifies an independently
+// scheduled RuntimeComponent; lifecycle remains in its tagged runtime facts.
 enum class ModelPlacement : std::uint8_t {
     Unspecified,
     VehicleOutput,
     InteractionClosure,
+    VehicleProcess,
 };
 
 [[nodiscard]] constexpr std::string_view to_string(
@@ -118,6 +128,8 @@ enum class ModelPlacement : std::uint8_t {
         return "vehicle.output";
     case ModelPlacement::InteractionClosure:
         return "interaction/closure";
+    case ModelPlacement::VehicleProcess:
+        return "vehicle.process";
     }
     return "Unknown";
 }
@@ -125,7 +137,95 @@ enum class ModelPlacement : std::uint8_t {
 [[nodiscard]] constexpr bool valid_model_placement(
     ModelPlacement placement) noexcept {
     return placement == ModelPlacement::VehicleOutput ||
-           placement == ModelPlacement::InteractionClosure;
+           placement == ModelPlacement::InteractionClosure ||
+           placement == ModelPlacement::VehicleProcess;
+}
+
+enum class RuntimeCellProfile : std::uint8_t {
+    Unspecified,
+    SampledTransform,
+};
+
+[[nodiscard]] constexpr std::string_view to_string(
+    RuntimeCellProfile profile) noexcept {
+    switch (profile) {
+    case RuntimeCellProfile::Unspecified:
+        return "Unspecified";
+    case RuntimeCellProfile::SampledTransform:
+        return "SampledTransform";
+    }
+    return "Unknown";
+}
+
+[[nodiscard]] constexpr bool valid_runtime_cell_profile(
+    RuntimeCellProfile profile) noexcept {
+    return profile == RuntimeCellProfile::SampledTransform;
+}
+
+enum class RuntimeExecutionObligation : std::uint8_t {
+    BoundaryEvaluation,
+};
+
+[[nodiscard]] constexpr std::string_view to_string(
+    RuntimeExecutionObligation obligation) noexcept {
+    switch (obligation) {
+    case RuntimeExecutionObligation::BoundaryEvaluation:
+        return "BoundaryEvaluation";
+    }
+    return "Unknown";
+}
+
+[[nodiscard]] constexpr bool valid_runtime_execution_obligation(
+    RuntimeExecutionObligation obligation) noexcept {
+    return obligation == RuntimeExecutionObligation::BoundaryEvaluation;
+}
+
+enum class RuntimeLifecycleCapability : std::uint8_t {
+    Instantiate,
+    Dispose,
+};
+
+[[nodiscard]] constexpr std::string_view to_string(
+    RuntimeLifecycleCapability capability) noexcept {
+    switch (capability) {
+    case RuntimeLifecycleCapability::Instantiate:
+        return "Instantiate";
+    case RuntimeLifecycleCapability::Dispose:
+        return "Dispose";
+    }
+    return "Unknown";
+}
+
+enum class CoarsePhase : std::uint8_t {
+    Unspecified,
+    Process,
+};
+
+[[nodiscard]] constexpr std::string_view to_string(
+    CoarsePhase phase) noexcept {
+    switch (phase) {
+    case CoarsePhase::Unspecified:
+        return "Unspecified";
+    case CoarsePhase::Process:
+        return "process";
+    }
+    return "Unknown";
+}
+
+enum class HoldPolicy : std::uint8_t {
+    Unspecified,
+    ZeroOrderHold,
+};
+
+[[nodiscard]] constexpr std::string_view to_string(
+    HoldPolicy policy) noexcept {
+    switch (policy) {
+    case HoldPolicy::Unspecified:
+        return "Unspecified";
+    case HoldPolicy::ZeroOrderHold:
+        return "ZeroOrderHold";
+    }
+    return "Unknown";
 }
 
 enum class CanonicalConfigValueKind : std::uint8_t {
@@ -227,9 +327,36 @@ struct StaticPortDescriptor {
         TemporalRelation::NotApplicable;
 };
 
+struct StaticStateSchemaDescriptor {
+    std::string schema_id;
+    std::string layout_id;
+};
+
+struct StaticRuntimeScheduleDescriptor {
+    CoarsePhase phase = CoarsePhase::Unspecified;
+    std::uint32_t step_interval = 0U;
+    std::uint32_t offset = 0U;
+    HoldPolicy output_hold = HoldPolicy::Unspecified;
+    std::uint32_t max_input_age_steps = 0U;
+};
+
+// Package-owned static facts for one independent runtime boundary. The
+// initial R2 consumer is a stateless SampledTransform, so state schemas stay
+// empty and lifecycle declares only instantiate/dispose.
+struct StaticRuntimeComponentDescriptor {
+    std::string recipe_id;
+    RuntimeCellProfile profile = RuntimeCellProfile::Unspecified;
+    std::vector<RuntimeExecutionObligation> obligations;
+    std::vector<StaticStateSchemaDescriptor> state_schemas;
+    StaticRuntimeScheduleDescriptor schedule;
+    std::vector<RuntimeLifecycleCapability> lifecycle_capabilities;
+    std::string algorithm_entry_id;
+    std::string algorithm_entry_version;
+};
+
 // Package-owned description of a model that can be read without preparing or
-// instantiating it. This R2 surface deliberately covers only the PureQuery and
-// Closure forms already delivered by real package consumers.
+// instantiating it. execution_form is the closed tag: only RuntimeComponent
+// may carry runtime_component facts.
 struct StaticModelDescriptor {
     ModelDefinitionMetadata definition;
     ModelPlacement placement = ModelPlacement::Unspecified;
@@ -238,6 +365,7 @@ struct StaticModelDescriptor {
     StaticConfigSchemaDescriptor configuration;
     std::vector<StaticAssetSlotDescriptor> asset_slots;
     std::vector<StaticPortDescriptor> ports;
+    std::optional<StaticRuntimeComponentDescriptor> runtime_component;
 };
 
 // A stateless AlgorithmKernel composition is a binding consumer. It has no

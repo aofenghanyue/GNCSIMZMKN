@@ -1263,7 +1263,8 @@ void verify_success_product(const StaticCompilation& compilation) {
     }
     require(has_assertion(
                 plan.binding_proofs[0U],
-                BindingProofAssertion::AssetIdentityExact) &&
+                BindingProofAssertion::
+                    SourceSelectedAssetIdentityPreserved) &&
                 !has_assertion(
                     plan.binding_proofs[1U],
                     BindingProofAssertion::ScopeExact) &&
@@ -1411,6 +1412,41 @@ void verify_negative_cases() {
     const auto catalog_outcome = Catalog::build(package_descriptors());
     const auto& catalog =
         require_value(catalog_outcome, "fixture Catalog build failed");
+
+    auto alternate_asset = composition_source();
+    constexpr std::string_view kAlternateAssetIdentity =
+        "aero-table.fixture.yyz.not-resolved-here@1";
+    alternate_asset.model_occurrences[1U]
+        .asset_bindings[0U]
+        .asset_id = std::string(kAlternateAssetIdentity);
+    const auto alternate_asset_outcome =
+        gnc::compiler::compile_static_plan(alternate_asset, catalog);
+    const auto& alternate_asset_compilation = require_value(
+        alternate_asset_outcome,
+        "nonempty source-selected asset identity was treated as resolved");
+    require(alternate_asset_compilation.ir.model_occurrences[1U]
+                    .asset_bindings[0U]
+                    .asset_id == kAlternateAssetIdentity &&
+                alternate_asset_compilation.plan.binding_plan.entries[0U]
+                    .provider_endpoint.owner_id == kAlternateAssetIdentity &&
+                alternate_asset_compilation.plan.binding_plan.entries[0U]
+                    .asset_binding->asset_id == kAlternateAssetIdentity,
+            "source-selected asset identity was not preserved into the plan");
+
+    auto empty_asset_identity = composition_source();
+    empty_asset_identity.model_occurrences[1U]
+        .asset_bindings[0U]
+        .asset_id.clear();
+    const auto empty_asset_identity_outcome =
+        gnc::compiler::compile_static_plan(empty_asset_identity, catalog);
+    const auto& empty_asset_identity_diagnostic = require_diagnostic(
+        empty_asset_identity_outcome.diagnostics,
+        DiagnosticCode::InvalidAssetIdentity,
+        "empty asset identity diagnostic missing");
+    require(!empty_asset_identity_outcome.value.has_value() &&
+                empty_asset_identity_diagnostic.source.node_path ==
+                    "/models/yyz.aerodynamics/assets/aerodynamics",
+            "empty source-selected asset identity entered the plan");
 
     auto empty = composition_source();
     empty.model_occurrences.clear();
@@ -1905,6 +1941,76 @@ require_hash(
                 has_diagnostic(negative_zero_hash.diagnostics,
                                DiagnosticCode::NonCanonicalIr),
             "noncanonical negative zero reached SHA-256");
+
+    const auto expect_noncanonical = [](const CanonicalMissionIr& invalid,
+                                        std::string_view message) {
+        const auto hash =
+            gnc::compiler::hash_canonical_mission_ir(invalid);
+        require(!hash.value.has_value() &&
+                    has_diagnostic(hash.diagnostics,
+                                   DiagnosticCode::NonCanonicalIr),
+                message);
+    };
+    auto cross_collection_identity = base_ir;
+    const auto previous_consumer_id =
+        cross_collection_identity.algorithm_consumers[0U].consumer_id;
+    cross_collection_identity.algorithm_consumers[0U].consumer_id =
+        cross_collection_identity.model_occurrences[0U].occurrence_id;
+    for (auto& binding : cross_collection_identity.binding_intents) {
+        if (binding.consumer_id == previous_consumer_id) {
+            binding.consumer_id =
+                cross_collection_identity.model_occurrences[0U]
+                    .occurrence_id;
+        }
+    }
+    std::sort(
+        cross_collection_identity.algorithm_consumers.begin(),
+        cross_collection_identity.algorithm_consumers.end(),
+        [](const auto& lhs, const auto& rhs) {
+            return lhs.consumer_id < rhs.consumer_id;
+        });
+    expect_noncanonical(
+        cross_collection_identity,
+        "cross-collection composition identity reached SHA-256");
+
+    auto empty_model_outputs = base_ir;
+    empty_model_outputs.model_occurrences[0U].output_ports.clear();
+    expect_noncanonical(empty_model_outputs,
+                        "model without outputs reached SHA-256");
+
+    auto empty_algorithm_inputs = base_ir;
+    empty_algorithm_inputs.algorithm_consumers[0U].input_ports.clear();
+    expect_noncanonical(empty_algorithm_inputs,
+                        "algorithm without inputs reached SHA-256");
+
+    auto runtime_component_form = base_ir;
+    runtime_component_form.model_occurrences[0U].execution_form =
+        ModelExecutionForm::RuntimeComponent;
+    expect_noncanonical(
+        runtime_component_form,
+        "RuntimeComponent entered semantic-bytes@2 without supersession");
+
+    auto runtime_component_placement = base_ir;
+    runtime_component_placement.model_occurrences[0U].placement =
+        gnc::model_sdk::ModelPlacement::VehicleProcess;
+    expect_noncanonical(
+        runtime_component_placement,
+        "RuntimeComponent placement entered semantic-bytes@2");
+
+    auto current_cycle_closure = base_ir;
+    const auto closure = std::find_if(
+        current_cycle_closure.model_occurrences.begin(),
+        current_cycle_closure.model_occurrences.end(),
+        [](const auto& model) {
+            return model.execution_form == ModelExecutionForm::Closure;
+        });
+    require(closure != current_cycle_closure.model_occurrences.end(),
+            "semantic hash fixture omitted its closure model");
+    closure->output_ports[0U].temporal_relation =
+        gnc::model_sdk::TemporalRelation::CurrentCycle;
+    expect_noncanonical(
+        current_cycle_closure,
+        "sampled temporal relation entered semantic-bytes@2 closure");
     return base_hash.hex_digest;
 }
 
