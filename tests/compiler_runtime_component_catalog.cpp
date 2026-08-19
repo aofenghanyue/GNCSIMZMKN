@@ -295,6 +295,64 @@ void expect_invalid_catalog(StaticPackageDescriptor package,
         std::move(no_runtime_output),
         "RuntimeComponent without a consumed output entered Catalog");
 
+    auto invalid_port_direction = describe_yyz_rigid_step_package();
+    find_model(invalid_port_direction,
+        kAltitudePitchGuidanceModelIdentity)
+        .ports[0U]
+        .direction = static_cast<StaticPortDirection>(255U);
+    expect_invalid_catalog(
+        std::move(invalid_port_direction),
+        "RuntimeComponent port with invalid direction entered Catalog");
+
+    auto invalid_port_binding = describe_yyz_rigid_step_package();
+    find_model(invalid_port_binding,
+               kAltitudePitchGuidanceModelIdentity)
+        .ports[0U]
+        .binding_kind = BindingKind::PureQuery;
+    expect_invalid_catalog(
+        std::move(invalid_port_binding),
+        "RuntimeComponent port without SampledSignal semantics entered "
+        "Catalog");
+
+    auto invalid_port_temporal = describe_yyz_rigid_step_package();
+    find_model(invalid_port_temporal,
+               kAltitudePitchGuidanceModelIdentity)
+        .ports[0U]
+        .temporal_relation = TemporalRelation::IntervalModel;
+    expect_invalid_catalog(
+        std::move(invalid_port_temporal),
+        "RuntimeComponent port without CurrentCycle semantics entered "
+        "Catalog");
+
+    auto invalid_input_cardinality = describe_yyz_rigid_step_package();
+    find_model(invalid_input_cardinality,
+               kAltitudePitchGuidanceModelIdentity)
+        .ports[0U]
+        .cardinality = PortCardinality::OneOrMore;
+    expect_invalid_catalog(
+        std::move(invalid_input_cardinality),
+        "RuntimeComponent input without exactly-one provider entered "
+        "Catalog");
+
+    auto invalid_output_cardinality = describe_yyz_rigid_step_package();
+    find_model(invalid_output_cardinality,
+               kAltitudePitchGuidanceModelIdentity)
+        .ports[1U]
+        .cardinality = PortCardinality::ExactlyOne;
+    expect_invalid_catalog(
+        std::move(invalid_output_cardinality),
+        "RuntimeComponent output without one-or-more consumers entered "
+        "Catalog");
+
+    auto duplicate_port_identity = describe_yyz_rigid_step_package();
+    auto& duplicate_port_model = find_model(
+        duplicate_port_identity, kAltitudePitchGuidanceModelIdentity);
+    duplicate_port_model.ports[1U].port_id =
+        duplicate_port_model.ports[0U].port_id;
+    expect_invalid_catalog(
+        std::move(duplicate_port_identity),
+        "duplicate RuntimeComponent port identity entered Catalog");
+
     gnc::compiler::TypedStaticCompositionSource source;
     source.source_version = std::string(
         gnc::compiler::kTypedStaticCompositionSourceVersion);
@@ -322,7 +380,7 @@ void expect_invalid_catalog(StaticPackageDescriptor package,
                 has_diagnostic(unknown.diagnostics,
                                DiagnosticCode::UnknownDefinition),
             "unknown RuntimeComponent definition was accepted");
-    return 20U;
+    return 26U;
 }
 
 } // namespace

@@ -4,7 +4,7 @@
 - Date: 2026-08-19
 - Owner: Repository owner
 - Related tasks: R2-CAT-001、R2-PLAN-001
-- Architecture references: 05 §5～§7、05 §12～§15、10 §4、12 §11～§14、13、14
+- Architecture references: 00A §3.3、05 §5～§7、05 §12～§15、10 §4、12 §4、12 §9.3、12 §11～§14、13、14、15 §4
 
 ## Context
 
