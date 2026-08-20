@@ -126,6 +126,16 @@ inline constexpr gnc::foundation::AlgorithmIdentity
 inline constexpr gnc::foundation::AlgorithmIdentity
     kUniformEnvironmentQueryIdentity{
         "gnc.package.yyz.environment.uniform-supplied.query@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kUniformEnvironmentResultBinderIdentity{
+        "gnc.package.yyz.environment.uniform-supplied.result-binder@1",
+        "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kAerodynamicTableResultBinderIdentity{
+        "gnc.package.yyz.aerodynamic-table.result-binder@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kForceMomentClosureResultBinderIdentity{
+        "gnc.package.yyz.force-moment-closure.result-binder@1", "0.1.0"};
 
 // Stable package-authored C++ prototype identities. These identify only the
 // exact in-process call shapes below; they are not wire or cross-compiler ABI
@@ -136,15 +146,24 @@ inline constexpr std::string_view
 inline constexpr std::string_view kUniformEnvironmentQueryCallShapeIdentity =
     "gnc.cpp-call-shape.yyz.uniform-environment.query@1";
 inline constexpr std::string_view
+    kUniformEnvironmentResultBinderCallShapeIdentity =
+        "gnc.cpp-call-shape.yyz.uniform-environment.result-binder@1";
+inline constexpr std::string_view
     kAerodynamicTablePreparationCallShapeIdentity =
         "gnc.cpp-call-shape.yyz.aerodynamic-table.prepare@1";
 inline constexpr std::string_view kAerodynamicTableQueryCallShapeIdentity =
     "gnc.cpp-call-shape.yyz.aerodynamic-table.query@1";
 inline constexpr std::string_view
+    kAerodynamicTableResultBinderCallShapeIdentity =
+        "gnc.cpp-call-shape.yyz.aerodynamic-table.result-binder@1";
+inline constexpr std::string_view
     kForceMomentClosurePreparationCallShapeIdentity =
         "gnc.cpp-call-shape.yyz.force-moment-closure.prepare@1";
 inline constexpr std::string_view kForceMomentClosureCallShapeIdentity =
     "gnc.cpp-call-shape.yyz.force-moment-closure.evaluate@1";
+inline constexpr std::string_view
+    kForceMomentClosureResultBinderCallShapeIdentity =
+        "gnc.cpp-call-shape.yyz.force-moment-closure.result-binder@1";
 inline constexpr std::string_view kRigidInitialStateCallShapeIdentity =
     "gnc.cpp-call-shape.yyz.rigid.initial-state@1";
 inline constexpr std::string_view kRigidPublishProjectionCallShapeIdentity =
@@ -307,6 +326,12 @@ using UniformEnvironmentQueryEvaluation =
     gnc::model_sdk::AlgorithmEvaluation<EnvironmentInput,
                                         UniformEnvironmentQueryTelemetry>;
 
+class UniformEnvironmentResultBinder {
+  public:
+    [[nodiscard]] static EnvironmentInput bind(
+        const EnvironmentInput& formal_output);
+};
+
 class UniformEnvironmentQueryKernel {
   public:
     [[nodiscard]] static gnc::foundation::NumericalOutcome<
@@ -457,6 +482,12 @@ using AerodynamicTableQueryEvaluation =
     gnc::model_sdk::AlgorithmEvaluation<AerodynamicTableQueryOutput,
                                         AerodynamicTableQueryTelemetry>;
 
+class AerodynamicTableResultBinder {
+  public:
+    [[nodiscard]] static AerodynamicTableQueryOutput bind(
+        const AerodynamicTableQueryOutput& formal_output);
+};
+
 class AerodynamicTableQueryKernel {
   public:
     [[nodiscard]] static gnc::foundation::NumericalOutcome<
@@ -570,7 +601,10 @@ describe_yyz_rigid_step_base_package() {
         gnc::contracts::ClosureStrategy::FrozenInterval,
         gnc::model_sdk::StaticWorkspaceRequirement::None,
         std::string(kForceMomentClosureInputContractIdentity),
-        std::string(kForceMomentClosureCallShapeIdentity)};
+        std::string(kForceMomentClosureCallShapeIdentity),
+        std::string(kForceMomentClosureResultBinderIdentity.id),
+        std::string(kForceMomentClosureResultBinderIdentity.version),
+        std::string(kForceMomentClosureResultBinderCallShapeIdentity)};
     closure.ports.push_back(
         {"form-input", std::string(kRigidFormInputContractIdentity),
          gnc::model_sdk::StaticPortDirection::Output,
@@ -623,7 +657,10 @@ describe_yyz_rigid_step_base_package() {
             std::string(kAerodynamicTableQueryIdentity.version),
             gnc::model_sdk::StaticWorkspaceRequirement::None,
             std::string(kAerodynamicOperatingPointContractIdentity),
-            std::string(kAerodynamicTableQueryCallShapeIdentity)};
+            std::string(kAerodynamicTableQueryCallShapeIdentity),
+            std::string(kAerodynamicTableResultBinderIdentity.id),
+            std::string(kAerodynamicTableResultBinderIdentity.version),
+            std::string(kAerodynamicTableResultBinderCallShapeIdentity)};
     aerodynamics.ports.push_back(
         {"coefficients",
          std::string(kAerodynamicCoefficientsContractIdentity),
@@ -678,7 +715,10 @@ describe_yyz_rigid_step_base_package() {
             std::string(kUniformEnvironmentQueryIdentity.version),
             gnc::model_sdk::StaticWorkspaceRequirement::None,
             std::string(kEnvironmentQueryContractIdentity),
-            std::string(kUniformEnvironmentQueryCallShapeIdentity)};
+            std::string(kUniformEnvironmentQueryCallShapeIdentity),
+            std::string(kUniformEnvironmentResultBinderIdentity.id),
+            std::string(kUniformEnvironmentResultBinderIdentity.version),
+            std::string(kUniformEnvironmentResultBinderCallShapeIdentity)};
     environment.ports.push_back(
         {"environment-sample",
          std::string(kEnvironmentSampleContractIdentity),
@@ -1009,6 +1049,12 @@ using ForceMomentClosureEvaluation =
     gnc::model_sdk::AlgorithmEvaluation<ForceMomentClosureOutput,
                                         ForceMomentClosureTelemetry>;
 
+class ForceMomentClosureResultBinder {
+  public:
+    [[nodiscard]] static ForceMomentClosureOutput bind(
+        const ForceMomentClosureOutput& formal_output);
+};
+
 class ForceMomentClosureKernel {
   public:
     [[nodiscard]] static gnc::foundation::NumericalOutcome<
@@ -1034,10 +1080,16 @@ using RigidFrozenFormEvaluation =
 
 using UniformEnvironmentQueryEntry =
     decltype(&UniformEnvironmentQueryKernel::evaluate);
+using UniformEnvironmentResultBinderEntry =
+    decltype(&UniformEnvironmentResultBinder::bind);
 using AerodynamicTableQueryEntry =
     decltype(&AerodynamicTableQueryKernel::evaluate);
+using AerodynamicTableResultBinderEntry =
+    decltype(&AerodynamicTableResultBinder::bind);
 using ForceMomentClosureEntry =
     decltype(&ForceMomentClosureKernel::evaluate);
+using ForceMomentClosureResultBinderEntry =
+    decltype(&ForceMomentClosureResultBinder::bind);
 
 // R3 materializes these exact process-local references from the authorized
 // invocation entries in ExecutionPlanImage. They are never serialized or
@@ -1045,9 +1097,22 @@ using ForceMomentClosureEntry =
 struct RigidFrozenFormInvocationSet {
     const PreparedAerodynamicTableModel* aerodynamic_model = nullptr;
     AerodynamicTableQueryEntry aerodynamic_query = nullptr;
+    AerodynamicTableResultBinderEntry aerodynamic_result_binder = nullptr;
     const PreparedForceMomentClosureModel* force_moment_closure_model =
         nullptr;
     ForceMomentClosureEntry force_moment_closure = nullptr;
+    ForceMomentClosureResultBinderEntry closure_result_binder = nullptr;
+};
+
+// Authoritative responses returned by the package typed composition. These
+// are formal query/closure outputs; telemetry remains explanatory only.
+struct RigidFrozenFormInvocationResults {
+    AerodynamicTableQueryOutput aerodynamic_coefficients;
+};
+
+struct RigidFrozenFormInvocationEvaluation {
+    RigidFrozenFormEvaluation evaluation;
+    RigidFrozenFormInvocationResults invocation_results;
 };
 
 class RigidFrozenFormKernel {
@@ -1062,6 +1127,13 @@ class RigidFrozenFormKernel {
     evaluate(const RigidFrozenFormRuntimeDefinition& definition,
              const RigidFrozenFormInvocationSet& invocations,
              const RigidStepInput& input);
+
+    [[nodiscard]] static gnc::foundation::NumericalOutcome<
+        RigidFrozenFormInvocationEvaluation>
+    evaluate_with_invocation_results(
+        const RigidFrozenFormRuntimeDefinition& definition,
+        const RigidFrozenFormInvocationSet& invocations,
+        const RigidStepInput& input);
 };
 
 struct RigidDerivativeOutput {
@@ -1140,6 +1212,8 @@ using UniformEnvironmentQueryCall =
     gnc::foundation::NumericalOutcome<UniformEnvironmentQueryEvaluation> (*)(
         const PreparedUniformEnvironmentModel&,
         const UniformEnvironmentQueryInput&);
+using UniformEnvironmentResultBinderCall = EnvironmentInput (*)(
+    const EnvironmentInput&);
 using AerodynamicTablePreparationCall =
     gnc::foundation::NumericalOutcome<PreparedAerodynamicTableModel> (*)(
         AerodynamicTableDefinition, AerodynamicTableAsset);
@@ -1147,6 +1221,8 @@ using AerodynamicTableQueryCall =
     gnc::foundation::NumericalOutcome<AerodynamicTableQueryEvaluation> (*)(
         const PreparedAerodynamicTableModel&,
         const AerodynamicTableQueryInput&);
+using AerodynamicTableResultBinderCall = AerodynamicTableQueryOutput (*)(
+    const AerodynamicTableQueryOutput&);
 using ForceMomentClosurePreparationCall =
     gnc::foundation::NumericalOutcome<PreparedForceMomentClosureModel> (*)(
         ForceMomentClosureDefinition);
@@ -1154,6 +1230,8 @@ using ForceMomentClosureCall =
     gnc::foundation::NumericalOutcome<ForceMomentClosureEvaluation> (*)(
         const PreparedForceMomentClosureModel&,
         const ForceMomentClosureInput&);
+using ForceMomentClosureResultBinderCall = ForceMomentClosureOutput (*)(
+    const ForceMomentClosureOutput&);
 using RigidInitialStateCall =
     gnc::foundation::NumericalOutcome<RigidState> (*)(
         const RigidStepAlgorithmDefinition&, const RigidInitialStateInput&);

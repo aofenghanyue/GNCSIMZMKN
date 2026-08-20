@@ -547,6 +547,13 @@ struct StaticRuntimeComponentDescriptor {
     std::string definition_builder_id;
     std::string definition_builder_version;
     std::string definition_builder_call_shape_id;
+    // Stable package-owned factory selected by R2 and invoked only by R3.
+    // The factory receives the already-built typed Definition together with
+    // the compiled numeric handles for this occurrence and constructs the
+    // Session-local Runtime Cell. Descriptor data never contains that cell.
+    std::string runtime_cell_factory_id;
+    std::string runtime_cell_factory_version;
+    std::string runtime_cell_factory_call_shape_id;
     // Present only for terminal Evaluator profiles whose exact package entry
     // consumes a bounded committed-state history.
     std::optional<StaticEvaluatorHistoryShapeDescriptor>
@@ -563,6 +570,14 @@ struct StaticPureQueryDescriptor {
         StaticWorkspaceRequirement::Unspecified;
     std::string request_contract_id;
     std::string query_call_shape_id;
+    // Maps a successful typed query evaluation's formal output to the
+    // response contract. It must not inspect telemetry. R2 exact-links this
+    // package entry. R3 binds the reference into the package-owned cell; the
+    // package composition invokes it once and returns the response that R3
+    // publishes through the authorized result-flow Binding.
+    std::string result_binder_id;
+    std::string result_binder_version;
+    std::string result_binder_call_shape_id;
 };
 
 struct StaticClosureDescriptor {
@@ -574,6 +589,9 @@ struct StaticClosureDescriptor {
         StaticWorkspaceRequirement::Unspecified;
     std::string request_contract_id;
     std::string closure_call_shape_id;
+    std::string result_binder_id;
+    std::string result_binder_version;
+    std::string result_binder_call_shape_id;
 };
 
 // Package-owned description of a model that can be read without preparing or

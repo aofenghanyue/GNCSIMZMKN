@@ -40,6 +40,7 @@ struct ValidationFailure {
 struct AirLookupComputation {
     AirDataOutput air_data;
     AerodynamicLookupOutput lookup;
+    AerodynamicTableQueryOutput aerodynamic_response;
     AerodynamicTableQueryEvaluation aerodynamic_query;
 };
 
@@ -241,6 +242,7 @@ template <typename Value>
     const RigidStepModelDefinition& definition,
     const PreparedAerodynamicTableModel& aerodynamic_model,
     AerodynamicTableQueryEntry aerodynamic_query,
+    AerodynamicTableResultBinderEntry aerodynamic_result_binder,
     const RigidState& state,
     const EnvironmentInput& environment) {
     NumericalFlags flags = 0U;
@@ -319,6 +321,7 @@ template <typename Value>
     flags |= query.evidence().flags;
     approximate = approximate || approximate_status(query.status());
     const auto& result = query.value();
+    const auto response = aerodynamic_result_binder(result.output);
 
     AirLookupComputation output;
     output.air_data.velocity_relative_inertial.value = relative_inertial;
@@ -331,7 +334,8 @@ template <typename Value>
     output.lookup.domain_status = result.telemetry.domain_status;
     output.lookup.weights = result.telemetry.weights;
     output.lookup.coefficients_ca_cy_cn_cl_cm_cn =
-        result.output.coefficients_ca_cy_cn_cl_cm_cn;
+        response.coefficients_ca_cy_cn_cl_cm_cn;
+    output.aerodynamic_response = response;
     output.aerodynamic_query = result;
     NumericalEvidence evidence = product_evidence(
         kRigidStepKernelIdentity, "air-and-aero-query", flags);
@@ -770,6 +774,11 @@ UniformEnvironmentQueryKernel::evaluate(
         evidence);
 }
 
+EnvironmentInput UniformEnvironmentResultBinder::bind(
+    const EnvironmentInput& formal_output) {
+    return formal_output;
+}
+
 gnc::model_sdk::CanonicalConfigBlock
 canonical_force_moment_closure_config(
     const ForceMomentClosureDefinition& definition) {
@@ -1112,6 +1121,11 @@ AerodynamicTableQueryKernel::evaluate(
         evidence);
 }
 
+AerodynamicTableQueryOutput AerodynamicTableResultBinder::bind(
+    const AerodynamicTableQueryOutput& formal_output) {
+    return formal_output;
+}
+
 PreparedForceMomentClosureModel::PreparedForceMomentClosureModel(
     std::shared_ptr<const ForceMomentClosureDefinition> definition,
     gnc::model_sdk::PreparedModelMetadata metadata) noexcept
@@ -1265,6 +1279,11 @@ ForceMomentClosureKernel::evaluate(
                 BodyMomentNewtonMeters{moment_total}},
             std::move(telemetry)},
         evidence);
+}
+
+ForceMomentClosureOutput ForceMomentClosureResultBinder::bind(
+    const ForceMomentClosureOutput& formal_output) {
+    return formal_output;
 }
 
 PreparedRigidStepModel::PreparedRigidStepModel(
@@ -1425,22 +1444,25 @@ RigidDerivativeKernel::evaluate(
 
 namespace {
 
-NumericalOutcome<RigidFrozenFormEvaluation> evaluate_rigid_frozen_form(
+NumericalOutcome<RigidFrozenFormInvocationEvaluation>
+evaluate_rigid_frozen_form(
     const RigidFrozenFormRuntimeDefinition& runtime_definition,
     const RigidFrozenFormInvocationSet& invocations,
     const RigidStepInput& input) {
     const auto failure = [](NumericalStatus status,
                             std::string_view detail,
                             NumericalFlags flags = 0U) {
-        return NumericalOutcome<RigidFrozenFormEvaluation>::failure(
+        return NumericalOutcome<RigidFrozenFormInvocationEvaluation>::failure(
             status,
             product_evidence(kRigidFrozenFormKernelIdentity,
                              detail, flags));
     };
     if (invocations.aerodynamic_model == nullptr ||
         invocations.aerodynamic_query == nullptr ||
+        invocations.aerodynamic_result_binder == nullptr ||
         invocations.force_moment_closure_model == nullptr ||
-        invocations.force_moment_closure == nullptr) {
+        invocations.force_moment_closure == nullptr ||
+        invocations.closure_result_binder == nullptr) {
         return failure(NumericalStatus::DomainError,
                        "invocation-set");
     }
@@ -1472,8 +1494,9 @@ NumericalOutcome<RigidFrozenFormEvaluation> evaluate_rigid_frozen_form(
 
     const auto air_lookup = compute_air_lookup(
         definition, *invocations.aerodynamic_model,
-        invocations.aerodynamic_query, input.committed_state,
-        input.environment);
+        invocations.aerodynamic_query,
+        invocations.aerodynamic_result_binder,
+        input.committed_state, input.environment);
     if (!air_lookup.has_value()) {
         return failure(air_lookup.status(), air_lookup.evidence().detail,
                        flags | air_lookup.evidence().flags);
@@ -1536,21 +1559,25 @@ NumericalOutcome<RigidFrozenFormEvaluation> evaluate_rigid_frozen_form(
     }
     flags |= closure.evidence().flags;
     approximate = approximate || approximate_status(closure.status());
+    const auto form_input = invocations.closure_result_binder(
+        closure.value().output);
 
     NumericalEvidence evidence = product_evidence(
         kRigidFrozenFormKernelIdentity, "frozen-form", flags);
     evidence.evaluations = air_lookup.evidence().evaluations +
                            closure.evidence().evaluations;
     evidence.last_step = definition.algorithm.fixed_step_seconds;
-    return NumericalOutcome<RigidFrozenFormEvaluation>::with_value(
+    return NumericalOutcome<RigidFrozenFormInvocationEvaluation>::with_value(
         approximate ? NumericalStatus::Approximate
                     : NumericalStatus::Success,
-        RigidFrozenFormEvaluation{
-            RigidFrozenFormOutput{
-                closure.value().output.form_input()},
-            RigidFrozenFormTelemetry{
-                air, lookup, air_lookup.value().aerodynamic_query,
-                closure.value()}},
+        RigidFrozenFormInvocationEvaluation{
+            RigidFrozenFormEvaluation{
+                RigidFrozenFormOutput{form_input.form_input()},
+                RigidFrozenFormTelemetry{
+                    air, lookup, air_lookup.value().aerodynamic_query,
+                    closure.value()}},
+            RigidFrozenFormInvocationResults{
+                air_lookup.value().aerodynamic_response}},
         evidence);
 }
 
@@ -1566,13 +1593,30 @@ RigidFrozenFormKernel::evaluate(const PreparedRigidStepModel& model,
         RigidFrozenFormInvocationSet{
             &model.aerodynamic_table_model(),
             &AerodynamicTableQueryKernel::evaluate,
+            &AerodynamicTableResultBinder::bind,
             &model.force_moment_closure_model(),
-            &ForceMomentClosureKernel::evaluate},
+            &ForceMomentClosureKernel::evaluate,
+            &ForceMomentClosureResultBinder::bind},
         input);
 }
 
 NumericalOutcome<RigidFrozenFormEvaluation>
 RigidFrozenFormKernel::evaluate(
+    const RigidFrozenFormRuntimeDefinition& definition,
+    const RigidFrozenFormInvocationSet& invocations,
+    const RigidStepInput& input) {
+    const auto result = evaluate_with_invocation_results(
+        definition, invocations, input);
+    if (!result.has_value()) {
+        return NumericalOutcome<RigidFrozenFormEvaluation>::failure(
+            result.status(), result.evidence());
+    }
+    return NumericalOutcome<RigidFrozenFormEvaluation>::with_value(
+        result.status(), result.value().evaluation, result.evidence());
+}
+
+NumericalOutcome<RigidFrozenFormInvocationEvaluation>
+RigidFrozenFormKernel::evaluate_with_invocation_results(
     const RigidFrozenFormRuntimeDefinition& definition,
     const RigidFrozenFormInvocationSet& invocations,
     const RigidStepInput& input) {

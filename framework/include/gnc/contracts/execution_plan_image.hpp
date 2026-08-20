@@ -17,9 +17,11 @@ using StaticLinkAnchor = void (*)() noexcept;
 
 enum class PlanImageEntryKind : std::uint8_t {
     DefinitionBuilder,
+    RuntimeCellFactory,
     Prepare,
     PureQuery,
     Closure,
+    InvocationResultBinder,
     InitialState,
     PublishProjection,
     BoundaryEvaluation,
@@ -73,8 +75,8 @@ struct PlanImageEntry {
     std::string call_shape_id;
     std::string state_layout_id;
     std::string workspace_layout_id;
-    // A process-local, type-preserving reference to the exact package science
-    // entry. R2 only copies it. A future package-owned R3 binder may recover
+    // A process-local, type-preserving reference to the exact package entry.
+    // R2 only copies it. A future package-owned R3 binder may recover
     // it with std::any_cast<decltype(&ExactCallable)>; this field alone is not
     // a RuntimeCell factory/materialization contract, and no untyped address
     // or cross-process ABI is implied.
@@ -130,6 +132,7 @@ struct PlanImageQuery {
     std::uint32_t occurrence_handle = 0U;
     std::uint32_t preparation_handle = 0U;
     std::uint32_t query_entry_handle = 0U;
+    std::uint32_t result_binder_entry_handle = 0U;
     std::string workspace_requirement;
     std::vector<std::uint32_t> authorized_invocation_handles;
 };
@@ -140,6 +143,7 @@ struct PlanImageClosure {
     std::uint32_t occurrence_handle = 0U;
     std::uint32_t preparation_handle = 0U;
     std::uint32_t closure_entry_handle = 0U;
+    std::uint32_t result_binder_entry_handle = 0U;
     std::string strategy;
     std::string workspace_requirement;
     std::vector<std::uint32_t> authorized_invocation_handles;
@@ -231,6 +235,9 @@ struct PlanImageRuntimeComponent {
     // Exact package definition builder linked for this occurrence. R2 never
     // invokes it and does not instantiate a Runtime Cell.
     std::uint32_t definition_builder_entry_handle = 0U;
+    // Exact package-owned factory. R2 links this handle but never calls it or
+    // creates the Session-local Runtime Cell returned by the typed entry.
+    std::uint32_t runtime_cell_factory_entry_handle = 0U;
     std::string recipe_id;
     std::string profile;
     std::string schedule_trigger;
@@ -240,6 +247,9 @@ struct PlanImageRuntimeComponent {
     std::uint32_t max_input_age_steps = 0U;
     std::vector<std::string> lifecycle_capabilities;
     std::vector<std::uint32_t> callsite_handles;
+    // Direct numeric ownership references used to construct the factory's
+    // compiled binding input without an R3 catalog/name lookup.
+    std::vector<std::uint32_t> state_block_handles;
 };
 
 struct PlanImageInvocation {
@@ -249,9 +259,17 @@ struct PlanImageInvocation {
     std::uint32_t caller_callsite_handle = 0U;
     std::uint32_t provider_occurrence_handle = 0U;
     std::uint32_t entry_handle = 0U;
+    // Provider-owned projection from a successful typed evaluation's formal
+    // output to the response slot contract. Telemetry is not an input.
+    std::uint32_t result_binder_entry_handle = 0U;
     std::string requirement_id;
+    // Zero-based position in the caller entry's package-authored invocation
+    // requirements. This freezes typed factory wiring without an R3 string
+    // lookup or an order inferred from source-authored invocation ids.
+    std::uint32_t requirement_ordinal = 0U;
     std::string invocation_kind;
     std::string contract_id;
+    std::string requirement_cardinality;
     // Authorization and result flow are distinct facts. These handles name
     // the one already-validated Binding that receives this invocation's
     // response; the result slot is therefore not a pre-existing callsite
@@ -375,9 +393,10 @@ struct ExecutionPlanImageData {
     std::vector<PlanImageConformance> conformance;
 };
 
-// An image is immutable after freeze(). These planning/proof/science-entry
-// link tables contain no Session-owned state/workspace/runtime objects and do
-// not by themselves define an R3 RuntimeCell factory or materialization path.
+// An image is immutable after freeze(). These planning/proof/link tables
+// contain exact package RuntimeCellFactory and invocation-result binder
+// handles, but no Session-owned state/workspace/runtime objects. R2 never
+// invokes a linked entry; R3 owns materialization and execution.
 class ExecutionPlanImage final {
   public:
     [[nodiscard]] static ExecutionPlanImage freeze(

@@ -21,9 +21,11 @@ namespace gnc::model_sdk {
 
 enum class StaticEntryKind : std::uint8_t {
     DefinitionBuilder,
+    RuntimeCellFactory,
     Prepare,
     PureQuery,
     Closure,
+    InvocationResultBinder,
     InitialState,
     PublishProjection,
     BoundaryEvaluation,
@@ -36,12 +38,16 @@ enum class StaticEntryKind : std::uint8_t {
     switch (kind) {
     case StaticEntryKind::DefinitionBuilder:
         return "DefinitionBuilder";
+    case StaticEntryKind::RuntimeCellFactory:
+        return "RuntimeCellFactory";
     case StaticEntryKind::Prepare:
         return "Prepare";
     case StaticEntryKind::PureQuery:
         return "PureQuery";
     case StaticEntryKind::Closure:
         return "Closure";
+    case StaticEntryKind::InvocationResultBinder:
+        return "InvocationResultBinder";
     case StaticEntryKind::InitialState:
         return "InitialState";
     case StaticEntryKind::PublishProjection:
@@ -266,6 +272,34 @@ struct StaticPackageImplementation {
     return stream.str();
 }
 
+[[nodiscard]] inline std::string canonical_runtime_cell_factory_signature(
+    const StaticModelDescriptor& model) {
+    std::vector<std::string> inputs;
+    std::vector<std::string> outputs;
+    for (const auto& port : model.ports) {
+        (port.direction == StaticPortDirection::Input ? inputs : outputs)
+            .push_back(port.port_id);
+    }
+    std::ostringstream stream;
+    stream << canonical_static_entry_signature(
+                  StaticEntryKind::RuntimeCellFactory, model,
+                  std::move(inputs), std::move(outputs))
+           << "|config=" << model.configuration.schema_id << '@'
+           << model.configuration.schema_version << "|recipe=";
+    if (model.runtime_component.has_value()) {
+        stream << model.runtime_component->recipe_id
+               << "|profile="
+               << model_sdk::to_string(model.runtime_component->profile)
+               << "|obligations=";
+        auto obligations = model.runtime_component->obligations;
+        std::sort(obligations.begin(), obligations.end());
+        for (const auto obligation : obligations) {
+            stream << model_sdk::to_string(obligation) << ',';
+        }
+    }
+    return stream.str();
+}
+
 [[nodiscard]] inline std::string canonical_query_signature(
     const StaticModelDescriptor& model) {
     std::vector<std::string> outputs;
@@ -290,10 +324,41 @@ struct StaticPackageImplementation {
                                             {}, std::move(outputs));
 }
 
+[[nodiscard]] inline std::string
+canonical_invocation_result_binder_signature(
+    const StaticModelDescriptor& model) {
+    std::vector<std::string> outputs;
+    for (const auto& port : model.ports) {
+        if (port.direction == StaticPortDirection::Output) {
+            outputs.push_back(port.port_id);
+        }
+    }
+    return canonical_static_entry_signature(
+               StaticEntryKind::InvocationResultBinder, model, {},
+               std::move(outputs)) +
+           "|formal-output-only=true";
+}
+
 [[nodiscard]] inline std::string canonical_initial_state_signature(
     const StaticModelDescriptor& model) {
     return canonical_static_entry_signature(StaticEntryKind::InitialState,
                                             model);
+}
+
+[[nodiscard]] inline std::string
+canonical_runtime_invocation_requirements_suffix(
+    const std::vector<StaticInvocationRequirementDescriptor>& requirements) {
+    std::ostringstream stream;
+    stream << "|invocations=";
+    for (std::size_t ordinal = 0U; ordinal < requirements.size();
+         ++ordinal) {
+        const auto& requirement = requirements[ordinal];
+        stream << ordinal << ':' << requirement.requirement_id << ':'
+               << model_sdk::to_string(requirement.kind) << ':'
+               << requirement.contract_id << ':'
+               << model_sdk::to_string(requirement.cardinality) << ',';
+    }
+    return stream.str();
 }
 
 [[nodiscard]] inline std::string canonical_runtime_entry_signature(
@@ -319,7 +384,9 @@ struct StaticPackageImplementation {
         entry.state_read, entry.state_write) +
            "|phase=" + std::string(model_sdk::to_string(entry.phase)) +
            "|request=" + entry.request_contract_id +
-           "|result=" + entry.result_contract_id;
+           "|result=" + entry.result_contract_id +
+           canonical_runtime_invocation_requirements_suffix(
+               entry.invocation_requirements);
 }
 
 template <auto Callable, typename ExpectedCallable>

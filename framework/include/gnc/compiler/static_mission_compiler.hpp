@@ -344,12 +344,16 @@ inline void validate_runtime_component(
         runtime.definition_builder_id.empty() ||
         runtime.definition_builder_version.empty() ||
         runtime.definition_builder_call_shape_id.empty() ||
+        runtime.runtime_cell_factory_id.empty() ||
+        runtime.runtime_cell_factory_version.empty() ||
+        runtime.runtime_cell_factory_call_shape_id.empty() ||
         !gnc::model_sdk::valid_runtime_cell_profile(runtime.profile)) {
         diagnostics.push_back(
             {DiagnosticCode::InvalidCatalogDescriptor, source,
              definition.model_id,
-             "RuntimeComponent recipe and profile must be exact; "
-             "prepare-only fields must be empty"});
+              "RuntimeComponent recipe, profile, definition builder, and "
+              "RuntimeCellFactory must be exact; "
+              "prepare-only fields must be empty"});
     }
 
     std::set<gnc::model_sdk::RuntimeExecutionObligation> obligations;
@@ -921,8 +925,8 @@ class Catalog {
                                          definition.model_id),
                                      definition.model_id,
                                      "PureQuery requires an exact kernel "
-                                     "entry, request contract, and explicit "
-                                     "workspace fact"});
+                                      "entry, request contract, and explicit "
+                                      "workspace fact"});
                             }
                         }
                     } else if (definition.execution_form ==
@@ -958,9 +962,9 @@ class Catalog {
                                          definition.model_id),
                                      definition.model_id,
                                      "the current Closure slice requires an "
-                                     "exact kernel entry, request contract, "
-                                     "FrozenInterval strategy, and explicit "
-                                     "workspace fact"});
+                                      "exact kernel entry, request contract, "
+                                      "FrozenInterval strategy, and explicit "
+                                      "workspace fact"});
                             }
                         }
                     }

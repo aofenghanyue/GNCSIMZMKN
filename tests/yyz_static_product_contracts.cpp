@@ -11,6 +11,7 @@
 #include <string>
 #include <string_view>
 #include <type_traits>
+#include <utility>
 #include <vector>
 
 namespace {
@@ -49,6 +50,14 @@ static_assert(std::is_same_v<
 static_assert(std::is_same_v<
               decltype(ControlledRigidBoundaryEvaluation{}.output),
               RigidFormInput>);
+static_assert(!std::is_assignable_v<
+              decltype((std::declval<ControlledRigidRuntimeCell&>()
+                            .definition)),
+              ControlledRigidBoundaryEvaluationDefinition>);
+static_assert(!std::is_assignable_v<
+              decltype((std::declval<ScalarBurnMassRuntimeCell&>()
+                            .bindings)),
+              ScalarBurnMassRuntimeCellBindings>);
 
 constexpr std::string_view kInertialFrame =
     "frame.fixture.yyz.inertial-cartesian@1";
@@ -59,6 +68,9 @@ constexpr std::string_view kMassStateId = "mass.fixture.yyz.vehicle@1";
 std::size_t environment_query_calls = 0U;
 std::size_t aerodynamic_query_calls = 0U;
 std::size_t force_moment_closure_calls = 0U;
+std::size_t environment_binder_calls = 0U;
+std::size_t aerodynamic_binder_calls = 0U;
+std::size_t closure_binder_calls = 0U;
 
 [[nodiscard]] auto counting_environment_query(
     const PreparedUniformEnvironmentModel& model,
@@ -82,6 +94,24 @@ std::size_t force_moment_closure_calls = 0U;
     -> decltype(ForceMomentClosureKernel::evaluate(model, input)) {
     ++force_moment_closure_calls;
     return ForceMomentClosureKernel::evaluate(model, input);
+}
+
+[[nodiscard]] EnvironmentInput counting_environment_binder(
+    const EnvironmentInput& output) {
+    ++environment_binder_calls;
+    return UniformEnvironmentResultBinder::bind(output);
+}
+
+[[nodiscard]] AerodynamicTableQueryOutput counting_aerodynamic_binder(
+    const AerodynamicTableQueryOutput& output) {
+    ++aerodynamic_binder_calls;
+    return AerodynamicTableResultBinder::bind(output);
+}
+
+[[nodiscard]] ForceMomentClosureOutput counting_closure_binder(
+    const ForceMomentClosureOutput& output) {
+    ++closure_binder_calls;
+    return ForceMomentClosureResultBinder::bind(output);
 }
 
 void require(bool condition, std::string_view message) {
@@ -486,7 +516,7 @@ void verify_implementation_table() {
                 implementation.package_version == package.package_version &&
                 implementation.build_fingerprint ==
                     "yyz-static-contract-test" &&
-                implementation.entries.size() == 25U &&
+                implementation.entries.size() == 35U &&
                 implementation.state_layouts.size() == 2U &&
                 implementation.value_layouts.size() == 12U,
             "static implementation inventory changed");
@@ -526,6 +556,17 @@ void verify_implementation_table() {
                 "typed implementation entry is missing");
         return *found;
     };
+    const auto require_exact_callable =
+        [&](const gnc::foundation::AlgorithmIdentity& identity,
+            StaticEntryKind kind, auto expected, std::string_view message) {
+            using Expected = decltype(expected);
+            const auto& entry =
+                find_implementation(identity.id, identity.version);
+            const auto typed = std::any_cast<Expected>(&entry.typed_entry);
+            require(entry.kind == kind && typed != nullptr &&
+                        *typed == expected,
+                    message);
+        };
 
     for (const auto& model : package.models) {
         if (model.pure_query.has_value()) {
@@ -535,6 +576,9 @@ void verify_implementation_table() {
             const auto& query = find_implementation(
                 model.pure_query->query_entry_id,
                 model.pure_query->query_entry_version);
+            const auto& binder = find_implementation(
+                model.pure_query->result_binder_id,
+                model.pure_query->result_binder_version);
             require(prepare.kind == StaticEntryKind::Prepare &&
                         prepare.signature_id ==
                             gnc::model_sdk::canonical_prepare_signature(model) &&
@@ -544,7 +588,15 @@ void verify_implementation_table() {
                         query.signature_id ==
                             gnc::model_sdk::canonical_query_signature(model) &&
                         query.call_shape_id ==
-                            model.pure_query->query_call_shape_id,
+                            model.pure_query->query_call_shape_id &&
+                        binder.kind ==
+                            StaticEntryKind::InvocationResultBinder &&
+                        binder.signature_id ==
+                            gnc::model_sdk::
+                                canonical_invocation_result_binder_signature(
+                                    model) &&
+                        binder.call_shape_id ==
+                            model.pure_query->result_binder_call_shape_id,
                     "PureQuery implementation signature changed");
         } else if (model.closure.has_value()) {
             const auto& prepare = find_implementation(
@@ -553,6 +605,9 @@ void verify_implementation_table() {
             const auto& closure = find_implementation(
                 model.closure->closure_entry_id,
                 model.closure->closure_entry_version);
+            const auto& binder = find_implementation(
+                model.closure->result_binder_id,
+                model.closure->result_binder_version);
             require(prepare.kind == StaticEntryKind::Prepare &&
                         prepare.signature_id ==
                             gnc::model_sdk::canonical_prepare_signature(model) &&
@@ -562,7 +617,15 @@ void verify_implementation_table() {
                         closure.signature_id ==
                             gnc::model_sdk::canonical_closure_signature(model) &&
                         closure.call_shape_id ==
-                            model.closure->closure_call_shape_id,
+                            model.closure->closure_call_shape_id &&
+                        binder.kind ==
+                            StaticEntryKind::InvocationResultBinder &&
+                        binder.signature_id ==
+                            gnc::model_sdk::
+                                canonical_invocation_result_binder_signature(
+                                    model) &&
+                        binder.call_shape_id ==
+                            model.closure->result_binder_call_shape_id,
                     "Closure implementation signature changed");
         }
         if (!model.runtime_component.has_value()) {
@@ -580,6 +643,16 @@ void verify_implementation_table() {
                     definition_builder.call_shape_id ==
                         runtime.definition_builder_call_shape_id,
                 "definition-builder implementation signature changed");
+        const auto& factory = find_implementation(
+            runtime.runtime_cell_factory_id,
+            runtime.runtime_cell_factory_version);
+        require(factory.kind == StaticEntryKind::RuntimeCellFactory &&
+                    factory.signature_id ==
+                        gnc::model_sdk::
+                            canonical_runtime_cell_factory_signature(model) &&
+                    factory.call_shape_id ==
+                        runtime.runtime_cell_factory_call_shape_id,
+                "runtime-cell factory implementation signature changed");
         std::string layout;
         if (runtime.state_owner.has_value()) {
             layout = runtime.state_owner->schema.layout_id;
@@ -616,8 +689,9 @@ void verify_implementation_table() {
     const auto& boundary_implementation = find_implementation(
         kControlledRigidBoundaryEvaluationIdentity.id,
         kControlledRigidBoundaryEvaluationIdentity.version);
-    const auto boundary_entry = std::any_cast<ControlledRigidBoundaryCall>(
-        &boundary_implementation.typed_entry);
+    const auto boundary_entry =
+        std::any_cast<ControlledRigidBoundaryRuntimeCall>(
+            &boundary_implementation.typed_entry);
     const auto& evaluator_implementation = find_implementation(
         kCommittedMissionHistoryEvaluationIdentity.id,
         kCommittedMissionHistoryEvaluationIdentity.version);
@@ -628,7 +702,8 @@ void verify_implementation_table() {
         evaluator_implementation.evaluator_history_witness;
     require(boundary_entry != nullptr &&
                 *boundary_entry ==
-                    &ControlledRigidBoundaryEvaluationKernel::evaluate &&
+                    &ControlledRigidBoundaryEvaluationKernel::
+                        evaluate_with_invocation_results &&
                 evaluator_entry != nullptr &&
                 *evaluator_entry ==
                     &CommittedMissionHistoryEvaluationKernel::evaluate &&
@@ -651,6 +726,57 @@ void verify_implementation_table() {
                 evaluator_history->ordered_members[1U].state_layout_id ==
                     kMassStateLayoutIdentity,
             "image-facing boundary or evaluator typed entry changed");
+
+    require_exact_callable(
+        kUniformEnvironmentResultBinderIdentity,
+        StaticEntryKind::InvocationResultBinder,
+        &UniformEnvironmentResultBinder::bind,
+        "uniform-environment formal-output binder changed");
+    require_exact_callable(
+        kAerodynamicTableResultBinderIdentity,
+        StaticEntryKind::InvocationResultBinder,
+        &AerodynamicTableResultBinder::bind,
+        "aerodynamic formal-output binder changed");
+    require_exact_callable(
+        kForceMomentClosureResultBinderIdentity,
+        StaticEntryKind::InvocationResultBinder,
+        &ForceMomentClosureResultBinder::bind,
+        "closure formal-output binder changed");
+    require_exact_callable(
+        kControlledRigidRuntimeCellFactoryIdentity,
+        StaticEntryKind::RuntimeCellFactory,
+        &create_controlled_rigid_runtime_cell,
+        "controlled-rigid runtime-cell factory changed");
+    require_exact_callable(
+        kScalarBurnMassRuntimeCellFactoryIdentity,
+        StaticEntryKind::RuntimeCellFactory,
+        &create_scalar_burn_mass_runtime_cell,
+        "mass runtime-cell factory changed");
+    require_exact_callable(
+        kAltitudePitchGuidanceRuntimeCellFactoryIdentity,
+        StaticEntryKind::RuntimeCellFactory,
+        &create_altitude_pitch_guidance_runtime_cell,
+        "guidance runtime-cell factory changed");
+    require_exact_callable(
+        kPitchMomentControllerRuntimeCellFactoryIdentity,
+        StaticEntryKind::RuntimeCellFactory,
+        &create_pitch_moment_controller_runtime_cell,
+        "controller runtime-cell factory changed");
+    require_exact_callable(
+        kIdealBodyMomentActuatorRuntimeCellFactoryIdentity,
+        StaticEntryKind::RuntimeCellFactory,
+        &create_ideal_body_moment_actuator_runtime_cell,
+        "actuator runtime-cell factory changed");
+    require_exact_callable(
+        kFixedSuppliedPropulsionRuntimeCellFactoryIdentity,
+        StaticEntryKind::RuntimeCellFactory,
+        &create_fixed_supplied_propulsion_runtime_cell,
+        "propulsion runtime-cell factory changed");
+    require_exact_callable(
+        kCommittedMissionResultRuntimeCellFactoryIdentity,
+        StaticEntryKind::RuntimeCellFactory,
+        &create_committed_mission_result_runtime_cell,
+        "evaluator runtime-cell factory changed");
 
     const auto rigid_layout = std::find_if(
         implementation.state_layouts.begin(),
@@ -768,43 +894,68 @@ void verify_rigid_extractions() {
     const RigidFrozenFormRuntimeDefinition runtime_definition{
         prepared.value().definition().inertial_frame,
         prepared.value().definition().algorithm};
-    const RigidFrozenFormInvocationSet invocations{
-        &prepared.value().aerodynamic_table_model(),
-        &AerodynamicTableQueryKernel::evaluate,
-        &prepared.value().force_moment_closure_model(),
-        &ForceMomentClosureKernel::evaluate};
-    const auto invoked = RigidFrozenFormKernel::evaluate(
-        runtime_definition, invocations, input);
-    require(invoked.has_value() && invoked.status() == frozen.status() &&
-                invoked.evidence().flags == frozen.evidence().flags &&
-                invoked.evidence().evaluations ==
+    RigidFrozenFormInvocationSet invocations;
+    invocations.aerodynamic_model =
+        &prepared.value().aerodynamic_table_model();
+    invocations.aerodynamic_query = &counting_aerodynamic_query;
+    invocations.aerodynamic_result_binder =
+        &counting_aerodynamic_binder;
+    invocations.force_moment_closure_model =
+        &prepared.value().force_moment_closure_model();
+    invocations.force_moment_closure = &counting_force_moment_closure;
+    invocations.closure_result_binder = &counting_closure_binder;
+    aerodynamic_query_calls = 0U;
+    force_moment_closure_calls = 0U;
+    aerodynamic_binder_calls = 0U;
+    closure_binder_calls = 0U;
+    const auto invoked_full =
+        RigidFrozenFormKernel::evaluate_with_invocation_results(
+            runtime_definition, invocations, input);
+    require(invoked_full.has_value(),
+            "invocation-result frozen form failed");
+    const auto& invoked = invoked_full.value().evaluation;
+    require(invoked_full.status() == frozen.status() &&
+                invoked_full.evidence().flags == frozen.evidence().flags &&
+                invoked_full.evidence().evaluations ==
                     frozen.evidence().evaluations &&
-                invoked.evidence().algorithm.id ==
+                invoked_full.evidence().algorithm.id ==
                     frozen.evidence().algorithm.id &&
-                invoked.evidence().algorithm.version ==
+                invoked_full.evidence().algorithm.version ==
                     frozen.evidence().algorithm.version &&
-                invoked.evidence().detail == frozen.evidence().detail &&
-                exactly(invoked.value().output.form_input.force_total.value,
+                invoked_full.evidence().detail == frozen.evidence().detail &&
+                exactly(invoked.output.form_input.force_total.value,
                         frozen.value().output.form_input.force_total.value) &&
-                exactly(invoked.value()
-                            .output.form_input
+                exactly(invoked.output.form_input
                             .moment_total_about_center_of_mass.value,
                         frozen.value()
                             .output.form_input
                             .moment_total_about_center_of_mass.value) &&
-                invoked.value()
-                        .telemetry.aerodynamic_query.output
+                invoked.telemetry.aerodynamic_query.output
                         .coefficients_ca_cy_cn_cl_cm_cn ==
                     frozen.value()
                         .telemetry.aerodynamic_query.output
-                        .coefficients_ca_cy_cn_cl_cm_cn,
+                        .coefficients_ca_cy_cn_cl_cm_cn &&
+                invoked_full.value()
+                        .invocation_results.aerodynamic_coefficients
+                        .coefficients_ca_cy_cn_cl_cm_cn ==
+                    invoked.telemetry.aerodynamic_query.output
+                        .coefficients_ca_cy_cn_cl_cm_cn &&
+                aerodynamic_query_calls == 1U &&
+                aerodynamic_binder_calls == 1U &&
+                force_moment_closure_calls == 1U &&
+                closure_binder_calls == 1U,
             "invocation-set frozen form changed the compatibility result");
     RigidStepInput invalid_input = input;
     invalid_input.mass_properties.mass_kilograms = -1.0;
     const auto compatibility_failure =
         RigidFrozenFormKernel::evaluate(prepared.value(), invalid_input);
-    const auto invoked_failure = RigidFrozenFormKernel::evaluate(
-        runtime_definition, invocations, invalid_input);
+    aerodynamic_query_calls = 0U;
+    force_moment_closure_calls = 0U;
+    aerodynamic_binder_calls = 0U;
+    closure_binder_calls = 0U;
+    const auto invoked_failure =
+        RigidFrozenFormKernel::evaluate_with_invocation_results(
+            runtime_definition, invocations, invalid_input);
     require(!compatibility_failure.has_value() &&
                 !invoked_failure.has_value() &&
                 invoked_failure.status() == compatibility_failure.status() &&
@@ -815,7 +966,11 @@ void verify_rigid_extractions() {
                 invoked_failure.evidence().algorithm.version ==
                     compatibility_failure.evidence().algorithm.version &&
                 invoked_failure.evidence().detail ==
-                    compatibility_failure.evidence().detail,
+                    compatibility_failure.evidence().detail &&
+                aerodynamic_query_calls == 0U &&
+                aerodynamic_binder_calls == 0U &&
+                force_moment_closure_calls == 0U &&
+                closure_binder_calls == 0U,
             "invocation-set frozen form changed failure identity or detail");
     const auto held = RigidStepKernel::evaluate_held_form(
         prepared.value(), input, frozen.value(), frozen.status(),
@@ -912,11 +1067,19 @@ void verify_controlled_boundary() {
 
     const auto direct_frozen =
         RigidFrozenFormKernel::evaluate(prepared.value(), input);
-    const RigidFrozenFormInvocationSet frozen_invocations{
-        &prepared.value().aerodynamic_table_model(),
-        &AerodynamicTableQueryKernel::evaluate,
-        &prepared.value().force_moment_closure_model(),
-        &ForceMomentClosureKernel::evaluate};
+    RigidFrozenFormInvocationSet frozen_invocations;
+    frozen_invocations.aerodynamic_model =
+        &prepared.value().aerodynamic_table_model();
+    frozen_invocations.aerodynamic_query =
+        &AerodynamicTableQueryKernel::evaluate;
+    frozen_invocations.aerodynamic_result_binder =
+        &AerodynamicTableResultBinder::bind;
+    frozen_invocations.force_moment_closure_model =
+        &prepared.value().force_moment_closure_model();
+    frozen_invocations.force_moment_closure =
+        &ForceMomentClosureKernel::evaluate;
+    frozen_invocations.closure_result_binder =
+        &ForceMomentClosureResultBinder::bind;
     const auto resolved = ControlledRigidBoundaryEvaluationKernel::
         evaluate_resolved_environment(
             rebuilt.value(), frozen_invocations,
@@ -929,46 +1092,82 @@ void verify_controlled_boundary() {
     environment_query_calls = 0U;
     aerodynamic_query_calls = 0U;
     force_moment_closure_calls = 0U;
-    const auto combined = ControlledRigidBoundaryEvaluationKernel::evaluate(
+    environment_binder_calls = 0U;
+    aerodynamic_binder_calls = 0U;
+    closure_binder_calls = 0U;
+    ControlledRigidBoundaryInvocationSet counted_invocations;
+    counted_invocations.environment_model = &prepared_environment.value();
+    counted_invocations.environment_query = &counting_environment_query;
+    counted_invocations.environment_result_binder =
+        &counting_environment_binder;
+    counted_invocations.frozen_form.aerodynamic_model =
+        &prepared.value().aerodynamic_table_model();
+    counted_invocations.frozen_form.aerodynamic_query =
+        &counting_aerodynamic_query;
+    counted_invocations.frozen_form.aerodynamic_result_binder =
+        &counting_aerodynamic_binder;
+    counted_invocations.frozen_form.force_moment_closure_model =
+        &prepared.value().force_moment_closure_model();
+    counted_invocations.frozen_form.force_moment_closure =
+        &counting_force_moment_closure;
+    counted_invocations.frozen_form.closure_result_binder =
+        &counting_closure_binder;
+    const auto combined = ControlledRigidBoundaryEvaluationKernel::
+        evaluate_with_invocation_results(
         rebuilt.value(),
-        {&prepared_environment.value(),
-         &counting_environment_query,
-         {&prepared.value().aerodynamic_table_model(),
-          &counting_aerodynamic_query,
-          &prepared.value().force_moment_closure_model(),
-          &counting_force_moment_closure}},
+        counted_invocations,
         {input.context, input.committed_state, input.mass_properties,
          propulsion, actuator});
+    ControlledRigidBoundaryInvocationSet compatibility_invocations;
+    compatibility_invocations.environment_model =
+        &prepared_environment.value();
+    compatibility_invocations.environment_query =
+        &UniformEnvironmentQueryKernel::evaluate;
+    compatibility_invocations.environment_result_binder =
+        &UniformEnvironmentResultBinder::bind;
+    compatibility_invocations.frozen_form = frozen_invocations;
+    const auto compatibility_boundary =
+        ControlledRigidBoundaryEvaluationKernel::evaluate(
+            rebuilt.value(), compatibility_invocations,
+            {input.context, input.committed_state, input.mass_properties,
+             propulsion, actuator});
     require(direct_frozen.has_value() && resolved.has_value() &&
-                combined.has_value() &&
+                combined.has_value() && compatibility_boundary.has_value() &&
                 environment_query_calls == 1U &&
                 aerodynamic_query_calls == 1U &&
                 force_moment_closure_calls == 1U &&
-                exactly(combined.value().telemetry.controlled_wrench
+                environment_binder_calls == 1U &&
+                aerodynamic_binder_calls == 1U &&
+                closure_binder_calls == 1U &&
+                exactly(combined.value().evaluation.telemetry.controlled_wrench
                             .force.value,
                         input.supplied_wrench.force.value) &&
-                exactly(combined.value().telemetry.environment_response
+                exactly(combined.value().evaluation.telemetry.environment_response
                             .context,
                         input.environment.context) &&
-                exactly(combined.value().telemetry.environment_response
+                exactly(combined.value().invocation_results
+                            .environment_response
                             .gravity.value,
                         input.environment.gravity.value) &&
-                exactly(combined.value().telemetry.environment_response
+                exactly(combined.value().invocation_results
+                            .environment_response
                             .velocity_airmass.value,
                         input.environment.velocity_airmass.value) &&
-                exactly(combined.value().output.force_total.value,
+                exactly(combined.value().evaluation.output.force_total.value,
                         direct_frozen.value().output.form_input.force_total
                             .value) &&
-                exactly(combined.value()
-                            .output.moment_total_about_center_of_mass.value,
+                exactly(combined.value().evaluation.output
+                            .moment_total_about_center_of_mass.value,
                         direct_frozen.value()
                             .output.form_input
                             .moment_total_about_center_of_mass.value) &&
+                exactly(compatibility_boundary.value().output.force_total.value,
+                        combined.value().evaluation.output.force_total.value) &&
                 exactly(resolved.value().frozen_form.output.form_input
                             .force_total.value,
-                        combined.value().output.force_total.value) &&
-                combined.value()
-                        .telemetry.frozen_form.aerodynamic_query.output
+                        combined.value().evaluation.output.force_total.value) &&
+                combined.value().invocation_results
+                        .aerodynamic_coefficients
                         .coefficients_ca_cy_cn_cl_cm_cn ==
                     direct_frozen.value()
                         .telemetry.aerodynamic_query.output

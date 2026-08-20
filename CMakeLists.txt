@@ -196,13 +196,17 @@ if(GNC_BUILD_TESTS)
         PRIVATE compiler yyz_rigid_step)
     gnc_enable_warnings(gnc_yyz_static_product_contracts_probe)
 
-    # R2 vertical review: canonical REF-YYZ planning/proof/science-entry link.
+    # R2 vertical review: canonical REF-YYZ planning/proof/exact-entry link.
     add_executable(
         gnc_compiler_complete_yyz_plan_probe
         tests/compiler_complete_yyz_plan.cpp)
     target_link_libraries(
         gnc_compiler_complete_yyz_plan_probe
         PRIVATE compiler yyz_rigid_step)
+    if(MSVC)
+        target_compile_options(
+            gnc_compiler_complete_yyz_plan_probe PRIVATE /bigobj)
+    endif()
     gnc_enable_warnings(gnc_compiler_complete_yyz_plan_probe)
 
     # R0 validation spike: intentionally isolated from product modules and Legacy.
