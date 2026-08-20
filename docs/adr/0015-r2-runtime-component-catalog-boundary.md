@@ -39,7 +39,11 @@ R1 已交付 `AltitudePitchGuidanceKernel`。它从 committed rigid observation 
 
 ## Implementation status
 
-当前 PR 已实现两项真实 StateOwner、产品入口，以及 planning/proof/exact-link review。七个 RuntimeComponent 各自冻结并 exact-link package-specific typed RuntimeCellFactory；environment/aero/closure invocation 也分别拥有只接收 formal output 的 package binder、唯一 result-flow Binding、稳定 ordinal 与 result slot，closure response 直接别名 held form。link 阶段不调用任何 entry。`R2-CAT-001` 已完成，`R2-PLAN-001`、`R2-PRF-001` 与 `R2-LINK-001` 均进入 owner review；这不表示 G3 已通过，也不把 Definition builder、wrapper 或统一 callback framework 描述为 factory。实际 factory 调用、Session-local RuntimeCell 与执行仍属于 R3。
+当前 PR 已实现两项真实 StateOwner、产品入口，以及 planning/proof/exact-link review。七个 RuntimeComponent 各自冻结并 exact-link package-specific typed RuntimeCellFactory；RigidBody/Mass state codec、真实 stored-value slot codec、writer/reader、deterministic offset 与 resource plan也进入Image。environment/aero invocation明确为授权caller的`CallerLocal` typed return且不分配result slot；FrozenInterval Closure只有一个held interval slot和Closure Coordinator writer，closure response与held form保持同一权威值。link 阶段不调用任何 entry。`R2-CAT-001` 已完成，`R2-PLAN-001`、`R2-PRF-001` 与 `R2-LINK-001` 均进入 owner review；这不表示 G3 已通过，也不把 Definition builder、wrapper 或统一 callback framework 描述为 factory。实际 factory/codec/science entry调用、Session-local RuntimeCell 与执行仍属于 R3。
+
+### Owner clarification — 2026-08-20
+
+R2 必须为每个已选 RuntimeComponent exact-link 一个真实 package-owned factory；Definition builder不能替代factory。公共Model SDK只提供最小进程内C++17 `RuntimeCellFactoryContext`和typed factory形状，Image只保存exact handle。`RuntimeInstanceId`、compiled handles、authorized BoundQuery/BoundClosure与resource plan是未来R3调用输入；R2不构造PreparedModel、Bound handle、workspace、RuntimeCell、Session store或executor，也不引入global registry、model/profile switch、动态插件ABI或serializer。
 
 ## Executable evidence
 

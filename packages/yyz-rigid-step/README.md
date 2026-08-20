@@ -26,7 +26,7 @@ package descriptor 将 AerodynamicTable 声明为 `vehicle.output + PureQuery`�
 
 R2 package contribution 进一步冻结了真实 uniform-environment PureQuery、RigidBody/Mass 两个 StateOwner、initial/projection/derivative/evolution entries，以及 guidance/controller/actuator/fixed supplied-propulsion/terminal evaluator 的静态合同。Mass 的既有 `NumericalPolicy` 已进入 canonical Definition/config，runtime-facing initial/evolution entries 不要求 Session 另行生成策略。`ControlledPropelledRigidMassStepKernel` 等 R1 wrapper 仍只作为科学/oracle compatibility composition，不被登记为 StateOwner 或 RuntimeComponent。
 
-package 现在为七个 RuntimeComponent 提供各自 package-specific typed `RuntimeCellFactory`，并为 uniform environment、aero 与 closure 提供只接收 formal output 的纯 result binder。R2 exact-link 这些 entry、call shape、独立 C++ type witness、numeric handle 与唯一 result-flow Binding，但不调用 factory/binder 或创建 Session-local cell。未来 R3 由仍掌握精确 package 类型的 composition boundary 恢复并调用它们；Kernel 不按 model id/type switch 重建 invocation set，telemetry 也不成为 environment/aero/closure 的权威 result flow。
+package 现在为七个 RuntimeComponent 提供各自 package-specific typed `RuntimeCellFactory`，并为 RigidBody/Mass state 与十类真实 stored value 提供窄进程内 codec。R2 exact-link 这些 entry、call shape、独立 C++ type witness 与 numeric handle，但不调用 factory/codec 或创建 Session-local cell。uniform environment 与 aero 的正式 query output 走授权 caller 的局部 typed return，不分配 CycleFrame result slot；ForceMomentClosure 的正式 output 由唯一 Closure Coordinator writer 写入 held interval slot。未来 R3 由仍掌握精确 package 类型的 composition boundary 恢复并调用已链接 entry；Kernel 不按 model id/type switch 重建 invocation set，telemetry 也不成为 environment/aero/closure 的权威 result flow。
 
 两段边界调用链：
 
