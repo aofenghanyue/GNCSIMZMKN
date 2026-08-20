@@ -10,7 +10,7 @@
 | `ready` | 输入与依赖齐全，可以领取 |
 | `in_progress` | 有 assignee，正在产生可定位的实现 |
 | `blocked` | 缺少外部决定、资料或前置产物 |
-| `review` | 实现与直接测试完成，等待必要的专业判断 |
+| `review` | 实现与直接测试完成，等待必要的专业判断；同一交付中可以与同为 `review` 的依赖形成联合复核链 |
 | `done` | 产物、acceptance 和可执行 evidence 闭合 |
 
 ## 领取与交付

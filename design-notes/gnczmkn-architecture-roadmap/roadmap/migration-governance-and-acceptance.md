@@ -194,20 +194,24 @@ Rollback 以 commit 为单位。回退后重新分析失败原因，再修正目
 ### 7.3 R2：Compiler/Plan
 
 - SourceFrontendPort、SourceTree/SourceMap 与格式 conformance；
-- Catalog descriptors；
+- package-owned Catalog descriptors、StateSchema/layout identity、initial-state builder、PublishProjection 与 execution entries；
 - typed Mission IR；
 - BindingPlan、TemporalBindingPlan、StateBlockPlan、CommandRoutePlan、EventDeliveryPlan、EntityTopologyPlan 与 InterventionPlan；
-- execution region DAG；
-- Closure/Integration/Transaction/Observation/Encoding plans；
+- QueryPlan、ClosurePlan、static invocation authorization、RuntimeComponent callsites 与 execution region DAG；
+- IntegrationScopePlan、TransactionPlan、Observation/Encoding plans；
+- 从真实 planning facts 派生的 PlanProofIndex；
+- 无选择语义的 exact linker 与 immutable process-local ExecutionPlanImage；
 - 分层 model/execution/observation/encoding hashes；
 - dry-run/explain；
 - negative compile suite。
 
-退出条件：YYZ target source 能生成完整可解释计划，不创建 runtime instance。
+R2 可以抽取和链接 package-owned 纯 entry，但不得调用它们；Image 不包含 per-session state、workspace、PreparedModel/Bound handle、RuntimeCell、runner 或 Session。退出条件：YYZ target source 能生成完整、已证明、已链接且可解释的静态 Image，不创建 runtime instance，也不执行 simulation step。
 
 ### 7.4 R3：Session 与纵向切换
 
-- lifecycle/CommittedStateStore/CycleFrame/StepTransaction；
+- 从 ExecutionPlanImage 物化 PreparedModel/Bound handles、workspace、RuntimeCell 与 per-session state；
+- lifecycle/CommittedStateStore/CycleFrame/compiled scheduler/StepTransaction；
+- 调用 projection/query/closure/component/derivative entries，执行 integration、candidate staging 与 atomic commit；
 - YYZ contracts 与 sensor-nav-guidance-control chain；
 - configuration-actuator-propulsion-mass-aero-closure-form chain；
 - terminal/evaluation/observation；

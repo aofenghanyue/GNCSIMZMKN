@@ -3,9 +3,12 @@
 #include "gnc/foundation/spd_cholesky_3x3.hpp"
 
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <cstdint>
+#include <optional>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 
 namespace gnc::packages::yyz {
@@ -132,6 +135,181 @@ template <typename Value>
            status == NumericalStatus::Extrapolated;
 }
 
+[[nodiscard]] std::string finite_check_token(
+    gnc::foundation::FiniteCheck value) {
+    switch (value) {
+    case gnc::foundation::FiniteCheck::Disabled:
+        return "disabled";
+    case gnc::foundation::FiniteCheck::InputAndOutput:
+        return "input-and-output";
+    case gnc::foundation::FiniteCheck::EveryStage:
+        return "every-stage";
+    }
+    return {};
+}
+
+[[nodiscard]] std::optional<gnc::foundation::FiniteCheck>
+parse_finite_check(std::string_view token) {
+    if (token == "disabled") {
+        return gnc::foundation::FiniteCheck::Disabled;
+    }
+    if (token == "input-and-output") {
+        return gnc::foundation::FiniteCheck::InputAndOutput;
+    }
+    if (token == "every-stage") {
+        return gnc::foundation::FiniteCheck::EveryStage;
+    }
+    return std::nullopt;
+}
+
+[[nodiscard]] std::string normalization_token(
+    gnc::foundation::QuaternionNormalizationPolicy value) {
+    switch (value) {
+    case gnc::foundation::QuaternionNormalizationPolicy::Error:
+        return "error";
+    case gnc::foundation::QuaternionNormalizationPolicy::NormalizeWithFlag:
+        return "normalize-with-flag";
+    }
+    return {};
+}
+
+[[nodiscard]] std::optional<
+    gnc::foundation::QuaternionNormalizationPolicy>
+parse_normalization(std::string_view token) {
+    if (token == "error") {
+        return gnc::foundation::QuaternionNormalizationPolicy::Error;
+    }
+    if (token == "normalize-with-flag") {
+        return gnc::foundation::QuaternionNormalizationPolicy::
+            NormalizeWithFlag;
+    }
+    return std::nullopt;
+}
+
+[[nodiscard]] bool canonical_double(double value) noexcept {
+    return std::isfinite(value) &&
+           !(value == 0.0 && std::signbit(value));
+}
+
+template <std::size_t Size>
+[[nodiscard]] bool exact_config_fields(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration,
+    std::string_view schema_id, std::uint32_t schema_version,
+    const std::array<std::string_view, Size>& fields) {
+    if (configuration.schema_id != schema_id ||
+        configuration.schema_version != schema_version ||
+        configuration.fields.size() != fields.size()) {
+        return false;
+    }
+    for (std::size_t index = 0U; index < fields.size(); ++index) {
+        if (configuration.fields[index].field_id != fields[index]) {
+            return false;
+        }
+    }
+    return true;
+}
+
+[[nodiscard]] std::optional<NumericalPolicy> config_numerical_policy(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration,
+    std::size_t absolute_index, std::size_t condition_index,
+    std::size_t finite_index, std::size_t relative_index,
+    std::size_t zero_index) {
+    const auto* absolute =
+        std::get_if<double>(&configuration.fields[absolute_index].value);
+    const auto* condition =
+        std::get_if<double>(&configuration.fields[condition_index].value);
+    const auto* finite =
+        std::get_if<gnc::model_sdk::CanonicalEnumValue>(
+            &configuration.fields[finite_index].value);
+    const auto* relative =
+        std::get_if<double>(&configuration.fields[relative_index].value);
+    const auto* zero =
+        std::get_if<double>(&configuration.fields[zero_index].value);
+    if (absolute == nullptr || condition == nullptr || finite == nullptr ||
+        relative == nullptr || zero == nullptr ||
+        !canonical_double(*absolute) || !canonical_double(*condition) ||
+        !canonical_double(*relative) || !canonical_double(*zero)) {
+        return std::nullopt;
+    }
+    const auto finite_check = parse_finite_check(finite->token);
+    if (!finite_check.has_value()) {
+        return std::nullopt;
+    }
+    NumericalPolicy policy{
+        *absolute, *relative, *finite_check, *zero, *condition};
+    return gnc::foundation::valid_numerical_policy(policy)
+               ? std::optional<NumericalPolicy>{policy}
+               : std::nullopt;
+}
+
+[[nodiscard]] std::string mission_metric_token(MissionMetric value) {
+    switch (value) {
+    case MissionMetric::DurationSeconds:
+        return "duration_s";
+    case MissionMetric::DownrangeMeters:
+        return "downrange_m";
+    case MissionMetric::RemainingMassKilograms:
+        return "remaining_mass_kg";
+    }
+    return {};
+}
+
+[[nodiscard]] std::optional<MissionMetric> parse_mission_metric(
+    std::string_view token) {
+    if (token == "duration_s") {
+        return MissionMetric::DurationSeconds;
+    }
+    if (token == "downrange_m") {
+        return MissionMetric::DownrangeMeters;
+    }
+    if (token == "remaining_mass_kg") {
+        return MissionMetric::RemainingMassKilograms;
+    }
+    return std::nullopt;
+}
+
+[[nodiscard]] std::string mission_relation_token(MissionRelation value) {
+    switch (value) {
+    case MissionRelation::LessThanOrEqual:
+        return "<=";
+    case MissionRelation::GreaterThanOrEqual:
+        return ">=";
+    }
+    return {};
+}
+
+[[nodiscard]] std::optional<MissionRelation> parse_mission_relation(
+    std::string_view token) {
+    if (token == "<=") {
+        return MissionRelation::LessThanOrEqual;
+    }
+    if (token == ">=") {
+        return MissionRelation::GreaterThanOrEqual;
+    }
+    return std::nullopt;
+}
+
+[[nodiscard]] std::string mission_action_token(MissionAction value) {
+    switch (value) {
+    case MissionAction::Complete:
+        return "Complete";
+    case MissionAction::Abort:
+        return "Abort";
+    }
+    return {};
+}
+
+[[nodiscard]] std::optional<MissionAction> parse_mission_action(
+    std::string_view token) {
+    if (token == "Complete") {
+        return MissionAction::Complete;
+    }
+    if (token == "Abort") {
+        return MissionAction::Abort;
+    }
+    return std::nullopt;
+}
+
 [[nodiscard]] CommittedRigidMassBoundary promote_candidate(
     const RigidStepContext& context,
     const AtomicRigidMassCandidate& candidate) {
@@ -148,7 +326,2705 @@ template <typename Value>
     return committed;
 }
 
+[[nodiscard]] const gnc::model_sdk::StaticModelDescriptor*
+find_static_model(
+    const gnc::model_sdk::StaticPackageDescriptor& package,
+    std::string_view model_id) {
+    const auto found = std::find_if(
+        package.models.begin(), package.models.end(),
+        [model_id](const auto& model) {
+            return model.definition.model_id == model_id;
+        });
+    return found == package.models.end() ? nullptr : &*found;
+}
+
+[[nodiscard]] const gnc::model_sdk::StaticRuntimeObligationEntryDescriptor*
+find_runtime_entry(
+    const gnc::model_sdk::StaticModelDescriptor& model,
+    gnc::model_sdk::RuntimeExecutionObligation obligation) {
+    if (!model.runtime_component.has_value()) {
+        return nullptr;
+    }
+    const auto& entries = model.runtime_component->obligation_entries;
+    const auto found = std::find_if(
+        entries.begin(), entries.end(),
+        [obligation](const auto& entry) {
+            return entry.obligation == obligation;
+        });
+    return found == entries.end() ? nullptr : &*found;
+}
+
+[[nodiscard]] const gnc::model_sdk::StaticPortDescriptor* find_static_port(
+    const gnc::model_sdk::StaticModelDescriptor& model,
+    std::string_view port_id) {
+    const auto found = std::find_if(
+        model.ports.begin(), model.ports.end(),
+        [port_id](const auto& port) { return port.port_id == port_id; });
+    return found == model.ports.end() ? nullptr : &*found;
+}
+
+// Authored independently of the descriptor history shape. The linker compares
+// this implementation witness against that descriptor before producing an
+// Image entry for the terminal evaluator callable.
+const gnc::model_sdk::StaticEvaluatorHistoryWitness
+    kCommittedMissionHistoryImplementationWitness{
+        std::string(kCommittedRigidMassSequenceContractIdentity),
+        static_cast<std::uint32_t>(kCommittedMissionHistoryDepth),
+        {{std::string(kCommittedMissionRigidHistoryMemberId),
+          std::string(kRigidStateSchemaIdentity),
+          std::string(kRigidStateLayoutIdentity)},
+         {std::string(kCommittedMissionMassHistoryMemberId),
+          std::string(kMassStateSchemaIdentity),
+          std::string(kMassStateLayoutIdentity)}}};
+
+template <typename ExpectedCallable, auto Callable>
+void append_static_entry(
+    gnc::model_sdk::StaticPackageImplementation& implementation,
+    const gnc::foundation::AlgorithmIdentity& identity,
+    gnc::model_sdk::StaticEntryKind kind, std::string signature,
+    std::string call_shape,
+    std::string state_layout = {}) {
+    implementation.entries.push_back(
+        gnc::model_sdk::make_static_implementation_entry<
+            Callable, ExpectedCallable>(
+            std::string(identity.id), std::string(identity.version), kind,
+            std::move(signature),
+            gnc::model_sdk::make_static_callable_contract<
+                ExpectedCallable>(std::move(call_shape)),
+            std::move(state_layout)));
+}
+
+template <typename ExpectedCallable, auto Callable>
+void append_state_codec_entry(
+    gnc::model_sdk::StaticPackageImplementation& implementation,
+    const gnc::model_sdk::StaticModelDescriptor& model) {
+    const auto& owner = *model.runtime_component->state_owner;
+    auto entry = gnc::model_sdk::make_static_implementation_entry<
+        Callable, ExpectedCallable>(
+        owner.codec.entry_id, owner.codec.entry_version,
+        gnc::model_sdk::StaticEntryKind::StateCodec,
+        gnc::model_sdk::canonical_state_codec_signature(model),
+        gnc::model_sdk::make_static_callable_contract<ExpectedCallable>(
+            owner.codec.call_shape_id),
+        owner.schema.layout_id);
+    entry = gnc::model_sdk::with_static_state_codec_witness(
+        std::move(entry),
+        {owner.schema.layout_id, owner.codec.clone_operation_id,
+         owner.codec.validate_operation_id,
+         owner.codec.finite_validation_operation_id,
+         owner.codec.invariant_validation_operation_id,
+         owner.codec.noexcept_swap_operation_id,
+         owner.codec.project_operation_id, true});
+    implementation.entries.push_back(std::move(entry));
+}
+
+template <typename ExpectedCallable, auto Callable>
+void append_slot_codec_entry(
+    gnc::model_sdk::StaticPackageImplementation& implementation,
+    const gnc::model_sdk::StaticModelDescriptor& model,
+    const gnc::model_sdk::StaticPortDescriptor& port) {
+    const auto& codec = *port.slot_codec;
+    auto entry = gnc::model_sdk::make_static_implementation_entry<
+        Callable, ExpectedCallable>(
+        codec.entry_id, codec.entry_version,
+        gnc::model_sdk::StaticEntryKind::SlotCodec,
+        gnc::model_sdk::canonical_slot_codec_signature(model, port),
+        gnc::model_sdk::make_static_callable_contract<ExpectedCallable>(
+            codec.call_shape_id));
+    entry = gnc::model_sdk::with_static_slot_codec_witness(
+        std::move(entry),
+        {port.contract_id, codec.layout_id, codec.copy_operation_id,
+         codec.validate_operation_id, codec.project_operation_id});
+    implementation.entries.push_back(std::move(entry));
+}
+
+template <typename ExpectedCallable, auto Callable>
+void append_result_slot_codec_entry(
+    gnc::model_sdk::StaticPackageImplementation& implementation,
+    const gnc::model_sdk::StaticModelDescriptor& model,
+    const gnc::model_sdk::StaticRuntimeObligationEntryDescriptor& obligation) {
+    const auto& codec = *obligation.result_codec;
+    auto entry = gnc::model_sdk::make_static_implementation_entry<
+        Callable, ExpectedCallable>(
+        codec.entry_id, codec.entry_version,
+        gnc::model_sdk::StaticEntryKind::SlotCodec,
+        gnc::model_sdk::canonical_result_slot_codec_signature(
+            model, obligation),
+        gnc::model_sdk::make_static_callable_contract<ExpectedCallable>(
+            codec.call_shape_id));
+    entry = gnc::model_sdk::with_static_slot_codec_witness(
+        std::move(entry),
+        {obligation.result_contract_id, codec.layout_id,
+         codec.copy_operation_id, codec.validate_operation_id,
+         codec.project_operation_id});
+    implementation.entries.push_back(std::move(entry));
+}
+
+template <typename ExpectedCallable, auto Callable>
+void append_runtime_entry(
+    gnc::model_sdk::StaticPackageImplementation& implementation,
+    const gnc::model_sdk::StaticModelDescriptor& model,
+    gnc::model_sdk::RuntimeExecutionObligation obligation,
+    gnc::model_sdk::StaticEntryKind kind,
+    std::string state_layout = {},
+    const gnc::model_sdk::StaticEvaluatorHistoryWitness*
+        evaluator_history_witness = nullptr) {
+    const auto* entry = find_runtime_entry(model, obligation);
+    if (entry == nullptr) {
+        return;
+    }
+    auto implementation_entry =
+        gnc::model_sdk::make_static_implementation_entry<
+            Callable, ExpectedCallable>(
+            entry->entry_id, entry->entry_version, kind,
+            gnc::model_sdk::canonical_runtime_entry_signature(model,
+                                                               *entry),
+            gnc::model_sdk::make_static_callable_contract<
+                ExpectedCallable>(entry->call_shape_id),
+            std::move(state_layout));
+    if (evaluator_history_witness != nullptr) {
+        implementation_entry =
+            gnc::model_sdk::with_static_evaluator_history_witness(
+                std::move(implementation_entry),
+                *evaluator_history_witness);
+    }
+    implementation.entries.push_back(std::move(implementation_entry));
+}
+
+template <typename ExpectedCallable, auto Callable>
+void append_definition_builder_entry(
+    gnc::model_sdk::StaticPackageImplementation& implementation,
+    const gnc::model_sdk::StaticModelDescriptor& model) {
+    if (!model.runtime_component.has_value()) {
+        return;
+    }
+    const auto& runtime = *model.runtime_component;
+    implementation.entries.push_back(
+        gnc::model_sdk::make_static_implementation_entry<
+            Callable, ExpectedCallable>(
+            runtime.definition_builder_id,
+            runtime.definition_builder_version,
+            gnc::model_sdk::StaticEntryKind::DefinitionBuilder,
+            gnc::model_sdk::canonical_definition_builder_signature(model),
+            gnc::model_sdk::make_static_callable_contract<
+                ExpectedCallable>(
+                runtime.definition_builder_call_shape_id)));
+}
+
+template <typename ExpectedCallable, auto Callable>
+void append_runtime_cell_factory_entry(
+    gnc::model_sdk::StaticPackageImplementation& implementation,
+    const gnc::model_sdk::StaticModelDescriptor& model) {
+    if (!model.runtime_component.has_value()) {
+        return;
+    }
+    const auto& runtime = *model.runtime_component;
+    implementation.entries.push_back(
+        gnc::model_sdk::make_static_implementation_entry<
+            Callable, ExpectedCallable>(
+            runtime.runtime_cell_factory_id,
+            runtime.runtime_cell_factory_version,
+            gnc::model_sdk::StaticEntryKind::RuntimeCellFactory,
+            gnc::model_sdk::canonical_runtime_cell_factory_signature(model),
+            gnc::model_sdk::make_static_callable_contract<
+                ExpectedCallable>(
+                runtime.runtime_cell_factory_call_shape_id)));
+}
+
+[[nodiscard]] bool valid_runtime_cell_factory_context(
+    const gnc::model_sdk::RuntimeCellFactoryContext& context) noexcept {
+    // Zero remains the reserved invalid handle in every compiled table.
+    return context.runtime_instance_id.value != 0U &&
+           context.runtime_component_handle != 0U &&
+           context.resources.handle != 0U &&
+           context.resources.workspace_layout_id ==
+               "gnc.workspace.none@1";
+}
+
 } // namespace
+
+gnc::model_sdk::StaticPackageDescriptor
+describe_yyz_rigid_step_package() {
+    auto package = detail::describe_yyz_rigid_step_base_package();
+
+    const auto periodic_schedule = [] {
+        gnc::model_sdk::StaticRuntimeScheduleDescriptor schedule;
+        schedule.trigger =
+            gnc::model_sdk::StaticScheduleTrigger::EveryBoundary;
+        schedule.step_interval = 1U;
+        schedule.offset = 0U;
+        schedule.output_hold =
+            gnc::model_sdk::HoldPolicy::ZeroOrderHold;
+        schedule.max_input_age_steps = 0U;
+        return schedule;
+    };
+    const std::vector<gnc::model_sdk::RuntimeLifecycleCapability>
+        lifecycle{
+            gnc::model_sdk::RuntimeLifecycleCapability::Instantiate,
+            gnc::model_sdk::RuntimeLifecycleCapability::Dispose};
+
+    const auto rigid_found = std::find_if(
+        package.models.begin(), package.models.end(),
+        [](const auto& candidate) {
+            return candidate.definition.model_id ==
+                   kRigidStepModelIdentity;
+        });
+    if (rigid_found != package.models.end() &&
+        rigid_found->runtime_component.has_value()) {
+        auto& rigid = *rigid_found;
+        rigid.configuration.fields.insert(
+            rigid.configuration.fields.begin() + 12,
+            {"combined_wrench_source_id",
+             gnc::model_sdk::CanonicalConfigValueKind::String});
+        rigid.ports = {
+            {"mass-properties",
+             std::string(kMassPropertiesContractIdentity),
+             gnc::model_sdk::StaticPortDirection::Input,
+             gnc::model_sdk::BindingKind::IntervalModel,
+             gnc::model_sdk::PortCardinality::ExactlyOne,
+             gnc::model_sdk::TemporalRelation::IntervalModel},
+            {"propulsion-body-wrench",
+             std::string(
+                 kSuppliedPropulsionBodyWrenchContractIdentity),
+             gnc::model_sdk::StaticPortDirection::Input,
+             gnc::model_sdk::BindingKind::IntervalModel,
+             gnc::model_sdk::PortCardinality::ExactlyOne,
+             gnc::model_sdk::TemporalRelation::IntervalModel},
+            {"actuator-output",
+             std::string(
+                 kIdealBodyMomentActuatorOutputContractIdentity),
+             gnc::model_sdk::StaticPortDirection::Input,
+             gnc::model_sdk::BindingKind::IntervalModel,
+             gnc::model_sdk::PortCardinality::ExactlyOne,
+             gnc::model_sdk::TemporalRelation::IntervalModel},
+            {"environment-sample",
+             std::string(kEnvironmentSampleContractIdentity),
+             gnc::model_sdk::StaticPortDirection::Input,
+             gnc::model_sdk::BindingKind::PureQuery,
+             gnc::model_sdk::PortCardinality::ExactlyOne,
+             gnc::model_sdk::TemporalRelation::NotApplicable},
+            {"aerodynamic-coefficients",
+             std::string(kAerodynamicCoefficientsContractIdentity),
+             gnc::model_sdk::StaticPortDirection::Input,
+             gnc::model_sdk::BindingKind::PureQuery,
+             gnc::model_sdk::PortCardinality::ExactlyOne,
+             gnc::model_sdk::TemporalRelation::NotApplicable},
+            {"form-input",
+             std::string(kRigidFormInputContractIdentity),
+             gnc::model_sdk::StaticPortDirection::Input,
+             gnc::model_sdk::BindingKind::ContinuousClosureLink,
+             gnc::model_sdk::PortCardinality::ExactlyOne,
+             gnc::model_sdk::TemporalRelation::IntervalModel},
+            {"committed-rigid-observation",
+             std::string(kRigidObservationContractIdentity),
+             gnc::model_sdk::StaticPortDirection::Output,
+             gnc::model_sdk::BindingKind::SampledSignal,
+             gnc::model_sdk::PortCardinality::OneOrMore,
+             gnc::model_sdk::TemporalRelation::CurrentCycle,
+             make_yyz_slot_codec_descriptor(
+                 kRigidObservationSlotCodecIdentity,
+                 kRigidObservationSlotCodecCallShapeIdentity,
+                 kRigidObservationLayoutIdentity,
+                 "gnc.operation.yyz.committed-rigid-observation")},
+        };
+        auto& entries =
+            rigid.runtime_component->obligation_entries;
+        const auto boundary = std::find_if(
+            entries.begin(), entries.end(), [](const auto& entry) {
+                return entry.obligation ==
+                       gnc::model_sdk::RuntimeExecutionObligation::
+                           BoundaryEvaluation;
+            });
+        if (boundary != entries.end()) {
+            boundary->entry_id = std::string(
+                kControlledRigidBoundaryEvaluationIdentity.id);
+            boundary->entry_version = std::string(
+                kControlledRigidBoundaryEvaluationIdentity.version);
+            boundary->request_contract_id = std::string(
+                kControlledRigidBoundaryInputContractIdentity);
+            boundary->result_contract_id =
+                std::string(
+                    kControlledRigidBoundaryPreparationContractIdentity);
+            boundary->input_port_ids = {
+                "mass-properties", "propulsion-body-wrench",
+                "actuator-output", "environment-sample",
+                "aerodynamic-coefficients", "form-input"};
+            boundary->call_shape_id = std::string(
+                kControlledRigidBoundaryRuntimeCallShapeIdentity);
+            boundary->result_codec = make_yyz_slot_codec_descriptor(
+                kControlledRigidBoundaryPreparationSlotCodecIdentity,
+                kControlledRigidBoundaryPreparationSlotCodecCallShapeIdentity,
+                kControlledRigidBoundaryPreparationLayoutIdentity,
+                "gnc.operation.yyz.controlled-rigid-boundary-preparation");
+        }
+        const auto derivative = std::find_if(
+            entries.begin(), entries.end(), [](const auto& entry) {
+                return entry.obligation ==
+                       gnc::model_sdk::RuntimeExecutionObligation::
+                           DerivativeEvaluation;
+            });
+        if (derivative != entries.end()) {
+            derivative->input_port_ids = {
+                "mass-properties", "environment-sample", "form-input"};
+            derivative->state_read =
+                gnc::model_sdk::StaticStateReadKind::Candidate;
+            derivative->state_write =
+                gnc::model_sdk::StaticStateWriteKind::None;
+        }
+        rigid.runtime_component->definition_builder_id = std::string(
+            kControlledRigidDefinitionBuilderIdentity.id);
+        rigid.runtime_component->definition_builder_version = std::string(
+            kControlledRigidDefinitionBuilderIdentity.version);
+        rigid.runtime_component->definition_builder_call_shape_id =
+            std::string(
+                kControlledRigidDefinitionBuilderCallShapeIdentity);
+        rigid.runtime_component->runtime_cell_factory_id = std::string(
+            kControlledRigidRuntimeCellFactoryIdentity.id);
+        rigid.runtime_component->runtime_cell_factory_version = std::string(
+            kControlledRigidRuntimeCellFactoryIdentity.version);
+        rigid.runtime_component->runtime_cell_factory_call_shape_id =
+            std::string(
+                kControlledRigidRuntimeCellFactoryCallShapeIdentity);
+    }
+
+    gnc::model_sdk::StaticModelDescriptor mass;
+    mass.definition = {
+        std::string(kScalarBurnMassModelIdentity),
+        std::string(kScalarBurnMassModelVersion),
+        gnc::model_sdk::ModelExecutionForm::RuntimeComponent};
+    mass.placement = gnc::model_sdk::ModelPlacement::VehicleOutput;
+    mass.configuration.schema_id =
+        std::string(kScalarBurnMassConfigSchemaIdentity);
+    mass.configuration.schema_version =
+        kScalarBurnMassConfigSchemaVersion;
+    mass.configuration.fields = {
+        {"mass_state_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"numerical.absolute_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"numerical.condition_limit",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"numerical.finite_check",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"numerical.relative_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"numerical.zero_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64}};
+    mass.ports = {
+        {"mass-flow-interval",
+         std::string(kMassFlowIntervalContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Input,
+         gnc::model_sdk::BindingKind::IntervalModel,
+         gnc::model_sdk::PortCardinality::ExactlyOne,
+         gnc::model_sdk::TemporalRelation::IntervalModel},
+        {"mass-properties",
+         std::string(kMassPropertiesContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Output,
+         gnc::model_sdk::BindingKind::IntervalModel,
+         gnc::model_sdk::PortCardinality::OneOrMore,
+         gnc::model_sdk::TemporalRelation::IntervalModel,
+         make_yyz_slot_codec_descriptor(
+             kMassPropertiesSlotCodecIdentity,
+             kMassPropertiesSlotCodecCallShapeIdentity,
+             kMassPropertiesLayoutIdentity,
+             "gnc.operation.yyz.mass-properties")},
+    };
+    gnc::model_sdk::StaticRuntimeComponentDescriptor mass_runtime;
+    mass_runtime.recipe_id = std::string(kScalarBurnMassRecipeIdentity);
+    mass_runtime.profile =
+        gnc::model_sdk::RuntimeCellProfile::DiscreteStateProcessor;
+    mass_runtime.obligations = {
+        gnc::model_sdk::RuntimeExecutionObligation::PublishProjection,
+        gnc::model_sdk::RuntimeExecutionObligation::IntervalEvolution};
+    mass_runtime.obligation_entries = {
+        {gnc::model_sdk::RuntimeExecutionObligation::PublishProjection,
+         gnc::model_sdk::CoarsePhase::Publish,
+         std::string(kMassPublishProjectionIdentity.id),
+         std::string(kMassPublishProjectionIdentity.version),
+         std::string(kMassPublishProjectionInputContractIdentity),
+         std::string(kMassPropertiesContractIdentity),
+         gnc::model_sdk::StaticWorkspaceRequirement::None,
+         {}, {"mass-properties"},
+         gnc::model_sdk::StaticStateReadKind::Committed,
+         gnc::model_sdk::StaticStateWriteKind::None, {},
+         std::string(kMassPublishProjectionCallShapeIdentity)},
+        {gnc::model_sdk::RuntimeExecutionObligation::IntervalEvolution,
+         gnc::model_sdk::CoarsePhase::Form,
+         std::string(kScalarBurnMassKernelIdentity.id),
+         std::string(kScalarBurnMassKernelIdentity.version),
+         std::string(kMassFlowIntervalContractIdentity),
+         std::string(kScalarBurnMassOutputContractIdentity),
+         gnc::model_sdk::StaticWorkspaceRequirement::None,
+         {"mass-flow-interval"}, {},
+         gnc::model_sdk::StaticStateReadKind::Committed,
+         gnc::model_sdk::StaticStateWriteKind::IntervalCandidate, {},
+         std::string(kMassIntervalEvolutionCallShapeIdentity)}};
+    mass_runtime.schedule = periodic_schedule();
+    mass_runtime.lifecycle_capabilities = lifecycle;
+    gnc::model_sdk::StaticStateOwnerDescriptor mass_owner;
+    mass_owner.schema = {
+        std::string(kMassStateSchemaIdentity), 1U,
+        std::string(kMassStateLayoutIdentity),
+        {{"context", "gnc.contracts.SampleContext", "1", "sample"},
+         {"mass-state-id", "utf8", "1", "none"},
+         {"mass", "float64", "kg", "none"},
+         {"body-origin-to-center-of-mass", "vec3.float64", "m", "body"},
+         {"inertia-about-center-of-mass", "mat3.float64", "kg*m^2",
+          "body"}}};
+    mass_owner.initial_state_builder_id =
+        std::string(kMassInitialStateBuilderIdentity.id);
+    mass_owner.initial_state_builder_version =
+        std::string(kMassInitialStateBuilderIdentity.version);
+    mass_owner.initial_state_input_schema = {
+        std::string(kMassInitialStateInputSchemaIdentity),
+        kMassInitialStateInputSchemaVersion,
+        {{"body_origin_to_center_of_mass.x_meters",
+          gnc::model_sdk::CanonicalConfigValueKind::Float64},
+         {"body_origin_to_center_of_mass.y_meters",
+          gnc::model_sdk::CanonicalConfigValueKind::Float64},
+         {"body_origin_to_center_of_mass.z_meters",
+          gnc::model_sdk::CanonicalConfigValueKind::Float64},
+         {"context.clock_domain_id",
+          gnc::model_sdk::CanonicalConfigValueKind::String},
+         {"context.configuration_revision",
+          gnc::model_sdk::CanonicalConfigValueKind::Integer},
+         {"context.frame_id",
+          gnc::model_sdk::CanonicalConfigValueKind::String},
+         {"context.quality",
+          gnc::model_sdk::CanonicalConfigValueKind::Enum},
+         {"context.sample_time.seconds",
+          gnc::model_sdk::CanonicalConfigValueKind::Float64},
+         {"context.sample_time.tick",
+          gnc::model_sdk::CanonicalConfigValueKind::Integer},
+         {"inertia_about_center_of_mass.xx_kilogram_meters_squared",
+          gnc::model_sdk::CanonicalConfigValueKind::Float64},
+         {"inertia_about_center_of_mass.xy_kilogram_meters_squared",
+          gnc::model_sdk::CanonicalConfigValueKind::Float64},
+         {"inertia_about_center_of_mass.xz_kilogram_meters_squared",
+          gnc::model_sdk::CanonicalConfigValueKind::Float64},
+         {"inertia_about_center_of_mass.yx_kilogram_meters_squared",
+          gnc::model_sdk::CanonicalConfigValueKind::Float64},
+         {"inertia_about_center_of_mass.yy_kilogram_meters_squared",
+          gnc::model_sdk::CanonicalConfigValueKind::Float64},
+         {"inertia_about_center_of_mass.yz_kilogram_meters_squared",
+          gnc::model_sdk::CanonicalConfigValueKind::Float64},
+         {"inertia_about_center_of_mass.zx_kilogram_meters_squared",
+          gnc::model_sdk::CanonicalConfigValueKind::Float64},
+         {"inertia_about_center_of_mass.zy_kilogram_meters_squared",
+          gnc::model_sdk::CanonicalConfigValueKind::Float64},
+         {"inertia_about_center_of_mass.zz_kilogram_meters_squared",
+          gnc::model_sdk::CanonicalConfigValueKind::Float64},
+         {"mass_kilograms",
+          gnc::model_sdk::CanonicalConfigValueKind::Float64},
+         {"mass_state_id",
+          gnc::model_sdk::CanonicalConfigValueKind::String}}};
+    mass_owner.evolution =
+        gnc::model_sdk::StaticStateEvolution::IntervalCandidate;
+    mass_owner.initial_state_builder_call_shape_id =
+        std::string(kMassInitialStateCallShapeIdentity);
+    mass_owner.codec = {
+        std::string(kMassStateCodecIdentity.id),
+        std::string(kMassStateCodecIdentity.version),
+        std::string(kMassStateCodecCallShapeIdentity),
+        "gnc.operation.yyz.mass-state.clone@1",
+        "gnc.operation.yyz.mass-state.validate@1",
+        "gnc.operation.yyz.mass-state.validate-finite@1",
+        "gnc.operation.yyz.mass-state.validate-invariants@1",
+        "gnc.operation.yyz.mass-state.noexcept-swap@1",
+        std::string(kMassPublishProjectionIdentity.id)};
+    mass_runtime.state_owner = std::move(mass_owner);
+    mass_runtime.definition_builder_id =
+        std::string(kScalarBurnMassDefinitionBuilderIdentity.id);
+    mass_runtime.definition_builder_version =
+        std::string(kScalarBurnMassDefinitionBuilderIdentity.version);
+    mass_runtime.definition_builder_call_shape_id = std::string(
+        kScalarBurnMassDefinitionBuilderCallShapeIdentity);
+    mass_runtime.runtime_cell_factory_id = std::string(
+        kScalarBurnMassRuntimeCellFactoryIdentity.id);
+    mass_runtime.runtime_cell_factory_version = std::string(
+        kScalarBurnMassRuntimeCellFactoryIdentity.version);
+    mass_runtime.runtime_cell_factory_call_shape_id = std::string(
+        kScalarBurnMassRuntimeCellFactoryCallShapeIdentity);
+    mass_runtime.resource_plan_id =
+        std::string(kYyzNoWorkspaceResourcePlanIdentity);
+    mass_runtime.resource_workspace_requirement =
+        gnc::model_sdk::StaticWorkspaceRequirement::None;
+    mass.runtime_component = std::move(mass_runtime);
+
+    gnc::model_sdk::StaticModelDescriptor guidance;
+    guidance.definition = {
+        std::string(kAltitudePitchGuidanceModelIdentity),
+        std::string(kAltitudePitchGuidanceModelVersion),
+        gnc::model_sdk::ModelExecutionForm::RuntimeComponent};
+    guidance.placement =
+        gnc::model_sdk::ModelPlacement::VehicleProcess;
+    guidance.configuration.schema_id =
+        std::string(kAltitudePitchGuidanceConfigSchemaIdentity);
+    guidance.configuration.schema_version =
+        kAltitudePitchGuidanceConfigSchemaVersion;
+    guidance.configuration.fields = {
+        {"altitude_error_gain_radians_per_meter",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"attitude.normalization",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"attitude.numerical.absolute_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"attitude.numerical.condition_limit",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"attitude.numerical.finite_check",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"attitude.numerical.relative_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"attitude.numerical.zero_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"clock_domain_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"configuration_revision",
+         gnc::model_sdk::CanonicalConfigValueKind::Integer},
+        {"inertial_frame_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"pitch_command_limit_radians",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"target_altitude_meters",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"vertical_speed_gain_radian_seconds_per_meter",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+    };
+    guidance.ports = {
+        {"committed-rigid-observation",
+         std::string(kCommittedRigidObservationContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Input,
+         gnc::model_sdk::BindingKind::SampledSignal,
+         gnc::model_sdk::PortCardinality::ExactlyOne,
+         gnc::model_sdk::TemporalRelation::CurrentCycle},
+        {"guidance-output",
+         std::string(kAltitudePitchGuidanceOutputContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Output,
+         gnc::model_sdk::BindingKind::SampledSignal,
+         gnc::model_sdk::PortCardinality::OneOrMore,
+         gnc::model_sdk::TemporalRelation::CurrentCycle,
+         make_yyz_slot_codec_descriptor(
+             kGuidanceOutputSlotCodecIdentity,
+             kGuidanceOutputSlotCodecCallShapeIdentity,
+             kGuidanceOutputLayoutIdentity,
+             "gnc.operation.yyz.guidance-output")},
+    };
+    gnc::model_sdk::StaticRuntimeComponentDescriptor runtime;
+    runtime.recipe_id =
+        std::string(kAltitudePitchGuidanceRecipeIdentity);
+    runtime.profile =
+        gnc::model_sdk::RuntimeCellProfile::SampledTransform;
+    runtime.obligations = {
+        gnc::model_sdk::RuntimeExecutionObligation::BoundaryEvaluation};
+    runtime.obligation_entries = {
+        {gnc::model_sdk::RuntimeExecutionObligation::BoundaryEvaluation,
+         gnc::model_sdk::CoarsePhase::Process,
+         std::string(kAltitudePitchGuidanceKernelIdentity.id),
+         std::string(kAltitudePitchGuidanceKernelIdentity.version),
+         std::string(kCommittedRigidObservationContractIdentity),
+         std::string(kAltitudePitchGuidanceOutputContractIdentity),
+         gnc::model_sdk::StaticWorkspaceRequirement::None,
+         {"committed-rigid-observation"}, {"guidance-output"},
+         gnc::model_sdk::StaticStateReadKind::None,
+         gnc::model_sdk::StaticStateWriteKind::None, {},
+         std::string(kAltitudePitchGuidanceCallShapeIdentity)}};
+    runtime.schedule = periodic_schedule();
+    runtime.lifecycle_capabilities = lifecycle;
+    runtime.definition_builder_id = std::string(
+        kAltitudePitchGuidanceDefinitionBuilderIdentity.id);
+    runtime.definition_builder_version = std::string(
+        kAltitudePitchGuidanceDefinitionBuilderIdentity.version);
+    runtime.definition_builder_call_shape_id = std::string(
+        kAltitudePitchGuidanceDefinitionBuilderCallShapeIdentity);
+    runtime.runtime_cell_factory_id = std::string(
+        kAltitudePitchGuidanceRuntimeCellFactoryIdentity.id);
+    runtime.runtime_cell_factory_version = std::string(
+        kAltitudePitchGuidanceRuntimeCellFactoryIdentity.version);
+    runtime.runtime_cell_factory_call_shape_id = std::string(
+        kAltitudePitchGuidanceRuntimeCellFactoryCallShapeIdentity);
+    runtime.resource_plan_id =
+        std::string(kYyzNoWorkspaceResourcePlanIdentity);
+    runtime.resource_workspace_requirement =
+        gnc::model_sdk::StaticWorkspaceRequirement::None;
+    guidance.runtime_component = std::move(runtime);
+
+    gnc::model_sdk::StaticModelDescriptor controller;
+    controller.definition = {
+        std::string(kPitchMomentControllerModelIdentity),
+        std::string(kPitchMomentControllerModelVersion),
+        gnc::model_sdk::ModelExecutionForm::RuntimeComponent};
+    controller.placement =
+        gnc::model_sdk::ModelPlacement::VehicleProcess;
+    controller.configuration.schema_id =
+        std::string(kPitchMomentControllerConfigSchemaIdentity);
+    controller.configuration.schema_version =
+        kPitchMomentControllerConfigSchemaVersion;
+    controller.configuration.fields = {
+        {"body_frame_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"clock_domain_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"configuration_revision",
+         gnc::model_sdk::CanonicalConfigValueKind::Integer},
+        {"moment_command_limit_newton_meters",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"numerical.absolute_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"numerical.condition_limit",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"numerical.finite_check",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"numerical.relative_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"numerical.zero_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"pitch_error_gain_newton_meters_per_radian",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"pitch_rate_gain_newton_meter_seconds_per_radian",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+    };
+    controller.ports = {
+        {"guidance-output",
+         std::string(kAltitudePitchGuidanceOutputContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Input,
+         gnc::model_sdk::BindingKind::SampledSignal,
+         gnc::model_sdk::PortCardinality::ExactlyOne,
+         gnc::model_sdk::TemporalRelation::CurrentCycle},
+        {"controller-output",
+         std::string(kPitchMomentControllerOutputContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Output,
+         gnc::model_sdk::BindingKind::SampledSignal,
+         gnc::model_sdk::PortCardinality::OneOrMore,
+         gnc::model_sdk::TemporalRelation::CurrentCycle,
+         make_yyz_slot_codec_descriptor(
+             kControllerOutputSlotCodecIdentity,
+             kControllerOutputSlotCodecCallShapeIdentity,
+             kControllerOutputLayoutIdentity,
+             "gnc.operation.yyz.controller-output")},
+    };
+    gnc::model_sdk::StaticRuntimeComponentDescriptor controller_runtime;
+    controller_runtime.recipe_id =
+        std::string(kPitchMomentControllerRecipeIdentity);
+    controller_runtime.profile =
+        gnc::model_sdk::RuntimeCellProfile::SampledTransform;
+    controller_runtime.obligations = {
+        gnc::model_sdk::RuntimeExecutionObligation::BoundaryEvaluation};
+    controller_runtime.obligation_entries = {
+        {gnc::model_sdk::RuntimeExecutionObligation::BoundaryEvaluation,
+         gnc::model_sdk::CoarsePhase::Process,
+         std::string(kPitchMomentControllerKernelIdentity.id),
+         std::string(kPitchMomentControllerKernelIdentity.version),
+         std::string(kAltitudePitchGuidanceOutputContractIdentity),
+         std::string(kPitchMomentControllerOutputContractIdentity),
+         gnc::model_sdk::StaticWorkspaceRequirement::None,
+         {"guidance-output"}, {"controller-output"},
+         gnc::model_sdk::StaticStateReadKind::None,
+         gnc::model_sdk::StaticStateWriteKind::None, {},
+         std::string(kPitchMomentControllerCallShapeIdentity)}};
+    controller_runtime.schedule = periodic_schedule();
+    controller_runtime.lifecycle_capabilities = lifecycle;
+    controller_runtime.definition_builder_id = std::string(
+        kPitchMomentControllerDefinitionBuilderIdentity.id);
+    controller_runtime.definition_builder_version = std::string(
+        kPitchMomentControllerDefinitionBuilderIdentity.version);
+    controller_runtime.definition_builder_call_shape_id = std::string(
+        kPitchMomentControllerDefinitionBuilderCallShapeIdentity);
+    controller_runtime.runtime_cell_factory_id = std::string(
+        kPitchMomentControllerRuntimeCellFactoryIdentity.id);
+    controller_runtime.runtime_cell_factory_version = std::string(
+        kPitchMomentControllerRuntimeCellFactoryIdentity.version);
+    controller_runtime.runtime_cell_factory_call_shape_id = std::string(
+        kPitchMomentControllerRuntimeCellFactoryCallShapeIdentity);
+    controller_runtime.resource_plan_id =
+        std::string(kYyzNoWorkspaceResourcePlanIdentity);
+    controller_runtime.resource_workspace_requirement =
+        gnc::model_sdk::StaticWorkspaceRequirement::None;
+    controller.runtime_component = std::move(controller_runtime);
+
+    gnc::model_sdk::StaticModelDescriptor actuator;
+    actuator.definition = {
+        std::string(kIdealBodyMomentActuatorModelIdentity),
+        std::string(kIdealBodyMomentActuatorModelVersion),
+        gnc::model_sdk::ModelExecutionForm::RuntimeComponent};
+    actuator.placement = gnc::model_sdk::ModelPlacement::VehicleOutput;
+    actuator.configuration.schema_id =
+        std::string(kIdealBodyMomentActuatorConfigSchemaIdentity);
+    actuator.configuration.schema_version =
+        kIdealBodyMomentActuatorConfigSchemaVersion;
+    actuator.configuration.fields = {
+        {"body_frame_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"clock_domain_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"configuration_revision",
+         gnc::model_sdk::CanonicalConfigValueKind::Integer},
+        {"numerical.absolute_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"numerical.condition_limit",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"numerical.finite_check",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"numerical.relative_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"numerical.zero_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"realization_gain",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"source_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+    };
+    actuator.ports = {
+        {"controller-output",
+         std::string(kPitchMomentControllerOutputContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Input,
+         gnc::model_sdk::BindingKind::SampledSignal,
+         gnc::model_sdk::PortCardinality::ExactlyOne,
+         gnc::model_sdk::TemporalRelation::CurrentCycle},
+        {"actuator-output",
+         std::string(kIdealBodyMomentActuatorOutputContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Output,
+         gnc::model_sdk::BindingKind::IntervalModel,
+         gnc::model_sdk::PortCardinality::OneOrMore,
+         gnc::model_sdk::TemporalRelation::IntervalModel,
+         make_yyz_slot_codec_descriptor(
+             kActuatorOutputSlotCodecIdentity,
+             kActuatorOutputSlotCodecCallShapeIdentity,
+             kActuatorOutputLayoutIdentity,
+             "gnc.operation.yyz.actuator-output")},
+    };
+    gnc::model_sdk::StaticRuntimeComponentDescriptor actuator_runtime;
+    actuator_runtime.recipe_id =
+        std::string(kIdealBodyMomentActuatorRecipeIdentity);
+    actuator_runtime.profile =
+        gnc::model_sdk::RuntimeCellProfile::SampledTransform;
+    actuator_runtime.obligations = {
+        gnc::model_sdk::RuntimeExecutionObligation::BoundaryEvaluation};
+    actuator_runtime.obligation_entries = {
+        {gnc::model_sdk::RuntimeExecutionObligation::BoundaryEvaluation,
+         gnc::model_sdk::CoarsePhase::Output,
+         std::string(kIdealBodyMomentActuatorKernelIdentity.id),
+         std::string(kIdealBodyMomentActuatorKernelIdentity.version),
+         std::string(kIdealBodyMomentActuatorRequestContractIdentity),
+         std::string(kIdealBodyMomentActuatorOutputContractIdentity),
+         gnc::model_sdk::StaticWorkspaceRequirement::None,
+         {"controller-output"}, {"actuator-output"},
+         gnc::model_sdk::StaticStateReadKind::None,
+         gnc::model_sdk::StaticStateWriteKind::None, {},
+         std::string(kIdealBodyMomentActuatorCallShapeIdentity)}};
+    actuator_runtime.schedule = periodic_schedule();
+    actuator_runtime.lifecycle_capabilities = lifecycle;
+    actuator_runtime.definition_builder_id = std::string(
+        kIdealBodyMomentActuatorDefinitionBuilderIdentity.id);
+    actuator_runtime.definition_builder_version = std::string(
+        kIdealBodyMomentActuatorDefinitionBuilderIdentity.version);
+    actuator_runtime.definition_builder_call_shape_id = std::string(
+        kIdealBodyMomentActuatorDefinitionBuilderCallShapeIdentity);
+    actuator_runtime.runtime_cell_factory_id = std::string(
+        kIdealBodyMomentActuatorRuntimeCellFactoryIdentity.id);
+    actuator_runtime.runtime_cell_factory_version = std::string(
+        kIdealBodyMomentActuatorRuntimeCellFactoryIdentity.version);
+    actuator_runtime.runtime_cell_factory_call_shape_id = std::string(
+        kIdealBodyMomentActuatorRuntimeCellFactoryCallShapeIdentity);
+    actuator_runtime.resource_plan_id =
+        std::string(kYyzNoWorkspaceResourcePlanIdentity);
+    actuator_runtime.resource_workspace_requirement =
+        gnc::model_sdk::StaticWorkspaceRequirement::None;
+    actuator.runtime_component = std::move(actuator_runtime);
+
+    gnc::model_sdk::StaticModelDescriptor propulsion;
+    propulsion.definition = {
+        std::string(kSuppliedPropulsionModelIdentity),
+        std::string(kSuppliedPropulsionModelVersion),
+        gnc::model_sdk::ModelExecutionForm::RuntimeComponent};
+    propulsion.placement = gnc::model_sdk::ModelPlacement::VehicleOutput;
+    propulsion.configuration.schema_id =
+        std::string(kSuppliedPropulsionConfigSchemaIdentity);
+    propulsion.configuration.schema_version =
+        kSuppliedPropulsionConfigSchemaVersion;
+    propulsion.configuration.fields = {
+        {"body_frame_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"center_of_mass_to_application.x_meters",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"center_of_mass_to_application.y_meters",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"center_of_mass_to_application.z_meters",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"clock_domain_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"fuel_consumption_rate_kilograms_per_second",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"intrinsic_moment_at_application.x_newton_meters",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"intrinsic_moment_at_application.y_newton_meters",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"intrinsic_moment_at_application.z_newton_meters",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"mass_state_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"numerical.absolute_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"numerical.condition_limit",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"numerical.finite_check",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"numerical.relative_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"numerical.zero_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"source_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"thrust_direction.x_unit",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"thrust_direction.y_unit",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"thrust_direction.z_unit",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"thrust_magnitude_newtons",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+    };
+    propulsion.ports = {
+        {"propulsion-body-wrench",
+         std::string(kSuppliedPropulsionBodyWrenchContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Output,
+         gnc::model_sdk::BindingKind::IntervalModel,
+         gnc::model_sdk::PortCardinality::OneOrMore,
+         gnc::model_sdk::TemporalRelation::IntervalModel,
+         make_yyz_slot_codec_descriptor(
+             kPropulsionWrenchSlotCodecIdentity,
+             kPropulsionWrenchSlotCodecCallShapeIdentity,
+             kPropulsionWrenchLayoutIdentity,
+             "gnc.operation.yyz.propulsion-wrench")},
+        {"mass-flow-interval",
+         std::string(kMassFlowIntervalContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Output,
+         gnc::model_sdk::BindingKind::IntervalModel,
+         gnc::model_sdk::PortCardinality::OneOrMore,
+         gnc::model_sdk::TemporalRelation::IntervalModel,
+         make_yyz_slot_codec_descriptor(
+             kMassFlowSlotCodecIdentity,
+             kMassFlowSlotCodecCallShapeIdentity,
+             kMassFlowLayoutIdentity,
+             "gnc.operation.yyz.mass-flow")},
+    };
+    gnc::model_sdk::StaticRuntimeComponentDescriptor propulsion_runtime;
+    propulsion_runtime.recipe_id =
+        std::string(kSuppliedPropulsionRecipeIdentity);
+    propulsion_runtime.profile =
+        gnc::model_sdk::RuntimeCellProfile::SampledTransform;
+    propulsion_runtime.obligations = {
+        gnc::model_sdk::RuntimeExecutionObligation::BoundaryEvaluation};
+    propulsion_runtime.obligation_entries = {
+        {gnc::model_sdk::RuntimeExecutionObligation::BoundaryEvaluation,
+         gnc::model_sdk::CoarsePhase::Output,
+         std::string(kFixedSuppliedPropulsionBoundaryIdentity.id),
+         std::string(kFixedSuppliedPropulsionBoundaryIdentity.version),
+         std::string(kFixedSuppliedPropulsionRequestContractIdentity),
+         std::string(kSuppliedPropulsionOutputContractIdentity),
+         gnc::model_sdk::StaticWorkspaceRequirement::None,
+         {},
+         {"propulsion-body-wrench", "mass-flow-interval"},
+         gnc::model_sdk::StaticStateReadKind::None,
+         gnc::model_sdk::StaticStateWriteKind::None, {},
+         std::string(kFixedSuppliedPropulsionCallShapeIdentity)}};
+    propulsion_runtime.schedule = periodic_schedule();
+    propulsion_runtime.lifecycle_capabilities = lifecycle;
+    propulsion_runtime.definition_builder_id = std::string(
+        kFixedSuppliedPropulsionDefinitionBuilderIdentity.id);
+    propulsion_runtime.definition_builder_version = std::string(
+        kFixedSuppliedPropulsionDefinitionBuilderIdentity.version);
+    propulsion_runtime.definition_builder_call_shape_id = std::string(
+        kFixedSuppliedPropulsionDefinitionBuilderCallShapeIdentity);
+    propulsion_runtime.runtime_cell_factory_id = std::string(
+        kFixedSuppliedPropulsionRuntimeCellFactoryIdentity.id);
+    propulsion_runtime.runtime_cell_factory_version = std::string(
+        kFixedSuppliedPropulsionRuntimeCellFactoryIdentity.version);
+    propulsion_runtime.runtime_cell_factory_call_shape_id = std::string(
+        kFixedSuppliedPropulsionRuntimeCellFactoryCallShapeIdentity);
+    propulsion_runtime.resource_plan_id =
+        std::string(kYyzNoWorkspaceResourcePlanIdentity);
+    propulsion_runtime.resource_workspace_requirement =
+        gnc::model_sdk::StaticWorkspaceRequirement::None;
+    propulsion.runtime_component = std::move(propulsion_runtime);
+
+    gnc::model_sdk::StaticModelDescriptor evaluator;
+    evaluator.definition = {
+        std::string(kCommittedMissionResultModelIdentity),
+        std::string(kCommittedMissionResultModelVersion),
+        gnc::model_sdk::ModelExecutionForm::RuntimeComponent};
+    evaluator.placement = gnc::model_sdk::ModelPlacement::Evaluation;
+    evaluator.configuration.schema_id =
+        std::string(kCommittedMissionResultConfigSchemaIdentity);
+    evaluator.configuration.schema_version =
+        kCommittedMissionResultConfigSchemaVersion;
+    evaluator.configuration.fields = {
+        {"body_frame_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"clock_domain_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"configuration_revision",
+         gnc::model_sdk::CanonicalConfigValueKind::Integer},
+        {"inertial_frame_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"mass_state_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"numerical.absolute_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"numerical.condition_limit",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"numerical.finite_check",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"numerical.relative_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"numerical.zero_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"predicates.0.action",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"predicates.0.metric",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"predicates.0.predicate_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"predicates.0.priority",
+         gnc::model_sdk::CanonicalConfigValueKind::Integer},
+        {"predicates.0.reason_code",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"predicates.0.relation",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"predicates.0.threshold",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"predicates.1.action",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"predicates.1.metric",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"predicates.1.predicate_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"predicates.1.priority",
+         gnc::model_sdk::CanonicalConfigValueKind::Integer},
+        {"predicates.1.reason_code",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"predicates.1.relation",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"predicates.1.threshold",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"predicates.2.action",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"predicates.2.metric",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"predicates.2.predicate_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"predicates.2.priority",
+         gnc::model_sdk::CanonicalConfigValueKind::Integer},
+        {"predicates.2.reason_code",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"predicates.2.relation",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"predicates.2.threshold",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"subject",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+    };
+    evaluator.ports = {
+        {"committed-rigid-mass-sequence",
+         std::string(kCommittedRigidMassSequenceContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Input,
+         gnc::model_sdk::BindingKind::SampledSignal,
+         gnc::model_sdk::PortCardinality::ExactlyOne,
+         gnc::model_sdk::TemporalRelation::CurrentCycle},
+        {"committed-mission-result",
+         std::string(kCommittedMissionResultContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Output,
+         gnc::model_sdk::BindingKind::SampledSignal,
+         gnc::model_sdk::PortCardinality::OneOrMore,
+         gnc::model_sdk::TemporalRelation::CurrentCycle,
+         make_yyz_slot_codec_descriptor(
+             kMissionResultSlotCodecIdentity,
+             kMissionResultSlotCodecCallShapeIdentity,
+             kMissionResultLayoutIdentity,
+             "gnc.operation.yyz.mission-result")},
+    };
+    gnc::model_sdk::StaticRuntimeComponentDescriptor evaluator_runtime;
+    evaluator_runtime.recipe_id =
+        std::string(kCommittedMissionResultRecipeIdentity);
+    evaluator_runtime.profile =
+        gnc::model_sdk::RuntimeCellProfile::Evaluator;
+    evaluator_runtime.obligations = {
+        gnc::model_sdk::RuntimeExecutionObligation::BoundaryEvaluation};
+    evaluator_runtime.obligation_entries = {
+        {gnc::model_sdk::RuntimeExecutionObligation::BoundaryEvaluation,
+         gnc::model_sdk::CoarsePhase::Evaluation,
+         std::string(kCommittedMissionHistoryEvaluationIdentity.id),
+         std::string(kCommittedMissionHistoryEvaluationIdentity.version),
+         std::string(kCommittedRigidMassSequenceContractIdentity),
+         std::string(kCommittedMissionResultContractIdentity),
+         gnc::model_sdk::StaticWorkspaceRequirement::None,
+         {"committed-rigid-mass-sequence"},
+         {"committed-mission-result"},
+         gnc::model_sdk::StaticStateReadKind::None,
+         gnc::model_sdk::StaticStateWriteKind::None, {},
+         std::string(
+             kCommittedMissionHistoryEvaluationCallShapeIdentity)}};
+    evaluator_runtime.schedule.trigger =
+        gnc::model_sdk::StaticScheduleTrigger::TerminalSequenceReady;
+    evaluator_runtime.schedule.step_interval = 0U;
+    evaluator_runtime.schedule.offset = 0U;
+    evaluator_runtime.schedule.output_hold =
+        gnc::model_sdk::HoldPolicy::ZeroOrderHold;
+    evaluator_runtime.schedule.max_input_age_steps = 0U;
+    evaluator_runtime.lifecycle_capabilities = lifecycle;
+    evaluator_runtime.definition_builder_id = std::string(
+        kCommittedMissionResultDefinitionBuilderIdentity.id);
+    evaluator_runtime.definition_builder_version = std::string(
+        kCommittedMissionResultDefinitionBuilderIdentity.version);
+    evaluator_runtime.definition_builder_call_shape_id = std::string(
+        kCommittedMissionResultDefinitionBuilderCallShapeIdentity);
+    evaluator_runtime.runtime_cell_factory_id = std::string(
+        kCommittedMissionResultRuntimeCellFactoryIdentity.id);
+    evaluator_runtime.runtime_cell_factory_version = std::string(
+        kCommittedMissionResultRuntimeCellFactoryIdentity.version);
+    evaluator_runtime.runtime_cell_factory_call_shape_id = std::string(
+        kCommittedMissionResultRuntimeCellFactoryCallShapeIdentity);
+    evaluator_runtime.resource_plan_id =
+        std::string(kYyzNoWorkspaceResourcePlanIdentity);
+    evaluator_runtime.resource_workspace_requirement =
+        gnc::model_sdk::StaticWorkspaceRequirement::None;
+    evaluator_runtime.evaluator_history_shape =
+        gnc::model_sdk::StaticEvaluatorHistoryShapeDescriptor{
+            std::string(kCommittedRigidMassSequenceContractIdentity),
+            static_cast<std::uint32_t>(kCommittedMissionHistoryDepth),
+            {{std::string(kCommittedMissionRigidHistoryMemberId),
+              std::string(kRigidStateSchemaIdentity),
+              std::string(kRigidStateLayoutIdentity)},
+             {std::string(kCommittedMissionMassHistoryMemberId),
+              std::string(kMassStateSchemaIdentity),
+              std::string(kMassStateLayoutIdentity)}}};
+    evaluator.runtime_component = std::move(evaluator_runtime);
+
+    package.models.push_back(std::move(mass));
+    package.models.push_back(std::move(guidance));
+    package.models.push_back(std::move(controller));
+    package.models.push_back(std::move(actuator));
+    package.models.push_back(std::move(propulsion));
+    package.models.push_back(std::move(evaluator));
+    return package;
+}
+
+gnc::model_sdk::StaticPackageImplementation
+describe_yyz_rigid_step_implementation(std::string build_fingerprint) {
+    const auto package = describe_yyz_rigid_step_package();
+    gnc::model_sdk::StaticPackageImplementation implementation;
+    implementation.package_id = package.package_id;
+    implementation.package_version = package.package_version;
+    implementation.build_fingerprint = std::move(build_fingerprint);
+
+    if (const auto* environment =
+            find_static_model(package, kUniformEnvironmentModelIdentity);
+        environment != nullptr && environment->pure_query.has_value()) {
+        append_static_entry<UniformEnvironmentPreparationCall,
+                            &prepare_uniform_environment_model>(
+            implementation, kUniformEnvironmentPreparationIdentity,
+            gnc::model_sdk::StaticEntryKind::Prepare,
+            gnc::model_sdk::canonical_prepare_signature(*environment),
+            environment->preparation_call_shape_id);
+        append_static_entry<UniformEnvironmentQueryCall,
+                            &UniformEnvironmentQueryKernel::evaluate>(
+            implementation, kUniformEnvironmentQueryIdentity,
+            gnc::model_sdk::StaticEntryKind::PureQuery,
+            gnc::model_sdk::canonical_query_signature(*environment),
+            environment->pure_query->query_call_shape_id);
+    }
+
+    if (const auto* aerodynamics =
+            find_static_model(package, kAerodynamicTableModelIdentity);
+        aerodynamics != nullptr && aerodynamics->pure_query.has_value()) {
+        append_static_entry<AerodynamicTablePreparationCall,
+                            &prepare_aerodynamic_table_model>(
+            implementation, kAerodynamicTablePreparationIdentity,
+            gnc::model_sdk::StaticEntryKind::Prepare,
+            gnc::model_sdk::canonical_prepare_signature(*aerodynamics),
+            aerodynamics->preparation_call_shape_id);
+        append_static_entry<AerodynamicTableQueryCall,
+                            &AerodynamicTableQueryKernel::evaluate>(
+            implementation, kAerodynamicTableQueryIdentity,
+            gnc::model_sdk::StaticEntryKind::PureQuery,
+            gnc::model_sdk::canonical_query_signature(*aerodynamics),
+            aerodynamics->pure_query->query_call_shape_id);
+    }
+
+    if (const auto* closure =
+            find_static_model(package, kForceMomentClosureModelIdentity);
+        closure != nullptr && closure->closure.has_value()) {
+        append_static_entry<ForceMomentClosurePreparationCall,
+                            &prepare_force_moment_closure_model>(
+            implementation, kForceMomentClosurePreparationIdentity,
+            gnc::model_sdk::StaticEntryKind::Prepare,
+            gnc::model_sdk::canonical_prepare_signature(*closure),
+            closure->preparation_call_shape_id);
+        append_static_entry<ForceMomentClosureCall,
+                            &ForceMomentClosureKernel::evaluate>(
+            implementation, kForceMomentClosureKernelIdentity,
+            gnc::model_sdk::StaticEntryKind::Closure,
+            gnc::model_sdk::canonical_closure_signature(*closure),
+            closure->closure->closure_call_shape_id);
+        if (const auto* output = find_static_port(*closure, "form-input");
+            output != nullptr && output->slot_codec.has_value()) {
+            append_slot_codec_entry<
+                RigidFormInputSlotCodecGetter,
+                &gnc::model_sdk::typed_in_process_slot_codec<
+                    RigidFormInput>>(implementation, *closure, *output);
+        }
+    }
+
+    if (const auto* rigid =
+            find_static_model(package, kRigidStepModelIdentity);
+        rigid != nullptr && rigid->runtime_component.has_value()) {
+        append_definition_builder_entry<
+            ControlledRigidDefinitionBuilderCall,
+            &build_controlled_rigid_boundary_definition>(implementation,
+                                                         *rigid);
+        append_runtime_cell_factory_entry<
+            ControlledRigidRuntimeCellFactoryCall,
+            &create_controlled_rigid_runtime_cell>(implementation, *rigid);
+        append_state_codec_entry<RigidStateCodecGetter,
+                                 &rigid_state_codec>(implementation, *rigid);
+        append_static_entry<RigidInitialStateCall,
+                            &RigidInitialStateBuilder::build>(
+            implementation, kRigidInitialStateBuilderIdentity,
+            gnc::model_sdk::StaticEntryKind::InitialState,
+            gnc::model_sdk::canonical_initial_state_signature(*rigid),
+            rigid->runtime_component->state_owner
+                ->initial_state_builder_call_shape_id,
+            std::string(kRigidStateLayoutIdentity));
+        append_runtime_entry<RigidPublishProjectionCall,
+                             &project_committed_rigid_observation>(
+            implementation, *rigid,
+            gnc::model_sdk::RuntimeExecutionObligation::PublishProjection,
+            gnc::model_sdk::StaticEntryKind::PublishProjection,
+            std::string(kRigidStateLayoutIdentity));
+        append_runtime_entry<ControlledRigidBoundaryRuntimeCall,
+            &ControlledRigidBoundaryEvaluationKernel::
+                prepare_for_integration>(
+            implementation, *rigid,
+            gnc::model_sdk::RuntimeExecutionObligation::BoundaryEvaluation,
+            gnc::model_sdk::StaticEntryKind::BoundaryEvaluation,
+            std::string(kRigidStateLayoutIdentity));
+        append_runtime_entry<RigidDerivativeCall,
+                             &RigidDerivativeKernel::evaluate>(
+            implementation, *rigid,
+            gnc::model_sdk::RuntimeExecutionObligation::DerivativeEvaluation,
+            gnc::model_sdk::StaticEntryKind::DerivativeEvaluation,
+            std::string(kRigidStateLayoutIdentity));
+        if (const auto* output = find_static_port(
+                *rigid, "committed-rigid-observation");
+            output != nullptr && output->slot_codec.has_value()) {
+            append_slot_codec_entry<
+                RigidObservationSlotCodecGetter,
+                &gnc::model_sdk::typed_in_process_slot_codec<
+                    CommittedRigidObservation>>(
+                implementation, *rigid, *output);
+        }
+        if (const auto* boundary = find_runtime_entry(
+                *rigid,
+                gnc::model_sdk::RuntimeExecutionObligation::
+                    BoundaryEvaluation);
+            boundary != nullptr && boundary->result_codec.has_value()) {
+            append_result_slot_codec_entry<
+                gnc::model_sdk::InProcessCodecGetter<
+                    ControlledRigidBoundaryPreparationSlotCodec>,
+                &gnc::model_sdk::typed_in_process_slot_codec<
+                    ControlledRigidBoundaryPreparationOutput>>(
+                implementation, *rigid, *boundary);
+        }
+    }
+
+    if (const auto* mass =
+            find_static_model(package, kScalarBurnMassModelIdentity);
+        mass != nullptr && mass->runtime_component.has_value()) {
+        append_definition_builder_entry<
+            ScalarBurnMassDefinitionBuilderCall,
+            &build_scalar_burn_mass_definition>(implementation, *mass);
+        append_runtime_cell_factory_entry<
+            ScalarBurnMassRuntimeCellFactoryCall,
+            &create_scalar_burn_mass_runtime_cell>(implementation, *mass);
+        append_state_codec_entry<MassStateCodecGetter,
+                                 &mass_state_codec>(implementation, *mass);
+        append_static_entry<MassInitialStateCall,
+                            &build_scalar_burn_mass_initial_state>(
+            implementation, kMassInitialStateBuilderIdentity,
+            gnc::model_sdk::StaticEntryKind::InitialState,
+            gnc::model_sdk::canonical_initial_state_signature(*mass),
+            mass->runtime_component->state_owner
+                ->initial_state_builder_call_shape_id,
+            std::string(kMassStateLayoutIdentity));
+        append_runtime_entry<MassPublishProjectionCall,
+                             &project_committed_mass_properties>(
+            implementation, *mass,
+            gnc::model_sdk::RuntimeExecutionObligation::PublishProjection,
+            gnc::model_sdk::StaticEntryKind::PublishProjection,
+            std::string(kMassStateLayoutIdentity));
+        append_runtime_entry<MassIntervalEvolutionCall,
+                             &evaluate_scalar_burn_mass_interval>(
+            implementation, *mass,
+            gnc::model_sdk::RuntimeExecutionObligation::IntervalEvolution,
+            gnc::model_sdk::StaticEntryKind::IntervalEvolution,
+            std::string(kMassStateLayoutIdentity));
+        if (const auto* output = find_static_port(*mass, "mass-properties");
+            output != nullptr && output->slot_codec.has_value()) {
+            append_slot_codec_entry<
+                gnc::model_sdk::InProcessCodecGetter<
+                    MassPropertiesSlotCodec>,
+                &gnc::model_sdk::typed_in_process_slot_codec<
+                    MassPropertiesInput>>(implementation, *mass, *output);
+        }
+    }
+
+    if (const auto* guidance =
+            find_static_model(package, kAltitudePitchGuidanceModelIdentity);
+        guidance != nullptr) {
+        append_definition_builder_entry<
+            AltitudePitchGuidanceDefinitionBuilderCall,
+            &build_altitude_pitch_guidance_definition>(implementation,
+                                                       *guidance);
+        append_runtime_cell_factory_entry<
+            AltitudePitchGuidanceRuntimeCellFactoryCall,
+            &create_altitude_pitch_guidance_runtime_cell>(implementation,
+                                                          *guidance);
+        append_runtime_entry<AltitudePitchGuidanceCall,
+                             &AltitudePitchGuidanceKernel::evaluate>(
+            implementation, *guidance,
+            gnc::model_sdk::RuntimeExecutionObligation::BoundaryEvaluation,
+            gnc::model_sdk::StaticEntryKind::BoundaryEvaluation);
+        if (const auto* output = find_static_port(*guidance, "guidance-output");
+            output != nullptr && output->slot_codec.has_value()) {
+            append_slot_codec_entry<
+                gnc::model_sdk::InProcessCodecGetter<GuidanceOutputSlotCodec>,
+                &gnc::model_sdk::typed_in_process_slot_codec<
+                    AltitudePitchGuidanceOutput>>(
+                implementation, *guidance, *output);
+        }
+    }
+    if (const auto* controller =
+            find_static_model(package, kPitchMomentControllerModelIdentity);
+        controller != nullptr) {
+        append_definition_builder_entry<
+            PitchMomentControllerDefinitionBuilderCall,
+            &build_pitch_moment_controller_definition>(implementation,
+                                                       *controller);
+        append_runtime_cell_factory_entry<
+            PitchMomentControllerRuntimeCellFactoryCall,
+            &create_pitch_moment_controller_runtime_cell>(implementation,
+                                                          *controller);
+        append_runtime_entry<PitchMomentControllerCall,
+                             &PitchMomentControllerKernel::evaluate>(
+            implementation, *controller,
+            gnc::model_sdk::RuntimeExecutionObligation::BoundaryEvaluation,
+            gnc::model_sdk::StaticEntryKind::BoundaryEvaluation);
+        if (const auto* output = find_static_port(
+                *controller, "controller-output");
+            output != nullptr && output->slot_codec.has_value()) {
+            append_slot_codec_entry<
+                gnc::model_sdk::InProcessCodecGetter<
+                    ControllerOutputSlotCodec>,
+                &gnc::model_sdk::typed_in_process_slot_codec<
+                    PitchMomentControllerOutput>>(
+                implementation, *controller, *output);
+        }
+    }
+    if (const auto* actuator =
+            find_static_model(package, kIdealBodyMomentActuatorModelIdentity);
+        actuator != nullptr) {
+        append_definition_builder_entry<
+            IdealBodyMomentActuatorDefinitionBuilderCall,
+            &build_ideal_body_moment_actuator_definition>(implementation,
+                                                          *actuator);
+        append_runtime_cell_factory_entry<
+            IdealBodyMomentActuatorRuntimeCellFactoryCall,
+            &create_ideal_body_moment_actuator_runtime_cell>(
+                implementation, *actuator);
+        append_runtime_entry<IdealBodyMomentActuatorCall,
+                             &IdealBodyMomentActuatorKernel::evaluate>(
+            implementation, *actuator,
+            gnc::model_sdk::RuntimeExecutionObligation::BoundaryEvaluation,
+            gnc::model_sdk::StaticEntryKind::BoundaryEvaluation);
+        if (const auto* output = find_static_port(*actuator, "actuator-output");
+            output != nullptr && output->slot_codec.has_value()) {
+            append_slot_codec_entry<
+                gnc::model_sdk::InProcessCodecGetter<ActuatorOutputSlotCodec>,
+                &gnc::model_sdk::typed_in_process_slot_codec<
+                    IdealBodyMomentActuatorOutput>>(
+                implementation, *actuator, *output);
+        }
+    }
+    if (const auto* propulsion =
+            find_static_model(package, kSuppliedPropulsionModelIdentity);
+        propulsion != nullptr) {
+        append_definition_builder_entry<
+            FixedSuppliedPropulsionDefinitionBuilderCall,
+            &build_fixed_supplied_propulsion_definition>(implementation,
+                                                         *propulsion);
+        append_runtime_cell_factory_entry<
+            FixedSuppliedPropulsionRuntimeCellFactoryCall,
+            &create_fixed_supplied_propulsion_runtime_cell>(
+                implementation, *propulsion);
+        append_runtime_entry<FixedSuppliedPropulsionCall,
+                             &FixedSuppliedPropulsionBoundaryKernel::evaluate>(
+            implementation, *propulsion,
+            gnc::model_sdk::RuntimeExecutionObligation::BoundaryEvaluation,
+            gnc::model_sdk::StaticEntryKind::BoundaryEvaluation);
+        if (const auto* output = find_static_port(
+                *propulsion, "propulsion-body-wrench");
+            output != nullptr && output->slot_codec.has_value()) {
+            append_slot_codec_entry<
+                gnc::model_sdk::InProcessCodecGetter<
+                    PropulsionWrenchSlotCodec>,
+                &gnc::model_sdk::typed_in_process_slot_codec<
+                    SuppliedPropulsionBodyWrench>>(
+                implementation, *propulsion, *output);
+        }
+        if (const auto* output = find_static_port(
+                *propulsion, "mass-flow-interval");
+            output != nullptr && output->slot_codec.has_value()) {
+            append_slot_codec_entry<
+                gnc::model_sdk::InProcessCodecGetter<MassFlowSlotCodec>,
+                &gnc::model_sdk::typed_in_process_slot_codec<
+                    MassFlowIntervalInput>>(
+                implementation, *propulsion, *output);
+        }
+    }
+    if (const auto* evaluator =
+            find_static_model(package, kCommittedMissionResultModelIdentity);
+        evaluator != nullptr) {
+        append_definition_builder_entry<
+            CommittedMissionResultDefinitionBuilderCall,
+            &build_committed_mission_result_definition>(implementation,
+                                                        *evaluator);
+        append_runtime_cell_factory_entry<
+            CommittedMissionResultRuntimeCellFactoryCall,
+            &create_committed_mission_result_runtime_cell>(implementation,
+                                                           *evaluator);
+        append_runtime_entry<CommittedMissionHistoryEvaluationCall,
+            &CommittedMissionHistoryEvaluationKernel::evaluate>(
+            implementation, *evaluator,
+            gnc::model_sdk::RuntimeExecutionObligation::BoundaryEvaluation,
+            gnc::model_sdk::StaticEntryKind::BoundaryEvaluation, {},
+            &kCommittedMissionHistoryImplementationWitness);
+        if (const auto* output = find_static_port(
+                *evaluator, "committed-mission-result");
+            output != nullptr && output->slot_codec.has_value()) {
+            append_slot_codec_entry<
+                gnc::model_sdk::InProcessCodecGetter<MissionResultSlotCodec>,
+                &gnc::model_sdk::typed_in_process_slot_codec<
+                    CommittedMissionResultOutput>>(
+                implementation, *evaluator, *output);
+        }
+    }
+
+    implementation.state_layouts = {
+        {std::string(kRigidStateLayoutIdentity), sizeof(RigidState),
+         alignof(RigidState)},
+        {std::string(kMassStateLayoutIdentity), sizeof(MassState),
+         alignof(MassState)},
+    };
+    implementation.value_layouts = {
+        {std::string(kRigidFormInputContractIdentity),
+         sizeof(RigidFormInput), alignof(RigidFormInput),
+         std::string(kRigidFormInputLayoutIdentity)},
+        {std::string(kMassPropertiesContractIdentity),
+         sizeof(MassPropertiesInput), alignof(MassPropertiesInput),
+         std::string(kMassPropertiesLayoutIdentity)},
+        {std::string(kSuppliedPropulsionBodyWrenchContractIdentity),
+         sizeof(SuppliedPropulsionBodyWrench),
+         alignof(SuppliedPropulsionBodyWrench),
+         std::string(kPropulsionWrenchLayoutIdentity)},
+        {std::string(kIdealBodyMomentActuatorOutputContractIdentity),
+         sizeof(IdealBodyMomentActuatorOutput),
+         alignof(IdealBodyMomentActuatorOutput),
+         std::string(kActuatorOutputLayoutIdentity)},
+        {std::string(kRigidObservationContractIdentity),
+         sizeof(CommittedRigidObservation),
+         alignof(CommittedRigidObservation),
+         std::string(kRigidObservationLayoutIdentity)},
+        {std::string(kMassFlowIntervalContractIdentity),
+         sizeof(MassFlowIntervalInput), alignof(MassFlowIntervalInput),
+         std::string(kMassFlowLayoutIdentity)},
+        {std::string(kAltitudePitchGuidanceOutputContractIdentity),
+         sizeof(AltitudePitchGuidanceOutput),
+         alignof(AltitudePitchGuidanceOutput),
+         std::string(kGuidanceOutputLayoutIdentity)},
+        {std::string(kPitchMomentControllerOutputContractIdentity),
+         sizeof(PitchMomentControllerOutput),
+         alignof(PitchMomentControllerOutput),
+         std::string(kControllerOutputLayoutIdentity)},
+        {std::string(kCommittedMissionResultContractIdentity),
+         sizeof(CommittedMissionResultOutput),
+         alignof(CommittedMissionResultOutput),
+         std::string(kMissionResultLayoutIdentity)},
+        {std::string(kControlledRigidBoundaryPreparationContractIdentity),
+         sizeof(ControlledRigidBoundaryPreparationOutput),
+         alignof(ControlledRigidBoundaryPreparationOutput),
+         std::string(kControlledRigidBoundaryPreparationLayoutIdentity)},
+    };
+    return implementation;
+}
+
+NumericalOutcome<ControlledRigidRuntimeCell>
+create_controlled_rigid_runtime_cell(
+    const ControlledRigidBoundaryEvaluationDefinition& definition,
+    const gnc::model_sdk::RuntimeCellFactoryContext& context,
+    const ControlledRigidRuntimeCellBindings& bindings) {
+    const auto& invocations = bindings.bound_invocations;
+    const bool callsites_are_unique =
+        bindings.publish_projection_callsite_handle !=
+            bindings.boundary_evaluation_callsite_handle &&
+        bindings.publish_projection_callsite_handle !=
+            bindings.derivative_evaluation_callsite_handle &&
+        bindings.boundary_evaluation_callsite_handle !=
+            bindings.derivative_evaluation_callsite_handle;
+    const bool invocations_are_unique =
+        invocations.environment.invocation_handle !=
+            invocations.frozen_form.aerodynamic.invocation_handle &&
+        invocations.environment.invocation_handle !=
+            invocations.frozen_form.closure.invocation_handle &&
+        invocations.frozen_form.aerodynamic.invocation_handle !=
+            invocations.frozen_form.closure.invocation_handle;
+    if (!valid_runtime_cell_factory_context(context) ||
+        bindings.state_block_handle == 0U ||
+        bindings.publish_projection_callsite_handle == 0U ||
+        bindings.boundary_evaluation_callsite_handle == 0U ||
+        bindings.derivative_evaluation_callsite_handle == 0U ||
+        bindings.observation_output.slot_handle == 0U ||
+        bindings.observation_output.writer_token.value == 0U ||
+        bindings.boundary_preparation_output.slot_handle == 0U ||
+        bindings.boundary_preparation_output.writer_token.value == 0U ||
+        bindings.mass_properties_input_slot_handle == 0U ||
+        bindings.propulsion_body_wrench_input_slot_handle == 0U ||
+        bindings.actuator_output_input_slot_handle == 0U ||
+        bindings.held_form_result_slot_handle == 0U ||
+        !callsites_are_unique || !invocations_are_unique ||
+        bindings.publish_projection == nullptr ||
+        bindings.boundary_evaluation == nullptr ||
+        bindings.derivative_evaluation == nullptr ||
+        invocations.environment.invocation_handle == 0U ||
+        invocations.environment.provider_plan_handle == 0U ||
+        invocations.environment.entry_handle == 0U ||
+        invocations.environment.prepared_model == nullptr ||
+        invocations.environment.callable == nullptr ||
+        invocations.frozen_form.aerodynamic.invocation_handle == 0U ||
+        invocations.frozen_form.aerodynamic.provider_plan_handle == 0U ||
+        invocations.frozen_form.aerodynamic.entry_handle == 0U ||
+        invocations.frozen_form.aerodynamic.prepared_model == nullptr ||
+        invocations.frozen_form.aerodynamic.callable == nullptr ||
+        invocations.frozen_form.closure.invocation_handle == 0U ||
+        invocations.frozen_form.closure.provider_plan_handle == 0U ||
+        invocations.frozen_form.closure.entry_handle == 0U ||
+        invocations.frozen_form.closure.prepared_model == nullptr ||
+        invocations.frozen_form.closure.callable == nullptr) {
+        return mass_commit_failure<ControlledRigidRuntimeCell>(
+            kControlledRigidRuntimeCellFactoryIdentity,
+            NumericalStatus::DomainError, "compiled-bindings");
+    }
+    return NumericalOutcome<ControlledRigidRuntimeCell>::with_value(
+        NumericalStatus::Success,
+        ControlledRigidRuntimeCell{definition, context, bindings},
+        mass_commit_evidence(kControlledRigidRuntimeCellFactoryIdentity,
+                             "runtime-cell"));
+}
+
+NumericalOutcome<ScalarBurnMassRuntimeCell>
+create_scalar_burn_mass_runtime_cell(
+    const ScalarBurnMassDefinition& definition,
+    const gnc::model_sdk::RuntimeCellFactoryContext& context,
+    const ScalarBurnMassRuntimeCellBindings& bindings) {
+    if (!valid_runtime_cell_factory_context(context) ||
+        bindings.state_block_handle == 0U ||
+        bindings.publish_projection_callsite_handle == 0U ||
+        bindings.interval_evolution_callsite_handle == 0U ||
+        bindings.publish_projection_callsite_handle ==
+            bindings.interval_evolution_callsite_handle ||
+        bindings.mass_properties_output.slot_handle == 0U ||
+        bindings.mass_properties_output.writer_token.value == 0U ||
+        bindings.candidate_state_writer.value == 0U ||
+        bindings.mass_flow_input_slot_handle == 0U ||
+        bindings.publish_projection == nullptr ||
+        bindings.interval_evolution == nullptr) {
+        return mass_commit_failure<ScalarBurnMassRuntimeCell>(
+            kScalarBurnMassRuntimeCellFactoryIdentity,
+            NumericalStatus::DomainError, "compiled-bindings");
+    }
+    return NumericalOutcome<ScalarBurnMassRuntimeCell>::with_value(
+        NumericalStatus::Success,
+        ScalarBurnMassRuntimeCell{definition, context, bindings},
+        mass_commit_evidence(kScalarBurnMassRuntimeCellFactoryIdentity,
+                             "runtime-cell"));
+}
+
+NumericalOutcome<AltitudePitchGuidanceRuntimeCell>
+create_altitude_pitch_guidance_runtime_cell(
+    const AltitudePitchGuidanceDefinition& definition,
+    const gnc::model_sdk::RuntimeCellFactoryContext& context,
+    const AltitudePitchGuidanceRuntimeCellBindings& bindings) {
+    if (!valid_runtime_cell_factory_context(context) ||
+        bindings.boundary_evaluation_callsite_handle == 0U ||
+        bindings.observation_input_slot_handle == 0U ||
+        bindings.guidance_output.slot_handle == 0U ||
+        bindings.guidance_output.writer_token.value == 0U ||
+        bindings.boundary_evaluation == nullptr) {
+        return mass_commit_failure<AltitudePitchGuidanceRuntimeCell>(
+            kAltitudePitchGuidanceRuntimeCellFactoryIdentity,
+            NumericalStatus::DomainError, "compiled-bindings");
+    }
+    return NumericalOutcome<AltitudePitchGuidanceRuntimeCell>::with_value(
+        NumericalStatus::Success,
+        AltitudePitchGuidanceRuntimeCell{definition, context, bindings},
+        mass_commit_evidence(
+            kAltitudePitchGuidanceRuntimeCellFactoryIdentity,
+            "runtime-cell"));
+}
+
+NumericalOutcome<PitchMomentControllerRuntimeCell>
+create_pitch_moment_controller_runtime_cell(
+    const PitchMomentControllerDefinition& definition,
+    const gnc::model_sdk::RuntimeCellFactoryContext& context,
+    const PitchMomentControllerRuntimeCellBindings& bindings) {
+    if (!valid_runtime_cell_factory_context(context) ||
+        bindings.boundary_evaluation_callsite_handle == 0U ||
+        bindings.guidance_input_slot_handle == 0U ||
+        bindings.controller_output.slot_handle == 0U ||
+        bindings.controller_output.writer_token.value == 0U ||
+        bindings.boundary_evaluation == nullptr) {
+        return mass_commit_failure<PitchMomentControllerRuntimeCell>(
+            kPitchMomentControllerRuntimeCellFactoryIdentity,
+            NumericalStatus::DomainError, "compiled-bindings");
+    }
+    return NumericalOutcome<PitchMomentControllerRuntimeCell>::with_value(
+        NumericalStatus::Success,
+        PitchMomentControllerRuntimeCell{definition, context, bindings},
+        mass_commit_evidence(
+            kPitchMomentControllerRuntimeCellFactoryIdentity,
+            "runtime-cell"));
+}
+
+NumericalOutcome<IdealBodyMomentActuatorRuntimeCell>
+create_ideal_body_moment_actuator_runtime_cell(
+    const IdealBodyMomentActuatorDefinition& definition,
+    const gnc::model_sdk::RuntimeCellFactoryContext& context,
+    const IdealBodyMomentActuatorRuntimeCellBindings& bindings) {
+    if (!valid_runtime_cell_factory_context(context) ||
+        bindings.boundary_evaluation_callsite_handle == 0U ||
+        bindings.controller_input_slot_handle == 0U ||
+        bindings.actuator_output.slot_handle == 0U ||
+        bindings.actuator_output.writer_token.value == 0U ||
+        bindings.boundary_evaluation == nullptr) {
+        return mass_commit_failure<IdealBodyMomentActuatorRuntimeCell>(
+            kIdealBodyMomentActuatorRuntimeCellFactoryIdentity,
+            NumericalStatus::DomainError, "compiled-bindings");
+    }
+    return NumericalOutcome<IdealBodyMomentActuatorRuntimeCell>::with_value(
+        NumericalStatus::Success,
+        IdealBodyMomentActuatorRuntimeCell{definition, context, bindings},
+        mass_commit_evidence(
+            kIdealBodyMomentActuatorRuntimeCellFactoryIdentity,
+            "runtime-cell"));
+}
+
+NumericalOutcome<FixedSuppliedPropulsionRuntimeCell>
+create_fixed_supplied_propulsion_runtime_cell(
+    const FixedSuppliedPropulsionDefinition& definition,
+    const gnc::model_sdk::RuntimeCellFactoryContext& context,
+    const FixedSuppliedPropulsionRuntimeCellBindings& bindings) {
+    if (!valid_runtime_cell_factory_context(context) ||
+        bindings.boundary_evaluation_callsite_handle == 0U ||
+        bindings.propulsion_wrench_output.slot_handle == 0U ||
+        bindings.propulsion_wrench_output.writer_token.value == 0U ||
+        bindings.mass_flow_output.slot_handle == 0U ||
+        bindings.mass_flow_output.writer_token.value == 0U ||
+        bindings.boundary_evaluation == nullptr) {
+        return mass_commit_failure<FixedSuppliedPropulsionRuntimeCell>(
+            kFixedSuppliedPropulsionRuntimeCellFactoryIdentity,
+            NumericalStatus::DomainError, "compiled-bindings");
+    }
+    return NumericalOutcome<FixedSuppliedPropulsionRuntimeCell>::with_value(
+        NumericalStatus::Success,
+        FixedSuppliedPropulsionRuntimeCell{definition, context, bindings},
+        mass_commit_evidence(
+            kFixedSuppliedPropulsionRuntimeCellFactoryIdentity,
+            "runtime-cell"));
+}
+
+NumericalOutcome<CommittedMissionResultRuntimeCell>
+create_committed_mission_result_runtime_cell(
+    const CommittedMissionResultDefinition& definition,
+    const gnc::model_sdk::RuntimeCellFactoryContext& context,
+    const CommittedMissionResultRuntimeCellBindings& bindings) {
+    if (!valid_runtime_cell_factory_context(context) ||
+        bindings.boundary_evaluation_callsite_handle == 0U ||
+        bindings.committed_history_handle == 0U ||
+        bindings.mission_result_output.slot_handle == 0U ||
+        bindings.mission_result_output.writer_token.value == 0U ||
+        bindings.boundary_evaluation == nullptr) {
+        return mass_commit_failure<CommittedMissionResultRuntimeCell>(
+            kCommittedMissionResultRuntimeCellFactoryIdentity,
+            NumericalStatus::DomainError, "compiled-bindings");
+    }
+    return NumericalOutcome<CommittedMissionResultRuntimeCell>::with_value(
+        NumericalStatus::Success,
+        CommittedMissionResultRuntimeCell{definition, context, bindings},
+        mass_commit_evidence(
+            kCommittedMissionResultRuntimeCellFactoryIdentity,
+            "runtime-cell"));
+}
+
+gnc::model_sdk::CanonicalConfigBlock
+canonical_scalar_burn_mass_config(
+    const ScalarBurnMassDefinition& definition) {
+    const auto& policy = definition.numerical_policy;
+    return {
+        std::string(kScalarBurnMassConfigSchemaIdentity),
+        kScalarBurnMassConfigSchemaVersion,
+        {
+            {"mass_state_id", definition.mass_state_id},
+            {"numerical.absolute_tolerance", policy.absolute_tolerance},
+            {"numerical.condition_limit", policy.condition_limit},
+            {"numerical.finite_check",
+             gnc::model_sdk::CanonicalEnumValue{
+                 finite_check_token(policy.finite_check)}},
+            {"numerical.relative_tolerance", policy.relative_tolerance},
+            {"numerical.zero_tolerance", policy.zero_tolerance},
+        },
+    };
+}
+
+NumericalOutcome<ScalarBurnMassDefinition>
+build_scalar_burn_mass_definition(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration) {
+    const auto failure = [] {
+        return mass_commit_failure<ScalarBurnMassDefinition>(
+            kScalarBurnMassDefinitionBuilderIdentity,
+            NumericalStatus::DomainError, "canonical-config");
+    };
+    static constexpr std::array<std::string_view, 6U> kFields{
+        "mass_state_id", "numerical.absolute_tolerance",
+        "numerical.condition_limit", "numerical.finite_check",
+        "numerical.relative_tolerance", "numerical.zero_tolerance"};
+    if (!exact_config_fields(
+            configuration, kScalarBurnMassConfigSchemaIdentity,
+            kScalarBurnMassConfigSchemaVersion, kFields)) {
+        return failure();
+    }
+    const auto* mass_state_id =
+        std::get_if<std::string>(&configuration.fields[0U].value);
+    const auto policy =
+        config_numerical_policy(configuration, 1U, 2U, 3U, 4U, 5U);
+    if (mass_state_id == nullptr || mass_state_id->empty() ||
+        !policy.has_value()) {
+        return failure();
+    }
+    return NumericalOutcome<ScalarBurnMassDefinition>::with_value(
+        NumericalStatus::Success,
+        ScalarBurnMassDefinition{
+            std::string(kScalarBurnMassModelIdentity),
+            std::string(kScalarBurnMassModelVersion), *mass_state_id,
+            *policy},
+        mass_commit_evidence(kScalarBurnMassDefinitionBuilderIdentity,
+                             "canonical-config"));
+}
+
+gnc::model_sdk::CanonicalConfigBlock
+canonical_pitch_moment_controller_config(
+    const PitchMomentControllerDefinition& definition) {
+    const auto& policy = definition.numerical_policy;
+    return {
+        std::string(kPitchMomentControllerConfigSchemaIdentity),
+        kPitchMomentControllerConfigSchemaVersion,
+        {
+            {"body_frame_id", definition.body_frame.id},
+            {"clock_domain_id", definition.clock_domain.id},
+            {"configuration_revision", definition.configuration_revision},
+            {"moment_command_limit_newton_meters",
+             definition.moment_command_limit_newton_meters},
+            {"numerical.absolute_tolerance", policy.absolute_tolerance},
+            {"numerical.condition_limit", policy.condition_limit},
+            {"numerical.finite_check",
+             gnc::model_sdk::CanonicalEnumValue{
+                 finite_check_token(policy.finite_check)}},
+            {"numerical.relative_tolerance", policy.relative_tolerance},
+            {"numerical.zero_tolerance", policy.zero_tolerance},
+            {"pitch_error_gain_newton_meters_per_radian",
+             definition.pitch_error_gain_newton_meters_per_radian},
+            {"pitch_rate_gain_newton_meter_seconds_per_radian",
+             definition
+                 .pitch_rate_gain_newton_meter_seconds_per_radian},
+        },
+    };
+}
+
+NumericalOutcome<PitchMomentControllerDefinition>
+build_pitch_moment_controller_definition(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration) {
+    const auto failure = [] {
+        return mass_commit_failure<PitchMomentControllerDefinition>(
+            kPitchMomentControllerDefinitionBuilderIdentity,
+            NumericalStatus::DomainError, "canonical-config");
+    };
+    static constexpr std::array<std::string_view, 11U> kFields{
+        "body_frame_id",
+        "clock_domain_id",
+        "configuration_revision",
+        "moment_command_limit_newton_meters",
+        "numerical.absolute_tolerance",
+        "numerical.condition_limit",
+        "numerical.finite_check",
+        "numerical.relative_tolerance",
+        "numerical.zero_tolerance",
+        "pitch_error_gain_newton_meters_per_radian",
+        "pitch_rate_gain_newton_meter_seconds_per_radian",
+    };
+    if (!exact_config_fields(
+            configuration, kPitchMomentControllerConfigSchemaIdentity,
+            kPitchMomentControllerConfigSchemaVersion, kFields)) {
+        return failure();
+    }
+    const auto* body_frame =
+        std::get_if<std::string>(&configuration.fields[0U].value);
+    const auto* clock_domain =
+        std::get_if<std::string>(&configuration.fields[1U].value);
+    const auto* revision =
+        std::get_if<std::int64_t>(&configuration.fields[2U].value);
+    const auto* command_limit =
+        std::get_if<double>(&configuration.fields[3U].value);
+    const auto policy =
+        config_numerical_policy(configuration, 4U, 5U, 6U, 7U, 8U);
+    const auto* error_gain =
+        std::get_if<double>(&configuration.fields[9U].value);
+    const auto* rate_gain =
+        std::get_if<double>(&configuration.fields[10U].value);
+    if (body_frame == nullptr || body_frame->empty() ||
+        clock_domain == nullptr || clock_domain->empty() ||
+        revision == nullptr || *revision < 0 || command_limit == nullptr ||
+        error_gain == nullptr || rate_gain == nullptr ||
+        !canonical_double(*command_limit) ||
+        !canonical_double(*error_gain) || !canonical_double(*rate_gain) ||
+        *command_limit <= 0.0 || *error_gain < 0.0 || *rate_gain < 0.0 ||
+        !policy.has_value()) {
+        return failure();
+    }
+    PitchMomentControllerDefinition definition;
+    definition.model_id = std::string(kPitchMomentControllerModelIdentity);
+    definition.model_version =
+        std::string(kPitchMomentControllerModelVersion);
+    definition.body_frame.id = *body_frame;
+    definition.clock_domain.id = *clock_domain;
+    definition.configuration_revision = *revision;
+    definition.pitch_error_gain_newton_meters_per_radian = *error_gain;
+    definition.pitch_rate_gain_newton_meter_seconds_per_radian = *rate_gain;
+    definition.moment_command_limit_newton_meters = *command_limit;
+    definition.numerical_policy = *policy;
+    return NumericalOutcome<PitchMomentControllerDefinition>::with_value(
+        NumericalStatus::Success, std::move(definition),
+        mass_commit_evidence(
+            kPitchMomentControllerDefinitionBuilderIdentity,
+            "canonical-config"));
+}
+
+gnc::model_sdk::CanonicalConfigBlock
+canonical_ideal_body_moment_actuator_config(
+    const IdealBodyMomentActuatorDefinition& definition) {
+    const auto& policy = definition.numerical_policy;
+    return {
+        std::string(kIdealBodyMomentActuatorConfigSchemaIdentity),
+        kIdealBodyMomentActuatorConfigSchemaVersion,
+        {
+            {"body_frame_id", definition.body_frame.id},
+            {"clock_domain_id", definition.clock_domain.id},
+            {"configuration_revision", definition.configuration_revision},
+            {"numerical.absolute_tolerance", policy.absolute_tolerance},
+            {"numerical.condition_limit", policy.condition_limit},
+            {"numerical.finite_check",
+             gnc::model_sdk::CanonicalEnumValue{
+                 finite_check_token(policy.finite_check)}},
+            {"numerical.relative_tolerance", policy.relative_tolerance},
+            {"numerical.zero_tolerance", policy.zero_tolerance},
+            {"realization_gain", definition.realization_gain},
+            {"source_id", definition.source_id},
+        },
+    };
+}
+
+NumericalOutcome<IdealBodyMomentActuatorDefinition>
+build_ideal_body_moment_actuator_definition(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration) {
+    const auto failure = [] {
+        return mass_commit_failure<IdealBodyMomentActuatorDefinition>(
+            kIdealBodyMomentActuatorDefinitionBuilderIdentity,
+            NumericalStatus::DomainError, "canonical-config");
+    };
+    static constexpr std::array<std::string_view, 10U> kFields{
+        "body_frame_id",
+        "clock_domain_id",
+        "configuration_revision",
+        "numerical.absolute_tolerance",
+        "numerical.condition_limit",
+        "numerical.finite_check",
+        "numerical.relative_tolerance",
+        "numerical.zero_tolerance",
+        "realization_gain",
+        "source_id",
+    };
+    if (!exact_config_fields(
+            configuration, kIdealBodyMomentActuatorConfigSchemaIdentity,
+            kIdealBodyMomentActuatorConfigSchemaVersion, kFields)) {
+        return failure();
+    }
+    const auto* body_frame =
+        std::get_if<std::string>(&configuration.fields[0U].value);
+    const auto* clock_domain =
+        std::get_if<std::string>(&configuration.fields[1U].value);
+    const auto* revision =
+        std::get_if<std::int64_t>(&configuration.fields[2U].value);
+    const auto policy =
+        config_numerical_policy(configuration, 3U, 4U, 5U, 6U, 7U);
+    const auto* gain =
+        std::get_if<double>(&configuration.fields[8U].value);
+    const auto* source_id =
+        std::get_if<std::string>(&configuration.fields[9U].value);
+    if (body_frame == nullptr || body_frame->empty() ||
+        clock_domain == nullptr || clock_domain->empty() ||
+        revision == nullptr || *revision < 0 || gain == nullptr ||
+        !canonical_double(*gain) || source_id == nullptr ||
+        source_id->empty() || !policy.has_value() ||
+        !near(*gain, 1.0, *policy)) {
+        return failure();
+    }
+    IdealBodyMomentActuatorDefinition definition;
+    definition.model_id =
+        std::string(kIdealBodyMomentActuatorModelIdentity);
+    definition.model_version =
+        std::string(kIdealBodyMomentActuatorModelVersion);
+    definition.source_id = *source_id;
+    definition.body_frame.id = *body_frame;
+    definition.clock_domain.id = *clock_domain;
+    definition.configuration_revision = *revision;
+    definition.realization_gain = *gain;
+    definition.numerical_policy = *policy;
+    return NumericalOutcome<IdealBodyMomentActuatorDefinition>::with_value(
+        NumericalStatus::Success, std::move(definition),
+        mass_commit_evidence(
+            kIdealBodyMomentActuatorDefinitionBuilderIdentity,
+            "canonical-config"));
+}
+
+gnc::model_sdk::CanonicalConfigBlock
+canonical_fixed_supplied_propulsion_config(
+    const FixedSuppliedPropulsionDefinition& definition) {
+    const auto& policy = definition.propulsion.numerical_policy;
+    return {
+        std::string(kSuppliedPropulsionConfigSchemaIdentity),
+        kSuppliedPropulsionConfigSchemaVersion,
+        {
+            {"body_frame_id", definition.propulsion.body_frame.id},
+            {"center_of_mass_to_application.x_meters",
+             definition.center_of_mass_to_application.value(0)},
+            {"center_of_mass_to_application.y_meters",
+             definition.center_of_mass_to_application.value(1)},
+            {"center_of_mass_to_application.z_meters",
+             definition.center_of_mass_to_application.value(2)},
+            {"clock_domain_id", definition.propulsion.clock_domain.id},
+            {"fuel_consumption_rate_kilograms_per_second",
+             definition.fuel_consumption_rate_kilograms_per_second},
+            {"intrinsic_moment_at_application.x_newton_meters",
+             definition.intrinsic_moment_at_application.value(0)},
+            {"intrinsic_moment_at_application.y_newton_meters",
+             definition.intrinsic_moment_at_application.value(1)},
+            {"intrinsic_moment_at_application.z_newton_meters",
+             definition.intrinsic_moment_at_application.value(2)},
+            {"mass_state_id", definition.propulsion.mass_state_id},
+            {"numerical.absolute_tolerance", policy.absolute_tolerance},
+            {"numerical.condition_limit", policy.condition_limit},
+            {"numerical.finite_check",
+             gnc::model_sdk::CanonicalEnumValue{
+                 finite_check_token(policy.finite_check)}},
+            {"numerical.relative_tolerance", policy.relative_tolerance},
+            {"numerical.zero_tolerance", policy.zero_tolerance},
+            {"source_id", definition.propulsion.source_id},
+            {"thrust_direction.x_unit", definition.thrust_direction.value(0)},
+            {"thrust_direction.y_unit", definition.thrust_direction.value(1)},
+            {"thrust_direction.z_unit", definition.thrust_direction.value(2)},
+            {"thrust_magnitude_newtons",
+             definition.thrust_magnitude_newtons},
+        },
+    };
+}
+
+NumericalOutcome<FixedSuppliedPropulsionDefinition>
+build_fixed_supplied_propulsion_definition(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration) {
+    const auto failure = [] {
+        return mass_commit_failure<FixedSuppliedPropulsionDefinition>(
+            kFixedSuppliedPropulsionDefinitionBuilderIdentity,
+            NumericalStatus::DomainError, "canonical-config");
+    };
+    static constexpr std::array<std::string_view, 20U> kFields{
+        "body_frame_id",
+        "center_of_mass_to_application.x_meters",
+        "center_of_mass_to_application.y_meters",
+        "center_of_mass_to_application.z_meters",
+        "clock_domain_id",
+        "fuel_consumption_rate_kilograms_per_second",
+        "intrinsic_moment_at_application.x_newton_meters",
+        "intrinsic_moment_at_application.y_newton_meters",
+        "intrinsic_moment_at_application.z_newton_meters",
+        "mass_state_id",
+        "numerical.absolute_tolerance",
+        "numerical.condition_limit",
+        "numerical.finite_check",
+        "numerical.relative_tolerance",
+        "numerical.zero_tolerance",
+        "source_id",
+        "thrust_direction.x_unit",
+        "thrust_direction.y_unit",
+        "thrust_direction.z_unit",
+        "thrust_magnitude_newtons",
+    };
+    if (!exact_config_fields(
+            configuration, kSuppliedPropulsionConfigSchemaIdentity,
+            kSuppliedPropulsionConfigSchemaVersion, kFields)) {
+        return failure();
+    }
+    const auto* body_frame =
+        std::get_if<std::string>(&configuration.fields[0U].value);
+    const auto* clock_domain =
+        std::get_if<std::string>(&configuration.fields[4U].value);
+    const auto* mass_state_id =
+        std::get_if<std::string>(&configuration.fields[9U].value);
+    const auto policy = config_numerical_policy(
+        configuration, 10U, 11U, 12U, 13U, 14U);
+    const auto* source_id =
+        std::get_if<std::string>(&configuration.fields[15U].value);
+    const std::array<std::size_t, 11U> kNumberIndices{
+        1U, 2U, 3U, 5U, 6U, 7U, 8U, 16U, 17U, 18U, 19U};
+    std::array<const double*, kNumberIndices.size()> numbers{};
+    for (std::size_t index = 0U; index < kNumberIndices.size(); ++index) {
+        numbers[index] = std::get_if<double>(
+            &configuration.fields[kNumberIndices[index]].value);
+    }
+    if (body_frame == nullptr || body_frame->empty() ||
+        clock_domain == nullptr || clock_domain->empty() ||
+        mass_state_id == nullptr || mass_state_id->empty() ||
+        source_id == nullptr || source_id->empty() || !policy.has_value() ||
+        std::any_of(numbers.begin(), numbers.end(), [](const double* value) {
+            return value == nullptr || !canonical_double(*value);
+        })) {
+        return failure();
+    }
+    FixedSuppliedPropulsionDefinition definition;
+    definition.propulsion.model_id =
+        std::string(kSuppliedPropulsionModelIdentity);
+    definition.propulsion.model_version =
+        std::string(kSuppliedPropulsionModelVersion);
+    definition.propulsion.source_id = *source_id;
+    definition.propulsion.body_frame.id = *body_frame;
+    definition.propulsion.clock_domain.id = *clock_domain;
+    definition.propulsion.mass_state_id = *mass_state_id;
+    definition.propulsion.numerical_policy = *policy;
+    definition.center_of_mass_to_application.value =
+        Vec3{*numbers[0U], *numbers[1U], *numbers[2U]};
+    definition.fuel_consumption_rate_kilograms_per_second = *numbers[3U];
+    definition.intrinsic_moment_at_application.value =
+        Vec3{*numbers[4U], *numbers[5U], *numbers[6U]};
+    definition.thrust_direction.value =
+        Vec3{*numbers[7U], *numbers[8U], *numbers[9U]};
+    definition.thrust_magnitude_newtons = *numbers[10U];
+    const double direction_norm = definition.thrust_direction.value.norm();
+    if (definition.thrust_magnitude_newtons < 0.0 ||
+        definition.fuel_consumption_rate_kilograms_per_second < 0.0 ||
+        !std::isfinite(direction_norm) ||
+        !near(direction_norm, 1.0, definition.propulsion.numerical_policy)) {
+        return failure();
+    }
+    return NumericalOutcome<FixedSuppliedPropulsionDefinition>::with_value(
+        NumericalStatus::Success, std::move(definition),
+        mass_commit_evidence(
+            kFixedSuppliedPropulsionDefinitionBuilderIdentity,
+            "canonical-config"));
+}
+
+gnc::model_sdk::CanonicalConfigBlock
+canonical_controlled_rigid_boundary_config(
+    const ControlledRigidBoundaryEvaluationDefinition& definition) {
+    const auto& algorithm = definition.rigid.algorithm;
+    const auto& candidate = algorithm.candidate_attitude_policy;
+    const auto& evaluation = algorithm.attitude_evaluation_policy;
+    const auto& numerical = algorithm.numerical_policy;
+    return {
+        std::string(kRigidStepConfigSchemaIdentity),
+        kRigidStepConfigSchemaVersion,
+        {
+            {"attitude.candidate.normalization",
+             gnc::model_sdk::CanonicalEnumValue{
+                 normalization_token(candidate.normalization)}},
+            {"attitude.candidate.numerical.absolute_tolerance",
+             candidate.numerical.absolute_tolerance},
+            {"attitude.candidate.numerical.condition_limit",
+             candidate.numerical.condition_limit},
+            {"attitude.candidate.numerical.finite_check",
+             gnc::model_sdk::CanonicalEnumValue{
+                 finite_check_token(candidate.numerical.finite_check)}},
+            {"attitude.candidate.numerical.relative_tolerance",
+             candidate.numerical.relative_tolerance},
+            {"attitude.candidate.numerical.zero_tolerance",
+             candidate.numerical.zero_tolerance},
+            {"attitude.evaluation.normalization",
+             gnc::model_sdk::CanonicalEnumValue{
+                 normalization_token(evaluation.normalization)}},
+            {"attitude.evaluation.numerical.absolute_tolerance",
+             evaluation.numerical.absolute_tolerance},
+            {"attitude.evaluation.numerical.condition_limit",
+             evaluation.numerical.condition_limit},
+            {"attitude.evaluation.numerical.finite_check",
+             gnc::model_sdk::CanonicalEnumValue{
+                 finite_check_token(evaluation.numerical.finite_check)}},
+            {"attitude.evaluation.numerical.relative_tolerance",
+             evaluation.numerical.relative_tolerance},
+            {"attitude.evaluation.numerical.zero_tolerance",
+             evaluation.numerical.zero_tolerance},
+            {"combined_wrench_source_id",
+             definition.wrench_adapter.combined_wrench_source_id},
+            {"fixed_step_seconds", algorithm.fixed_step_seconds},
+            {"inertial_frame_id", definition.rigid.inertial_frame.id},
+            {"numerical.absolute_tolerance",
+             numerical.absolute_tolerance},
+            {"numerical.condition_limit", numerical.condition_limit},
+            {"numerical.finite_check",
+             gnc::model_sdk::CanonicalEnumValue{
+                 finite_check_token(numerical.finite_check)}},
+            {"numerical.relative_tolerance",
+             numerical.relative_tolerance},
+            {"numerical.zero_tolerance", numerical.zero_tolerance},
+        },
+    };
+}
+
+NumericalOutcome<ControlledRigidBoundaryEvaluationDefinition>
+build_controlled_rigid_boundary_definition(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration) {
+    const auto failure = [] {
+        return NumericalOutcome<
+            ControlledRigidBoundaryEvaluationDefinition>::failure(
+                NumericalStatus::DomainError,
+                mass_commit_evidence(
+                    kControlledRigidDefinitionBuilderIdentity,
+                    "canonical-config"));
+    };
+    static constexpr std::array<std::string_view, 20U> kFields{
+        "attitude.candidate.normalization",
+        "attitude.candidate.numerical.absolute_tolerance",
+        "attitude.candidate.numerical.condition_limit",
+        "attitude.candidate.numerical.finite_check",
+        "attitude.candidate.numerical.relative_tolerance",
+        "attitude.candidate.numerical.zero_tolerance",
+        "attitude.evaluation.normalization",
+        "attitude.evaluation.numerical.absolute_tolerance",
+        "attitude.evaluation.numerical.condition_limit",
+        "attitude.evaluation.numerical.finite_check",
+        "attitude.evaluation.numerical.relative_tolerance",
+        "attitude.evaluation.numerical.zero_tolerance",
+        "combined_wrench_source_id",
+        "fixed_step_seconds",
+        "inertial_frame_id",
+        "numerical.absolute_tolerance",
+        "numerical.condition_limit",
+        "numerical.finite_check",
+        "numerical.relative_tolerance",
+        "numerical.zero_tolerance",
+    };
+    if (configuration.schema_id != kRigidStepConfigSchemaIdentity ||
+        configuration.schema_version != kRigidStepConfigSchemaVersion ||
+        configuration.fields.size() != kFields.size()) {
+        return failure();
+    }
+    for (std::size_t index = 0U; index < kFields.size(); ++index) {
+        if (configuration.fields[index].field_id != kFields[index]) {
+            return failure();
+        }
+    }
+    const auto number = [&](std::size_t index) {
+        return std::get_if<double>(&configuration.fields[index].value);
+    };
+    const auto enumeration = [&](std::size_t index) {
+        return std::get_if<gnc::model_sdk::CanonicalEnumValue>(
+            &configuration.fields[index].value);
+    };
+    const auto text = [&](std::size_t index) {
+        return std::get_if<std::string>(
+            &configuration.fields[index].value);
+    };
+    const auto* candidate_normalization = enumeration(0U);
+    const auto* candidate_absolute = number(1U);
+    const auto* candidate_condition = number(2U);
+    const auto* candidate_finite = enumeration(3U);
+    const auto* candidate_relative = number(4U);
+    const auto* candidate_zero = number(5U);
+    const auto* evaluation_normalization = enumeration(6U);
+    const auto* evaluation_absolute = number(7U);
+    const auto* evaluation_condition = number(8U);
+    const auto* evaluation_finite = enumeration(9U);
+    const auto* evaluation_relative = number(10U);
+    const auto* evaluation_zero = number(11U);
+    const auto* combined_source = text(12U);
+    const auto* fixed_step = number(13U);
+    const auto* inertial_frame = text(14U);
+    const auto* absolute = number(15U);
+    const auto* condition = number(16U);
+    const auto* finite_check = enumeration(17U);
+    const auto* relative = number(18U);
+    const auto* zero = number(19U);
+    const std::array<const double*, 13U> numbers{
+        candidate_absolute, candidate_condition, candidate_relative,
+        candidate_zero, evaluation_absolute, evaluation_condition,
+        evaluation_relative, evaluation_zero, fixed_step, absolute,
+        condition, relative, zero};
+    if (candidate_normalization == nullptr || candidate_finite == nullptr ||
+        evaluation_normalization == nullptr ||
+        evaluation_finite == nullptr || combined_source == nullptr ||
+        combined_source->empty() || inertial_frame == nullptr ||
+        inertial_frame->empty() || finite_check == nullptr ||
+        std::any_of(numbers.begin(), numbers.end(),
+                    [](const double* value) {
+                        return value == nullptr ||
+                               !canonical_double(*value);
+                    })) {
+        return failure();
+    }
+    const auto candidate_normalization_value =
+        parse_normalization(candidate_normalization->token);
+    const auto candidate_finite_value =
+        parse_finite_check(candidate_finite->token);
+    const auto evaluation_normalization_value =
+        parse_normalization(evaluation_normalization->token);
+    const auto evaluation_finite_value =
+        parse_finite_check(evaluation_finite->token);
+    const auto finite_check_value =
+        parse_finite_check(finite_check->token);
+    if (!candidate_normalization_value.has_value() ||
+        !candidate_finite_value.has_value() ||
+        !evaluation_normalization_value.has_value() ||
+        !evaluation_finite_value.has_value() ||
+        !finite_check_value.has_value()) {
+        return failure();
+    }
+
+    ControlledRigidBoundaryEvaluationDefinition definition;
+    definition.rigid.inertial_frame.id = *inertial_frame;
+    definition.rigid.algorithm.fixed_step_seconds = *fixed_step;
+    definition.rigid.algorithm.numerical_policy = {
+        *absolute, *relative, *finite_check_value, *zero, *condition};
+    definition.rigid.algorithm.candidate_attitude_policy.numerical = {
+        *candidate_absolute, *candidate_relative,
+        *candidate_finite_value, *candidate_zero, *candidate_condition};
+    definition.rigid.algorithm.candidate_attitude_policy.normalization =
+        *candidate_normalization_value;
+    definition.rigid.algorithm.attitude_evaluation_policy.numerical = {
+        *evaluation_absolute, *evaluation_relative,
+        *evaluation_finite_value, *evaluation_zero, *evaluation_condition};
+    definition.rigid.algorithm.attitude_evaluation_policy.normalization =
+        *evaluation_normalization_value;
+    definition.wrench_adapter.combined_wrench_source_id =
+        *combined_source;
+    if (definition.rigid.algorithm.fixed_step_seconds <= 0.0 ||
+        !gnc::foundation::valid_numerical_policy(
+            definition.rigid.algorithm.numerical_policy) ||
+        !gnc::foundation::valid_quaternion_policy(
+            definition.rigid.algorithm.candidate_attitude_policy) ||
+        !gnc::foundation::valid_quaternion_policy(
+            definition.rigid.algorithm.attitude_evaluation_policy)) {
+        return failure();
+    }
+    return NumericalOutcome<
+        ControlledRigidBoundaryEvaluationDefinition>::with_value(
+            NumericalStatus::Success, std::move(definition),
+            mass_commit_evidence(
+                kControlledRigidDefinitionBuilderIdentity,
+                "canonical-config"));
+}
+
+gnc::model_sdk::CanonicalConfigBlock
+canonical_altitude_pitch_guidance_config(
+    const AltitudePitchGuidanceDefinition& definition) {
+    const auto& policy = definition.attitude_policy.numerical;
+    return {
+        std::string(kAltitudePitchGuidanceConfigSchemaIdentity),
+        kAltitudePitchGuidanceConfigSchemaVersion,
+        {
+            {"altitude_error_gain_radians_per_meter",
+             definition.altitude_error_gain_radians_per_meter},
+            {"attitude.normalization",
+             gnc::model_sdk::CanonicalEnumValue{
+                 normalization_token(
+                     definition.attitude_policy.normalization)}},
+            {"attitude.numerical.absolute_tolerance",
+             policy.absolute_tolerance},
+            {"attitude.numerical.condition_limit",
+             policy.condition_limit},
+            {"attitude.numerical.finite_check",
+             gnc::model_sdk::CanonicalEnumValue{
+                 finite_check_token(policy.finite_check)}},
+            {"attitude.numerical.relative_tolerance",
+             policy.relative_tolerance},
+            {"attitude.numerical.zero_tolerance",
+             policy.zero_tolerance},
+            {"clock_domain_id", definition.clock_domain.id},
+            {"configuration_revision",
+             definition.configuration_revision},
+            {"inertial_frame_id", definition.inertial_frame.id},
+            {"pitch_command_limit_radians",
+             definition.pitch_command_limit_radians},
+            {"target_altitude_meters",
+             definition.target_altitude_meters},
+            {"vertical_speed_gain_radian_seconds_per_meter",
+             definition.vertical_speed_gain_radian_seconds_per_meter},
+        },
+    };
+}
+
+NumericalOutcome<AltitudePitchGuidanceDefinition>
+build_altitude_pitch_guidance_definition(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration) {
+    const auto failure = [] {
+        return NumericalOutcome<AltitudePitchGuidanceDefinition>::failure(
+            NumericalStatus::DomainError,
+            mass_commit_evidence(
+                kAltitudePitchGuidanceDefinitionBuilderIdentity,
+                "canonical-config"));
+    };
+    static constexpr std::array<std::string_view, 13U> kFields{
+        "altitude_error_gain_radians_per_meter",
+        "attitude.normalization",
+        "attitude.numerical.absolute_tolerance",
+        "attitude.numerical.condition_limit",
+        "attitude.numerical.finite_check",
+        "attitude.numerical.relative_tolerance",
+        "attitude.numerical.zero_tolerance",
+        "clock_domain_id",
+        "configuration_revision",
+        "inertial_frame_id",
+        "pitch_command_limit_radians",
+        "target_altitude_meters",
+        "vertical_speed_gain_radian_seconds_per_meter",
+    };
+    if (configuration.schema_id !=
+            kAltitudePitchGuidanceConfigSchemaIdentity ||
+        configuration.schema_version !=
+            kAltitudePitchGuidanceConfigSchemaVersion ||
+        configuration.fields.size() != kFields.size()) {
+        return failure();
+    }
+    for (std::size_t index = 0U; index < kFields.size(); ++index) {
+        if (configuration.fields[index].field_id != kFields[index]) {
+            return failure();
+        }
+    }
+
+    const auto* altitude_gain =
+        std::get_if<double>(&configuration.fields[0U].value);
+    const auto* normalization =
+        std::get_if<gnc::model_sdk::CanonicalEnumValue>(
+            &configuration.fields[1U].value);
+    const auto* absolute =
+        std::get_if<double>(&configuration.fields[2U].value);
+    const auto* condition =
+        std::get_if<double>(&configuration.fields[3U].value);
+    const auto* finite_token =
+        std::get_if<gnc::model_sdk::CanonicalEnumValue>(
+            &configuration.fields[4U].value);
+    const auto* relative =
+        std::get_if<double>(&configuration.fields[5U].value);
+    const auto* zero =
+        std::get_if<double>(&configuration.fields[6U].value);
+    const auto* clock_domain =
+        std::get_if<std::string>(&configuration.fields[7U].value);
+    const auto* revision =
+        std::get_if<std::int64_t>(&configuration.fields[8U].value);
+    const auto* inertial_frame =
+        std::get_if<std::string>(&configuration.fields[9U].value);
+    const auto* command_limit =
+        std::get_if<double>(&configuration.fields[10U].value);
+    const auto* target =
+        std::get_if<double>(&configuration.fields[11U].value);
+    const auto* vertical_gain =
+        std::get_if<double>(&configuration.fields[12U].value);
+    if (altitude_gain == nullptr || normalization == nullptr ||
+        absolute == nullptr || condition == nullptr ||
+        finite_token == nullptr || relative == nullptr || zero == nullptr ||
+        clock_domain == nullptr || clock_domain->empty() ||
+        revision == nullptr || *revision < 0 || inertial_frame == nullptr ||
+        inertial_frame->empty() || command_limit == nullptr ||
+        target == nullptr || vertical_gain == nullptr) {
+        return failure();
+    }
+    const std::array<const double*, 7U> numbers{
+        altitude_gain, absolute, condition, relative, zero,
+        command_limit, target};
+    if (std::any_of(numbers.begin(), numbers.end(),
+                    [](const double* value) {
+                        return !canonical_double(*value);
+                    }) ||
+        !canonical_double(*vertical_gain)) {
+        return failure();
+    }
+    const auto finite_check = parse_finite_check(finite_token->token);
+    const auto normalization_policy =
+        parse_normalization(normalization->token);
+    if (!finite_check.has_value() ||
+        !normalization_policy.has_value()) {
+        return failure();
+    }
+
+    AltitudePitchGuidanceDefinition definition;
+    definition.model_id =
+        std::string(kAltitudePitchGuidanceModelIdentity);
+    definition.model_version =
+        std::string(kAltitudePitchGuidanceModelVersion);
+    definition.inertial_frame.id = *inertial_frame;
+    definition.clock_domain.id = *clock_domain;
+    definition.configuration_revision = *revision;
+    definition.target_altitude_meters = *target;
+    definition.altitude_error_gain_radians_per_meter = *altitude_gain;
+    definition.vertical_speed_gain_radian_seconds_per_meter =
+        *vertical_gain;
+    definition.pitch_command_limit_radians = *command_limit;
+    definition.attitude_policy.numerical = {
+        *absolute, *relative, *finite_check, *zero, *condition};
+    definition.attitude_policy.normalization =
+        *normalization_policy;
+    if (!gnc::foundation::valid_quaternion_policy(
+            definition.attitude_policy) ||
+        definition.altitude_error_gain_radians_per_meter < 0.0 ||
+        definition.vertical_speed_gain_radian_seconds_per_meter < 0.0 ||
+        definition.pitch_command_limit_radians <= 0.0) {
+        return failure();
+    }
+    return NumericalOutcome<AltitudePitchGuidanceDefinition>::with_value(
+        NumericalStatus::Success, std::move(definition),
+        mass_commit_evidence(
+            kAltitudePitchGuidanceDefinitionBuilderIdentity,
+            "canonical-config"));
+}
+
+gnc::model_sdk::CanonicalConfigBlock
+canonical_committed_mission_result_config(
+    const CommittedMissionResultDefinition& definition) {
+    const auto& policy = definition.numerical_policy;
+    gnc::model_sdk::CanonicalConfigBlock configuration{
+        std::string(kCommittedMissionResultConfigSchemaIdentity),
+        kCommittedMissionResultConfigSchemaVersion,
+        {
+            {"body_frame_id", definition.body_frame.id},
+            {"clock_domain_id", definition.clock_domain.id},
+            {"configuration_revision", definition.configuration_revision},
+            {"inertial_frame_id", definition.inertial_frame.id},
+            {"mass_state_id", definition.mass_state_id},
+            {"numerical.absolute_tolerance", policy.absolute_tolerance},
+            {"numerical.condition_limit", policy.condition_limit},
+            {"numerical.finite_check",
+             gnc::model_sdk::CanonicalEnumValue{
+                 finite_check_token(policy.finite_check)}},
+            {"numerical.relative_tolerance", policy.relative_tolerance},
+            {"numerical.zero_tolerance", policy.zero_tolerance},
+        },
+    };
+    for (std::size_t index = 0U; index < definition.predicates.size();
+         ++index) {
+        const auto prefix = "predicates." + std::to_string(index) + ".";
+        const auto& predicate = definition.predicates[index];
+        configuration.fields.push_back(
+            {prefix + "action",
+             gnc::model_sdk::CanonicalEnumValue{
+                 mission_action_token(predicate.action)}});
+        configuration.fields.push_back(
+            {prefix + "metric",
+             gnc::model_sdk::CanonicalEnumValue{
+                 mission_metric_token(predicate.metric)}});
+        configuration.fields.push_back(
+            {prefix + "predicate_id", predicate.predicate_id});
+        configuration.fields.push_back(
+            {prefix + "priority", predicate.priority});
+        configuration.fields.push_back(
+            {prefix + "reason_code", predicate.reason_code});
+        configuration.fields.push_back(
+            {prefix + "relation",
+             gnc::model_sdk::CanonicalEnumValue{
+                 mission_relation_token(predicate.relation)}});
+        configuration.fields.push_back(
+            {prefix + "threshold", predicate.threshold});
+    }
+    configuration.fields.push_back({"subject", definition.subject});
+    return configuration;
+}
+
+NumericalOutcome<CommittedMissionResultDefinition>
+build_committed_mission_result_definition(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration) {
+    const auto failure = [] {
+        return mass_commit_failure<CommittedMissionResultDefinition>(
+            kCommittedMissionResultDefinitionBuilderIdentity,
+            NumericalStatus::DomainError, "canonical-config");
+    };
+    static constexpr std::array<std::string_view, 10U> kBaseFields{
+        "body_frame_id",
+        "clock_domain_id",
+        "configuration_revision",
+        "inertial_frame_id",
+        "mass_state_id",
+        "numerical.absolute_tolerance",
+        "numerical.condition_limit",
+        "numerical.finite_check",
+        "numerical.relative_tolerance",
+        "numerical.zero_tolerance",
+    };
+    static constexpr std::array<std::string_view, 7U> kPredicateFields{
+        "action", "metric", "predicate_id", "priority", "reason_code",
+        "relation", "threshold"};
+    constexpr std::size_t kSubjectIndex =
+        kBaseFields.size() + 3U * kPredicateFields.size();
+    if (configuration.schema_id !=
+            kCommittedMissionResultConfigSchemaIdentity ||
+        configuration.schema_version !=
+            kCommittedMissionResultConfigSchemaVersion ||
+        configuration.fields.size() != kSubjectIndex + 1U) {
+        return failure();
+    }
+    for (std::size_t index = 0U; index < kBaseFields.size(); ++index) {
+        if (configuration.fields[index].field_id != kBaseFields[index]) {
+            return failure();
+        }
+    }
+    for (std::size_t predicate_index = 0U; predicate_index < 3U;
+         ++predicate_index) {
+        const auto prefix =
+            "predicates." + std::to_string(predicate_index) + ".";
+        for (std::size_t field_index = 0U;
+             field_index < kPredicateFields.size(); ++field_index) {
+            const auto index = kBaseFields.size() +
+                               predicate_index * kPredicateFields.size() +
+                               field_index;
+            if (configuration.fields[index].field_id !=
+                prefix + std::string(kPredicateFields[field_index])) {
+                return failure();
+            }
+        }
+    }
+    if (configuration.fields[kSubjectIndex].field_id != "subject") {
+        return failure();
+    }
+
+    const auto* body_frame =
+        std::get_if<std::string>(&configuration.fields[0U].value);
+    const auto* clock_domain =
+        std::get_if<std::string>(&configuration.fields[1U].value);
+    const auto* revision =
+        std::get_if<std::int64_t>(&configuration.fields[2U].value);
+    const auto* inertial_frame =
+        std::get_if<std::string>(&configuration.fields[3U].value);
+    const auto* mass_state_id =
+        std::get_if<std::string>(&configuration.fields[4U].value);
+    const auto policy =
+        config_numerical_policy(configuration, 5U, 6U, 7U, 8U, 9U);
+    const auto* subject = std::get_if<std::string>(
+        &configuration.fields[kSubjectIndex].value);
+    if (body_frame == nullptr || body_frame->empty() ||
+        clock_domain == nullptr || clock_domain->empty() ||
+        revision == nullptr || *revision < 0 || inertial_frame == nullptr ||
+        inertial_frame->empty() || mass_state_id == nullptr ||
+        mass_state_id->empty() || subject == nullptr || subject->empty() ||
+        !policy.has_value()) {
+        return failure();
+    }
+
+    CommittedMissionResultDefinition definition;
+    definition.model_id =
+        std::string(kCommittedMissionResultModelIdentity);
+    definition.model_version =
+        std::string(kCommittedMissionResultModelVersion);
+    definition.subject = *subject;
+    definition.inertial_frame.id = *inertial_frame;
+    definition.body_frame.id = *body_frame;
+    definition.clock_domain.id = *clock_domain;
+    definition.mass_state_id = *mass_state_id;
+    definition.configuration_revision = *revision;
+    definition.numerical_policy = *policy;
+    for (std::size_t predicate_index = 0U;
+         predicate_index < definition.predicates.size(); ++predicate_index) {
+        const auto offset = kBaseFields.size() +
+                            predicate_index * kPredicateFields.size();
+        const auto* action =
+            std::get_if<gnc::model_sdk::CanonicalEnumValue>(
+                &configuration.fields[offset].value);
+        const auto* metric =
+            std::get_if<gnc::model_sdk::CanonicalEnumValue>(
+                &configuration.fields[offset + 1U].value);
+        const auto* predicate_id = std::get_if<std::string>(
+            &configuration.fields[offset + 2U].value);
+        const auto* priority = std::get_if<std::int64_t>(
+            &configuration.fields[offset + 3U].value);
+        const auto* reason = std::get_if<std::string>(
+            &configuration.fields[offset + 4U].value);
+        const auto* relation =
+            std::get_if<gnc::model_sdk::CanonicalEnumValue>(
+                &configuration.fields[offset + 5U].value);
+        const auto* threshold = std::get_if<double>(
+            &configuration.fields[offset + 6U].value);
+        if (action == nullptr || metric == nullptr ||
+            predicate_id == nullptr || predicate_id->empty() ||
+            priority == nullptr || *priority < 0 || reason == nullptr ||
+            reason->empty() || relation == nullptr || threshold == nullptr ||
+            !canonical_double(*threshold)) {
+            return failure();
+        }
+        const auto action_value = parse_mission_action(action->token);
+        const auto metric_value = parse_mission_metric(metric->token);
+        const auto relation_value =
+            parse_mission_relation(relation->token);
+        if (!action_value.has_value() || !metric_value.has_value() ||
+            !relation_value.has_value()) {
+            return failure();
+        }
+        definition.predicates[predicate_index] = {
+            *predicate_id, *metric_value, *relation_value, *threshold,
+            *action_value, *reason, *priority};
+        for (std::size_t previous = 0U; previous < predicate_index;
+             ++previous) {
+            if (definition.predicates[previous].predicate_id ==
+                definition.predicates[predicate_index].predicate_id) {
+                return failure();
+            }
+        }
+    }
+    return NumericalOutcome<CommittedMissionResultDefinition>::with_value(
+        NumericalStatus::Success, std::move(definition),
+        mass_commit_evidence(
+            kCommittedMissionResultDefinitionBuilderIdentity,
+            "canonical-config"));
+}
+
+NumericalOutcome<MassState> MassInitialStateBuilder::build(
+    const ScalarBurnMassDefinition& definition,
+    const MassInitialStateInput& input,
+    const NumericalPolicy& policy) {
+    const MassState& state = input.state;
+    if (definition.model_id != kScalarBurnMassModelIdentity ||
+        definition.model_version != kScalarBurnMassModelVersion ||
+        definition.mass_state_id.empty() ||
+        !gnc::foundation::valid_numerical_policy(policy)) {
+        return mass_commit_failure<MassState>(
+            kMassInitialStateBuilderIdentity,
+            NumericalStatus::DomainError, "definition-or-policy");
+    }
+    if (state.mass_state_id != definition.mass_state_id ||
+        state.context.frame.id.empty() ||
+        state.context.clock_domain.id.empty() ||
+        state.context.configuration_revision < 0 ||
+        state.context.quality != DataQuality::Valid ||
+        state.context.sample_time.tick < 0 ||
+        !std::isfinite(state.context.sample_time.seconds)) {
+        return mass_commit_failure<MassState>(
+            kMassInitialStateBuilderIdentity,
+            NumericalStatus::DomainError, "initial-context-or-identity");
+    }
+    if (!std::isfinite(state.mass_kilograms) ||
+        !finite(state.body_origin_to_center_of_mass.value) ||
+        !finite(state.inertia_about_center_of_mass.value)) {
+        return mass_commit_failure<MassState>(
+            kMassInitialStateBuilderIdentity,
+            NumericalStatus::NonFiniteInput, "initial-state");
+    }
+    if (state.mass_kilograms <= 0.0) {
+        return mass_commit_failure<MassState>(
+            kMassInitialStateBuilderIdentity,
+            NumericalStatus::DomainError, "initial-mass");
+    }
+    const auto inertia = gnc::foundation::solve_spd_3x3(
+        state.inertia_about_center_of_mass.value, Vec3::Zero(), policy);
+    if (!inertia.has_value()) {
+        return mass_commit_failure<MassState>(
+            kMassInitialStateBuilderIdentity, inertia.status(),
+            "initial-inertia", inertia.evidence().flags);
+    }
+    NumericalEvidence evidence = mass_commit_evidence(
+        kMassInitialStateBuilderIdentity, "initial-state",
+        inertia.evidence().flags);
+    evidence.evaluations = inertia.evidence().evaluations;
+    return NumericalOutcome<MassState>::with_value(
+        approximate_status(inertia.status())
+            ? NumericalStatus::Approximate
+            : NumericalStatus::Success,
+        state, evidence);
+}
+
+NumericalOutcome<MassState> build_scalar_burn_mass_initial_state(
+    const ScalarBurnMassDefinition& definition,
+    const MassInitialStateInput& input) {
+    return MassInitialStateBuilder::build(
+        definition, input, definition.numerical_policy);
+}
+
+MassPropertiesInput project_committed_mass_properties(
+    const IntervalSampleContext& interval_context,
+    const MassState& state) {
+    MassPropertiesInput projected;
+    projected.context = interval_context;
+    projected.mass_state_id = state.mass_state_id;
+    projected.mass_kilograms = state.mass_kilograms;
+    projected.body_origin_to_center_of_mass =
+        state.body_origin_to_center_of_mass;
+    projected.inertia_about_center_of_mass =
+        state.inertia_about_center_of_mass;
+    return projected;
+}
+
+MassState clone_mass_state(const MassState& state) {
+    return state;
+}
+
+bool validate_mass_state_finite(const MassState& state) noexcept {
+    return std::isfinite(state.context.sample_time.seconds) &&
+           std::isfinite(state.mass_kilograms) &&
+           finite(state.body_origin_to_center_of_mass.value) &&
+           finite(state.inertia_about_center_of_mass.value);
+}
+
+bool validate_mass_state_invariants(const MassState& state) noexcept {
+    if (state.context.frame.id.empty() ||
+        state.context.clock_domain.id.empty() ||
+        state.context.configuration_revision < 0 ||
+        state.context.quality != DataQuality::Valid ||
+        state.context.sample_time.tick < 0 ||
+        state.mass_state_id.empty() || state.mass_kilograms <= 0.0) {
+        return false;
+    }
+    const auto inertia = gnc::foundation::solve_spd_3x3(
+        state.inertia_about_center_of_mass.value, Vec3::Zero());
+    return inertia.has_value();
+}
+
+bool validate_mass_state(const MassState& state) noexcept {
+    return validate_mass_state_finite(state) &&
+           validate_mass_state_invariants(state);
+}
+
+void swap_mass_state(MassState& lhs, MassState& rhs) noexcept {
+    static_assert(std::is_nothrow_swappable_v<MassState>,
+                  "MassState codec requires noexcept swap");
+    using std::swap;
+    swap(lhs, rhs);
+}
+
+const MassStateCodec& mass_state_codec() noexcept {
+    static const MassStateCodec codec{
+        &clone_mass_state, &validate_mass_state,
+        &validate_mass_state_finite,
+        &validate_mass_state_invariants,
+        &swap_mass_state, &project_committed_mass_properties};
+    return codec;
+}
 
 NumericalOutcome<SuppliedPropulsionOutput>
 SuppliedPropulsionKernel::evaluate(
@@ -234,6 +3110,34 @@ SuppliedPropulsionKernel::evaluate(
                          input.context.validity.effective_from.seconds;
     return NumericalOutcome<SuppliedPropulsionOutput>::with_value(
         NumericalStatus::Success, std::move(output), evidence);
+}
+
+NumericalOutcome<SuppliedPropulsionOutput>
+FixedSuppliedPropulsionBoundaryKernel::evaluate(
+    const FixedSuppliedPropulsionDefinition& definition,
+    const IntervalSampleContext& context) {
+    SuppliedPropulsionInput input;
+    input.context = context;
+    input.thrust_magnitude_newtons =
+        definition.thrust_magnitude_newtons;
+    input.thrust_direction = definition.thrust_direction;
+    input.center_of_mass_to_application =
+        definition.center_of_mass_to_application;
+    input.intrinsic_moment_at_application =
+        definition.intrinsic_moment_at_application;
+    input.fuel_consumption_rate_kilograms_per_second =
+        definition.fuel_consumption_rate_kilograms_per_second;
+    auto result = SuppliedPropulsionKernel::evaluate(
+        definition.propulsion, input);
+    auto evidence = result.evidence();
+    evidence.algorithm = kFixedSuppliedPropulsionBoundaryIdentity;
+    evidence.detail = "fixed-supplied-boundary";
+    if (!result.has_value()) {
+        return NumericalOutcome<SuppliedPropulsionOutput>::failure(
+            result.status(), evidence);
+    }
+    return NumericalOutcome<SuppliedPropulsionOutput>::with_value(
+        result.status(), std::move(result.value()), evidence);
 }
 
 NumericalOutcome<ScalarBurnMassOutput> ScalarBurnMassKernel::evaluate(
@@ -335,6 +3239,15 @@ NumericalOutcome<ScalarBurnMassOutput> ScalarBurnMassKernel::evaluate(
             ? NumericalStatus::Approximate
             : NumericalStatus::Success,
         std::move(output), evidence);
+}
+
+NumericalOutcome<ScalarBurnMassOutput>
+evaluate_scalar_burn_mass_interval(
+    const ScalarBurnMassDefinition& definition,
+    const MassState& committed_state,
+    const MassFlowIntervalInput& flow) {
+    return ScalarBurnMassKernel::evaluate(
+        definition, committed_state, flow, definition.numerical_policy);
 }
 
 NumericalOutcome<AltitudePitchGuidanceOutput>
@@ -592,12 +3505,329 @@ IdealBodyMomentActuatorKernel::evaluate(
         NumericalStatus::Success, std::move(output), evidence);
 }
 
+NumericalOutcome<AppliedBodyWrenchInput>
+ControlledBodyWrenchAdapterKernel::evaluate(
+    const ControlledBodyWrenchAdapterDefinition& definition,
+    const ControlledBodyWrenchAdapterInput& input) {
+    if (definition.combined_wrench_source_id.empty() ||
+        input.propulsion.source_id.empty() ||
+        input.actuator.source_id.empty()) {
+        return mass_commit_failure<AppliedBodyWrenchInput>(
+            kControlledBodyWrenchAdapterIdentity,
+            NumericalStatus::DomainError, "source-identity");
+    }
+    const auto same_time = [](const SimulationInstant& lhs,
+                              const SimulationInstant& rhs) {
+        return lhs.tick == rhs.tick && lhs.seconds == rhs.seconds;
+    };
+    const auto& propulsion_context = input.propulsion.context;
+    const auto& actuator_context = input.actuator.context;
+    if (propulsion_context.sample.frame != actuator_context.sample.frame ||
+        propulsion_context.sample.clock_domain !=
+            actuator_context.sample.clock_domain ||
+        !same_time(propulsion_context.sample.sample_time,
+                   actuator_context.sample.sample_time) ||
+        propulsion_context.sample.configuration_revision !=
+            actuator_context.sample.configuration_revision ||
+        propulsion_context.sample.quality !=
+            actuator_context.sample.quality ||
+        !same_time(propulsion_context.validity.effective_from,
+                   actuator_context.validity.effective_from) ||
+        !same_time(propulsion_context.validity.effective_until,
+                   actuator_context.validity.effective_until)) {
+        return mass_commit_failure<AppliedBodyWrenchInput>(
+            kControlledBodyWrenchAdapterIdentity,
+            NumericalStatus::DomainError, "interval-context");
+    }
+    if (!finite(input.body_origin_to_center_of_mass.value) ||
+        !finite(input.propulsion.force.value) ||
+        !finite(input.propulsion.center_of_mass_to_application.value) ||
+        !finite(input.propulsion.intrinsic_moment_at_application.value) ||
+        !finite(input.actuator.moment_about_center_of_mass.value)) {
+        return mass_commit_failure<AppliedBodyWrenchInput>(
+            kControlledBodyWrenchAdapterIdentity,
+            NumericalStatus::NonFiniteInput, "adapter-input");
+    }
+
+    AppliedBodyWrenchInput output;
+    output.context = input.propulsion.context;
+    output.source_id = definition.combined_wrench_source_id;
+    output.force = input.propulsion.force;
+    output.body_origin_to_application.value =
+        input.body_origin_to_center_of_mass.value +
+        input.propulsion.center_of_mass_to_application.value;
+    output.intrinsic_moment_at_application.value =
+        input.propulsion.intrinsic_moment_at_application.value +
+        input.actuator.moment_about_center_of_mass.value;
+    if (!finite(output.body_origin_to_application.value) ||
+        !finite(output.intrinsic_moment_at_application.value)) {
+        return mass_commit_failure<AppliedBodyWrenchInput>(
+            kControlledBodyWrenchAdapterIdentity,
+            NumericalStatus::NonFiniteIntermediate,
+            "controlled-wrench-adapter");
+    }
+    NumericalEvidence evidence = mass_commit_evidence(
+        kControlledBodyWrenchAdapterIdentity, "controlled-body-wrench");
+    evidence.evaluations = 1U;
+    return NumericalOutcome<AppliedBodyWrenchInput>::with_value(
+        NumericalStatus::Success, std::move(output), evidence);
+}
+
+NumericalOutcome<ControlledRigidBoundaryEvaluation>
+ControlledRigidBoundaryEvaluationKernel::evaluate(
+    const ControlledRigidBoundaryEvaluationDefinition& definition,
+    const ControlledRigidBoundaryInvocationSet& invocations,
+    const ControlledRigidBoundaryEvaluationInput& input) {
+    const auto result = evaluate_with_invocation_results(
+        definition, invocations, input);
+    if (!result.has_value()) {
+        return NumericalOutcome<ControlledRigidBoundaryEvaluation>::failure(
+            result.status(), result.evidence());
+    }
+    return NumericalOutcome<ControlledRigidBoundaryEvaluation>::with_value(
+        result.status(), result.value().evaluation, result.evidence());
+}
+
+NumericalOutcome<ControlledRigidBoundaryPreparationEvaluation>
+ControlledRigidBoundaryEvaluationKernel::prepare_for_integration(
+    const ControlledRigidBoundaryEvaluationDefinition& definition,
+    const ControlledRigidBoundaryInvocationSet& invocations,
+    const ControlledRigidBoundaryEvaluationInput& input) {
+    if (invocations.environment.prepared_model == nullptr ||
+        invocations.environment.callable == nullptr) {
+        return mass_commit_failure<
+            ControlledRigidBoundaryPreparationEvaluation>(
+                kControlledRigidBoundaryEvaluationIdentity,
+                NumericalStatus::DomainError,
+                "environment-invocation-set");
+    }
+
+    UniformEnvironmentQueryInput environment_request;
+    environment_request.context = {
+        input.context.inertial_frame,
+        input.context.clock_domain,
+        input.context.interval_start,
+        input.context.configuration_revision,
+        input.context.quality};
+    environment_request.position = input.committed_state.position;
+    const auto environment = invocations.environment.callable(
+        *invocations.environment.prepared_model, environment_request);
+    if (!environment.has_value()) {
+        return mass_commit_failure<
+            ControlledRigidBoundaryPreparationEvaluation>(
+                kControlledRigidBoundaryEvaluationIdentity,
+                environment.status(), "environment-query",
+                environment.evidence().flags);
+    }
+
+    const auto controlled_wrench =
+        ControlledBodyWrenchAdapterKernel::evaluate(
+            definition.wrench_adapter,
+            ControlledBodyWrenchAdapterInput{
+                input.mass_properties.body_origin_to_center_of_mass,
+                input.propulsion,
+                input.actuator});
+    if (!controlled_wrench.has_value()) {
+        return mass_commit_failure<
+            ControlledRigidBoundaryPreparationEvaluation>(
+                kControlledRigidBoundaryEvaluationIdentity,
+                controlled_wrench.status(),
+                controlled_wrench.evidence().detail,
+                environment.evidence().flags |
+                    controlled_wrench.evidence().flags);
+    }
+
+    RigidStepInput rigid_input;
+    rigid_input.context = input.context;
+    rigid_input.committed_state = input.committed_state;
+    rigid_input.environment = environment.value().output;
+    rigid_input.mass_properties = input.mass_properties;
+    rigid_input.supplied_wrench = controlled_wrench.value();
+    const auto prepared = RigidFrozenFormKernel::prepare_closure_request(
+        definition.rigid,
+        RigidFrozenFormQuerySet{invocations.frozen_form.aerodynamic},
+        rigid_input);
+    if (!prepared.has_value()) {
+        return mass_commit_failure<
+            ControlledRigidBoundaryPreparationEvaluation>(
+                kControlledRigidBoundaryEvaluationIdentity,
+                prepared.status(), prepared.evidence().detail,
+                environment.evidence().flags |
+                    controlled_wrench.evidence().flags |
+                    prepared.evidence().flags);
+    }
+
+    const NumericalFlags flags = environment.evidence().flags |
+                                 controlled_wrench.evidence().flags |
+                                 prepared.evidence().flags;
+    NumericalEvidence evidence = mass_commit_evidence(
+        kControlledRigidBoundaryEvaluationIdentity,
+        "controlled-boundary-preparation", flags);
+    evidence.evaluations = environment.evidence().evaluations +
+                           controlled_wrench.evidence().evaluations +
+                           prepared.evidence().evaluations;
+    evidence.last_step = definition.rigid.algorithm.fixed_step_seconds;
+    return NumericalOutcome<
+        ControlledRigidBoundaryPreparationEvaluation>::with_value(
+            approximate_status(environment.status()) ||
+                    approximate_status(controlled_wrench.status()) ||
+                    approximate_status(prepared.status())
+                ? NumericalStatus::Approximate
+                : NumericalStatus::Success,
+            ControlledRigidBoundaryPreparationEvaluation{
+                ControlledRigidBoundaryPreparationOutput{
+                    environment.value().output,
+                    prepared.value().invocation_results
+                        .aerodynamic_coefficients,
+                    prepared.value().evaluation.output.closure_request},
+                ControlledRigidBoundaryPreparationTelemetry{
+                    controlled_wrench.value(),
+                    environment.value().telemetry,
+                    prepared.value().evaluation.telemetry}},
+            evidence);
+}
+
+NumericalOutcome<ControlledRigidBoundaryInvocationEvaluation>
+ControlledRigidBoundaryEvaluationKernel::evaluate_with_invocation_results(
+    const ControlledRigidBoundaryEvaluationDefinition& definition,
+    const ControlledRigidBoundaryInvocationSet& invocations,
+    const ControlledRigidBoundaryEvaluationInput& input) {
+    if (invocations.frozen_form.closure.prepared_model == nullptr ||
+        invocations.frozen_form.closure.callable == nullptr) {
+        return mass_commit_failure<
+                ControlledRigidBoundaryInvocationEvaluation>(
+                kControlledRigidBoundaryEvaluationIdentity,
+                NumericalStatus::DomainError,
+                "closure-invocation-set");
+    }
+    const auto prepared = prepare_for_integration(
+        definition, invocations, input);
+    if (!prepared.has_value()) {
+        return mass_commit_failure<
+                ControlledRigidBoundaryInvocationEvaluation>(
+                kControlledRigidBoundaryEvaluationIdentity,
+                prepared.status(), prepared.evidence().detail,
+                prepared.evidence().flags);
+    }
+    const auto closure = invocations.frozen_form.closure.callable(
+        *invocations.frozen_form.closure.prepared_model,
+        prepared.value().output.closure_request);
+    if (!closure.has_value()) {
+        return mass_commit_failure<
+                ControlledRigidBoundaryInvocationEvaluation>(
+                kControlledRigidBoundaryEvaluationIdentity,
+                closure.status(), closure.evidence().detail,
+                prepared.evidence().flags |
+                    closure.evidence().flags);
+    }
+    const NumericalFlags flags = prepared.evidence().flags |
+                                 closure.evidence().flags;
+    NumericalEvidence evidence = mass_commit_evidence(
+        kControlledRigidBoundaryEvaluationIdentity,
+        "controlled-frozen-form", flags);
+    evidence.evaluations = prepared.evidence().evaluations +
+                           closure.evidence().evaluations;
+    evidence.last_step = definition.rigid.algorithm.fixed_step_seconds;
+    return NumericalOutcome<
+        ControlledRigidBoundaryInvocationEvaluation>::with_value(
+            approximate_status(prepared.status()) ||
+                    approximate_status(closure.status())
+                ? NumericalStatus::Approximate
+                : NumericalStatus::Success,
+            ControlledRigidBoundaryInvocationEvaluation{
+                ControlledRigidBoundaryEvaluation{
+                    closure.value().output,
+                    ControlledRigidBoundaryTelemetry{
+                        prepared.value().telemetry.controlled_wrench,
+                        prepared.value().output.environment_response,
+                        RigidFrozenFormTelemetry{
+                            prepared.value().telemetry.frozen_form.air_data,
+                            prepared.value().telemetry.frozen_form
+                                .aerodynamic_lookup,
+                            prepared.value().telemetry.frozen_form
+                                .aerodynamic_query,
+                            closure.value()}}},
+                ControlledRigidBoundaryInvocationResults{
+                    prepared.value().output.environment_response,
+                    prepared.value().output.aerodynamic_coefficients}},
+            evidence);
+}
+
+NumericalOutcome<ControlledRigidBoundaryEvaluationOutput>
+ControlledRigidBoundaryEvaluationKernel::evaluate_resolved_environment(
+    const ControlledRigidBoundaryEvaluationDefinition& definition,
+    const RigidFrozenFormInvocationSet& invocations,
+    const ControlledRigidBoundaryResolvedEnvironmentInput& input) {
+    const auto controlled_wrench =
+        ControlledBodyWrenchAdapterKernel::evaluate(
+            definition.wrench_adapter,
+            ControlledBodyWrenchAdapterInput{
+                input.mass_properties.body_origin_to_center_of_mass,
+                input.propulsion,
+                input.actuator});
+    if (!controlled_wrench.has_value()) {
+        return mass_commit_failure<
+            ControlledRigidBoundaryEvaluationOutput>(
+                kControlledRigidBoundaryEvaluationIdentity,
+                controlled_wrench.status(),
+                controlled_wrench.evidence().detail,
+                controlled_wrench.evidence().flags);
+    }
+
+    RigidStepInput rigid_input;
+    rigid_input.context = input.context;
+    rigid_input.committed_state = input.committed_state;
+    rigid_input.environment = input.environment;
+    rigid_input.mass_properties = input.mass_properties;
+    rigid_input.supplied_wrench = controlled_wrench.value();
+    const auto frozen =
+        RigidFrozenFormKernel::evaluate_with_invocation_results(
+            definition.rigid, invocations, rigid_input);
+    if (!frozen.has_value()) {
+        return mass_commit_failure<
+            ControlledRigidBoundaryEvaluationOutput>(
+                kControlledRigidBoundaryEvaluationIdentity,
+                frozen.status(), frozen.evidence().detail,
+                controlled_wrench.evidence().flags |
+                    frozen.evidence().flags);
+    }
+
+    ControlledRigidBoundaryEvaluationOutput output;
+    output.controlled_wrench = controlled_wrench.value();
+    output.environment_response = input.environment;
+    output.frozen_form = frozen.value().evaluation;
+    output.frozen_form_invocation_results =
+        frozen.value().invocation_results;
+    output.frozen_form_status = frozen.status();
+    output.frozen_form_evidence = frozen.evidence();
+    const NumericalFlags flags = controlled_wrench.evidence().flags |
+                                 frozen.evidence().flags;
+    NumericalEvidence evidence = mass_commit_evidence(
+        kControlledRigidBoundaryEvaluationIdentity,
+        "controlled-frozen-form", flags);
+    evidence.evaluations = controlled_wrench.evidence().evaluations +
+                           frozen.evidence().evaluations;
+    evidence.last_step = definition.rigid.algorithm.fixed_step_seconds;
+    return NumericalOutcome<
+        ControlledRigidBoundaryEvaluationOutput>::with_value(
+            approximate_status(controlled_wrench.status()) ||
+                    approximate_status(frozen.status())
+                ? NumericalStatus::Approximate
+                : NumericalStatus::Success,
+            std::move(output), evidence);
+}
+
+namespace {
+
 NumericalOutcome<FrozenRigidMassStepOutput>
-FrozenRigidMassStepKernel::evaluate(
+evaluate_frozen_rigid_mass_step(
     const PreparedRigidStepModel& rigid_model,
     const ScalarBurnMassDefinition& mass_definition,
     const CommittedRigidMassBoundary& opening_boundary,
-    const RigidMassIntervalInput& interval) {
+    const RigidMassIntervalInput& interval,
+    const RigidFrozenFormEvaluation* held_form,
+    NumericalStatus held_form_status,
+    const NumericalEvidence* held_form_evidence) {
     const auto& rigid_definition = rigid_model.definition();
     const auto& closure = rigid_definition.force_moment_closure;
     const auto& policy = rigid_definition.algorithm.numerical_policy;
@@ -627,16 +3857,9 @@ FrozenRigidMassStepKernel::evaluate(
             NumericalStatus::DomainError, "opening-boundary-or-flow");
     }
 
-    MassPropertiesInput projected_mass;
-    projected_mass.context = interval.mass_flow.context;
-    projected_mass.mass_state_id =
-        opening_boundary.mass_state.mass_state_id;
-    projected_mass.mass_kilograms =
-        opening_boundary.mass_state.mass_kilograms;
-    projected_mass.body_origin_to_center_of_mass =
-        opening_boundary.mass_state.body_origin_to_center_of_mass;
-    projected_mass.inertia_about_center_of_mass =
-        opening_boundary.mass_state.inertia_about_center_of_mass;
+    const MassPropertiesInput projected_mass =
+        project_committed_mass_properties(
+            interval.mass_flow.context, opening_boundary.mass_state);
 
     RigidStepInput rigid_input;
     rigid_input.context = interval.context;
@@ -644,7 +3867,11 @@ FrozenRigidMassStepKernel::evaluate(
     rigid_input.environment = interval.environment;
     rigid_input.mass_properties = projected_mass;
     rigid_input.supplied_wrench = interval.supplied_wrench;
-    const auto rigid = RigidStepKernel::evaluate(rigid_model, rigid_input);
+    const auto rigid = held_form == nullptr
+        ? RigidStepKernel::evaluate(rigid_model, rigid_input)
+        : RigidStepKernel::evaluate_held_form(
+              rigid_model, rigid_input, *held_form,
+              held_form_status, *held_form_evidence);
     if (!rigid.has_value()) {
         return mass_commit_failure<FrozenRigidMassStepOutput>(
             kFrozenRigidMassStepKernelIdentity, rigid.status(),
@@ -690,6 +3917,33 @@ FrozenRigidMassStepKernel::evaluate(
             ? NumericalStatus::Approximate
             : NumericalStatus::Success,
         std::move(output), evidence);
+}
+
+} // namespace
+
+NumericalOutcome<FrozenRigidMassStepOutput>
+FrozenRigidMassStepKernel::evaluate(
+    const PreparedRigidStepModel& rigid_model,
+    const ScalarBurnMassDefinition& mass_definition,
+    const CommittedRigidMassBoundary& opening_boundary,
+    const RigidMassIntervalInput& interval) {
+    return evaluate_frozen_rigid_mass_step(
+        rigid_model, mass_definition, opening_boundary, interval,
+        nullptr, NumericalStatus::InternalFailure, nullptr);
+}
+
+NumericalOutcome<FrozenRigidMassStepOutput>
+FrozenRigidMassStepKernel::evaluate_held_form(
+    const PreparedRigidStepModel& rigid_model,
+    const ScalarBurnMassDefinition& mass_definition,
+    const CommittedRigidMassBoundary& opening_boundary,
+    const RigidMassIntervalInput& interval,
+    const RigidFrozenFormEvaluation& frozen_form,
+    NumericalStatus frozen_form_status,
+    const NumericalEvidence& frozen_form_evidence) {
+    return evaluate_frozen_rigid_mass_step(
+        rigid_model, mass_definition, opening_boundary, interval,
+        &frozen_form, frozen_form_status, &frozen_form_evidence);
 }
 
 NumericalOutcome<PropelledFrozenRigidMassStepOutput>
@@ -809,9 +4063,10 @@ ControlledPropelledRigidMassStepKernel::evaluate(
                 "definition-identity-closure");
     }
 
-    CommittedRigidObservation observation;
-    observation.context = opening_boundary.rigid_context;
-    observation.state = opening_boundary.rigid_state;
+    CommittedRigidObservation observation =
+        project_committed_rigid_observation(
+            opening_boundary.rigid_context,
+            opening_boundary.rigid_state);
     const auto guidance = AltitudePitchGuidanceKernel::evaluate(
         definition.guidance, observation);
     if (!guidance.has_value()) {
@@ -860,33 +4115,52 @@ ControlledPropelledRigidMassStepKernel::evaluate(
     atomic_input.context = interval.context;
     atomic_input.environment = interval.environment;
     const auto& response = propulsion.value();
-    atomic_input.supplied_wrench.context =
-        response.supplied_body_wrench.context;
-    atomic_input.supplied_wrench.source_id =
-        definition.combined_wrench_source_id;
-    atomic_input.supplied_wrench.force =
-        response.supplied_body_wrench.force;
-    atomic_input.supplied_wrench.body_origin_to_application.value =
-        opening_boundary.mass_state.body_origin_to_center_of_mass.value +
-        response.supplied_body_wrench
-            .center_of_mass_to_application.value;
-    atomic_input.supplied_wrench.intrinsic_moment_at_application.value =
-        response.supplied_body_wrench
-            .intrinsic_moment_at_application.value +
-        actuator.value().moment_about_center_of_mass.value;
-    atomic_input.mass_flow = response.mass_flow;
-    if (!finite(atomic_input.supplied_wrench
-                    .body_origin_to_application.value) ||
-        !finite(atomic_input.supplied_wrench
-                    .intrinsic_moment_at_application.value)) {
+    const MassPropertiesInput projected_mass =
+        project_committed_mass_properties(
+            response.mass_flow.context,
+            opening_boundary.mass_state);
+    const auto controlled_boundary =
+        ControlledRigidBoundaryEvaluationKernel::evaluate_resolved_environment(
+            ControlledRigidBoundaryEvaluationDefinition{
+                {rigid_model.definition().inertial_frame,
+                 rigid_model.definition().algorithm},
+                {definition.combined_wrench_source_id}},
+            RigidFrozenFormInvocationSet{
+                BoundAerodynamicTableQuery{
+                    0U, 0U, 0U,
+                    &rigid_model.aerodynamic_table_model(),
+                    &AerodynamicTableQueryKernel::evaluate},
+                BoundForceMomentClosure{
+                    0U, 0U, 0U,
+                    &rigid_model.force_moment_closure_model(),
+                    &ForceMomentClosureKernel::evaluate}},
+            ControlledRigidBoundaryResolvedEnvironmentInput{
+                interval.context,
+                opening_boundary.rigid_state,
+                interval.environment,
+                projected_mass,
+                response.supplied_body_wrench,
+                actuator.value()});
+    if (!controlled_boundary.has_value()) {
         return mass_commit_failure<
             ControlledPropelledRigidMassStepOutput>(
                 kControlledPropelledRigidMassStepKernelIdentity,
-                NumericalStatus::NonFiniteIntermediate,
-                "controlled-wrench-adapter");
+                controlled_boundary.status(),
+                controlled_boundary.evidence().detail,
+                guidance.evidence().flags |
+                    controller.evidence().flags |
+                    actuator.evidence().flags |
+                    propulsion.evidence().flags |
+                    controlled_boundary.evidence().flags);
     }
-    const auto boundary = FrozenRigidMassStepKernel::evaluate(
-        rigid_model, mass_definition, opening_boundary, atomic_input);
+    atomic_input.supplied_wrench =
+        controlled_boundary.value().controlled_wrench;
+    atomic_input.mass_flow = response.mass_flow;
+    const auto boundary = FrozenRigidMassStepKernel::evaluate_held_form(
+        rigid_model, mass_definition, opening_boundary, atomic_input,
+        controlled_boundary.value().frozen_form,
+        controlled_boundary.value().frozen_form_status,
+        controlled_boundary.value().frozen_form_evidence);
     if (!boundary.has_value()) {
         return mass_commit_failure<
             ControlledPropelledRigidMassStepOutput>(
@@ -1278,6 +4552,25 @@ CommittedMissionResultKernel::evaluate(
         kCommittedMissionResultKernelIdentity,
         NumericalStatus::DomainError, "no-terminal-committed-sample",
         validation_flags);
+}
+
+NumericalOutcome<CommittedMissionResultOutput>
+CommittedMissionHistoryEvaluationKernel::evaluate(
+    const CommittedMissionResultDefinition& definition,
+    const CommittedMissionStateHistoryInput& input) {
+    CommittedMissionResultInput assembled;
+    for (std::size_t index = 0U;
+         index < assembled.committed_samples.size(); ++index) {
+        assembled.committed_samples[index] = {
+            SampleContext{
+                definition.inertial_frame,
+                definition.clock_domain,
+                input.mass_states[index].context.sample_time,
+                definition.configuration_revision,
+                input.mass_states[index].context.quality},
+            input.rigid_states[index], input.mass_states[index]};
+    }
+    return CommittedMissionResultKernel::evaluate(definition, assembled);
 }
 
 NumericalOutcome<TwoIntervalMassCommitOutput>

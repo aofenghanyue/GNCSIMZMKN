@@ -6,7 +6,7 @@
 
 ## 1. 阶段目标
 
-R3 把 R0–R2 的 plan regions/obligations 变成 Model Authority 的封闭 Execution Algebra，以 YYZ 6DoF slice 证明开放 Model Graph 可以降级到通用算子、Kernel 无领域/RuntimeCellProfile 分支并完成硬切换。R4 建立 Artifact Authority 与 Evidence Firewall。R5 建立 Operation + Artifact 两域的 Workflow 操作闭环，并用真实气动—控制—仿真—报告链证明外部研究能力可以在不改变单次 Session 语义的条件下增长。
+R3 消费 R2 已证明、已链接的 immutable `ExecutionPlanImage`，把其中 regions/obligations、typed entries、state layouts、integration scopes 与 transaction groups 物化为 Model Authority 的封闭 Execution Algebra。R3 创建 PreparedModel/Bound handles、workspace、RuntimeCell、per-session stores 与 scheduler，并首次调用 entry、积分、暂存 candidate 和原子提交；它不从 source/Catalog 重新发现依赖或选择实现。YYZ 6DoF slice 用于证明开放 Model Graph 可以降级到通用算子、Kernel 无领域/RuntimeCellProfile 分支并完成硬切换。R4 建立 Artifact Authority 与 Evidence Firewall。R5 建立 Operation + Artifact 两域的 Workflow 操作闭环，并用真实气动—控制—仿真—报告链证明外部研究能力可以在不改变单次 Session 语义的条件下增长。
 
 阶段顺序严格：
 
@@ -56,9 +56,9 @@ G6 前暂停 Python/LLM/GUI 对内部对象的绑定。
 - typed StateBlockHandle；
 - CommittedStateStore；
 - CommittedOutputStore；
-- StateSchema/layout hash；
+- 校验并消费 Image 已冻结的 StateSchema/layout identity 与 process-local size/alignment；
 - StateCodecEntry 与 per-Session aligned committed boxes；
-- initial state builder；
+- 调用 Image 已链接的 initial-state builder；
 - full-block StateReplacement 形式的 InstantPatch/IntervalCandidate buffers；
 - CommittedCommandLedger、SessionCommandQueue 与 EventQueue control stores；
 - checkpoint-ready serialization hooks；
@@ -170,12 +170,11 @@ StepOutcome 记录 base/committed epoch、phase reached、delta set、terminatio
 
 ### 2.7 R3.7 YYZ slice A：contracts 与 state/form
 
-先落地：
+先物化并执行 R2 已冻结的最小 YYZ RigidBody/Mass schema、initial builder、committed projection、frozen-form 与 derivative entries；随后沿同一边界扩展目标 YYZ slice：
 
-- split contracts；
-- RigidBody StateSchema/initial builder/truth projector/derivative kernel；
 - entity-scoped truth projector 与 plan-local selector view；
-- Earth/Atmosphere/Gravity/Wind prepared query models；
+- R3 实际 Prepared Environment/Aero/Closure 与 Bound invocation handles；
+- 超出当前 uniform-environment qualification slice 的 Earth/Atmosphere/Gravity/Wind prepared query models；
 - static perturbation Definition；
 - minimal Observation projector；
 - no-force/no-control fixture mission。

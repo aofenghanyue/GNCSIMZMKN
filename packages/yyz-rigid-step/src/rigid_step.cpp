@@ -11,6 +11,7 @@
 #include <memory>
 #include <optional>
 #include <string_view>
+#include <type_traits>
 #include <utility>
 
 namespace gnc::packages::yyz {
@@ -40,6 +41,8 @@ struct ValidationFailure {
 struct AirLookupComputation {
     AirDataOutput air_data;
     AerodynamicLookupOutput lookup;
+    AerodynamicTableQueryOutput aerodynamic_response;
+    AerodynamicTableQueryEvaluation aerodynamic_query;
 };
 
 [[nodiscard]] NumericalEvidence product_evidence(
@@ -239,6 +242,7 @@ template <typename Value>
 [[nodiscard]] NumericalOutcome<AirLookupComputation> compute_air_lookup(
     const RigidStepModelDefinition& definition,
     const PreparedAerodynamicTableModel& aerodynamic_model,
+    AerodynamicTableQueryEntry aerodynamic_query,
     const RigidState& state,
     const EnvironmentInput& environment) {
     NumericalFlags flags = 0U;
@@ -308,9 +312,8 @@ template <typename Value>
             NumericalStatus::NonFiniteIntermediate, "air-data", flags);
     }
 
-    const auto query = AerodynamicTableQueryKernel::evaluate(
-        aerodynamic_model,
-        AerodynamicTableQueryInput{mach, alpha, beta});
+    const auto query = aerodynamic_query(
+        aerodynamic_model, AerodynamicTableQueryInput{mach, alpha, beta});
     if (!query.has_value()) {
         return product_failure<AirLookupComputation>(
             query.status(), "aero-query", flags | query.evidence().flags);
@@ -318,6 +321,7 @@ template <typename Value>
     flags |= query.evidence().flags;
     approximate = approximate || approximate_status(query.status());
     const auto& result = query.value();
+    const auto& response = result.output;
 
     AirLookupComputation output;
     output.air_data.velocity_relative_inertial.value = relative_inertial;
@@ -330,7 +334,9 @@ template <typename Value>
     output.lookup.domain_status = result.telemetry.domain_status;
     output.lookup.weights = result.telemetry.weights;
     output.lookup.coefficients_ca_cy_cn_cl_cm_cn =
-        result.output.coefficients_ca_cy_cn_cl_cm_cn;
+        response.coefficients_ca_cy_cn_cl_cm_cn;
+    output.aerodynamic_response = response;
+    output.aerodynamic_query = result;
     NumericalEvidence evidence = product_evidence(
         kRigidStepKernelIdentity, "air-and-aero-query", flags);
     evidence.evaluations = query.evidence().evaluations;
@@ -355,7 +361,8 @@ template <typename Value>
     };
 }
 
-[[nodiscard]] NumericalOutcome<RigidDerivativeOutput> evaluate_derivative(
+[[nodiscard]] NumericalOutcome<RigidDerivativeOutput>
+evaluate_derivative_impl(
     const RigidStepAlgorithmDefinition& algorithm,
     const RigidState& state,
     double mass_kilograms,
@@ -368,9 +375,11 @@ template <typename Value>
     const auto prepared_attitude = gnc::foundation::prepare_passive_quaternion(
         state.attitude.value, algorithm.attitude_evaluation_policy);
     if (!prepared_attitude.has_value()) {
-        return product_failure<RigidDerivativeOutput>(
-            prepared_attitude.status(), "derivative-attitude",
-            prepared_attitude.evidence().flags);
+        return NumericalOutcome<RigidDerivativeOutput>::failure(
+            prepared_attitude.status(),
+            product_evidence(kRigidDerivativeKernelIdentity,
+                             "derivative-attitude",
+                             prepared_attitude.evidence().flags));
     }
     flags |= prepared_attitude.evidence().flags;
     approximate = approximate || approximate_status(prepared_attitude.status());
@@ -379,9 +388,11 @@ template <typename Value>
         prepared_attitude.value(), force_total_body,
         algorithm.attitude_evaluation_policy);
     if (!force_inertial.has_value()) {
-        return product_failure<RigidDerivativeOutput>(
-            force_inertial.status(), "derivative-force-frame",
-            flags | force_inertial.evidence().flags);
+        return NumericalOutcome<RigidDerivativeOutput>::failure(
+            force_inertial.status(),
+            product_evidence(kRigidDerivativeKernelIdentity,
+                             "derivative-force-frame",
+                             flags | force_inertial.evidence().flags));
     }
     flags |= force_inertial.evidence().flags;
     approximate = approximate || approximate_status(force_inertial.status());
@@ -393,18 +404,21 @@ template <typename Value>
     const Vec3 net_moment = moment_total_body - gyroscopic;
     if (!finite(acceleration) || !finite(angular_momentum) ||
         !finite(gyroscopic) || !finite(net_moment)) {
-        return product_failure<RigidDerivativeOutput>(
+        return NumericalOutcome<RigidDerivativeOutput>::failure(
             NumericalStatus::NonFiniteIntermediate,
-            "derivative-balance", flags);
+            product_evidence(kRigidDerivativeKernelIdentity,
+                             "derivative-balance", flags));
     }
 
     const auto angular_acceleration = gnc::foundation::solve_spd_3x3(
         inertia_about_center_of_mass, net_moment,
         algorithm.numerical_policy);
     if (!angular_acceleration.has_value()) {
-        return product_failure<RigidDerivativeOutput>(
-            angular_acceleration.status(), "derivative-inertia",
-            flags | angular_acceleration.evidence().flags);
+        return NumericalOutcome<RigidDerivativeOutput>::failure(
+            angular_acceleration.status(),
+            product_evidence(kRigidDerivativeKernelIdentity,
+                             "derivative-inertia",
+                             flags | angular_acceleration.evidence().flags));
     }
     flags |= angular_acceleration.evidence().flags;
     approximate = approximate ||
@@ -415,9 +429,11 @@ template <typename Value>
             prepared_attitude.value(), state.angular_rate.value,
             algorithm.attitude_evaluation_policy);
     if (!attitude_derivative.has_value()) {
-        return product_failure<RigidDerivativeOutput>(
-            attitude_derivative.status(), "derivative-attitude-rate",
-            flags | attitude_derivative.evidence().flags);
+        return NumericalOutcome<RigidDerivativeOutput>::failure(
+            attitude_derivative.status(),
+            product_evidence(kRigidDerivativeKernelIdentity,
+                             "derivative-attitude-rate",
+                             flags | attitude_derivative.evidence().flags));
     }
     flags |= attitude_derivative.evidence().flags;
     approximate = approximate || approximate_status(
@@ -432,7 +448,7 @@ template <typename Value>
     output.angular_acceleration.value = angular_acceleration.value().solution;
     output.attitude_derivative.value = attitude_derivative.value();
     NumericalEvidence evidence = product_evidence(
-        kRigidStepKernelIdentity, "rigid-derivative", flags);
+        kRigidDerivativeKernelIdentity, "rigid-derivative", flags);
     return NumericalOutcome<RigidDerivativeOutput>::with_value(
         approximate ? NumericalStatus::Approximate
                     : NumericalStatus::Success,
@@ -528,6 +544,235 @@ namespace {
 }
 
 } // namespace
+
+gnc::model_sdk::CanonicalConfigBlock
+canonical_uniform_environment_config(
+    const UniformEnvironmentDefinition& definition) {
+    return {
+        std::string(kUniformEnvironmentConfigSchemaIdentity),
+        kUniformEnvironmentConfigSchemaVersion,
+        {
+            {"clock_domain_id", definition.clock_domain.id},
+            {"configuration_revision",
+             definition.configuration_revision},
+            {"density_kilograms_per_cubic_meter",
+             definition.density_kilograms_per_cubic_meter},
+            {"gravity.x_meters_per_second_squared",
+             definition.gravity.value(0)},
+            {"gravity.y_meters_per_second_squared",
+             definition.gravity.value(1)},
+            {"gravity.z_meters_per_second_squared",
+             definition.gravity.value(2)},
+            {"inertial_frame_id", definition.inertial_frame.id},
+            {"speed_of_sound_meters_per_second",
+             definition.speed_of_sound_meters_per_second},
+            {"velocity_airmass.x_meters_per_second",
+             definition.velocity_airmass.value(0)},
+            {"velocity_airmass.y_meters_per_second",
+             definition.velocity_airmass.value(1)},
+            {"velocity_airmass.z_meters_per_second",
+             definition.velocity_airmass.value(2)},
+        },
+    };
+}
+
+NumericalOutcome<UniformEnvironmentDefinition>
+build_uniform_environment_definition(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration) {
+    const auto failure = [] {
+        return NumericalOutcome<UniformEnvironmentDefinition>::failure(
+            NumericalStatus::DomainError,
+            product_evidence(kUniformEnvironmentPreparationIdentity,
+                             "canonical-config"));
+    };
+    static constexpr std::array<std::string_view, 11U> kFields{
+        "clock_domain_id",
+        "configuration_revision",
+        "density_kilograms_per_cubic_meter",
+        "gravity.x_meters_per_second_squared",
+        "gravity.y_meters_per_second_squared",
+        "gravity.z_meters_per_second_squared",
+        "inertial_frame_id",
+        "speed_of_sound_meters_per_second",
+        "velocity_airmass.x_meters_per_second",
+        "velocity_airmass.y_meters_per_second",
+        "velocity_airmass.z_meters_per_second",
+    };
+    if (configuration.schema_id !=
+            kUniformEnvironmentConfigSchemaIdentity ||
+        configuration.schema_version !=
+            kUniformEnvironmentConfigSchemaVersion ||
+        configuration.fields.size() != kFields.size()) {
+        return failure();
+    }
+    for (std::size_t index = 0U; index < kFields.size(); ++index) {
+        if (configuration.fields[index].field_id != kFields[index]) {
+            return failure();
+        }
+    }
+
+    const auto* clock_domain = std::get_if<std::string>(
+        &configuration.fields[0U].value);
+    const auto* revision = std::get_if<std::int64_t>(
+        &configuration.fields[1U].value);
+    const auto* density =
+        std::get_if<double>(&configuration.fields[2U].value);
+    const auto* gravity_x =
+        std::get_if<double>(&configuration.fields[3U].value);
+    const auto* gravity_y =
+        std::get_if<double>(&configuration.fields[4U].value);
+    const auto* gravity_z =
+        std::get_if<double>(&configuration.fields[5U].value);
+    const auto* inertial_frame = std::get_if<std::string>(
+        &configuration.fields[6U].value);
+    const auto* speed_of_sound =
+        std::get_if<double>(&configuration.fields[7U].value);
+    const auto* velocity_x =
+        std::get_if<double>(&configuration.fields[8U].value);
+    const auto* velocity_y =
+        std::get_if<double>(&configuration.fields[9U].value);
+    const auto* velocity_z =
+        std::get_if<double>(&configuration.fields[10U].value);
+    const std::array<const double*, 8U> numbers{
+        density, gravity_x, gravity_y, gravity_z,
+        speed_of_sound, velocity_x, velocity_y, velocity_z};
+    if (clock_domain == nullptr || clock_domain->empty() ||
+        revision == nullptr || *revision < 0 ||
+        inertial_frame == nullptr || inertial_frame->empty() ||
+        std::any_of(numbers.begin(), numbers.end(),
+                    [](const double* value) {
+                        return value == nullptr ||
+                               !canonical_double(*value);
+                    }) ||
+        *density < 0.0 || *speed_of_sound <= 0.0) {
+        return failure();
+    }
+
+    UniformEnvironmentDefinition definition;
+    definition.metadata = {
+        std::string(kUniformEnvironmentModelIdentity),
+        std::string(kUniformEnvironmentModelVersion),
+        gnc::model_sdk::ModelExecutionForm::PureQuery,
+    };
+    definition.inertial_frame.id = *inertial_frame;
+    definition.clock_domain.id = *clock_domain;
+    definition.configuration_revision = *revision;
+    definition.gravity.value = Vec3{*gravity_x, *gravity_y, *gravity_z};
+    definition.velocity_airmass.value =
+        Vec3{*velocity_x, *velocity_y, *velocity_z};
+    definition.density_kilograms_per_cubic_meter = *density;
+    definition.speed_of_sound_meters_per_second = *speed_of_sound;
+    return NumericalOutcome<UniformEnvironmentDefinition>::with_value(
+        NumericalStatus::Success, std::move(definition),
+        product_evidence(kUniformEnvironmentPreparationIdentity,
+                         "canonical-config"));
+}
+
+PreparedUniformEnvironmentModel::PreparedUniformEnvironmentModel(
+    std::shared_ptr<const UniformEnvironmentDefinition> definition,
+    gnc::model_sdk::PreparedModelMetadata metadata) noexcept
+    : definition_(std::move(definition)), metadata_(std::move(metadata)) {}
+
+const UniformEnvironmentDefinition&
+PreparedUniformEnvironmentModel::definition() const noexcept {
+    return *definition_;
+}
+
+const gnc::model_sdk::PreparedModelMetadata&
+PreparedUniformEnvironmentModel::metadata() const noexcept {
+    return metadata_;
+}
+
+NumericalOutcome<PreparedUniformEnvironmentModel>
+prepare_uniform_environment_model(UniformEnvironmentDefinition definition) {
+    const auto failure = [](NumericalStatus status,
+                            std::string_view detail) {
+        return NumericalOutcome<PreparedUniformEnvironmentModel>::failure(
+            status,
+            product_evidence(kUniformEnvironmentPreparationIdentity,
+                             detail));
+    };
+    auto metadata = gnc::model_sdk::prepare_model_metadata(
+        definition.metadata, kUniformEnvironmentPreparationIdentity);
+    if (!metadata.has_value()) {
+        return NumericalOutcome<PreparedUniformEnvironmentModel>::failure(
+            metadata.status(), metadata.evidence());
+    }
+    if (definition.metadata.model_id !=
+            kUniformEnvironmentModelIdentity ||
+        definition.metadata.model_version !=
+            kUniformEnvironmentModelVersion ||
+        definition.metadata.execution_form !=
+            gnc::model_sdk::ModelExecutionForm::PureQuery ||
+        definition.inertial_frame.id.empty() ||
+        definition.clock_domain.id.empty() ||
+        definition.configuration_revision < 0) {
+        return failure(NumericalStatus::DomainError,
+                       "definition-identity-or-context");
+    }
+    if (!finite(definition.gravity.value) ||
+        !finite(definition.velocity_airmass.value) ||
+        !canonical_double(
+            definition.density_kilograms_per_cubic_meter) ||
+        !canonical_double(
+            definition.speed_of_sound_meters_per_second) ||
+        definition.density_kilograms_per_cubic_meter < 0.0 ||
+        definition.speed_of_sound_meters_per_second <= 0.0) {
+        return failure(NumericalStatus::DomainError,
+                       "definition-physical-domain");
+    }
+    return NumericalOutcome<PreparedUniformEnvironmentModel>::with_value(
+        NumericalStatus::Success,
+        PreparedUniformEnvironmentModel{
+            std::make_shared<const UniformEnvironmentDefinition>(
+                std::move(definition)),
+            std::move(metadata.value())},
+        product_evidence(kUniformEnvironmentPreparationIdentity,
+                         "prepared"));
+}
+
+NumericalOutcome<UniformEnvironmentQueryEvaluation>
+UniformEnvironmentQueryKernel::evaluate(
+    const PreparedUniformEnvironmentModel& model,
+    const UniformEnvironmentQueryInput& input) {
+    const auto& definition = model.definition();
+    const auto& context = input.context;
+    if (context.frame != definition.inertial_frame ||
+        context.clock_domain != definition.clock_domain ||
+        context.configuration_revision !=
+            definition.configuration_revision ||
+        context.quality != DataQuality::Valid ||
+        context.sample_time.tick < 0 ||
+        !std::isfinite(context.sample_time.seconds)) {
+        return NumericalOutcome<UniformEnvironmentQueryEvaluation>::failure(
+            NumericalStatus::DomainError,
+            product_evidence(kUniformEnvironmentQueryIdentity,
+                             "query-context"));
+    }
+    if (!finite(input.position.value)) {
+        return NumericalOutcome<UniformEnvironmentQueryEvaluation>::failure(
+            NumericalStatus::NonFiniteInput,
+            product_evidence(kUniformEnvironmentQueryIdentity,
+                             "query-position"));
+    }
+
+    EnvironmentInput output;
+    output.context = context;
+    output.gravity = definition.gravity;
+    output.velocity_airmass = definition.velocity_airmass;
+    output.density_kilograms_per_cubic_meter =
+        definition.density_kilograms_per_cubic_meter;
+    output.speed_of_sound_meters_per_second =
+        definition.speed_of_sound_meters_per_second;
+    NumericalEvidence evidence = product_evidence(
+        kUniformEnvironmentQueryIdentity, "uniform-environment");
+    evidence.evaluations = 1U;
+    return NumericalOutcome<UniformEnvironmentQueryEvaluation>::with_value(
+        NumericalStatus::Success,
+        UniformEnvironmentQueryEvaluation{
+            std::move(output), UniformEnvironmentQueryTelemetry{}},
+        evidence);
+}
 
 gnc::model_sdk::CanonicalConfigBlock
 canonical_force_moment_closure_config(
@@ -1019,7 +1264,7 @@ ForceMomentClosureKernel::evaluate(
     return NumericalOutcome<ForceMomentClosureEvaluation>::with_value(
         NumericalStatus::Success,
         ForceMomentClosureEvaluation{
-            ForceMomentClosureOutput{
+            RigidFormInput{
                 BodyForceNewtons{force_total},
                 BodyMomentNewtonMeters{moment_total}},
             std::move(telemetry)},
@@ -1101,17 +1346,159 @@ NumericalOutcome<PreparedRigidStepModel> prepare_rigid_step_model(
         evidence);
 }
 
-NumericalOutcome<RigidStepEvaluation> RigidStepKernel::evaluate(
-    const PreparedRigidStepModel& model,
-    const RigidStepInput& input) {
-    const auto& definition = model.definition();
-    if (const auto failure = validate_contexts(definition, input)) {
-        return product_failure<RigidStepEvaluation>(failure->status,
-                                                    failure->detail);
+NumericalOutcome<RigidState> RigidInitialStateBuilder::build(
+    const RigidStepAlgorithmDefinition& algorithm,
+    const RigidInitialStateInput& input) {
+    if (!std::isfinite(algorithm.fixed_step_seconds) ||
+        algorithm.fixed_step_seconds <= 0.0 ||
+        !gnc::foundation::valid_numerical_policy(
+            algorithm.numerical_policy) ||
+        !gnc::foundation::valid_quaternion_policy(
+            algorithm.attitude_evaluation_policy) ||
+        !gnc::foundation::valid_quaternion_policy(
+            algorithm.candidate_attitude_policy)) {
+        return NumericalOutcome<RigidState>::failure(
+            NumericalStatus::DomainError,
+            product_evidence(kRigidInitialStateBuilderIdentity,
+                             "definition-or-policy"));
     }
-    if (const auto failure = validate_values(definition, input)) {
-        return product_failure<RigidStepEvaluation>(failure->status,
-                                                    failure->detail);
+    if (!finite(input.state)) {
+        return NumericalOutcome<RigidState>::failure(
+            NumericalStatus::NonFiniteInput,
+            product_evidence(kRigidInitialStateBuilderIdentity,
+                             "initial-state"));
+    }
+    const auto attitude = gnc::foundation::prepare_passive_quaternion(
+        input.state.attitude.value, algorithm.candidate_attitude_policy);
+    if (!attitude.has_value()) {
+        return NumericalOutcome<RigidState>::failure(
+            attitude.status(),
+            product_evidence(kRigidInitialStateBuilderIdentity,
+                             "initial-attitude",
+                             attitude.evidence().flags));
+    }
+    RigidState state = input.state;
+    state.attitude.value = attitude.value();
+    NumericalEvidence evidence = product_evidence(
+        kRigidInitialStateBuilderIdentity, "initial-state",
+        attitude.evidence().flags);
+    evidence.evaluations = attitude.evidence().evaluations;
+    evidence.residual_norm = attitude.evidence().residual_norm;
+    return NumericalOutcome<RigidState>::with_value(
+        attitude.status(), std::move(state), evidence);
+}
+
+CommittedRigidObservation project_committed_rigid_observation(
+    const SampleContext& context, const RigidState& state) {
+    return CommittedRigidObservation{context, state};
+}
+
+RigidState clone_rigid_state(const RigidState& state) {
+    return state;
+}
+
+bool validate_rigid_state_finite(const RigidState& state) noexcept {
+    return finite(state);
+}
+
+bool validate_rigid_state_invariants(const RigidState& state) noexcept {
+    const double squared_norm = state.attitude.value.squaredNorm();
+    return std::isfinite(squared_norm) && squared_norm > 0.0;
+}
+
+bool validate_rigid_state(const RigidState& state) noexcept {
+    return validate_rigid_state_finite(state) &&
+           validate_rigid_state_invariants(state);
+}
+
+void swap_rigid_state(RigidState& lhs, RigidState& rhs) noexcept {
+    static_assert(std::is_nothrow_swappable_v<RigidState>,
+                  "RigidState codec requires noexcept swap");
+    using std::swap;
+    swap(lhs, rhs);
+}
+
+const RigidStateCodec& rigid_state_codec() noexcept {
+    static const RigidStateCodec codec{
+        &clone_rigid_state, &validate_rigid_state,
+        &validate_rigid_state_finite,
+        &validate_rigid_state_invariants,
+        &swap_rigid_state, &project_committed_rigid_observation};
+    return codec;
+}
+
+NumericalOutcome<RigidDerivativeOutput>
+RigidDerivativeKernel::evaluate(
+    const RigidStepAlgorithmDefinition& algorithm,
+    const RigidDerivativeInput& input) {
+    if (!std::isfinite(input.mass_kilograms) ||
+        !finite(input.inertia_about_center_of_mass.value) ||
+        !finite(input.frozen_form_input.force_total.value) ||
+        !finite(input.frozen_form_input
+                    .moment_total_about_center_of_mass.value) ||
+        !finite(input.frozen_gravity.value) ||
+        !finite(input.candidate_state)) {
+        return NumericalOutcome<RigidDerivativeOutput>::failure(
+            NumericalStatus::NonFiniteInput,
+            product_evidence(kRigidDerivativeKernelIdentity,
+                             "derivative-input"));
+    }
+    if (input.mass_kilograms <= 0.0 ||
+        !gnc::foundation::valid_numerical_policy(
+            algorithm.numerical_policy) ||
+        !gnc::foundation::valid_quaternion_policy(
+            algorithm.attitude_evaluation_policy)) {
+        return NumericalOutcome<RigidDerivativeOutput>::failure(
+            NumericalStatus::DomainError,
+            product_evidence(kRigidDerivativeKernelIdentity,
+                             "definition-or-domain"));
+    }
+    return evaluate_derivative_impl(
+        algorithm, input.candidate_state, input.mass_kilograms,
+        input.inertia_about_center_of_mass.value,
+        input.frozen_form_input.force_total.value,
+        input.frozen_form_input.moment_total_about_center_of_mass.value,
+        input.frozen_gravity.value);
+}
+
+namespace {
+
+NumericalOutcome<RigidFrozenFormPreparationInvocationEvaluation>
+prepare_rigid_frozen_form_closure_request(
+    const RigidFrozenFormRuntimeDefinition& runtime_definition,
+    const RigidFrozenFormQuerySet& queries,
+    const RigidStepInput& input) {
+    const auto failure = [](NumericalStatus status,
+                            std::string_view detail,
+                            NumericalFlags flags = 0U) {
+        return NumericalOutcome<
+            RigidFrozenFormPreparationInvocationEvaluation>::failure(
+                status,
+                product_evidence(kRigidFrozenFormKernelIdentity,
+                                 detail, flags));
+    };
+    if (queries.aerodynamic.prepared_model == nullptr ||
+        queries.aerodynamic.callable == nullptr) {
+        return failure(NumericalStatus::DomainError,
+                       "aerodynamic-invocation");
+    }
+    RigidStepModelDefinition definition;
+    definition.inertial_frame = runtime_definition.inertial_frame;
+    definition.algorithm = runtime_definition.algorithm;
+    definition.aerodynamics =
+        queries.aerodynamic.prepared_model->definition();
+    definition.force_moment_closure.body_frame = input.context.body_frame;
+    definition.force_moment_closure.clock_domain =
+        input.context.clock_domain;
+    definition.force_moment_closure.configuration_revision =
+        input.context.configuration_revision;
+    definition.force_moment_closure.numerical_policy =
+        runtime_definition.algorithm.numerical_policy;
+    if (const auto validation = validate_contexts(definition, input)) {
+        return failure(validation->status, validation->detail);
+    }
+    if (const auto validation = validate_values(definition, input)) {
+        return failure(validation->status, validation->detail);
     }
 
     NumericalFlags flags = 0U;
@@ -1120,20 +1507,19 @@ NumericalOutcome<RigidStepEvaluation> RigidStepKernel::evaluate(
         input.mass_properties.inertia_about_center_of_mass.value,
         Vec3::Zero(), definition.algorithm.numerical_policy);
     if (!inertia_check.has_value()) {
-        return product_failure<RigidStepEvaluation>(
-            inertia_check.status(), "mass-inertia",
-            inertia_check.evidence().flags);
+        return failure(inertia_check.status(), "mass-inertia",
+                       inertia_check.evidence().flags);
     }
     flags |= inertia_check.evidence().flags;
     approximate = approximate || approximate_status(inertia_check.status());
 
     const auto air_lookup = compute_air_lookup(
-        definition, model.aerodynamic_table_model(), input.committed_state,
+        definition, *queries.aerodynamic.prepared_model,
+        queries.aerodynamic.callable, input.committed_state,
         input.environment);
     if (!air_lookup.has_value()) {
-        return product_failure<RigidStepEvaluation>(
-            air_lookup.status(), air_lookup.evidence().detail,
-            flags | air_lookup.evidence().flags);
+        return failure(air_lookup.status(), air_lookup.evidence().detail,
+                       flags | air_lookup.evidence().flags);
     }
     flags |= air_lookup.evidence().flags;
     approximate = approximate || approximate_status(air_lookup.status());
@@ -1159,19 +1545,17 @@ NumericalOutcome<RigidStepEvaluation> RigidStepKernel::evaluate(
     };
     if (!finite(aerodynamic_force) ||
         !finite(aerodynamic_moment_at_application)) {
-        return product_failure<RigidStepEvaluation>(
-            NumericalStatus::NonFiniteIntermediate,
-            "aero-dimensionalization", flags);
+        return failure(NumericalStatus::NonFiniteIntermediate,
+                       "aero-dimensionalization", flags);
     }
 
     AppliedBodyWrenchInput aerodynamic_wrench;
     aerodynamic_wrench.context = {
-        SampleContext{
-            definition.force_moment_closure.body_frame,
-            definition.force_moment_closure.clock_domain,
-            input.context.interval_start,
-            definition.force_moment_closure.configuration_revision,
-            input.context.quality},
+        SampleContext{input.context.body_frame,
+                      input.context.clock_domain,
+                      input.context.interval_start,
+                      input.context.configuration_revision,
+                      input.context.quality},
         gnc::contracts::HalfOpenValidityInterval{
             input.context.interval_start, input.context.interval_end}};
     aerodynamic_wrench.source_id = definition.aerodynamics.source_id;
@@ -1186,25 +1570,168 @@ NumericalOutcome<RigidStepEvaluation> RigidStepKernel::evaluate(
         input.mass_properties.body_origin_to_center_of_mass;
     closure_input.contributions = {aerodynamic_wrench,
                                    input.supplied_wrench};
-    const auto closure = ForceMomentClosureKernel::evaluate(
-        model.force_moment_closure_model(), closure_input);
-    if (!closure.has_value()) {
-        return product_failure<RigidStepEvaluation>(
-            closure.status(), closure.evidence().detail,
-            flags | closure.evidence().flags);
-    }
-    flags |= closure.evidence().flags;
-    approximate = approximate || approximate_status(closure.status());
-    const RigidFormInput form_input = closure.value().output.form_input();
-    const Vec3& force_total = form_input.force_total.value;
-    const Vec3& moment_total =
-        form_input.moment_total_about_center_of_mass.value;
+    NumericalEvidence evidence = product_evidence(
+        kRigidFrozenFormKernelIdentity, "frozen-form-preparation", flags);
+    evidence.evaluations = air_lookup.evidence().evaluations;
+    evidence.last_step = definition.algorithm.fixed_step_seconds;
+    return NumericalOutcome<
+        RigidFrozenFormPreparationInvocationEvaluation>::with_value(
+            approximate ? NumericalStatus::Approximate
+                        : NumericalStatus::Success,
+            RigidFrozenFormPreparationInvocationEvaluation{
+                RigidFrozenFormPreparationEvaluation{
+                    RigidFrozenFormPreparationOutput{
+                        input.environment, std::move(closure_input)},
+                    RigidFrozenFormPreparationTelemetry{
+                        air, lookup,
+                        air_lookup.value().aerodynamic_query}},
+                RigidFrozenFormInvocationResults{
+                    air_lookup.value().aerodynamic_response}},
+            evidence);
+}
 
-    const auto initial_derivative = evaluate_derivative(
-        definition.algorithm, input.committed_state,
-        input.mass_properties.mass_kilograms,
-        input.mass_properties.inertia_about_center_of_mass.value,
-        force_total, moment_total, input.environment.gravity.value);
+NumericalOutcome<RigidFrozenFormInvocationEvaluation>
+evaluate_rigid_frozen_form(
+    const RigidFrozenFormRuntimeDefinition& runtime_definition,
+    const RigidFrozenFormInvocationSet& invocations,
+    const RigidStepInput& input) {
+    const auto failure = [](NumericalStatus status,
+                            std::string_view detail,
+                            NumericalFlags flags = 0U) {
+        return NumericalOutcome<RigidFrozenFormInvocationEvaluation>::failure(
+            status,
+            product_evidence(kRigidFrozenFormKernelIdentity,
+                             detail, flags));
+    };
+    if (invocations.closure.prepared_model == nullptr ||
+        invocations.closure.callable == nullptr) {
+        return failure(NumericalStatus::DomainError,
+                       "closure-invocation");
+    }
+    const auto prepared = prepare_rigid_frozen_form_closure_request(
+        runtime_definition,
+        RigidFrozenFormQuerySet{invocations.aerodynamic}, input);
+    if (!prepared.has_value()) {
+        return failure(prepared.status(), prepared.evidence().detail,
+                       prepared.evidence().flags);
+    }
+    const auto closure = invocations.closure.callable(
+        *invocations.closure.prepared_model,
+        prepared.value().evaluation.output.closure_request);
+    if (!closure.has_value()) {
+        return failure(closure.status(), closure.evidence().detail,
+                       prepared.evidence().flags |
+                           closure.evidence().flags);
+    }
+    const NumericalFlags flags = prepared.evidence().flags |
+                                 closure.evidence().flags;
+
+    NumericalEvidence evidence = product_evidence(
+        kRigidFrozenFormKernelIdentity, "frozen-form", flags);
+    evidence.evaluations = prepared.evidence().evaluations +
+                           closure.evidence().evaluations;
+    evidence.last_step = runtime_definition.algorithm.fixed_step_seconds;
+    return NumericalOutcome<RigidFrozenFormInvocationEvaluation>::with_value(
+        approximate_status(prepared.status()) ||
+                approximate_status(closure.status())
+            ? NumericalStatus::Approximate
+            : NumericalStatus::Success,
+        RigidFrozenFormInvocationEvaluation{
+            RigidFrozenFormEvaluation{
+                RigidFrozenFormOutput{closure.value().output.form_input()},
+                RigidFrozenFormTelemetry{
+                    prepared.value().evaluation.telemetry.air_data,
+                    prepared.value().evaluation.telemetry.aerodynamic_lookup,
+                    prepared.value().evaluation.telemetry.aerodynamic_query,
+                    closure.value()}},
+            prepared.value().invocation_results},
+        evidence);
+}
+
+} // namespace
+
+NumericalOutcome<RigidFrozenFormPreparationInvocationEvaluation>
+RigidFrozenFormKernel::prepare_closure_request(
+    const RigidFrozenFormRuntimeDefinition& definition,
+    const RigidFrozenFormQuerySet& queries,
+    const RigidStepInput& input) {
+    return prepare_rigid_frozen_form_closure_request(
+        definition, queries, input);
+}
+
+NumericalOutcome<RigidFrozenFormEvaluation>
+RigidFrozenFormKernel::evaluate(const PreparedRigidStepModel& model,
+                                const RigidStepInput& input) {
+    return evaluate(
+        RigidFrozenFormRuntimeDefinition{
+            model.definition().inertial_frame,
+            model.definition().algorithm},
+        RigidFrozenFormInvocationSet{
+            BoundAerodynamicTableQuery{
+                0U, 0U, 0U, &model.aerodynamic_table_model(),
+                &AerodynamicTableQueryKernel::evaluate},
+            BoundForceMomentClosure{
+                0U, 0U, 0U, &model.force_moment_closure_model(),
+                &ForceMomentClosureKernel::evaluate}},
+        input);
+}
+
+NumericalOutcome<RigidFrozenFormEvaluation>
+RigidFrozenFormKernel::evaluate(
+    const RigidFrozenFormRuntimeDefinition& definition,
+    const RigidFrozenFormInvocationSet& invocations,
+    const RigidStepInput& input) {
+    const auto result = evaluate_with_invocation_results(
+        definition, invocations, input);
+    if (!result.has_value()) {
+        return NumericalOutcome<RigidFrozenFormEvaluation>::failure(
+            result.status(), result.evidence());
+    }
+    return NumericalOutcome<RigidFrozenFormEvaluation>::with_value(
+        result.status(), result.value().evaluation, result.evidence());
+}
+
+NumericalOutcome<RigidFrozenFormInvocationEvaluation>
+RigidFrozenFormKernel::evaluate_with_invocation_results(
+    const RigidFrozenFormRuntimeDefinition& definition,
+    const RigidFrozenFormInvocationSet& invocations,
+    const RigidStepInput& input) {
+    return evaluate_rigid_frozen_form(definition, invocations, input);
+}
+
+NumericalOutcome<RigidStepEvaluation> RigidStepKernel::evaluate(
+    const PreparedRigidStepModel& model,
+    const RigidStepInput& input) {
+    const auto frozen = RigidFrozenFormKernel::evaluate(model, input);
+    if (!frozen.has_value()) {
+        return product_failure<RigidStepEvaluation>(
+            frozen.status(), frozen.evidence().detail,
+            frozen.evidence().flags);
+    }
+    return evaluate_held_form(model, input, frozen.value(),
+                              frozen.status(), frozen.evidence());
+}
+
+NumericalOutcome<RigidStepEvaluation>
+RigidStepKernel::evaluate_held_form(
+    const PreparedRigidStepModel& model,
+    const RigidStepInput& input,
+    const RigidFrozenFormEvaluation& frozen_form,
+    NumericalStatus frozen_form_status,
+    const NumericalEvidence& frozen_form_evidence) {
+    const auto& definition = model.definition();
+    NumericalFlags flags = frozen_form_evidence.flags;
+    bool approximate = approximate_status(frozen_form_status);
+    const RigidFormInput& form_input = frozen_form.output.form_input;
+
+    const auto initial_derivative = RigidDerivativeKernel::evaluate(
+        definition.algorithm,
+        RigidDerivativeInput{
+            input.committed_state,
+            input.mass_properties.mass_kilograms,
+            input.mass_properties.inertia_about_center_of_mass,
+            form_input,
+            input.environment.gravity});
     if (!initial_derivative.has_value()) {
         return product_failure<RigidStepEvaluation>(
             initial_derivative.status(), initial_derivative.evidence().detail,
@@ -1217,11 +1744,14 @@ NumericalOutcome<RigidStepEvaluation> RigidStepKernel::evaluate(
     const StateVector committed = pack_state(input.committed_state);
     const auto derivative = [&](double, const StateVector& stage_state) {
         const RigidState typed_state = unpack_state(stage_state);
-        const auto stage_derivative = evaluate_derivative(
-            definition.algorithm, typed_state,
-            input.mass_properties.mass_kilograms,
-            input.mass_properties.inertia_about_center_of_mass.value,
-            force_total, moment_total, input.environment.gravity.value);
+        const auto stage_derivative = RigidDerivativeKernel::evaluate(
+            definition.algorithm,
+            RigidDerivativeInput{
+                typed_state,
+                input.mass_properties.mass_kilograms,
+                input.mass_properties.inertia_about_center_of_mass,
+                form_input,
+                input.environment.gravity});
         if (!stage_derivative.has_value()) {
             return NumericalOutcome<StateVector>::failure(
                 stage_derivative.status(), stage_derivative.evidence());
@@ -1261,9 +1791,11 @@ NumericalOutcome<RigidStepEvaluation> RigidStepKernel::evaluate(
     }
 
     RigidStepTelemetry telemetry;
-    telemetry.air_data = air;
-    telemetry.aerodynamic_lookup = lookup;
-    telemetry.force_moment_closure = closure.value();
+    telemetry.air_data = frozen_form.telemetry.air_data;
+    telemetry.aerodynamic_lookup =
+        frozen_form.telemetry.aerodynamic_lookup;
+    telemetry.force_moment_closure =
+        frozen_form.telemetry.force_moment_closure;
     telemetry.derivative_at_interval_start = initial_derivative.value();
     RigidStepOutput output;
     output.candidate.effective_at = input.context.interval_end;
@@ -1271,8 +1803,7 @@ NumericalOutcome<RigidStepEvaluation> RigidStepKernel::evaluate(
     NumericalEvidence evidence = product_evidence(
         kRigidStepKernelIdentity, "one-step-candidate", flags);
     evidence.evaluations = integrated.evidence().evaluations +
-                           air_lookup.evidence().evaluations +
-                           closure.evidence().evaluations;
+                           frozen_form_evidence.evaluations;
     evidence.last_step = definition.algorithm.fixed_step_seconds;
     return NumericalOutcome<RigidStepEvaluation>::with_value(
         approximate ? NumericalStatus::Approximate

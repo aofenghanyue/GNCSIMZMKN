@@ -13,6 +13,7 @@ enum class ModelExecutionForm : std::uint8_t {
     Unspecified,
     PureQuery,
     Closure,
+    RuntimeComponent,
 };
 
 [[nodiscard]] constexpr std::string_view to_string(
@@ -22,6 +23,8 @@ enum class ModelExecutionForm : std::uint8_t {
         return "PureQuery";
     case ModelExecutionForm::Closure:
         return "Closure";
+    case ModelExecutionForm::RuntimeComponent:
+        return "RuntimeComponent";
     case ModelExecutionForm::Unspecified:
         return "Unspecified";
     }
@@ -29,6 +32,13 @@ enum class ModelExecutionForm : std::uint8_t {
 }
 
 [[nodiscard]] constexpr bool valid_model_execution_form(
+    ModelExecutionForm form) noexcept {
+    return form == ModelExecutionForm::PureQuery ||
+           form == ModelExecutionForm::Closure ||
+           form == ModelExecutionForm::RuntimeComponent;
+}
+
+[[nodiscard]] constexpr bool valid_prepared_model_execution_form(
     ModelExecutionForm form) noexcept {
     return form == ModelExecutionForm::PureQuery ||
            form == ModelExecutionForm::Closure;
@@ -63,7 +73,8 @@ prepare_model_metadata(
             PreparedModelMetadata>::failure(
             gnc::foundation::NumericalStatus::DomainError, evidence);
     }
-    if (!valid_model_execution_form(definition.execution_form)) {
+    if (!valid_prepared_model_execution_form(
+            definition.execution_form)) {
         evidence.detail = "model-execution-form";
         return gnc::foundation::NumericalOutcome<
             PreparedModelMetadata>::failure(

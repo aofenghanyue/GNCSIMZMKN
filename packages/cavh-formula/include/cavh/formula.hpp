@@ -31,6 +31,12 @@ inline constexpr std::string_view kGlideEnvelopeConfigSchemaIdentity =
 inline constexpr std::uint32_t kGlideEnvelopeConfigSchemaVersion = 1U;
 inline constexpr std::string_view kGlideEnvelopeOutputContractIdentity =
     "gnc.contract.cavh.glide-envelope-query-output@1";
+inline constexpr std::string_view kGlideEnvelopeRequestContractIdentity =
+    "gnc.contract.cavh.glide-envelope-query-input@1";
+inline constexpr std::string_view kGlideEnvelopePreparationCallShapeIdentity =
+    "gnc.call-shape.cavh.glide-envelope.prepare@1";
+inline constexpr std::string_view kGlideEnvelopeQueryCallShapeIdentity =
+    "gnc.call-shape.cavh.glide-envelope.query@1";
 inline constexpr gnc::foundation::AlgorithmIdentity
     kCavhFormulaPreparationIdentity{
         "gnc.package.cavh.formula.prepare@1", "0.1.0"};
@@ -199,6 +205,8 @@ describe_cavh_formula_package() {
         std::string(kGlideEnvelopePreparationIdentity.id);
     envelope.preparation_algorithm_version =
         std::string(kGlideEnvelopePreparationIdentity.version);
+    envelope.preparation_call_shape_id =
+        std::string(kGlideEnvelopePreparationCallShapeIdentity);
     envelope.configuration.schema_id =
         std::string(kGlideEnvelopeConfigSchemaIdentity);
     envelope.configuration.schema_version =
@@ -218,6 +226,13 @@ describe_cavh_formula_package() {
         {"induced_drag_factor",
          gnc::model_sdk::CanonicalConfigValueKind::Float64},
     };
+    envelope.pure_query =
+        gnc::model_sdk::StaticPureQueryDescriptor{
+            std::string(kGlideEnvelopeQueryIdentity.id),
+            std::string(kGlideEnvelopeQueryIdentity.version),
+            gnc::model_sdk::StaticWorkspaceRequirement::None,
+            std::string(kGlideEnvelopeRequestContractIdentity),
+            std::string(kGlideEnvelopeQueryCallShapeIdentity)};
     envelope.ports.push_back(
         {"envelope", std::string(kGlideEnvelopeOutputContractIdentity),
          gnc::model_sdk::StaticPortDirection::Output,

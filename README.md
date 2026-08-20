@@ -6,7 +6,7 @@
 
 - 当前 gate：`R2`；G0/G1/G2 已由仓库所有者判定 `Passed`。
 - 已闭合：R1 Foundation、窄范围 in-process Contracts、真实 GlideEnvelope PureQuery、真实 ForceMomentClosure、YYZ 四个产品切片和 CAVH 公式产品切片。
-- 当前静态编译入口：programmatic `TypedStaticCompositionSource` 已贯通真实 YYZ/CAVH package descriptor、只读 Catalog、当前 R2 canonical Mission IR、typed `BindingPlan`/`TemporalBindingPlan`、结构化 proof、query/closure obligation 和窄静态 `ExecutionPlanDescriptor`。IR 已冻结 entity/Vehicle scope/subject、package-owned placement、canonical config、真实 asset binding、typed port semantics 与 source-independent SHA-256 semantic identity。
+- 当前静态编译入口保留既有 `TypedStaticCompositionSource`/`semantic-bytes@2` qualification 路径，并增加最小 REF-YYZ 的 programmatic `CompleteStaticCompositionSource` revision 3。后者经同一个 package-owned Catalog 形成 `CompleteCanonicalMissionIr`、typed ports/bindings、RigidBody/Mass state blocks 与 initial/projection/evolution obligations、Query/Closure/RuntimeComponent plans、Boundary DAG、IntegrationScope、Transaction、派生 `PlanProofIndex`，再由 exact linker 生成 process-local `ExecutionPlanImage` review artifact。Image 已保存 exact build lock、layout、schedule、region、authorization、Definition builder、七个 package-owned typed `RuntimeCellFactory`、两个 state codec、stored-slot codec/writer/reader/offset，以及 Query `CallerLocal` 与 Closure `HeldInterval` result route；link 阶段不调用这些 entry，也不创建 R3 Session 或 RuntimeCell。
 - 暂缓开展：YAML/INI、多端 adapter、Session、mini runtime、runtime registry、serializer、StateFragment 与 R3～R8 能力。
 - 旧 GNCZMKN 只作为只读行为与科学参照，不进入任何生产 target、include path 或运行依赖。
 
@@ -64,16 +64,25 @@ build/dev/gnc_cavh_formula_product_probe --self-check
 
 当前 CAVH 输出止于 TDCT 公式阶段的限幅 alpha；产品级 guidance command 的 frame、时间与 ownership 映射等待真实 vehicle/controller consumer。
 
-YYZ 与 CAVH 共同消费最小 `ModelDefinitionMetadata`、`PreparedModelMetadata` 和 `AlgorithmEvaluation<Output, Telemetry>`。公共 metadata 只包含 stable model id/version、`PureQuery | Closure` 和 preparation identity；clock/configuration expectation 由 package definition 保持。GlideEnvelope、AerodynamicTable 与 ForceMomentClosure prepare 对各自 model id、model version 与 execution form 做 exact 检查。产品 probe 直接验证真实 query/closure output 消费、错误 model version 拒绝与 C++ output 类型边界，并保留既有 R0 oracle。
+YYZ 与 CAVH 共同消费最小 `ModelDefinitionMetadata`、`PreparedModelMetadata` 和 `AlgorithmEvaluation<Output, Telemetry>`。公共 execution-form tag 现包含 `PureQuery | Closure | RuntimeComponent`；当前 PreparedModel 产品路径仍只使用前两类，clock/configuration expectation 由 package definition 保持。GlideEnvelope、AerodynamicTable 与 ForceMomentClosure prepare 对各自 model id、model version 与 execution form 做 exact 检查。产品 probe 直接验证真实 query/closure output 消费、错误 model version 拒绝与 C++ output 类型边界，并保留既有 R0 oracle。
 
-当前 R2 static composition 从 package-owned descriptor 精确解析 `GlideEnvelope` 与 `AerodynamicTable` PureQuery、`ForceMomentClosure` Closure，以及 CAVH formula/YYZ rigid-step algorithm consumer。独立 REF-YYZ-001 typed source 将 `vehicle.fixture.yyz@1` 固定为 `Vehicle + subject_entity_id` scope；YYZ aero 位于 `vehicle.output`，closure 位于 `interaction/closure`，CAVH envelope 的 `vehicle.output` 只来自 definition policy。ForceMomentClosure canonical config 覆盖 body frame、clock、configuration revision 和完整 `NumericalPolicy`；YYZ aero 与 CAVH envelope 通过同一最小 typed config block 确定性重建 definition。真实 `aero-table.fixture.yyz.multiaffine@1` 以 exact role/schema/identity 在 prepare-time 绑定到 `PreparedAerodynamicTableModel`。运行连接明确区分 CAVH envelope query、YYZ aero query 和 `ContinuousClosureLink`；后者依照产品一次闭合并固定供全部 RK4 stages 消费的行为编译为 `IntervalModel`。CAVH 两端保持 definition-level 无 scope，YYZ 两条运行连接形成 exact Vehicle scope resolution。dry-run plan 现包含三项 model/preparation identity、四条 typed binding、一个 temporal binding、四份结构化 proof 与 query/query/closure obligations：
+既有 R2 static composition 继续从 package-owned descriptor 精确解析 CAVH `GlideEnvelope` 与 YYZ `AerodynamicTable` PureQuery、`ForceMomentClosure` Closure 和对应 algorithm consumer；其 `semantic-bytes@2` qualification 路径保持不变。完整 REF-YYZ 路径在 additive source/IR revision 3 中选择 uniform environment、aero、FrozenInterval closure、RigidBody、Mass、guidance、controller、ideal actuator、supplied propulsion 和 terminal evaluator 的真实产品定义。它冻结 current-cycle/interval temporal edges、两个唯一 StateOwner、initial state、PublishProjection、query/closure authorization、held form、rigid derivative、mass candidate、terminal committed history 和 rigid/mass atomic candidate set，不把 wrapper、dummy provider 或 RunBinding 伪装成 runtime node。
 
 ```powershell
 build/dev/gnc_compiler_static_plan_probe --explain
 build/dev/gnc_compiler_static_plan_probe --semantic-hash
+build/dev/gnc_compiler_complete_yyz_plan_probe --self-check
 ```
 
-`hash_canonical_mission_ir` 使用 `gnc.canonical-mission-ir.semantic-bytes@2` 的显式 tagged/length-prefixed big-endian encoding 与 SHA-256。source URI/path、输入顺序和 plan id 被排除；entity、model/algorithm scope relation、placement、model、typed port、config、asset 与 binding intent 变化均进入 digest。独立 Python reference 固定包含真实 RigidStep algorithm consumer 和两条 binding intent 的 YYZ qualification vector `b29dc67f2a9e0bb36cb18a5e54a8c4830bdb0cae718fbf856646ba903892511b`。当前仍未提供蓝图定义的 syntax-neutral `SourceTree`/`SourceMap`、完整 `PlanProofIndex`、plan link image、持久化 serializer、`RuntimeComponent` 或 Session；静态 plan 也尚未携带重建完整 PreparedModel 所需的全部数据。StateOwner、DecisionAuthority、activation/topology、intervention/fault routing 和 RuntimeComponent sampled graph cycle analysis 等待各自首个真实 consumer。
+YYZ package 还贡献 `AltitudePitchGuidance` 的 stateless `SampledTransform` descriptor：`vehicle.process` placement、每个 committed boundary 的 `process` phase、`BoundaryEvaluation`、current-cycle sampled input/output、zero-order hold、默认 instantiate/dispose 边界和 exact guidance kernel identity。该 schedule 只描述当前 R1 两区间产品 identity，不覆盖 00A/Reference A 的目标多速率 profile；该窄 descriptor 也不开放 state-schema 字段或重新解释现有混合 output。它的 canonical config 可确定性重建 definition，Catalog 对 form/profile/recipe/obligation/schedule/port/lifecycle 组合做封闭校验：
+
+```powershell
+build/dev/gnc_compiler_runtime_component_catalog_probe --self-check
+```
+
+`GNC-PLAN-RUNTIME-COMPONENT-UNAVAILABLE` 继续保护既有窄编译入口和残缺 RuntimeComponent 图；REF-YYZ revision 3 已闭合 provider、consumer、owner、schedule、temporal、invocation、typed factory、result route、stored-slot 与 state-codec facts，并可生成供 owner review 的静态 Image。缺 provider/授权、provider 或 owner/writer 不唯一、非法 phase/cycle/time relation、scope/transaction/lifecycle 不完整、factory/codec/build-lock/result-route cross-reference 错配和 unresolved implementation 均 fail closed。该结果把 `R2-PLAN-001`、`R2-PRF-001` 与 `R2-LINK-001` 推进到 review，但不代替仓库所有者作出 G3 gate 决定。
+
+`hash_canonical_mission_ir` 使用 `gnc.canonical-mission-ir.semantic-bytes@2` 的显式 tagged/length-prefixed big-endian encoding 与 SHA-256。source URI/path、输入顺序和 plan id 被排除；C++ 与 Python reference 继续固定 YYZ qualification vector `b29dc67f2a9e0bb36cb18a5e54a8c4830bdb0cae718fbf856646ba903892511b`。RuntimeComponent 仍不会进入该 API。完整图改用 additive `gnc.canonical-mission-ir.semantic-bytes@3`：source semantics覆盖 model/config/asset/port/state/obligation/schedule/temporal/invocation composition，package entry identity、recipe、workspace、state layout、build fingerprint、函数地址与 source location均排除。Descriptor/Image 另保存 exact implementation/layout facts，registration order与地址不影响稳定 fingerprint。当前仍未提供 syntax-neutral `SourceTree`/`SourceMap`、通用 `PreparedModelKey`/共享 cache、持久化 serializer、Session、stores、scheduler、integrator execution、candidate staging/commit、实际 PreparedModel/Bound handles、workspace 或 Session-local RuntimeCell；asset proof仍只证明 source-selected identity preservation。`R2-PLAN-001`、`R2-PRF-001` 与 `R2-LINK-001` 均为 owner review。G3 未通过，factory、codec 与 science entry 的实际恢复和调用、RuntimeCell 物化及 R3 后续阶段保持锁定。
 
 ## 仓库地图
 
