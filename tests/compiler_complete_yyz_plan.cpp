@@ -436,16 +436,6 @@ void append_configuration_provenance(
     return configuration;
 }
 
-[[nodiscard]] const StaticModelDescriptor* find_model(
-    const StaticPackageDescriptor& package, std::string_view model_id) {
-    const auto found = std::find_if(
-        package.models.begin(), package.models.end(),
-        [&](const auto& model) {
-            return model.definition.model_id == model_id;
-        });
-    return found == package.models.end() ? nullptr : &*found;
-}
-
 [[nodiscard]] bool is_terminal_evaluator(
     const StaticModelDescriptor& model) {
     return model.runtime_component.has_value() &&

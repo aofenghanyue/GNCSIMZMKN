@@ -1616,6 +1616,9 @@ lower_complete_static_source(
 namespace complete_plan_detail {
 
 struct LoweringContext {
+    explicit LoweringContext(const CompleteCanonicalMissionIr& input_ir)
+        : ir(input_ir) {}
+
     const CompleteCanonicalMissionIr& ir;
     CompleteExecutionPlanDescriptor plan;
     std::vector<CompleteDiagnostic> diagnostics;
@@ -4965,22 +4968,24 @@ link_complete_execution_plan(
         const auto entry_requirement =
             invocation.kind == gnc::model_sdk::StaticInvocationKind::PureQuery
                 ? plan.queries.at(
-                      std::find_if(
-                          plan.queries.begin(), plan.queries.end(),
-                          [&](const auto& query) {
-                              return query.occurrence_id ==
-                                     invocation.provider_occurrence_id;
-                          }) -
-                      plan.queries.begin())
+                      static_cast<std::size_t>(
+                          std::find_if(
+                              plan.queries.begin(), plan.queries.end(),
+                              [&](const auto& query) {
+                                  return query.occurrence_id ==
+                                         invocation.provider_occurrence_id;
+                              }) -
+                          plan.queries.begin()))
                       .entry_requirement_id
                 : plan.closures.at(
-                      std::find_if(
-                          plan.closures.begin(), plan.closures.end(),
-                          [&](const auto& closure) {
-                              return closure.occurrence_id ==
-                                     invocation.provider_occurrence_id;
-                          }) -
-                      plan.closures.begin())
+                      static_cast<std::size_t>(
+                          std::find_if(
+                              plan.closures.begin(), plan.closures.end(),
+                              [&](const auto& closure) {
+                                  return closure.occurrence_id ==
+                                         invocation.provider_occurrence_id;
+                              }) -
+                          plan.closures.begin()))
                       .entry_requirement_id;
         const auto caller_callsite = std::find_if(
             plan.runtime_callsites.begin(), plan.runtime_callsites.end(),

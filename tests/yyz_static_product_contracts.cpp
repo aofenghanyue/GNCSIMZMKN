@@ -1299,7 +1299,10 @@ void verify_committed_history_evaluator() {
         const double seconds = 0.1 * static_cast<double>(index);
         RigidState rigid;
         rigid.position.value =
-            Vec3{index == 2U ? 21.0 : 10.0 * index, 0.0, 1000.0};
+            Vec3{index == 2U
+                     ? 21.0
+                     : 10.0 * static_cast<double>(index),
+                 0.0, 1000.0};
         rigid.velocity.value =
             Vec3{110.0 - 5.0 * static_cast<double>(index), 0.0, 0.0};
         rigid.attitude.value =

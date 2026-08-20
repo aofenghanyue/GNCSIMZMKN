@@ -186,6 +186,7 @@ ScalarBurnMassDefinition fixture_mass_definition() {
         std::string(kScalarBurnMassModelIdentity),
         "0.1.0",
         std::string(kMassStateId),
+        fixture_numerical_policy(),
     };
 }
 
