@@ -26,6 +26,7 @@ enum class BindingKind : std::uint8_t {
     PureQuery,
     ContinuousClosureLink,
     SampledSignal,
+    IntervalModel,
 };
 
 [[nodiscard]] constexpr std::string_view to_string(
@@ -41,6 +42,8 @@ enum class BindingKind : std::uint8_t {
         return "ContinuousClosureLink";
     case BindingKind::SampledSignal:
         return "SampledSignal";
+    case BindingKind::IntervalModel:
+        return "IntervalModel";
     }
     return "Unknown";
 }
@@ -50,7 +53,8 @@ enum class BindingKind : std::uint8_t {
     return kind == BindingKind::AssetBinding ||
            kind == BindingKind::PureQuery ||
            kind == BindingKind::ContinuousClosureLink ||
-           kind == BindingKind::SampledSignal;
+           kind == BindingKind::SampledSignal ||
+           kind == BindingKind::IntervalModel;
 }
 
 enum class PortCardinality : std::uint8_t {
@@ -78,37 +82,12 @@ enum class PortCardinality : std::uint8_t {
            cardinality == PortCardinality::OneOrMore;
 }
 
-// Pure queries have no sampled/closure time relation. Closure relations retain
-// their frozen-interval meaning, while CurrentCycle belongs to sampled runtime
-// ports that must later participate in a closed runtime graph.
-enum class TemporalRelation : std::uint8_t {
-    NotApplicable,
-    IntervalModel,
-    CandidateStateQuery,
-    CurrentCycle,
-};
+using TemporalRelation = gnc::contracts::TemporalRelation;
+using gnc::contracts::valid_temporal_relation;
 
 [[nodiscard]] constexpr std::string_view to_string(
     TemporalRelation relation) noexcept {
-    switch (relation) {
-    case TemporalRelation::NotApplicable:
-        return "NotApplicable";
-    case TemporalRelation::IntervalModel:
-        return "IntervalModel";
-    case TemporalRelation::CandidateStateQuery:
-        return "CandidateStateQuery";
-    case TemporalRelation::CurrentCycle:
-        return "CurrentCycle";
-    }
-    return "Unknown";
-}
-
-[[nodiscard]] constexpr bool valid_temporal_relation(
-    TemporalRelation relation) noexcept {
-    return relation == TemporalRelation::NotApplicable ||
-           relation == TemporalRelation::IntervalModel ||
-           relation == TemporalRelation::CandidateStateQuery ||
-           relation == TemporalRelation::CurrentCycle;
+    return gnc::contracts::to_string(relation);
 }
 
 // Package-owned placement policy. VehicleProcess identifies an independently
@@ -118,6 +97,9 @@ enum class ModelPlacement : std::uint8_t {
     VehicleOutput,
     InteractionClosure,
     VehicleProcess,
+    Environment,
+    VehicleForm,
+    Evaluation,
 };
 
 [[nodiscard]] constexpr std::string_view to_string(
@@ -125,26 +107,38 @@ enum class ModelPlacement : std::uint8_t {
     switch (placement) {
     case ModelPlacement::Unspecified:
         return "Unspecified";
+    case ModelPlacement::Environment:
+        return "environment";
     case ModelPlacement::VehicleOutput:
         return "vehicle.output";
     case ModelPlacement::InteractionClosure:
         return "interaction/closure";
     case ModelPlacement::VehicleProcess:
         return "vehicle.process";
+    case ModelPlacement::VehicleForm:
+        return "vehicle.form";
+    case ModelPlacement::Evaluation:
+        return "evaluation";
     }
     return "Unknown";
 }
 
 [[nodiscard]] constexpr bool valid_model_placement(
     ModelPlacement placement) noexcept {
-    return placement == ModelPlacement::VehicleOutput ||
+    return placement == ModelPlacement::Environment ||
+           placement == ModelPlacement::VehicleOutput ||
            placement == ModelPlacement::InteractionClosure ||
-           placement == ModelPlacement::VehicleProcess;
+           placement == ModelPlacement::VehicleProcess ||
+           placement == ModelPlacement::VehicleForm ||
+           placement == ModelPlacement::Evaluation;
 }
 
 enum class RuntimeCellProfile : std::uint8_t {
     Unspecified,
     SampledTransform,
+    DiscreteStateProcessor,
+    ContinuousStateOwner,
+    Evaluator,
 };
 
 [[nodiscard]] constexpr std::string_view to_string(
@@ -154,31 +148,34 @@ enum class RuntimeCellProfile : std::uint8_t {
         return "Unspecified";
     case RuntimeCellProfile::SampledTransform:
         return "SampledTransform";
+    case RuntimeCellProfile::DiscreteStateProcessor:
+        return "DiscreteStateProcessor";
+    case RuntimeCellProfile::ContinuousStateOwner:
+        return "ContinuousStateOwner";
+    case RuntimeCellProfile::Evaluator:
+        return "Evaluator";
     }
     return "Unknown";
 }
 
 [[nodiscard]] constexpr bool valid_runtime_cell_profile(
     RuntimeCellProfile profile) noexcept {
-    return profile == RuntimeCellProfile::SampledTransform;
+    return profile == RuntimeCellProfile::SampledTransform ||
+           profile == RuntimeCellProfile::DiscreteStateProcessor ||
+           profile == RuntimeCellProfile::ContinuousStateOwner ||
+           profile == RuntimeCellProfile::Evaluator;
 }
 
-enum class RuntimeExecutionObligation : std::uint8_t {
-    BoundaryEvaluation,
-};
+using RuntimeExecutionObligation = gnc::contracts::ExecutionObligation;
 
 [[nodiscard]] constexpr std::string_view to_string(
     RuntimeExecutionObligation obligation) noexcept {
-    switch (obligation) {
-    case RuntimeExecutionObligation::BoundaryEvaluation:
-        return "BoundaryEvaluation";
-    }
-    return "Unknown";
+    return gnc::contracts::to_string(obligation);
 }
 
 [[nodiscard]] constexpr bool valid_runtime_execution_obligation(
     RuntimeExecutionObligation obligation) noexcept {
-    return obligation == RuntimeExecutionObligation::BoundaryEvaluation;
+    return gnc::contracts::valid_execution_obligation(obligation);
 }
 
 enum class RuntimeLifecycleCapability : std::uint8_t {
@@ -198,8 +195,13 @@ enum class RuntimeLifecycleCapability : std::uint8_t {
 }
 
 enum class CoarsePhase : std::uint8_t {
-    Unspecified,
-    Process,
+    Unspecified = 0U,
+    // Process was the first published R2 phase value.
+    Process = 1U,
+    Publish = 2U,
+    Evaluation = 3U,
+    Output = 4U,
+    Form = 5U,
 };
 
 [[nodiscard]] constexpr std::string_view to_string(
@@ -207,8 +209,16 @@ enum class CoarsePhase : std::uint8_t {
     switch (phase) {
     case CoarsePhase::Unspecified:
         return "Unspecified";
+    case CoarsePhase::Publish:
+        return "publish";
     case CoarsePhase::Process:
         return "process";
+    case CoarsePhase::Output:
+        return "output";
+    case CoarsePhase::Form:
+        return "form";
+    case CoarsePhase::Evaluation:
+        return "evaluation";
     }
     return "Unknown";
 }
@@ -217,6 +227,25 @@ enum class HoldPolicy : std::uint8_t {
     Unspecified,
     ZeroOrderHold,
 };
+
+enum class StaticScheduleTrigger : std::uint8_t {
+    Unspecified,
+    EveryBoundary,
+    TerminalSequenceReady,
+};
+
+[[nodiscard]] constexpr std::string_view to_string(
+    StaticScheduleTrigger trigger) noexcept {
+    switch (trigger) {
+    case StaticScheduleTrigger::Unspecified:
+        return "Unspecified";
+    case StaticScheduleTrigger::EveryBoundary:
+        return "EveryBoundary";
+    case StaticScheduleTrigger::TerminalSequenceReady:
+        return "TerminalSequenceReady";
+    }
+    return "Unknown";
+}
 
 [[nodiscard]] constexpr std::string_view to_string(
     HoldPolicy policy) noexcept {
@@ -361,25 +390,167 @@ struct StaticPortDescriptor {
 };
 
 struct StaticRuntimeScheduleDescriptor {
-    CoarsePhase phase = CoarsePhase::Unspecified;
+    StaticScheduleTrigger trigger = StaticScheduleTrigger::Unspecified;
     std::uint32_t step_interval = 0U;
     std::uint32_t offset = 0U;
     HoldPolicy output_hold = HoldPolicy::Unspecified;
     std::uint32_t max_input_age_steps = 0U;
 };
 
-// Package-owned static facts for one independent runtime boundary. The
-// initial R2 consumer is a stateless SampledTransform, so this narrow shape
-// deliberately carries no state-schema surface and lifecycle declares only
-// instantiate/dispose.
+enum class StaticStateEvolution : std::uint8_t {
+    Unspecified,
+    ContinuousCandidate,
+    IntervalCandidate,
+};
+
+[[nodiscard]] constexpr std::string_view to_string(
+    StaticStateEvolution evolution) noexcept {
+    switch (evolution) {
+    case StaticStateEvolution::Unspecified:
+        return "Unspecified";
+    case StaticStateEvolution::ContinuousCandidate:
+        return "ContinuousCandidate";
+    case StaticStateEvolution::IntervalCandidate:
+        return "IntervalCandidate";
+    }
+    return "Unknown";
+}
+
+struct StaticStateFieldDescriptor {
+    std::string field_id;
+    std::string value_type;
+    std::string unit;
+    std::string frame_role;
+};
+
+struct StaticStateSchemaDescriptor {
+    std::string schema_id;
+    std::uint32_t schema_version = 0U;
+    std::string layout_id;
+    std::vector<StaticStateFieldDescriptor> fields;
+};
+
+struct StaticStateOwnerDescriptor {
+    StaticStateSchemaDescriptor schema;
+    std::string initial_state_builder_id;
+    std::string initial_state_builder_version;
+    StaticConfigSchemaDescriptor initial_state_input_schema;
+    StaticStateEvolution evolution = StaticStateEvolution::Unspecified;
+    // Stable package-authored C++ call shape. The implementation table must
+    // independently contribute the same value before an Image can be linked.
+    std::string initial_state_builder_call_shape_id;
+};
+
+enum class StaticInvocationKind : std::uint8_t {
+    Unspecified,
+    PureQuery,
+    Closure,
+};
+
+[[nodiscard]] constexpr std::string_view to_string(
+    StaticInvocationKind kind) noexcept {
+    switch (kind) {
+    case StaticInvocationKind::Unspecified:
+        return "Unspecified";
+    case StaticInvocationKind::PureQuery:
+        return "PureQuery";
+    case StaticInvocationKind::Closure:
+        return "Closure";
+    }
+    return "Unknown";
+}
+
+[[nodiscard]] constexpr bool valid_static_invocation_kind(
+    StaticInvocationKind kind) noexcept {
+    return kind == StaticInvocationKind::PureQuery ||
+           kind == StaticInvocationKind::Closure;
+}
+
+struct StaticInvocationRequirementDescriptor {
+    std::string requirement_id;
+    StaticInvocationKind kind = StaticInvocationKind::Unspecified;
+    std::string contract_id;
+    PortCardinality cardinality = PortCardinality::ExactlyOne;
+};
+
+enum class StaticStateWriteKind : std::uint8_t {
+    None,
+    IntervalCandidate,
+};
+
+enum class StaticStateReadKind : std::uint8_t {
+    None,
+    Committed,
+    Candidate,
+};
+
+[[nodiscard]] constexpr std::string_view to_string(
+    StaticStateReadKind kind) noexcept {
+    switch (kind) {
+    case StaticStateReadKind::None:
+        return "None";
+    case StaticStateReadKind::Committed:
+        return "Committed";
+    case StaticStateReadKind::Candidate:
+        return "Candidate";
+    }
+    return "Unknown";
+}
+
+struct StaticRuntimeObligationEntryDescriptor {
+    RuntimeExecutionObligation obligation =
+        RuntimeExecutionObligation::BoundaryEvaluation;
+    CoarsePhase phase = CoarsePhase::Unspecified;
+    std::string entry_id;
+    std::string entry_version;
+    std::string request_contract_id;
+    std::string result_contract_id;
+    StaticWorkspaceRequirement workspace_requirement =
+        StaticWorkspaceRequirement::Unspecified;
+    std::vector<std::string> input_port_ids;
+    std::vector<std::string> output_port_ids;
+    StaticStateReadKind state_read = StaticStateReadKind::None;
+    StaticStateWriteKind state_write = StaticStateWriteKind::None;
+    std::vector<StaticInvocationRequirementDescriptor>
+        invocation_requirements;
+    // Separate from the semantic request/result signature: this locks the
+    // exact process-local C++ prototype expected from the package entry.
+    std::string call_shape_id;
+};
+
+struct StaticEvaluatorHistoryMemberDescriptor {
+    std::string member_id;
+    std::string state_schema_id;
+    std::string state_layout_id;
+};
+
+struct StaticEvaluatorHistoryShapeDescriptor {
+    std::string request_contract_id;
+    std::uint32_t depth = 0U;
+    std::vector<StaticEvaluatorHistoryMemberDescriptor> ordered_members;
+};
+
+// Package-owned static facts for one independent runtime boundary. State and
+// obligation entries remain immutable descriptor facts; Session storage and
+// bound callable objects are created only after an ExecutionPlanImage exists.
 struct StaticRuntimeComponentDescriptor {
     std::string recipe_id;
     RuntimeCellProfile profile = RuntimeCellProfile::Unspecified;
     std::vector<RuntimeExecutionObligation> obligations;
+    std::vector<StaticRuntimeObligationEntryDescriptor>
+        obligation_entries;
     StaticRuntimeScheduleDescriptor schedule;
     std::vector<RuntimeLifecycleCapability> lifecycle_capabilities;
-    std::string algorithm_entry_id;
-    std::string algorithm_entry_version;
+    std::optional<StaticStateOwnerDescriptor> state_owner;
+    // Builds the immutable, package-typed Definition from the occurrence's
+    // already-canonical configuration. R2 links but never calls this entry.
+    std::string definition_builder_id;
+    std::string definition_builder_version;
+    std::string definition_builder_call_shape_id;
+    // Present only for terminal Evaluator profiles whose exact package entry
+    // consumes a bounded committed-state history.
+    std::optional<StaticEvaluatorHistoryShapeDescriptor>
+        evaluator_history_shape;
 };
 
 // Stable implementation facts for the existing PreparedModel-backed forms.
@@ -390,6 +561,8 @@ struct StaticPureQueryDescriptor {
     std::string query_entry_version;
     StaticWorkspaceRequirement workspace_requirement =
         StaticWorkspaceRequirement::Unspecified;
+    std::string request_contract_id;
+    std::string query_call_shape_id;
 };
 
 struct StaticClosureDescriptor {
@@ -399,6 +572,8 @@ struct StaticClosureDescriptor {
         gnc::contracts::ClosureStrategy::Unspecified;
     StaticWorkspaceRequirement workspace_requirement =
         StaticWorkspaceRequirement::Unspecified;
+    std::string request_contract_id;
+    std::string closure_call_shape_id;
 };
 
 // Package-owned description of a model that can be read without preparing or
@@ -415,6 +590,7 @@ struct StaticModelDescriptor {
     std::optional<StaticPureQueryDescriptor> pure_query;
     std::optional<StaticClosureDescriptor> closure;
     std::optional<StaticRuntimeComponentDescriptor> runtime_component;
+    std::string preparation_call_shape_id;
 };
 
 // A stateless AlgorithmKernel composition is a binding consumer. It has no
@@ -423,6 +599,10 @@ struct StaticAlgorithmDescriptor {
     std::string algorithm_id;
     std::string algorithm_version;
     std::vector<StaticPortDescriptor> ports;
+    StaticWorkspaceRequirement workspace_requirement =
+        StaticWorkspaceRequirement::None;
+    std::vector<StaticInvocationRequirementDescriptor>
+        invocation_requirements;
 };
 
 struct StaticPackageDescriptor {

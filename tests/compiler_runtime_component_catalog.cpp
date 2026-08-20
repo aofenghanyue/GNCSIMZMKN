@@ -24,10 +24,14 @@ using gnc::model_sdk::PortCardinality;
 using gnc::model_sdk::RuntimeCellProfile;
 using gnc::model_sdk::RuntimeExecutionObligation;
 using gnc::model_sdk::RuntimeLifecycleCapability;
+using gnc::model_sdk::StaticScheduleTrigger;
+using gnc::model_sdk::StaticStateReadKind;
+using gnc::model_sdk::StaticStateWriteKind;
 using gnc::model_sdk::StaticModelDescriptor;
 using gnc::model_sdk::StaticPackageDescriptor;
 using gnc::model_sdk::StaticPortDirection;
 using gnc::model_sdk::StaticRuntimeComponentDescriptor;
+using gnc::model_sdk::StaticWorkspaceRequirement;
 using gnc::model_sdk::TemporalRelation;
 using namespace gnc::packages::yyz;
 
@@ -40,7 +44,8 @@ struct has_state_schemas_member<
 
 static_assert(
     !has_state_schemas_member<StaticRuntimeComponentDescriptor>::value,
-    "the stateless RuntimeComponent slice must not predeclare state schema");
+    "RuntimeComponent must expose at most one optional state owner, not a "
+    "free state-schema collection");
 
 void require(bool condition, std::string_view message) {
     if (!condition) {
@@ -109,6 +114,12 @@ void expect_invalid_catalog(StaticPackageDescriptor package,
     auto yyz = describe_yyz_rigid_step_package();
     auto cavh = gnc::packages::cavh::describe_cavh_formula_package();
     const auto catalog_outcome = Catalog::build({yyz, cavh});
+    if (!catalog_outcome.succeeded()) {
+        for (const auto& diagnostic : catalog_outcome.diagnostics) {
+            std::cerr << diagnostic.subject << ": "
+                      << diagnostic.detail << '\n';
+        }
+    }
     require(catalog_outcome.succeeded(),
             "YYZ/CAVH Catalog rejected the runtime contribution");
     const auto& catalog = *catalog_outcome.value;
@@ -137,7 +148,8 @@ void expect_invalid_catalog(StaticPackageDescriptor package,
                 runtime.obligations ==
                     std::vector<RuntimeExecutionObligation>{
                         RuntimeExecutionObligation::BoundaryEvaluation} &&
-                runtime.schedule.phase == CoarsePhase::Process &&
+                runtime.schedule.trigger ==
+                    StaticScheduleTrigger::EveryBoundary &&
                 runtime.schedule.step_interval == 1U &&
                 runtime.schedule.offset == 0U &&
                 runtime.schedule.output_hold ==
@@ -147,11 +159,31 @@ void expect_invalid_catalog(StaticPackageDescriptor package,
                     std::vector<RuntimeLifecycleCapability>{
                         RuntimeLifecycleCapability::Instantiate,
                         RuntimeLifecycleCapability::Dispose} &&
-                runtime.algorithm_entry_id ==
-                    kAltitudePitchGuidanceKernelIdentity.id &&
-                runtime.algorithm_entry_version ==
-                    kAltitudePitchGuidanceKernelIdentity.version,
+                runtime.obligation_entries.size() == 1U,
             "SampledTransform recipe, schedule, lifecycle, or entry differs");
+    const auto& guidance_entry = runtime.obligation_entries.front();
+    require(guidance_entry.obligation ==
+                RuntimeExecutionObligation::BoundaryEvaluation &&
+                guidance_entry.phase == CoarsePhase::Process &&
+                guidance_entry.entry_id ==
+                    kAltitudePitchGuidanceKernelIdentity.id &&
+                guidance_entry.entry_version ==
+                    kAltitudePitchGuidanceKernelIdentity.version &&
+                guidance_entry.request_contract_id ==
+                    kCommittedRigidObservationContractIdentity &&
+                guidance_entry.result_contract_id ==
+                    kAltitudePitchGuidanceOutputContractIdentity &&
+                guidance_entry.workspace_requirement ==
+                    StaticWorkspaceRequirement::None &&
+                guidance_entry.input_port_ids ==
+                    std::vector<std::string>{
+                        "committed-rigid-observation"} &&
+                guidance_entry.output_port_ids ==
+                    std::vector<std::string>{"guidance-output"} &&
+                guidance_entry.state_read == StaticStateReadKind::None &&
+                guidance_entry.state_write == StaticStateWriteKind::None &&
+                guidance_entry.invocation_requirements.empty(),
+            "BoundaryEvaluation entry contract differs");
     require(guidance.ports[0U].direction ==
                 StaticPortDirection::Input &&
                 guidance.ports[0U].contract_id ==
@@ -213,8 +245,9 @@ void expect_invalid_catalog(StaticPackageDescriptor package,
             "package declaration order changed Catalog lookup");
 
     auto duplicate = describe_yyz_rigid_step_package();
-    duplicate.models.push_back(find_model(
-        duplicate, kAltitudePitchGuidanceModelIdentity));
+    const auto duplicate_guidance = find_model(
+        duplicate, kAltitudePitchGuidanceModelIdentity);
+    duplicate.models.push_back(duplicate_guidance);
     const auto duplicate_outcome = Catalog::build({std::move(duplicate)});
     require(!duplicate_outcome.value.has_value() &&
                 has_diagnostic(duplicate_outcome.diagnostics,
@@ -247,6 +280,14 @@ void expect_invalid_catalog(StaticPackageDescriptor package,
     expect_invalid_catalog(std::move(missing_recipe),
                            "RuntimeComponent without recipe entered Catalog");
 
+    auto missing_definition_builder = describe_yyz_rigid_step_package();
+    find_model(missing_definition_builder,
+               kAltitudePitchGuidanceModelIdentity)
+        .runtime_component->definition_builder_id.clear();
+    expect_invalid_catalog(
+        std::move(missing_definition_builder),
+        "RuntimeComponent without Definition builder entered Catalog");
+
     auto missing_obligation = describe_yyz_rigid_step_package();
     find_model(missing_obligation, kAltitudePitchGuidanceModelIdentity)
         .runtime_component->obligations.clear();
@@ -254,12 +295,53 @@ void expect_invalid_catalog(StaticPackageDescriptor package,
         std::move(missing_obligation),
         "RuntimeComponent without obligation entered the Catalog");
 
+    auto missing_call_shape = describe_yyz_rigid_step_package();
+    find_model(missing_call_shape, kAltitudePitchGuidanceModelIdentity)
+        .runtime_component->obligation_entries[0U]
+        .call_shape_id.clear();
+    expect_invalid_catalog(
+        std::move(missing_call_shape),
+        "RuntimeComponent entry without call shape entered the Catalog");
+
+    auto missing_initial_call_shape = describe_yyz_rigid_step_package();
+    find_model(missing_initial_call_shape, kScalarBurnMassModelIdentity)
+        .runtime_component->state_owner
+        ->initial_state_builder_call_shape_id.clear();
+    expect_invalid_catalog(
+        std::move(missing_initial_call_shape),
+        "state owner without initial call shape entered the Catalog");
+
     auto invalid_schedule = describe_yyz_rigid_step_package();
     find_model(invalid_schedule, kAltitudePitchGuidanceModelIdentity)
         .runtime_component->schedule.step_interval = 0U;
     expect_invalid_catalog(
         std::move(invalid_schedule),
         "RuntimeComponent without integer schedule entered the Catalog");
+
+    auto stale_schedule = describe_yyz_rigid_step_package();
+    find_model(stale_schedule, kAltitudePitchGuidanceModelIdentity)
+        .runtime_component->schedule.max_input_age_steps = 1U;
+    expect_invalid_catalog(
+        std::move(stale_schedule),
+        "RuntimeComponent with stale input allowance entered the Catalog");
+
+    auto periodic_evaluator = describe_yyz_rigid_step_package();
+    auto& evaluator_schedule =
+        find_model(periodic_evaluator, kCommittedMissionResultModelIdentity)
+            .runtime_component->schedule;
+    evaluator_schedule.trigger = StaticScheduleTrigger::EveryBoundary;
+    evaluator_schedule.step_interval = 1U;
+    expect_invalid_catalog(
+        std::move(periodic_evaluator),
+        "terminal committed-history evaluator entered a periodic schedule");
+
+    auto missing_evaluator_history = describe_yyz_rigid_step_package();
+    find_model(missing_evaluator_history,
+               kCommittedMissionResultModelIdentity)
+        .runtime_component->evaluator_history_shape.reset();
+    expect_invalid_catalog(
+        std::move(missing_evaluator_history),
+        "Evaluator without committed-history shape entered the Catalog");
 
     auto invalid_lifecycle = describe_yyz_rigid_step_package();
     find_model(invalid_lifecycle, kAltitudePitchGuidanceModelIdentity)
@@ -380,7 +462,7 @@ void expect_invalid_catalog(StaticPackageDescriptor package,
                 has_diagnostic(unknown.diagnostics,
                                DiagnosticCode::UnknownDefinition),
             "unknown RuntimeComponent definition was accepted");
-    return 26U;
+    return 32U;
 }
 
 } // namespace

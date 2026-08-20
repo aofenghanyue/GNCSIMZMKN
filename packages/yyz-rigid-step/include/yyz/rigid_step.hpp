@@ -28,6 +28,44 @@ inline constexpr std::string_view kYyzRigidStepPackageIdentity =
 inline constexpr std::string_view kYyzRigidStepPackageVersion = "0.1.0";
 inline constexpr std::string_view kRigidStepModelIdentity =
     "gnc.package.yyz.rigid-step.frozen-interval.experimental@1";
+inline constexpr std::string_view kRigidStepModelVersion = "0.1.0";
+inline constexpr std::string_view kRigidStepConfigSchemaIdentity =
+    "gnc.package.yyz.rigid-step.frozen-interval.config@1";
+inline constexpr std::uint32_t kRigidStepConfigSchemaVersion = 1U;
+inline constexpr std::string_view kRigidStepRecipeIdentity =
+    "gnc.package.yyz.rigid-body-6dof.recipe@1";
+inline constexpr std::string_view kRigidStateSchemaIdentity =
+    "gnc.state-schema.yyz.rigid-body-6dof@1";
+inline constexpr std::string_view kRigidStateLayoutIdentity =
+    "gnc.package.yyz.rigid-body-6dof.state-layout@1";
+inline constexpr std::string_view kRigidInitialStateInputSchemaIdentity =
+    "gnc.package.yyz.rigid-body-6dof.initial-state-input@1";
+inline constexpr std::uint32_t kRigidInitialStateInputSchemaVersion = 1U;
+inline constexpr std::string_view kRigidObservationContractIdentity =
+    "gnc.contract.yyz.committed-rigid-observation@1";
+inline constexpr std::string_view
+    kRigidPublishProjectionInputContractIdentity =
+        "gnc.contract.yyz.rigid-publish-projection-input@1";
+inline constexpr std::string_view
+    kControlledRigidBoundaryInputContractIdentity =
+        "gnc.contract.yyz.controlled-rigid-boundary-input@1";
+inline constexpr std::string_view kRigidDerivativeInputContractIdentity =
+    "gnc.contract.yyz.rigid-derivative-input@1";
+inline constexpr std::string_view kRigidDerivativeOutputContractIdentity =
+    "gnc.contract.yyz.rigid-derivative-output@1";
+inline constexpr std::string_view kEnvironmentQueryContractIdentity =
+    "gnc.contract.yyz.environment-query@1";
+inline constexpr std::string_view kEnvironmentSampleContractIdentity =
+    "gnc.contract.yyz.environment-sample@1";
+inline constexpr std::string_view kMassPropertiesContractIdentity =
+    "gnc.contract.yyz.mass-properties@1";
+inline constexpr std::string_view kAppliedBodyWrenchContractIdentity =
+    "gnc.contract.yyz.applied-body-wrench-interval@1";
+inline constexpr std::string_view kForceMomentClosureInputContractIdentity =
+    "gnc.contract.yyz.force-moment-closure-input@1";
+inline constexpr std::string_view
+    kAerodynamicOperatingPointContractIdentity =
+        "gnc.contract.yyz.aerodynamic-operating-point@1";
 inline constexpr std::string_view kForceMomentClosureModelIdentity =
     "gnc.package.yyz.force-moment-closure.frozen-interval.experimental@1";
 inline constexpr std::string_view kForceMomentClosureModelVersion = "0.1.0";
@@ -63,6 +101,56 @@ inline constexpr gnc::foundation::AlgorithmIdentity
         "gnc.package.yyz.aerodynamic-table.query@1", "0.1.0"};
 inline constexpr gnc::foundation::AlgorithmIdentity kRigidStepKernelIdentity{
     "gnc.package.yyz.rigid-step.kernel@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kRigidInitialStateBuilderIdentity{
+        "gnc.package.yyz.rigid-body-6dof.initial-state@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kRigidPublishProjectionIdentity{
+        "gnc.package.yyz.rigid-body-6dof.committed-observation@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kRigidFrozenFormKernelIdentity{
+        "gnc.package.yyz.rigid-body-6dof.frozen-form@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kRigidDerivativeKernelIdentity{
+        "gnc.package.yyz.rigid-body-6dof.derivative@1", "0.1.0"};
+
+inline constexpr std::string_view kUniformEnvironmentModelIdentity =
+    "gnc.package.yyz.environment.uniform-supplied.experimental@1";
+inline constexpr std::string_view kUniformEnvironmentModelVersion = "0.1.0";
+inline constexpr std::string_view kUniformEnvironmentConfigSchemaIdentity =
+    "gnc.package.yyz.environment.uniform-supplied.config@1";
+inline constexpr std::uint32_t kUniformEnvironmentConfigSchemaVersion = 1U;
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kUniformEnvironmentPreparationIdentity{
+        "gnc.package.yyz.environment.uniform-supplied.prepare@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kUniformEnvironmentQueryIdentity{
+        "gnc.package.yyz.environment.uniform-supplied.query@1", "0.1.0"};
+
+// Stable package-authored C++ prototype identities. These identify only the
+// exact in-process call shapes below; they are not wire or cross-compiler ABI
+// claims and contain no RTTI spelling.
+inline constexpr std::string_view
+    kUniformEnvironmentPreparationCallShapeIdentity =
+        "gnc.cpp-call-shape.yyz.uniform-environment.prepare@1";
+inline constexpr std::string_view kUniformEnvironmentQueryCallShapeIdentity =
+    "gnc.cpp-call-shape.yyz.uniform-environment.query@1";
+inline constexpr std::string_view
+    kAerodynamicTablePreparationCallShapeIdentity =
+        "gnc.cpp-call-shape.yyz.aerodynamic-table.prepare@1";
+inline constexpr std::string_view kAerodynamicTableQueryCallShapeIdentity =
+    "gnc.cpp-call-shape.yyz.aerodynamic-table.query@1";
+inline constexpr std::string_view
+    kForceMomentClosurePreparationCallShapeIdentity =
+        "gnc.cpp-call-shape.yyz.force-moment-closure.prepare@1";
+inline constexpr std::string_view kForceMomentClosureCallShapeIdentity =
+    "gnc.cpp-call-shape.yyz.force-moment-closure.evaluate@1";
+inline constexpr std::string_view kRigidInitialStateCallShapeIdentity =
+    "gnc.cpp-call-shape.yyz.rigid.initial-state@1";
+inline constexpr std::string_view kRigidPublishProjectionCallShapeIdentity =
+    "gnc.cpp-call-shape.yyz.rigid.publish-projection@1";
+inline constexpr std::string_view kRigidDerivativeCallShapeIdentity =
+    "gnc.cpp-call-shape.yyz.rigid.derivative@1";
 
 struct InertialPositionMeters {
     gnc::foundation::Vec3 value = gnc::foundation::Vec3::Zero();
@@ -129,6 +217,11 @@ struct RigidState {
     BodyAngularRateRadiansPerSecond angular_rate;
 };
 
+struct CommittedRigidObservation {
+    gnc::contracts::SampleContext context;
+    RigidState state;
+};
+
 struct RigidStepContext {
     gnc::contracts::FrameIdentity inertial_frame;
     gnc::contracts::FrameIdentity body_frame;
@@ -146,6 +239,80 @@ struct EnvironmentInput {
     InertialVelocityMetersPerSecond velocity_airmass;
     double density_kilograms_per_cubic_meter = 0.0;
     double speed_of_sound_meters_per_second = 0.0;
+};
+
+struct UniformEnvironmentDefinition {
+    gnc::model_sdk::ModelDefinitionMetadata metadata;
+    gnc::contracts::FrameIdentity inertial_frame;
+    gnc::contracts::ClockDomainIdentity clock_domain;
+    std::int64_t configuration_revision = 0;
+    InertialAccelerationMetersPerSecondSquared gravity;
+    InertialVelocityMetersPerSecond velocity_airmass;
+    double density_kilograms_per_cubic_meter = 0.0;
+    double speed_of_sound_meters_per_second = 0.0;
+};
+
+[[nodiscard]] gnc::model_sdk::CanonicalConfigBlock
+canonical_uniform_environment_config(
+    const UniformEnvironmentDefinition& definition);
+
+[[nodiscard]] gnc::foundation::NumericalOutcome<
+    UniformEnvironmentDefinition>
+build_uniform_environment_definition(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration);
+
+class PreparedUniformEnvironmentModel {
+  public:
+    PreparedUniformEnvironmentModel(
+        const PreparedUniformEnvironmentModel&) = default;
+    PreparedUniformEnvironmentModel(
+        PreparedUniformEnvironmentModel&&) noexcept = default;
+    PreparedUniformEnvironmentModel& operator=(
+        const PreparedUniformEnvironmentModel&) = default;
+    PreparedUniformEnvironmentModel& operator=(
+        PreparedUniformEnvironmentModel&&) noexcept = default;
+
+    [[nodiscard]] const UniformEnvironmentDefinition& definition()
+        const noexcept;
+    [[nodiscard]] const gnc::model_sdk::PreparedModelMetadata& metadata()
+        const noexcept;
+
+  private:
+    PreparedUniformEnvironmentModel(
+        std::shared_ptr<const UniformEnvironmentDefinition> definition,
+        gnc::model_sdk::PreparedModelMetadata metadata) noexcept;
+
+    std::shared_ptr<const UniformEnvironmentDefinition> definition_;
+    gnc::model_sdk::PreparedModelMetadata metadata_;
+
+    friend gnc::foundation::NumericalOutcome<
+        PreparedUniformEnvironmentModel>
+    prepare_uniform_environment_model(
+        UniformEnvironmentDefinition definition);
+};
+
+[[nodiscard]] gnc::foundation::NumericalOutcome<
+    PreparedUniformEnvironmentModel>
+prepare_uniform_environment_model(
+    UniformEnvironmentDefinition definition);
+
+struct UniformEnvironmentQueryInput {
+    gnc::contracts::SampleContext context;
+    InertialPositionMeters position;
+};
+
+struct UniformEnvironmentQueryTelemetry {};
+
+using UniformEnvironmentQueryEvaluation =
+    gnc::model_sdk::AlgorithmEvaluation<EnvironmentInput,
+                                        UniformEnvironmentQueryTelemetry>;
+
+class UniformEnvironmentQueryKernel {
+  public:
+    [[nodiscard]] static gnc::foundation::NumericalOutcome<
+        UniformEnvironmentQueryEvaluation>
+    evaluate(const PreparedUniformEnvironmentModel& model,
+             const UniformEnvironmentQueryInput& input);
 };
 
 struct MassPropertiesInput {
@@ -172,6 +339,29 @@ struct RigidStepAlgorithmDefinition {
     gnc::foundation::QuaternionPolicy attitude_evaluation_policy;
     gnc::foundation::QuaternionPolicy candidate_attitude_policy;
 };
+
+// Runtime-owned configuration required by the rigid form/derivative
+// algorithms. Prepared query/closure providers remain separate occurrences
+// and are supplied through the invocation set below.
+struct RigidFrozenFormRuntimeDefinition {
+    gnc::contracts::FrameIdentity inertial_frame;
+    RigidStepAlgorithmDefinition algorithm;
+};
+
+struct RigidInitialStateInput {
+    RigidState state;
+};
+
+class RigidInitialStateBuilder {
+  public:
+    [[nodiscard]] static gnc::foundation::NumericalOutcome<RigidState>
+    build(const RigidStepAlgorithmDefinition& algorithm,
+          const RigidInitialStateInput& input);
+};
+
+[[nodiscard]] CommittedRigidObservation project_committed_rigid_observation(
+    const gnc::contracts::SampleContext& context,
+    const RigidState& state);
 
 struct AerodynamicTableAsset {
     std::string asset_schema_id;
@@ -350,6 +540,8 @@ describe_yyz_rigid_step_base_package() {
         std::string(kForceMomentClosurePreparationIdentity.id);
     closure.preparation_algorithm_version =
         std::string(kForceMomentClosurePreparationIdentity.version);
+    closure.preparation_call_shape_id = std::string(
+        kForceMomentClosurePreparationCallShapeIdentity);
     closure.configuration.schema_id =
         std::string(kForceMomentClosureConfigSchemaIdentity);
     closure.configuration.schema_version =
@@ -376,7 +568,9 @@ describe_yyz_rigid_step_base_package() {
         std::string(kForceMomentClosureKernelIdentity.id),
         std::string(kForceMomentClosureKernelIdentity.version),
         gnc::contracts::ClosureStrategy::FrozenInterval,
-        gnc::model_sdk::StaticWorkspaceRequirement::None};
+        gnc::model_sdk::StaticWorkspaceRequirement::None,
+        std::string(kForceMomentClosureInputContractIdentity),
+        std::string(kForceMomentClosureCallShapeIdentity)};
     closure.ports.push_back(
         {"form-input", std::string(kRigidFormInputContractIdentity),
          gnc::model_sdk::StaticPortDirection::Output,
@@ -395,6 +589,8 @@ describe_yyz_rigid_step_base_package() {
         std::string(kAerodynamicTablePreparationIdentity.id);
     aerodynamics.preparation_algorithm_version =
         std::string(kAerodynamicTablePreparationIdentity.version);
+    aerodynamics.preparation_call_shape_id = std::string(
+        kAerodynamicTablePreparationCallShapeIdentity);
     aerodynamics.configuration.schema_id =
         std::string(kAerodynamicTableConfigSchemaIdentity);
     aerodynamics.configuration.schema_version =
@@ -425,7 +621,9 @@ describe_yyz_rigid_step_base_package() {
         gnc::model_sdk::StaticPureQueryDescriptor{
             std::string(kAerodynamicTableQueryIdentity.id),
             std::string(kAerodynamicTableQueryIdentity.version),
-            gnc::model_sdk::StaticWorkspaceRequirement::None};
+            gnc::model_sdk::StaticWorkspaceRequirement::None,
+            std::string(kAerodynamicOperatingPointContractIdentity),
+            std::string(kAerodynamicTableQueryCallShapeIdentity)};
     aerodynamics.ports.push_back(
         {"coefficients",
          std::string(kAerodynamicCoefficientsContractIdentity),
@@ -433,6 +631,259 @@ describe_yyz_rigid_step_base_package() {
          gnc::model_sdk::BindingKind::PureQuery,
          gnc::model_sdk::PortCardinality::OneOrMore,
          gnc::model_sdk::TemporalRelation::NotApplicable});
+
+    gnc::model_sdk::StaticModelDescriptor environment;
+    environment.definition = {
+        std::string(kUniformEnvironmentModelIdentity),
+        std::string(kUniformEnvironmentModelVersion),
+        gnc::model_sdk::ModelExecutionForm::PureQuery};
+    environment.placement = gnc::model_sdk::ModelPlacement::Environment;
+    environment.preparation_algorithm_id =
+        std::string(kUniformEnvironmentPreparationIdentity.id);
+    environment.preparation_algorithm_version =
+        std::string(kUniformEnvironmentPreparationIdentity.version);
+    environment.preparation_call_shape_id = std::string(
+        kUniformEnvironmentPreparationCallShapeIdentity);
+    environment.configuration.schema_id =
+        std::string(kUniformEnvironmentConfigSchemaIdentity);
+    environment.configuration.schema_version =
+        kUniformEnvironmentConfigSchemaVersion;
+    environment.configuration.fields = {
+        {"clock_domain_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"configuration_revision",
+         gnc::model_sdk::CanonicalConfigValueKind::Integer},
+        {"density_kilograms_per_cubic_meter",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"gravity.x_meters_per_second_squared",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"gravity.y_meters_per_second_squared",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"gravity.z_meters_per_second_squared",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"inertial_frame_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"speed_of_sound_meters_per_second",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"velocity_airmass.x_meters_per_second",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"velocity_airmass.y_meters_per_second",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"velocity_airmass.z_meters_per_second",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+    };
+    environment.pure_query =
+        gnc::model_sdk::StaticPureQueryDescriptor{
+            std::string(kUniformEnvironmentQueryIdentity.id),
+            std::string(kUniformEnvironmentQueryIdentity.version),
+            gnc::model_sdk::StaticWorkspaceRequirement::None,
+            std::string(kEnvironmentQueryContractIdentity),
+            std::string(kUniformEnvironmentQueryCallShapeIdentity)};
+    environment.ports.push_back(
+        {"environment-sample",
+         std::string(kEnvironmentSampleContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Output,
+         gnc::model_sdk::BindingKind::PureQuery,
+         gnc::model_sdk::PortCardinality::OneOrMore,
+         gnc::model_sdk::TemporalRelation::NotApplicable});
+
+    gnc::model_sdk::StaticModelDescriptor rigid;
+    rigid.definition = {
+        std::string(kRigidStepModelIdentity),
+        std::string(kRigidStepModelVersion),
+        gnc::model_sdk::ModelExecutionForm::RuntimeComponent};
+    rigid.placement = gnc::model_sdk::ModelPlacement::VehicleForm;
+    rigid.configuration.schema_id =
+        std::string(kRigidStepConfigSchemaIdentity);
+    rigid.configuration.schema_version = kRigidStepConfigSchemaVersion;
+    rigid.configuration.fields = {
+        {"attitude.candidate.normalization",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"attitude.candidate.numerical.absolute_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"attitude.candidate.numerical.condition_limit",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"attitude.candidate.numerical.finite_check",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"attitude.candidate.numerical.relative_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"attitude.candidate.numerical.zero_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"attitude.evaluation.normalization",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"attitude.evaluation.numerical.absolute_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"attitude.evaluation.numerical.condition_limit",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"attitude.evaluation.numerical.finite_check",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"attitude.evaluation.numerical.relative_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"attitude.evaluation.numerical.zero_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"fixed_step_seconds",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"inertial_frame_id",
+         gnc::model_sdk::CanonicalConfigValueKind::String},
+        {"numerical.absolute_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"numerical.condition_limit",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"numerical.finite_check",
+         gnc::model_sdk::CanonicalConfigValueKind::Enum},
+        {"numerical.relative_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+        {"numerical.zero_tolerance",
+         gnc::model_sdk::CanonicalConfigValueKind::Float64},
+    };
+    rigid.ports = {
+        {"mass-properties",
+         std::string(kMassPropertiesContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Input,
+         gnc::model_sdk::BindingKind::IntervalModel,
+         gnc::model_sdk::PortCardinality::ExactlyOne,
+         gnc::model_sdk::TemporalRelation::IntervalModel},
+        {"supplied-body-wrench",
+         std::string(kAppliedBodyWrenchContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Input,
+         gnc::model_sdk::BindingKind::IntervalModel,
+         gnc::model_sdk::PortCardinality::ExactlyOne,
+         gnc::model_sdk::TemporalRelation::IntervalModel},
+        {"environment-sample",
+         std::string(kEnvironmentSampleContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Input,
+         gnc::model_sdk::BindingKind::PureQuery,
+         gnc::model_sdk::PortCardinality::ExactlyOne,
+         gnc::model_sdk::TemporalRelation::NotApplicable},
+        {"aerodynamic-coefficients",
+         std::string(kAerodynamicCoefficientsContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Input,
+         gnc::model_sdk::BindingKind::PureQuery,
+         gnc::model_sdk::PortCardinality::ExactlyOne,
+         gnc::model_sdk::TemporalRelation::NotApplicable},
+        {"form-input",
+         std::string(kRigidFormInputContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Input,
+         gnc::model_sdk::BindingKind::ContinuousClosureLink,
+         gnc::model_sdk::PortCardinality::ExactlyOne,
+         gnc::model_sdk::TemporalRelation::IntervalModel},
+        {"committed-rigid-observation",
+         std::string(kRigidObservationContractIdentity),
+         gnc::model_sdk::StaticPortDirection::Output,
+         gnc::model_sdk::BindingKind::SampledSignal,
+         gnc::model_sdk::PortCardinality::OneOrMore,
+         gnc::model_sdk::TemporalRelation::CurrentCycle},
+    };
+    gnc::model_sdk::StaticRuntimeComponentDescriptor rigid_runtime;
+    rigid_runtime.recipe_id = std::string(kRigidStepRecipeIdentity);
+    rigid_runtime.profile =
+        gnc::model_sdk::RuntimeCellProfile::ContinuousStateOwner;
+    rigid_runtime.obligations = {
+        gnc::model_sdk::RuntimeExecutionObligation::PublishProjection,
+        gnc::model_sdk::RuntimeExecutionObligation::BoundaryEvaluation,
+        gnc::model_sdk::RuntimeExecutionObligation::DerivativeEvaluation,
+    };
+    rigid_runtime.obligation_entries = {
+        {gnc::model_sdk::RuntimeExecutionObligation::PublishProjection,
+         gnc::model_sdk::CoarsePhase::Publish,
+         std::string(kRigidPublishProjectionIdentity.id),
+         std::string(kRigidPublishProjectionIdentity.version),
+         std::string(kRigidPublishProjectionInputContractIdentity),
+         std::string(kRigidObservationContractIdentity),
+         gnc::model_sdk::StaticWorkspaceRequirement::None,
+         {}, {"committed-rigid-observation"},
+         gnc::model_sdk::StaticStateReadKind::Committed,
+         gnc::model_sdk::StaticStateWriteKind::None, {},
+         std::string(kRigidPublishProjectionCallShapeIdentity)},
+        {gnc::model_sdk::RuntimeExecutionObligation::BoundaryEvaluation,
+         gnc::model_sdk::CoarsePhase::Form,
+         std::string(kRigidFrozenFormKernelIdentity.id),
+         std::string(kRigidFrozenFormKernelIdentity.version),
+         std::string(kControlledRigidBoundaryInputContractIdentity),
+         std::string(kRigidFormInputContractIdentity),
+         gnc::model_sdk::StaticWorkspaceRequirement::None,
+         {"mass-properties", "supplied-body-wrench",
+          "environment-sample", "aerodynamic-coefficients",
+          "form-input"}, {},
+         gnc::model_sdk::StaticStateReadKind::Committed,
+         gnc::model_sdk::StaticStateWriteKind::None,
+         {{"environment-query",
+           gnc::model_sdk::StaticInvocationKind::PureQuery,
+           std::string(kEnvironmentQueryContractIdentity),
+           gnc::model_sdk::PortCardinality::ExactlyOne},
+          {"aerodynamic-table-query",
+           gnc::model_sdk::StaticInvocationKind::PureQuery,
+           std::string(kAerodynamicOperatingPointContractIdentity),
+           gnc::model_sdk::PortCardinality::ExactlyOne},
+          {"force-moment-closure",
+           gnc::model_sdk::StaticInvocationKind::Closure,
+           std::string(kForceMomentClosureInputContractIdentity),
+           gnc::model_sdk::PortCardinality::ExactlyOne}},
+         std::string{}},
+        {gnc::model_sdk::RuntimeExecutionObligation::DerivativeEvaluation,
+         gnc::model_sdk::CoarsePhase::Form,
+         std::string(kRigidDerivativeKernelIdentity.id),
+         std::string(kRigidDerivativeKernelIdentity.version),
+         std::string(kRigidDerivativeInputContractIdentity),
+         std::string(kRigidDerivativeOutputContractIdentity),
+         gnc::model_sdk::StaticWorkspaceRequirement::None,
+         {"mass-properties", "environment-sample", "form-input"}, {},
+         gnc::model_sdk::StaticStateReadKind::Candidate,
+         gnc::model_sdk::StaticStateWriteKind::None, {},
+         std::string(kRigidDerivativeCallShapeIdentity)},
+    };
+    rigid_runtime.schedule.trigger =
+        gnc::model_sdk::StaticScheduleTrigger::EveryBoundary;
+    rigid_runtime.schedule.step_interval = 1U;
+    rigid_runtime.schedule.offset = 0U;
+    rigid_runtime.schedule.output_hold =
+        gnc::model_sdk::HoldPolicy::ZeroOrderHold;
+    rigid_runtime.schedule.max_input_age_steps = 0U;
+    rigid_runtime.lifecycle_capabilities = {
+        gnc::model_sdk::RuntimeLifecycleCapability::Instantiate,
+        gnc::model_sdk::RuntimeLifecycleCapability::Dispose};
+    rigid_runtime.state_owner =
+        gnc::model_sdk::StaticStateOwnerDescriptor{
+            {std::string(kRigidStateSchemaIdentity), 1U,
+             std::string(kRigidStateLayoutIdentity),
+             {{"position", "vec3.float64", "m", "inertial"},
+              {"velocity", "vec3.float64", "m/s", "inertial"},
+              {"attitude", "quaternion.wxyz.float64", "1",
+               "passive-inertial-from-body"},
+              {"angular-rate", "vec3.float64", "rad/s", "body"}}},
+            std::string(kRigidInitialStateBuilderIdentity.id),
+            std::string(kRigidInitialStateBuilderIdentity.version),
+            {std::string(kRigidInitialStateInputSchemaIdentity),
+             kRigidInitialStateInputSchemaVersion,
+             {{"angular_rate.x_radians_per_second",
+               gnc::model_sdk::CanonicalConfigValueKind::Float64},
+              {"angular_rate.y_radians_per_second",
+               gnc::model_sdk::CanonicalConfigValueKind::Float64},
+              {"angular_rate.z_radians_per_second",
+               gnc::model_sdk::CanonicalConfigValueKind::Float64},
+              {"attitude.w",
+               gnc::model_sdk::CanonicalConfigValueKind::Float64},
+              {"attitude.x",
+               gnc::model_sdk::CanonicalConfigValueKind::Float64},
+              {"attitude.y",
+               gnc::model_sdk::CanonicalConfigValueKind::Float64},
+              {"attitude.z",
+               gnc::model_sdk::CanonicalConfigValueKind::Float64},
+              {"position.x_meters",
+               gnc::model_sdk::CanonicalConfigValueKind::Float64},
+              {"position.y_meters",
+               gnc::model_sdk::CanonicalConfigValueKind::Float64},
+              {"position.z_meters",
+               gnc::model_sdk::CanonicalConfigValueKind::Float64},
+              {"velocity.x_meters_per_second",
+               gnc::model_sdk::CanonicalConfigValueKind::Float64},
+              {"velocity.y_meters_per_second",
+               gnc::model_sdk::CanonicalConfigValueKind::Float64},
+              {"velocity.z_meters_per_second",
+               gnc::model_sdk::CanonicalConfigValueKind::Float64}}},
+            gnc::model_sdk::StaticStateEvolution::ContinuousCandidate,
+            std::string(kRigidInitialStateCallShapeIdentity)};
+    rigid.runtime_component = std::move(rigid_runtime);
 
     gnc::model_sdk::StaticAlgorithmDescriptor rigid_step;
     rigid_step.algorithm_id = std::string(kRigidStepKernelIdentity.id);
@@ -457,6 +908,8 @@ describe_yyz_rigid_step_base_package() {
     package.package_version = std::string(kYyzRigidStepPackageVersion);
     package.models.push_back(std::move(closure));
     package.models.push_back(std::move(aerodynamics));
+    package.models.push_back(std::move(environment));
+    package.models.push_back(std::move(rigid));
     package.algorithms.push_back(std::move(rigid_step));
     return package;
 }
@@ -535,6 +988,10 @@ struct BodyWrenchContribution {
 struct RigidFormInput {
     BodyForceNewtons force_total;
     BodyMomentNewtonMeters moment_total_about_center_of_mass;
+
+    [[nodiscard]] RigidFormInput form_input() const noexcept {
+        return *this;
+    }
 };
 
 struct ForceMomentClosureInput {
@@ -542,14 +999,7 @@ struct ForceMomentClosureInput {
     std::vector<AppliedBodyWrenchInput> contributions;
 };
 
-struct ForceMomentClosureOutput {
-    BodyForceNewtons force_total;
-    BodyMomentNewtonMeters moment_total_about_center_of_mass;
-
-    [[nodiscard]] RigidFormInput form_input() const noexcept {
-        return {force_total, moment_total_about_center_of_mass};
-    }
-};
+using ForceMomentClosureOutput = RigidFormInput;
 
 struct ForceMomentClosureTelemetry {
     std::vector<BodyWrenchContribution> contributions;
@@ -567,6 +1017,53 @@ class ForceMomentClosureKernel {
              const ForceMomentClosureInput& input);
 };
 
+struct RigidFrozenFormOutput {
+    RigidFormInput form_input;
+};
+
+struct RigidFrozenFormTelemetry {
+    AirDataOutput air_data;
+    AerodynamicLookupOutput aerodynamic_lookup;
+    AerodynamicTableQueryEvaluation aerodynamic_query;
+    ForceMomentClosureEvaluation force_moment_closure;
+};
+
+using RigidFrozenFormEvaluation =
+    gnc::model_sdk::AlgorithmEvaluation<RigidFrozenFormOutput,
+                                        RigidFrozenFormTelemetry>;
+
+using UniformEnvironmentQueryEntry =
+    decltype(&UniformEnvironmentQueryKernel::evaluate);
+using AerodynamicTableQueryEntry =
+    decltype(&AerodynamicTableQueryKernel::evaluate);
+using ForceMomentClosureEntry =
+    decltype(&ForceMomentClosureKernel::evaluate);
+
+// R3 materializes these exact process-local references from the authorized
+// invocation entries in ExecutionPlanImage. They are never serialized or
+// included in a stable fingerprint.
+struct RigidFrozenFormInvocationSet {
+    const PreparedAerodynamicTableModel* aerodynamic_model = nullptr;
+    AerodynamicTableQueryEntry aerodynamic_query = nullptr;
+    const PreparedForceMomentClosureModel* force_moment_closure_model =
+        nullptr;
+    ForceMomentClosureEntry force_moment_closure = nullptr;
+};
+
+class RigidFrozenFormKernel {
+  public:
+    [[nodiscard]] static gnc::foundation::NumericalOutcome<
+        RigidFrozenFormEvaluation>
+    evaluate(const PreparedRigidStepModel& model,
+             const RigidStepInput& input);
+
+    [[nodiscard]] static gnc::foundation::NumericalOutcome<
+        RigidFrozenFormEvaluation>
+    evaluate(const RigidFrozenFormRuntimeDefinition& definition,
+             const RigidFrozenFormInvocationSet& invocations,
+             const RigidStepInput& input);
+};
+
 struct RigidDerivativeOutput {
     InertialForceNewtons force_total_inertial;
     InertialAccelerationMetersPerSecondSquared acceleration;
@@ -575,6 +1072,22 @@ struct RigidDerivativeOutput {
     BodyMomentNewtonMeters net_moment;
     BodyAngularAccelerationRadiansPerSecondSquared angular_acceleration;
     PassiveAttitudeDerivativeIFromBPerSecond attitude_derivative;
+};
+
+struct RigidDerivativeInput {
+    RigidState candidate_state;
+    double mass_kilograms = 0.0;
+    BodyInertiaKilogramMetersSquared inertia_about_center_of_mass;
+    RigidFormInput frozen_form_input;
+    InertialAccelerationMetersPerSecondSquared frozen_gravity;
+};
+
+class RigidDerivativeKernel {
+  public:
+    [[nodiscard]] static gnc::foundation::NumericalOutcome<
+        RigidDerivativeOutput>
+    evaluate(const RigidStepAlgorithmDefinition& algorithm,
+             const RigidDerivativeInput& input);
 };
 
 struct RigidStateCandidate {
@@ -603,6 +1116,51 @@ class RigidStepKernel {
         gnc::foundation::NumericalOutcome<RigidStepEvaluation>
     evaluate(const PreparedRigidStepModel& model,
              const RigidStepInput& input);
+
+    // Compatibility composition hook: the caller must provide the frozen
+    // form produced for this exact interval input. Runtime state ownership and
+    // commit remain outside this pure package kernel.
+    [[nodiscard]] static
+        gnc::foundation::NumericalOutcome<RigidStepEvaluation>
+    evaluate_held_form(
+        const PreparedRigidStepModel& model,
+        const RigidStepInput& input,
+        const RigidFrozenFormEvaluation& frozen_form,
+        gnc::foundation::NumericalStatus frozen_form_status,
+        const gnc::foundation::NumericalEvidence& frozen_form_evidence);
 };
+
+// Independent product contracts for the exact callable pointers contributed
+// by describe_yyz_rigid_step_implementation(). The implementation factory
+// statically compares each real function address against these aliases.
+using UniformEnvironmentPreparationCall =
+    gnc::foundation::NumericalOutcome<PreparedUniformEnvironmentModel> (*)(
+        UniformEnvironmentDefinition);
+using UniformEnvironmentQueryCall =
+    gnc::foundation::NumericalOutcome<UniformEnvironmentQueryEvaluation> (*)(
+        const PreparedUniformEnvironmentModel&,
+        const UniformEnvironmentQueryInput&);
+using AerodynamicTablePreparationCall =
+    gnc::foundation::NumericalOutcome<PreparedAerodynamicTableModel> (*)(
+        AerodynamicTableDefinition, AerodynamicTableAsset);
+using AerodynamicTableQueryCall =
+    gnc::foundation::NumericalOutcome<AerodynamicTableQueryEvaluation> (*)(
+        const PreparedAerodynamicTableModel&,
+        const AerodynamicTableQueryInput&);
+using ForceMomentClosurePreparationCall =
+    gnc::foundation::NumericalOutcome<PreparedForceMomentClosureModel> (*)(
+        ForceMomentClosureDefinition);
+using ForceMomentClosureCall =
+    gnc::foundation::NumericalOutcome<ForceMomentClosureEvaluation> (*)(
+        const PreparedForceMomentClosureModel&,
+        const ForceMomentClosureInput&);
+using RigidInitialStateCall =
+    gnc::foundation::NumericalOutcome<RigidState> (*)(
+        const RigidStepAlgorithmDefinition&, const RigidInitialStateInput&);
+using RigidPublishProjectionCall = CommittedRigidObservation (*)(
+    const gnc::contracts::SampleContext&, const RigidState&);
+using RigidDerivativeCall =
+    gnc::foundation::NumericalOutcome<RigidDerivativeOutput> (*)(
+        const RigidStepAlgorithmDefinition&, const RigidDerivativeInput&);
 
 } // namespace gnc::packages::yyz

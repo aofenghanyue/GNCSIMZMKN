@@ -2,6 +2,8 @@
 
 #include <yyz/rigid_step.hpp>
 
+#include <gnc/model_sdk/static_implementation.hpp>
+
 #include <array>
 #include <cstdint>
 #include <string>
@@ -9,10 +11,33 @@
 
 namespace gnc::packages::yyz {
 
+[[nodiscard]] gnc::model_sdk::StaticPackageImplementation
+describe_yyz_rigid_step_implementation(std::string build_fingerprint);
+
 inline constexpr std::string_view kScalarBurnMassContractIdentity =
     "gnc.package.yyz.mass.scalar-burn.contract.experimental@1";
 inline constexpr std::string_view kScalarBurnMassModelIdentity =
     "gnc.package.yyz.mass.scalar-burn-constant-geometry.experimental@1";
+inline constexpr std::string_view kScalarBurnMassModelVersion = "0.1.0";
+inline constexpr std::string_view kScalarBurnMassConfigSchemaIdentity =
+    "gnc.package.yyz.mass.scalar-burn-constant-geometry.config@1";
+inline constexpr std::uint32_t kScalarBurnMassConfigSchemaVersion = 1U;
+inline constexpr std::string_view kScalarBurnMassRecipeIdentity =
+    "gnc.package.yyz.mass.scalar-burn-constant-geometry.recipe@1";
+inline constexpr std::string_view kMassStateSchemaIdentity =
+    "gnc.state-schema.yyz.scalar-burn-mass@1";
+inline constexpr std::string_view kMassStateLayoutIdentity =
+    "gnc.package.yyz.scalar-burn-mass.state-layout@1";
+inline constexpr std::string_view kMassInitialStateInputSchemaIdentity =
+    "gnc.package.yyz.scalar-burn-mass.initial-state-input@1";
+inline constexpr std::uint32_t kMassInitialStateInputSchemaVersion = 1U;
+inline constexpr std::string_view kMassFlowIntervalContractIdentity =
+    "gnc.contract.yyz.mass-flow-interval@1";
+inline constexpr std::string_view
+    kMassPublishProjectionInputContractIdentity =
+        "gnc.contract.yyz.mass-publish-projection-input@1";
+inline constexpr std::string_view kScalarBurnMassOutputContractIdentity =
+    "gnc.contract.yyz.scalar-burn-mass-output@1";
 inline constexpr std::string_view kTwoIntervalMassCommitContractIdentity =
     "gnc.package.yyz.rigid-mass-boundary.contract.experimental@1";
 inline constexpr std::string_view kTwoIntervalMassCommitModelIdentity =
@@ -21,6 +46,20 @@ inline constexpr std::string_view kSuppliedPropulsionContractIdentity =
     "gnc.package.yyz.propulsion-response.contract.experimental@1";
 inline constexpr std::string_view kSuppliedPropulsionModelIdentity =
     "gnc.package.yyz.propulsion-response.supplied.experimental@1";
+inline constexpr std::string_view kSuppliedPropulsionModelVersion = "0.1.0";
+inline constexpr std::string_view kSuppliedPropulsionConfigSchemaIdentity =
+    "gnc.package.yyz.propulsion-response.supplied.config@1";
+inline constexpr std::uint32_t kSuppliedPropulsionConfigSchemaVersion = 1U;
+inline constexpr std::string_view kSuppliedPropulsionRecipeIdentity =
+    "gnc.package.yyz.propulsion-response.supplied.recipe@1";
+inline constexpr std::string_view
+    kFixedSuppliedPropulsionRequestContractIdentity =
+        "gnc.contract.yyz.fixed-supplied-propulsion-boundary-request@1";
+inline constexpr std::string_view
+    kSuppliedPropulsionBodyWrenchContractIdentity =
+        "gnc.contract.yyz.supplied-propulsion-body-wrench@1";
+inline constexpr std::string_view kSuppliedPropulsionOutputContractIdentity =
+    "gnc.contract.yyz.supplied-propulsion-output@1";
 inline constexpr std::string_view kAltitudePitchGuidanceModelIdentity =
     "gnc.package.yyz.guidance.altitude-pitch.experimental@1";
 inline constexpr std::string_view kAltitudePitchGuidanceModelVersion =
@@ -35,14 +74,41 @@ inline constexpr std::string_view
         "gnc.package.yyz.guidance.altitude-pitch.recipe@1";
 inline constexpr std::string_view
     kCommittedRigidObservationContractIdentity =
-        "gnc.contract.yyz.committed-rigid-observation@1";
+        kRigidObservationContractIdentity;
 inline constexpr std::string_view
     kAltitudePitchGuidanceOutputContractIdentity =
         "gnc.contract.yyz.altitude-pitch-guidance-output@1";
 inline constexpr std::string_view kPitchMomentControllerModelIdentity =
     "gnc.package.yyz.controller.pitch-moment.experimental@1";
+inline constexpr std::string_view kPitchMomentControllerModelVersion =
+    "0.1.0";
+inline constexpr std::string_view
+    kPitchMomentControllerConfigSchemaIdentity =
+        "gnc.package.yyz.controller.pitch-moment.config@1";
+inline constexpr std::uint32_t
+    kPitchMomentControllerConfigSchemaVersion = 1U;
+inline constexpr std::string_view kPitchMomentControllerRecipeIdentity =
+    "gnc.package.yyz.controller.pitch-moment.recipe@1";
+inline constexpr std::string_view
+    kPitchMomentControllerOutputContractIdentity =
+        "gnc.contract.yyz.pitch-moment-controller-output@1";
 inline constexpr std::string_view kIdealBodyMomentActuatorModelIdentity =
     "gnc.package.yyz.actuator.ideal-body-moment.experimental@1";
+inline constexpr std::string_view kIdealBodyMomentActuatorModelVersion =
+    "0.1.0";
+inline constexpr std::string_view
+    kIdealBodyMomentActuatorConfigSchemaIdentity =
+        "gnc.package.yyz.actuator.ideal-body-moment.config@1";
+inline constexpr std::uint32_t
+    kIdealBodyMomentActuatorConfigSchemaVersion = 1U;
+inline constexpr std::string_view kIdealBodyMomentActuatorRecipeIdentity =
+    "gnc.package.yyz.actuator.ideal-body-moment.recipe@1";
+inline constexpr std::string_view
+    kIdealBodyMomentActuatorOutputContractIdentity =
+        "gnc.contract.yyz.ideal-body-moment-actuator-output@1";
+inline constexpr std::string_view
+    kIdealBodyMomentActuatorRequestContractIdentity =
+        "gnc.contract.yyz.ideal-body-moment-actuator-request@1";
 inline constexpr std::string_view
     kControlledPropelledRigidMassStepModelIdentity =
         "gnc.package.yyz.controlled-propelled-rigid-mass-step.experimental@1";
@@ -51,10 +117,35 @@ inline constexpr std::string_view
         "gnc.package.yyz.two-interval-controlled-propelled-commit.experimental@1";
 inline constexpr std::string_view kCommittedMissionResultModelIdentity =
     "gnc.package.yyz.committed-mission-result.experimental@1";
+inline constexpr std::string_view kCommittedMissionResultModelVersion =
+    "0.1.0";
+inline constexpr std::string_view
+    kCommittedMissionResultConfigSchemaIdentity =
+        "gnc.package.yyz.committed-mission-result.config@1";
+inline constexpr std::uint32_t
+    kCommittedMissionResultConfigSchemaVersion = 1U;
+inline constexpr std::string_view kCommittedMissionResultRecipeIdentity =
+    "gnc.package.yyz.committed-mission-result.recipe@1";
+inline constexpr std::string_view
+    kCommittedRigidMassSequenceContractIdentity =
+        "gnc.contract.yyz.committed-rigid-mass-sequence@1";
+inline constexpr std::string_view kCommittedMissionResultContractIdentity =
+    "gnc.contract.yyz.committed-mission-result@1";
+inline constexpr std::uint32_t kCommittedMissionHistoryDepth = 3U;
+inline constexpr std::string_view kCommittedMissionRigidHistoryMemberId =
+    "rigid_states";
+inline constexpr std::string_view kCommittedMissionMassHistoryMemberId =
+    "mass_states";
 
 inline constexpr gnc::foundation::AlgorithmIdentity
     kScalarBurnMassKernelIdentity{
         "gnc.package.yyz.mass.scalar-burn.kernel@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kMassInitialStateBuilderIdentity{
+        "gnc.package.yyz.mass.scalar-burn.initial-state@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kMassPublishProjectionIdentity{
+        "gnc.package.yyz.mass.scalar-burn.committed-properties@1", "0.1.0"};
 inline constexpr gnc::foundation::AlgorithmIdentity
     kFrozenRigidMassStepKernelIdentity{
         "gnc.package.yyz.rigid-mass.frozen-step.kernel@1", "0.1.0"};
@@ -64,6 +155,9 @@ inline constexpr gnc::foundation::AlgorithmIdentity
 inline constexpr gnc::foundation::AlgorithmIdentity
     kSuppliedPropulsionKernelIdentity{
         "gnc.package.yyz.propulsion-response.supplied.kernel@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kFixedSuppliedPropulsionBoundaryIdentity{
+        "gnc.package.yyz.propulsion-response.fixed-boundary@1", "0.1.0"};
 inline constexpr gnc::foundation::AlgorithmIdentity
     kPropelledFrozenRigidMassStepKernelIdentity{
         "gnc.package.yyz.rigid-mass.propelled-frozen-step.kernel@1",
@@ -88,12 +182,101 @@ inline constexpr gnc::foundation::AlgorithmIdentity
 inline constexpr gnc::foundation::AlgorithmIdentity
     kCommittedMissionResultKernelIdentity{
         "gnc.package.yyz.committed-mission-result.kernel@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kCommittedMissionHistoryEvaluationIdentity{
+        "gnc.package.yyz.committed-mission-result.history-adapter@1",
+        "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kControlledBodyWrenchAdapterIdentity{
+        "gnc.package.yyz.controlled-body-wrench.adapter@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kControlledRigidBoundaryEvaluationIdentity{
+        "gnc.package.yyz.rigid-body-6dof.controlled-boundary@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kControlledRigidDefinitionBuilderIdentity{
+        "gnc.package.yyz.rigid-body-6dof.definition-builder@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kScalarBurnMassDefinitionBuilderIdentity{
+        "gnc.package.yyz.mass.scalar-burn.definition-builder@1", "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kAltitudePitchGuidanceDefinitionBuilderIdentity{
+        "gnc.package.yyz.guidance.altitude-pitch.definition-builder@1",
+        "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kPitchMomentControllerDefinitionBuilderIdentity{
+        "gnc.package.yyz.controller.pitch-moment.definition-builder@1",
+        "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kIdealBodyMomentActuatorDefinitionBuilderIdentity{
+        "gnc.package.yyz.actuator.ideal-body-moment.definition-builder@1",
+        "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kFixedSuppliedPropulsionDefinitionBuilderIdentity{
+        "gnc.package.yyz.propulsion-response.fixed.definition-builder@1",
+        "0.1.0"};
+inline constexpr gnc::foundation::AlgorithmIdentity
+    kCommittedMissionResultDefinitionBuilderIdentity{
+        "gnc.package.yyz.committed-mission-result.definition-builder@1",
+        "0.1.0"};
+
+inline constexpr std::string_view kMassInitialStateCallShapeIdentity =
+    "gnc.cpp-call-shape.yyz.mass.initial-state@1";
+inline constexpr std::string_view kMassPublishProjectionCallShapeIdentity =
+    "gnc.cpp-call-shape.yyz.mass.publish-projection@1";
+inline constexpr std::string_view kMassIntervalEvolutionCallShapeIdentity =
+    "gnc.cpp-call-shape.yyz.mass.interval-evolution@1";
+inline constexpr std::string_view kControlledRigidBoundaryCallShapeIdentity =
+    "gnc.cpp-call-shape.yyz.rigid.controlled-boundary@1";
+inline constexpr std::string_view kAltitudePitchGuidanceCallShapeIdentity =
+    "gnc.cpp-call-shape.yyz.guidance.altitude-pitch@1";
+inline constexpr std::string_view kPitchMomentControllerCallShapeIdentity =
+    "gnc.cpp-call-shape.yyz.controller.pitch-moment@1";
+inline constexpr std::string_view
+    kIdealBodyMomentActuatorCallShapeIdentity =
+        "gnc.cpp-call-shape.yyz.actuator.ideal-body-moment@1";
+inline constexpr std::string_view
+    kFixedSuppliedPropulsionCallShapeIdentity =
+        "gnc.cpp-call-shape.yyz.propulsion.fixed-supplied@1";
+inline constexpr std::string_view
+    kCommittedMissionHistoryEvaluationCallShapeIdentity =
+        "gnc.cpp-call-shape.yyz.evaluator.committed-mission-history@1";
+inline constexpr std::string_view
+    kControlledRigidDefinitionBuilderCallShapeIdentity =
+        "gnc.cpp-call-shape.yyz.rigid.definition-builder@1";
+inline constexpr std::string_view
+    kScalarBurnMassDefinitionBuilderCallShapeIdentity =
+        "gnc.cpp-call-shape.yyz.mass.definition-builder@1";
+inline constexpr std::string_view
+    kAltitudePitchGuidanceDefinitionBuilderCallShapeIdentity =
+        "gnc.cpp-call-shape.yyz.guidance.altitude-pitch.definition-builder@1";
+inline constexpr std::string_view
+    kPitchMomentControllerDefinitionBuilderCallShapeIdentity =
+        "gnc.cpp-call-shape.yyz.controller.pitch-moment.definition-builder@1";
+inline constexpr std::string_view
+    kIdealBodyMomentActuatorDefinitionBuilderCallShapeIdentity =
+        "gnc.cpp-call-shape.yyz.actuator.ideal-body-moment.definition-builder@1";
+inline constexpr std::string_view
+    kFixedSuppliedPropulsionDefinitionBuilderCallShapeIdentity =
+        "gnc.cpp-call-shape.yyz.propulsion.fixed-supplied.definition-builder@1";
+inline constexpr std::string_view
+    kCommittedMissionResultDefinitionBuilderCallShapeIdentity =
+        "gnc.cpp-call-shape.yyz.evaluator.committed-mission.definition-builder@1";
 
 struct ScalarBurnMassDefinition {
     std::string model_id;
     std::string model_version;
     std::string mass_state_id;
+    gnc::foundation::NumericalPolicy numerical_policy;
 };
+
+[[nodiscard]] gnc::model_sdk::CanonicalConfigBlock
+canonical_scalar_burn_mass_config(
+    const ScalarBurnMassDefinition& definition);
+
+[[nodiscard]] gnc::foundation::NumericalOutcome<
+    ScalarBurnMassDefinition>
+build_scalar_burn_mass_definition(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration);
 
 struct MassState {
     gnc::contracts::SampleContext context;
@@ -103,11 +286,35 @@ struct MassState {
     BodyInertiaKilogramMetersSquared inertia_about_center_of_mass;
 };
 
+struct MassInitialStateInput {
+    MassState state;
+};
+
+class MassInitialStateBuilder {
+  public:
+    [[nodiscard]] static gnc::foundation::NumericalOutcome<MassState>
+    build(const ScalarBurnMassDefinition& definition,
+          const MassInitialStateInput& input,
+          const gnc::foundation::NumericalPolicy& policy);
+};
+
+// Runtime-facing entry: the numerical policy is an immutable part of the
+// canonical Definition, so Session materialization does not invent or inject
+// a second policy value.
+[[nodiscard]] gnc::foundation::NumericalOutcome<MassState>
+build_scalar_burn_mass_initial_state(
+    const ScalarBurnMassDefinition& definition,
+    const MassInitialStateInput& input);
+
 struct MassFlowIntervalInput {
     gnc::contracts::IntervalSampleContext context;
     std::string mass_state_id;
     double fuel_consumption_rate_kilograms_per_second = 0.0;
 };
+
+[[nodiscard]] MassPropertiesInput project_committed_mass_properties(
+    const gnc::contracts::IntervalSampleContext& interval_context,
+    const MassState& state);
 
 struct BodyThrustDirectionUnit {
     gnc::foundation::Vec3 value = gnc::foundation::Vec3::UnitX();
@@ -165,6 +372,32 @@ class SuppliedPropulsionKernel {
                  const SuppliedPropulsionInput& input);
 };
 
+struct FixedSuppliedPropulsionDefinition {
+    SuppliedPropulsionDefinition propulsion;
+    double thrust_magnitude_newtons = 0.0;
+    BodyThrustDirectionUnit thrust_direction;
+    BodyCenterOfMassToApplicationMeters center_of_mass_to_application;
+    BodyMomentNewtonMeters intrinsic_moment_at_application;
+    double fuel_consumption_rate_kilograms_per_second = 0.0;
+};
+
+[[nodiscard]] gnc::model_sdk::CanonicalConfigBlock
+canonical_fixed_supplied_propulsion_config(
+    const FixedSuppliedPropulsionDefinition& definition);
+
+[[nodiscard]] gnc::foundation::NumericalOutcome<
+    FixedSuppliedPropulsionDefinition>
+build_fixed_supplied_propulsion_definition(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration);
+
+class FixedSuppliedPropulsionBoundaryKernel {
+  public:
+    [[nodiscard]] static gnc::foundation::NumericalOutcome<
+        SuppliedPropulsionOutput>
+    evaluate(const FixedSuppliedPropulsionDefinition& definition,
+             const gnc::contracts::IntervalSampleContext& context);
+};
+
 struct MassStateCandidate {
     gnc::contracts::SimulationInstant effective_at;
     MassState state;
@@ -186,6 +419,14 @@ class ScalarBurnMassKernel {
                  const MassFlowIntervalInput& flow,
                  const gnc::foundation::NumericalPolicy& policy);
 };
+
+// Runtime-facing entry paired with the Definition builder above. The existing
+// policy-taking kernel remains the R1 compatibility/science implementation.
+[[nodiscard]] gnc::foundation::NumericalOutcome<ScalarBurnMassOutput>
+evaluate_scalar_burn_mass_interval(
+    const ScalarBurnMassDefinition& definition,
+    const MassState& committed_state,
+    const MassFlowIntervalInput& flow);
 
 struct CommittedRigidMassBoundary {
     gnc::contracts::SampleContext rigid_context;
@@ -222,6 +463,18 @@ class FrozenRigidMassStepKernel {
                  const ScalarBurnMassDefinition& mass_definition,
                  const CommittedRigidMassBoundary& opening_boundary,
                  const RigidMassIntervalInput& interval);
+
+    [[nodiscard]] static
+        gnc::foundation::NumericalOutcome<FrozenRigidMassStepOutput>
+        evaluate_held_form(
+            const PreparedRigidStepModel& rigid_model,
+            const ScalarBurnMassDefinition& mass_definition,
+            const CommittedRigidMassBoundary& opening_boundary,
+            const RigidMassIntervalInput& interval,
+            const RigidFrozenFormEvaluation& frozen_form,
+            gnc::foundation::NumericalStatus frozen_form_status,
+            const gnc::foundation::NumericalEvidence&
+                frozen_form_evidence);
 };
 
 struct PropelledRigidMassIntervalInput {
@@ -244,11 +497,6 @@ class PropelledFrozenRigidMassStepKernel {
                  const SuppliedPropulsionDefinition& propulsion_definition,
                  const CommittedRigidMassBoundary& opening_boundary,
                  const PropelledRigidMassIntervalInput& interval);
-};
-
-struct CommittedRigidObservation {
-    gnc::contracts::SampleContext context;
-    RigidState state;
 };
 
 struct AltitudePitchGuidanceDefinition {
@@ -305,6 +553,15 @@ struct PitchMomentControllerDefinition {
     gnc::foundation::NumericalPolicy numerical_policy;
 };
 
+[[nodiscard]] gnc::model_sdk::CanonicalConfigBlock
+canonical_pitch_moment_controller_config(
+    const PitchMomentControllerDefinition& definition);
+
+[[nodiscard]] gnc::foundation::NumericalOutcome<
+    PitchMomentControllerDefinition>
+build_pitch_moment_controller_definition(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration);
+
 struct PitchMomentControllerOutput {
     gnc::contracts::SampleContext context;
     double pitch_error_radians = 0.0;
@@ -334,6 +591,15 @@ struct IdealBodyMomentActuatorDefinition {
     gnc::foundation::NumericalPolicy numerical_policy;
 };
 
+[[nodiscard]] gnc::model_sdk::CanonicalConfigBlock
+canonical_ideal_body_moment_actuator_config(
+    const IdealBodyMomentActuatorDefinition& definition);
+
+[[nodiscard]] gnc::foundation::NumericalOutcome<
+    IdealBodyMomentActuatorDefinition>
+build_ideal_body_moment_actuator_definition(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration);
+
 struct IdealBodyMomentActuatorOutput {
     gnc::contracts::IntervalSampleContext context;
     std::string source_id;
@@ -347,6 +613,96 @@ class IdealBodyMomentActuatorKernel {
         evaluate(const IdealBodyMomentActuatorDefinition& definition,
                  const gnc::contracts::IntervalSampleContext& context,
                  const PitchMomentControllerOutput& controller);
+};
+
+struct ControlledBodyWrenchAdapterDefinition {
+    std::string combined_wrench_source_id;
+};
+
+struct ControlledRigidBoundaryEvaluationDefinition {
+    RigidFrozenFormRuntimeDefinition rigid;
+    ControlledBodyWrenchAdapterDefinition wrench_adapter;
+};
+
+[[nodiscard]] gnc::model_sdk::CanonicalConfigBlock
+canonical_controlled_rigid_boundary_config(
+    const ControlledRigidBoundaryEvaluationDefinition& definition);
+
+[[nodiscard]] gnc::foundation::NumericalOutcome<
+    ControlledRigidBoundaryEvaluationDefinition>
+build_controlled_rigid_boundary_definition(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration);
+
+struct ControlledBodyWrenchAdapterInput {
+    BodyPointMeters body_origin_to_center_of_mass;
+    SuppliedPropulsionBodyWrench propulsion;
+    IdealBodyMomentActuatorOutput actuator;
+};
+
+class ControlledBodyWrenchAdapterKernel {
+  public:
+    [[nodiscard]] static gnc::foundation::NumericalOutcome<
+        AppliedBodyWrenchInput>
+    evaluate(const ControlledBodyWrenchAdapterDefinition& definition,
+             const ControlledBodyWrenchAdapterInput& input);
+};
+
+struct ControlledRigidBoundaryEvaluationInput {
+    RigidStepContext context;
+    RigidState committed_state;
+    MassPropertiesInput mass_properties;
+    SuppliedPropulsionBodyWrench propulsion;
+    IdealBodyMomentActuatorOutput actuator;
+};
+
+struct ControlledRigidBoundaryResolvedEnvironmentInput {
+    RigidStepContext context;
+    RigidState committed_state;
+    EnvironmentInput environment;
+    MassPropertiesInput mass_properties;
+    SuppliedPropulsionBodyWrench propulsion;
+    IdealBodyMomentActuatorOutput actuator;
+};
+
+struct ControlledRigidBoundaryInvocationSet {
+    const PreparedUniformEnvironmentModel* environment_model = nullptr;
+    UniformEnvironmentQueryEntry environment_query = nullptr;
+    RigidFrozenFormInvocationSet frozen_form;
+};
+
+struct ControlledRigidBoundaryEvaluationOutput {
+    AppliedBodyWrenchInput controlled_wrench;
+    EnvironmentInput environment_response;
+    RigidFrozenFormEvaluation frozen_form;
+    gnc::foundation::NumericalStatus frozen_form_status =
+        gnc::foundation::NumericalStatus::InternalFailure;
+    gnc::foundation::NumericalEvidence frozen_form_evidence;
+};
+
+struct ControlledRigidBoundaryTelemetry {
+    AppliedBodyWrenchInput controlled_wrench;
+    EnvironmentInput environment_response;
+    RigidFrozenFormTelemetry frozen_form;
+};
+
+using ControlledRigidBoundaryEvaluation =
+    gnc::model_sdk::AlgorithmEvaluation<
+        RigidFormInput, ControlledRigidBoundaryTelemetry>;
+
+class ControlledRigidBoundaryEvaluationKernel {
+  public:
+    [[nodiscard]] static gnc::foundation::NumericalOutcome<
+        ControlledRigidBoundaryEvaluation>
+    evaluate(const ControlledRigidBoundaryEvaluationDefinition& definition,
+             const ControlledRigidBoundaryInvocationSet& invocations,
+             const ControlledRigidBoundaryEvaluationInput& input);
+
+    [[nodiscard]] static gnc::foundation::NumericalOutcome<
+        ControlledRigidBoundaryEvaluationOutput>
+    evaluate_resolved_environment(
+        const ControlledRigidBoundaryEvaluationDefinition& definition,
+        const RigidFrozenFormInvocationSet& invocations,
+        const ControlledRigidBoundaryResolvedEnvironmentInput& input);
 };
 
 struct ControlledPropelledRigidMassStepDefinition {
@@ -452,6 +808,15 @@ struct CommittedMissionResultDefinition {
     std::array<MissionTerminationPredicate, 3U> predicates;
 };
 
+[[nodiscard]] gnc::model_sdk::CanonicalConfigBlock
+canonical_committed_mission_result_config(
+    const CommittedMissionResultDefinition& definition);
+
+[[nodiscard]] gnc::foundation::NumericalOutcome<
+    CommittedMissionResultDefinition>
+build_committed_mission_result_definition(
+    const gnc::model_sdk::CanonicalConfigBlock& configuration);
+
 struct MissionMetrics {
     double duration_seconds = 0.0;
     double downrange_meters = 0.0;
@@ -489,7 +854,16 @@ struct MissionMetricSummary {
 };
 
 struct CommittedMissionResultInput {
-    std::array<CommittedRigidMassBoundary, 3U> committed_samples;
+    std::array<CommittedRigidMassBoundary, kCommittedMissionHistoryDepth>
+        committed_samples;
+};
+
+// R3 supplies chronological committed histories for the two state layouts in
+// the evaluator history plan. This adapter is the package-owned, non-science
+// assembly boundary into the existing mission-result kernel.
+struct CommittedMissionStateHistoryInput {
+    std::array<RigidState, kCommittedMissionHistoryDepth> rigid_states;
+    std::array<MassState, kCommittedMissionHistoryDepth> mass_states;
 };
 
 struct CommittedMissionResultOutput {
@@ -509,6 +883,14 @@ class CommittedMissionResultKernel {
         CommittedMissionResultOutput>
         evaluate(const CommittedMissionResultDefinition& definition,
                  const CommittedMissionResultInput& input);
+};
+
+class CommittedMissionHistoryEvaluationKernel {
+  public:
+    [[nodiscard]] static gnc::foundation::NumericalOutcome<
+        CommittedMissionResultOutput>
+    evaluate(const CommittedMissionResultDefinition& definition,
+             const CommittedMissionStateHistoryInput& input);
 };
 
 struct TwoIntervalMassCommitInput {
@@ -534,5 +916,64 @@ class TwoIntervalMassCommitKernel {
                  const ScalarBurnMassDefinition& mass_definition,
                  const TwoIntervalMassCommitInput& input);
 };
+
+using ControlledRigidDefinitionBuilderCall =
+    gnc::foundation::NumericalOutcome<
+        ControlledRigidBoundaryEvaluationDefinition> (*)(
+        const gnc::model_sdk::CanonicalConfigBlock&);
+using ScalarBurnMassDefinitionBuilderCall =
+    gnc::foundation::NumericalOutcome<ScalarBurnMassDefinition> (*)(
+        const gnc::model_sdk::CanonicalConfigBlock&);
+using AltitudePitchGuidanceDefinitionBuilderCall =
+    gnc::foundation::NumericalOutcome<AltitudePitchGuidanceDefinition> (*)(
+        const gnc::model_sdk::CanonicalConfigBlock&);
+using PitchMomentControllerDefinitionBuilderCall =
+    gnc::foundation::NumericalOutcome<PitchMomentControllerDefinition> (*)(
+        const gnc::model_sdk::CanonicalConfigBlock&);
+using IdealBodyMomentActuatorDefinitionBuilderCall =
+    gnc::foundation::NumericalOutcome<IdealBodyMomentActuatorDefinition> (*)(
+        const gnc::model_sdk::CanonicalConfigBlock&);
+using FixedSuppliedPropulsionDefinitionBuilderCall =
+    gnc::foundation::NumericalOutcome<FixedSuppliedPropulsionDefinition> (*)(
+        const gnc::model_sdk::CanonicalConfigBlock&);
+using CommittedMissionResultDefinitionBuilderCall =
+    gnc::foundation::NumericalOutcome<CommittedMissionResultDefinition> (*)(
+        const gnc::model_sdk::CanonicalConfigBlock&);
+
+using MassInitialStateCall =
+    gnc::foundation::NumericalOutcome<MassState> (*)(
+        const ScalarBurnMassDefinition&, const MassInitialStateInput&);
+using MassPublishProjectionCall = MassPropertiesInput (*)(
+    const gnc::contracts::IntervalSampleContext&, const MassState&);
+using MassIntervalEvolutionCall =
+    gnc::foundation::NumericalOutcome<ScalarBurnMassOutput> (*)(
+        const ScalarBurnMassDefinition&, const MassState&,
+        const MassFlowIntervalInput&);
+using ControlledRigidBoundaryCall =
+    gnc::foundation::NumericalOutcome<ControlledRigidBoundaryEvaluation> (*)(
+        const ControlledRigidBoundaryEvaluationDefinition&,
+        const ControlledRigidBoundaryInvocationSet&,
+        const ControlledRigidBoundaryEvaluationInput&);
+using AltitudePitchGuidanceCall =
+    gnc::foundation::NumericalOutcome<AltitudePitchGuidanceOutput> (*)(
+        const AltitudePitchGuidanceDefinition&,
+        const CommittedRigidObservation&);
+using PitchMomentControllerCall =
+    gnc::foundation::NumericalOutcome<PitchMomentControllerOutput> (*)(
+        const PitchMomentControllerDefinition&,
+        const AltitudePitchGuidanceOutput&);
+using IdealBodyMomentActuatorCall =
+    gnc::foundation::NumericalOutcome<IdealBodyMomentActuatorOutput> (*)(
+        const IdealBodyMomentActuatorDefinition&,
+        const gnc::contracts::IntervalSampleContext&,
+        const PitchMomentControllerOutput&);
+using FixedSuppliedPropulsionCall =
+    gnc::foundation::NumericalOutcome<SuppliedPropulsionOutput> (*)(
+        const FixedSuppliedPropulsionDefinition&,
+        const gnc::contracts::IntervalSampleContext&);
+using CommittedMissionHistoryEvaluationCall =
+    gnc::foundation::NumericalOutcome<CommittedMissionResultOutput> (*)(
+        const CommittedMissionResultDefinition&,
+        const CommittedMissionStateHistoryInput&);
 
 } // namespace gnc::packages::yyz

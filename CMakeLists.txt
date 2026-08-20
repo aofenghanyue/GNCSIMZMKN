@@ -187,6 +187,24 @@ if(GNC_BUILD_TESTS)
         PRIVATE compiler yyz_rigid_step cavh_formula)
     gnc_enable_warnings(gnc_compiler_runtime_component_catalog_probe)
 
+    # R2 package contracts: real state owners and exact linked YYZ entries.
+    add_executable(
+        gnc_yyz_static_product_contracts_probe
+        tests/yyz_static_product_contracts.cpp)
+    target_link_libraries(
+        gnc_yyz_static_product_contracts_probe
+        PRIVATE compiler yyz_rigid_step)
+    gnc_enable_warnings(gnc_yyz_static_product_contracts_probe)
+
+    # R2 vertical review: canonical REF-YYZ planning/proof/science-entry link.
+    add_executable(
+        gnc_compiler_complete_yyz_plan_probe
+        tests/compiler_complete_yyz_plan.cpp)
+    target_link_libraries(
+        gnc_compiler_complete_yyz_plan_probe
+        PRIVATE compiler yyz_rigid_step)
+    gnc_enable_warnings(gnc_compiler_complete_yyz_plan_probe)
+
     # R0 validation spike: intentionally isolated from product modules and Legacy.
     add_executable(
         gnc_scientific_conventions
@@ -410,6 +428,12 @@ if(GNC_BUILD_TESTS)
     add_test(
         NAME r2.compiler-runtime-component-catalog.probe
         COMMAND gnc_compiler_runtime_component_catalog_probe --self-check)
+    add_test(
+        NAME r2.yyz-static-product-contracts.probe
+        COMMAND gnc_yyz_static_product_contracts_probe --self-check)
+    add_test(
+        NAME r2.compiler-complete-yyz-plan.probe
+        COMMAND gnc_compiler_complete_yyz_plan_probe --self-check)
     add_test(
         NAME r0.scientific-conventions.properties
         COMMAND gnc_scientific_conventions --self-check)

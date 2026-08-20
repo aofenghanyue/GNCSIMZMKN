@@ -1,0 +1,483 @@
+#pragma once
+
+#include <any>
+#include <cstdint>
+#include <string_view>
+#include <string>
+#include <utility>
+#include <vector>
+
+namespace gnc::contracts {
+
+// Optimized-build symbol-retention evidence only. The exact process-local,
+// type-preserving callable reference lives in PlanImageEntry::typed_entry.
+// R2 may copy this inert anchor but must never invoke it or describe it as an
+// executable trampoline.
+using StaticLinkAnchor = void (*)() noexcept;
+
+enum class PlanImageEntryKind : std::uint8_t {
+    DefinitionBuilder,
+    Prepare,
+    PureQuery,
+    Closure,
+    InitialState,
+    PublishProjection,
+    BoundaryEvaluation,
+    IntervalEvolution,
+    DerivativeEvaluation,
+};
+
+enum class PlanImageSlotKind : std::uint8_t {
+    PortValue,
+    CommittedState,
+    CandidateState,
+    HeldIntervalValue,
+};
+
+enum class PlanImageDagNodeKind : std::uint8_t {
+    RuntimeCallsite,
+    IntegrationScope,
+};
+
+enum class PlanImageValueKind : std::uint8_t {
+    String,
+    Enum,
+    Integer,
+    Float64,
+};
+
+struct PlanImagePackage {
+    std::uint32_t handle = 0U;
+    std::string package_id;
+    std::string package_version;
+    std::string build_fingerprint;
+};
+
+struct PlanImageClock {
+    std::uint32_t handle = 0U;
+    std::string plan_element_id;
+    std::string clock_id;
+    double base_step_seconds = 0.0;
+    std::int64_t initial_tick = 0;
+    std::int64_t terminal_tick = 0;
+};
+
+struct PlanImageEntry {
+    std::uint32_t handle = 0U;
+    std::uint32_t package_handle = 0U;
+    std::string requirement_id;
+    std::string entry_id;
+    std::string entry_version;
+    PlanImageEntryKind kind = PlanImageEntryKind::Prepare;
+    std::string signature_id;
+    std::string call_shape_id;
+    std::string state_layout_id;
+    std::string workspace_layout_id;
+    // A process-local, type-preserving reference to the exact package science
+    // entry. R2 only copies it. A future package-owned R3 binder may recover
+    // it with std::any_cast<decltype(&ExactCallable)>; this field alone is not
+    // a RuntimeCell factory/materialization contract, and no untyped address
+    // or cross-process ABI is implied.
+    std::any typed_entry;
+    // Retains an explicit relocation to the callable in optimized builds.
+    // This anchor is inert and is not an executable trampoline.
+    StaticLinkAnchor link_anchor = nullptr;
+};
+
+struct PlanImageOccurrence {
+    std::uint32_t handle = 0U;
+    std::uint32_t package_handle = 0U;
+    std::string plan_element_id;
+    std::string occurrence_id;
+    std::string definition_id;
+    std::string definition_version;
+    std::string execution_form;
+    std::string placement;
+    std::string subject_entity_id;
+    bool has_scope = false;
+    std::string scope_kind;
+    std::string scope_subject_entity_id;
+    struct ConfigBlock {
+        std::string schema_id;
+        std::uint32_t schema_version = 0U;
+        struct Field {
+            std::string field_id;
+            PlanImageValueKind kind = PlanImageValueKind::String;
+            std::string string_value;
+            std::int64_t integer_value = 0;
+            double float64_value = 0.0;
+        };
+        std::vector<Field> fields;
+    } canonical_configuration;
+    struct AssetBinding {
+        std::string role;
+        std::string asset_schema_id;
+        std::string asset_id;
+    };
+    std::vector<AssetBinding> asset_bindings;
+};
+
+struct PlanImagePreparation {
+    std::uint32_t handle = 0U;
+    std::string plan_element_id;
+    std::uint32_t occurrence_handle = 0U;
+    std::uint32_t prepare_entry_handle = 0U;
+};
+
+struct PlanImageQuery {
+    std::uint32_t handle = 0U;
+    std::string plan_element_id;
+    std::uint32_t occurrence_handle = 0U;
+    std::uint32_t preparation_handle = 0U;
+    std::uint32_t query_entry_handle = 0U;
+    std::string workspace_requirement;
+    std::vector<std::uint32_t> authorized_invocation_handles;
+};
+
+struct PlanImageClosure {
+    std::uint32_t handle = 0U;
+    std::string plan_element_id;
+    std::uint32_t occurrence_handle = 0U;
+    std::uint32_t preparation_handle = 0U;
+    std::uint32_t closure_entry_handle = 0U;
+    std::string strategy;
+    std::string workspace_requirement;
+    std::vector<std::uint32_t> authorized_invocation_handles;
+};
+
+struct PlanImagePort {
+    std::uint32_t handle = 0U;
+    std::uint32_t occurrence_handle = 0U;
+    std::string plan_element_id;
+    std::string port_id;
+    std::string contract_id;
+    std::string direction;
+    std::string binding_kind;
+    std::string temporal_relation;
+};
+
+struct PlanImageSlot {
+    std::uint32_t handle = 0U;
+    std::string plan_element_id;
+    std::string slot_id;
+    PlanImageSlotKind kind = PlanImageSlotKind::PortValue;
+    std::uint32_t owner_occurrence_handle = 0U;
+    std::uint32_t port_handle = 0U;
+    std::string contract_or_layout_id;
+    std::uint64_t size_bytes = 0U;
+    std::uint64_t alignment_bytes = 1U;
+};
+
+struct PlanImageStateBlock {
+    std::uint32_t handle = 0U;
+    std::string plan_element_id;
+    std::uint32_t owner_occurrence_handle = 0U;
+    std::string schema_id;
+    std::uint32_t schema_version = 0U;
+    std::string layout_id;
+    std::uint64_t size_bytes = 0U;
+    std::uint64_t alignment_bytes = 0U;
+    std::string evolution;
+    std::uint32_t committed_slot_handle = 0U;
+    std::uint32_t candidate_slot_handle = 0U;
+};
+
+struct PlanImageValue {
+    std::string field_id;
+    PlanImageValueKind kind = PlanImageValueKind::String;
+    std::string string_value;
+    std::int64_t integer_value = 0;
+    double float64_value = 0.0;
+};
+
+struct PlanImageInitialBinding {
+    std::uint32_t handle = 0U;
+    std::string plan_element_id;
+    std::uint32_t owner_occurrence_handle = 0U;
+    std::uint32_t committed_state_slot_handle = 0U;
+    std::uint32_t builder_entry_handle = 0U;
+    std::string input_schema_id;
+    std::uint32_t input_schema_version = 0U;
+    std::vector<PlanImageValue> values;
+};
+
+struct PlanImageBinding {
+    std::uint32_t handle = 0U;
+    std::string plan_element_id;
+    std::string binding_id;
+    std::uint32_t provider_slot_handle = 0U;
+    std::uint32_t consumer_port_handle = 0U;
+};
+
+struct PlanImageCallsite {
+    std::uint32_t handle = 0U;
+    std::string plan_element_id;
+    std::string callsite_id;
+    std::uint32_t occurrence_handle = 0U;
+    std::uint32_t entry_handle = 0U;
+    std::string obligation;
+    std::string request_contract_id;
+    std::string result_contract_id;
+    std::string region_id;
+    std::vector<std::uint32_t> input_slot_handles;
+    std::vector<std::uint32_t> output_slot_handles;
+    std::vector<std::uint32_t> authorized_invocation_handles;
+};
+
+struct PlanImageRuntimeComponent {
+    std::uint32_t handle = 0U;
+    std::string plan_element_id;
+    std::uint32_t occurrence_handle = 0U;
+    // Exact package definition builder linked for this occurrence. R2 never
+    // invokes it and does not instantiate a Runtime Cell.
+    std::uint32_t definition_builder_entry_handle = 0U;
+    std::string recipe_id;
+    std::string profile;
+    std::string schedule_trigger;
+    std::uint32_t step_interval = 0U;
+    std::uint32_t offset = 0U;
+    std::string output_hold;
+    std::uint32_t max_input_age_steps = 0U;
+    std::vector<std::string> lifecycle_capabilities;
+    std::vector<std::uint32_t> callsite_handles;
+};
+
+struct PlanImageInvocation {
+    std::uint32_t handle = 0U;
+    std::string plan_element_id;
+    std::string invocation_id;
+    std::uint32_t caller_callsite_handle = 0U;
+    std::uint32_t provider_occurrence_handle = 0U;
+    std::uint32_t entry_handle = 0U;
+    std::string requirement_id;
+    std::string invocation_kind;
+    std::string contract_id;
+    // Authorization and result flow are distinct facts. These handles name
+    // the one already-validated Binding that receives this invocation's
+    // response; the result slot is therefore not a pre-existing callsite
+    // input and must be populated only by the authorized invocation.
+    std::uint32_t result_binding_handle = 0U;
+    std::uint32_t provider_result_slot_handle = 0U;
+    std::uint32_t consumer_port_handle = 0U;
+};
+
+struct PlanImageRegion {
+    std::uint32_t handle = 0U;
+    std::string plan_element_id;
+    std::string region_id;
+    std::uint32_t ordinal = 0U;
+    std::string phase;
+    std::vector<std::uint32_t> callsite_handles;
+};
+
+struct PlanImageDagNode {
+    std::uint32_t handle = 0U;
+    std::string plan_element_id;
+    std::string node_id;
+    PlanImageDagNodeKind kind = PlanImageDagNodeKind::RuntimeCallsite;
+    std::uint32_t target_handle = 0U;
+    std::string phase;
+};
+
+struct PlanImageDagEdge {
+    std::string plan_element_id;
+    std::uint32_t predecessor_node_handle = 0U;
+    std::uint32_t successor_node_handle = 0U;
+};
+
+struct PlanImageIntegrationScope {
+    std::uint32_t handle = 0U;
+    std::string plan_element_id;
+    std::string integration_scope_id;
+    std::uint32_t owner_occurrence_handle = 0U;
+    std::uint32_t committed_state_slot_handle = 0U;
+    std::uint32_t candidate_state_slot_handle = 0U;
+    std::uint32_t projection_callsite_handle = 0U;
+    std::uint32_t form_callsite_handle = 0U;
+    std::uint32_t derivative_callsite_handle = 0U;
+    std::uint32_t held_form_slot_handle = 0U;
+    std::string held_form_contract_id;
+    std::string derivative_request_contract_id;
+    std::string derivative_result_contract_id;
+    std::vector<std::uint32_t> closure_invocation_handles;
+};
+
+struct PlanImageTransaction {
+    std::uint32_t handle = 0U;
+    std::string plan_element_id;
+    std::string transaction_id;
+    std::vector<std::uint32_t> owner_occurrence_handles;
+    std::vector<std::uint32_t> candidate_state_slot_handles;
+    std::vector<std::string> candidate_producer_kinds;
+    std::vector<std::uint32_t> candidate_producer_handles;
+};
+
+struct PlanImageEvaluatorHistoryMember {
+    std::string member_id;
+    std::string state_schema_id;
+    std::string state_layout_id;
+    std::uint32_t committed_state_slot_handle = 0U;
+};
+
+struct PlanImageEvaluatorHistory {
+    std::uint32_t handle = 0U;
+    std::string plan_element_id;
+    std::uint32_t evaluator_callsite_handle = 0U;
+    std::string request_contract_id;
+    std::uint32_t history_depth = 0U;
+    std::vector<PlanImageEvaluatorHistoryMember> ordered_members;
+};
+
+// Diagnostic/provenance information is deliberately not part of the stable
+// image fingerprint. It proves source-to-image traceability without making a
+// source file relocation semantic.
+struct PlanImageSourceRef {
+    std::string document_uri;
+    std::string node_path;
+};
+
+struct PlanImageConformance {
+    std::string plan_element_id;
+    std::vector<PlanImageSourceRef> source_refs;
+    std::vector<std::string> proof_ids;
+    std::vector<std::uint32_t> image_handles;
+};
+
+struct ExecutionPlanImageData {
+    std::uint32_t revision = 1U;
+    std::string plan_id;
+    std::string mission_id;
+    std::string source_semantic_hash;
+    std::string descriptor_semantic_hash;
+    std::string proof_index_hash;
+    std::string image_fingerprint;
+    std::vector<PlanImagePackage> packages;
+    PlanImageClock clock;
+    std::vector<PlanImageEntry> entries;
+    std::vector<PlanImageOccurrence> occurrences;
+    std::vector<PlanImagePreparation> preparations;
+    std::vector<PlanImageQuery> queries;
+    std::vector<PlanImageClosure> closures;
+    std::vector<PlanImagePort> ports;
+    std::vector<PlanImageSlot> slots;
+    std::vector<PlanImageStateBlock> state_blocks;
+    std::vector<PlanImageInitialBinding> initial_bindings;
+    std::vector<PlanImageBinding> bindings;
+    std::vector<PlanImageCallsite> callsites;
+    std::vector<PlanImageRuntimeComponent> runtime_components;
+    std::vector<PlanImageInvocation> invocations;
+    std::vector<PlanImageRegion> regions;
+    std::vector<PlanImageDagNode> dag_nodes;
+    std::vector<PlanImageDagEdge> dag_edges;
+    std::vector<PlanImageIntegrationScope> integration_scopes;
+    std::vector<PlanImageTransaction> transactions;
+    std::vector<PlanImageEvaluatorHistory> evaluator_histories;
+    std::vector<PlanImageConformance> conformance;
+};
+
+// An image is immutable after freeze(). These planning/proof/science-entry
+// link tables contain no Session-owned state/workspace/runtime objects and do
+// not by themselves define an R3 RuntimeCell factory or materialization path.
+class ExecutionPlanImage final {
+  public:
+    [[nodiscard]] static ExecutionPlanImage freeze(
+        ExecutionPlanImageData data) {
+        return ExecutionPlanImage(std::move(data));
+    }
+
+    [[nodiscard]] std::uint32_t revision() const noexcept {
+        return data_.revision;
+    }
+    [[nodiscard]] const std::string& plan_id() const noexcept {
+        return data_.plan_id;
+    }
+    [[nodiscard]] const std::string& mission_id() const noexcept {
+        return data_.mission_id;
+    }
+    [[nodiscard]] const std::string& source_semantic_hash() const noexcept {
+        return data_.source_semantic_hash;
+    }
+    [[nodiscard]] const std::string& descriptor_semantic_hash() const noexcept {
+        return data_.descriptor_semantic_hash;
+    }
+    [[nodiscard]] const std::string& proof_index_hash() const noexcept {
+        return data_.proof_index_hash;
+    }
+    [[nodiscard]] const std::string& fingerprint() const noexcept {
+        return data_.image_fingerprint;
+    }
+    [[nodiscard]] const std::vector<PlanImagePackage>& packages() const noexcept {
+        return data_.packages;
+    }
+    [[nodiscard]] const PlanImageClock& clock() const noexcept {
+        return data_.clock;
+    }
+    [[nodiscard]] const std::vector<PlanImageEntry>& entries() const noexcept {
+        return data_.entries;
+    }
+    [[nodiscard]] const std::vector<PlanImageOccurrence>& occurrences() const noexcept {
+        return data_.occurrences;
+    }
+    [[nodiscard]] const std::vector<PlanImagePreparation>& preparations() const noexcept {
+        return data_.preparations;
+    }
+    [[nodiscard]] const std::vector<PlanImageQuery>& queries() const noexcept {
+        return data_.queries;
+    }
+    [[nodiscard]] const std::vector<PlanImageClosure>& closures() const noexcept {
+        return data_.closures;
+    }
+    [[nodiscard]] const std::vector<PlanImagePort>& ports() const noexcept {
+        return data_.ports;
+    }
+    [[nodiscard]] const std::vector<PlanImageSlot>& slots() const noexcept {
+        return data_.slots;
+    }
+    [[nodiscard]] const std::vector<PlanImageStateBlock>& state_blocks() const noexcept {
+        return data_.state_blocks;
+    }
+    [[nodiscard]] const std::vector<PlanImageInitialBinding>& initial_bindings() const noexcept {
+        return data_.initial_bindings;
+    }
+    [[nodiscard]] const std::vector<PlanImageBinding>& bindings() const noexcept {
+        return data_.bindings;
+    }
+    [[nodiscard]] const std::vector<PlanImageCallsite>& callsites() const noexcept {
+        return data_.callsites;
+    }
+    [[nodiscard]] const std::vector<PlanImageRuntimeComponent>& runtime_components() const noexcept {
+        return data_.runtime_components;
+    }
+    [[nodiscard]] const std::vector<PlanImageInvocation>& invocations() const noexcept {
+        return data_.invocations;
+    }
+    [[nodiscard]] const std::vector<PlanImageRegion>& regions() const noexcept {
+        return data_.regions;
+    }
+    [[nodiscard]] const std::vector<PlanImageDagNode>& dag_nodes() const noexcept {
+        return data_.dag_nodes;
+    }
+    [[nodiscard]] const std::vector<PlanImageDagEdge>& dag_edges() const noexcept {
+        return data_.dag_edges;
+    }
+    [[nodiscard]] const std::vector<PlanImageIntegrationScope>& integration_scopes() const noexcept {
+        return data_.integration_scopes;
+    }
+    [[nodiscard]] const std::vector<PlanImageTransaction>& transactions() const noexcept {
+        return data_.transactions;
+    }
+    [[nodiscard]] const std::vector<PlanImageEvaluatorHistory>& evaluator_histories() const noexcept {
+        return data_.evaluator_histories;
+    }
+    [[nodiscard]] const std::vector<PlanImageConformance>& conformance() const noexcept {
+        return data_.conformance;
+    }
+
+  private:
+    explicit ExecutionPlanImage(ExecutionPlanImageData data)
+        : data_(std::move(data)) {}
+
+    ExecutionPlanImageData data_;
+};
+
+} // namespace gnc::contracts
