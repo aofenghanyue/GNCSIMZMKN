@@ -73,7 +73,7 @@
 
 ## 后续阶段边界
 
-1. `R2-CAT-001` 为 `done`；最小REF-YYZ的 `R2-PLAN-001`、`R2-PRF-001`、`R2-LINK-001` 为 `review`，并明确携带RuntimeCellFactory/result-writer blocker，等待仓库所有者复核；`R2-GATE-001` 与G3保持 `planned`。本次owner review不等于整个R2蓝图或G3通过。
+1. `R2-CAT-001` 为 `done`；最小REF-YYZ的 `R2-PLAN-001` 为 `review`，等待仓库所有者复核。依赖完整plan的 `R2-PRF-001` 与尚缺RuntimeCellFactory/result-writer的 `R2-LINK-001` 为 `blocked`；`R2-GATE-001` 与G3保持 `planned`。本次owner review不等于整个R2蓝图或G3通过。
 2. R2目标仍是交付可供R3无发现物化的immutable静态Image；当前review artifact尚未达到该目标。R3才调用已由R2链接的factory，创建Session、PreparedModel/Bound handles、workspace、RuntimeCell、stores和scheduler，调用projection/query/closure/component/derivative，执行积分、candidate staging与Rigid/Mass原子commit；第一个完整正常YYZ run仍属于R3。
 3. 当前Image限定于10 Hz、0.2 s、两区间REF-YYZ qualification graph，不覆盖00A/Reference A的30 s、100/10/20 Hz全产品图。DecisionAuthority、entity activation/topology、intervention/fault routing、Observation/Encoding、SourceFrontend多格式和产品级CAVH command仍按各自真实consumer推进。
 4. JSON/YAML/INI、多端adapter、mini runtime、manager、runtime registry、serializer、StateFragment、Artifact、Workflow、前端与R3+执行能力继续保持关闭。
