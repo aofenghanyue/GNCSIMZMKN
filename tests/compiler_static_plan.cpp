@@ -2002,7 +2002,8 @@ void verify_negative_cases() {
             "empty SourceBinding source entered proof or diagnostic output");
 
     auto duplicate_packages = package_descriptors();
-    duplicate_packages.push_back(duplicate_packages[0U]);
+    const auto duplicate_package = duplicate_packages[0U];
+    duplicate_packages.push_back(duplicate_package);
     const auto duplicate_catalog_outcome =
         Catalog::build(std::move(duplicate_packages));
     require(!duplicate_catalog_outcome.value.has_value() &&
