@@ -24,7 +24,9 @@ package descriptor 将 AerodynamicTable 声明为 `vehicle.output + PureQuery`�
 
 同一 package contribution 现在也把真实 `AltitudePitchGuidanceKernel` 描述为首个 RuntimeComponent Catalog 候选。该 kernel 对每份 committed rigid observation 做独立求值，正式 output 被 `PitchMomentControllerKernel` 消费；descriptor 因而冻结 stateless `SampledTransform + BoundaryEvaluation`、process phase 每个 committed boundary 的 schedule、current-cycle sampled ports、zero-order hold、instantiate/dispose 和 exact kernel identity，并且不开放 state schema。canonical config builder 保留 frame、clock、revision、三项 guidance 参数与完整 quaternion policy。
 
-当前 `ControlledPropelledRigidMassStepKernel` 仍在 package wrapper 内构造 observation 并顺序调用 guidance/controller/actuator，package 尚未贡献可独立连接的 RigidBody StateOwner/`PublishProjection`、environment PureQuery 或完整 runtime component 图；`RunBinding` 也不能替代每步 provider。Catalog descriptor 可以独立审查；Compiler 会拒绝把孤立 guidance occurrence 降为 RuntimeComponent plan。
+R2 package contribution 进一步冻结了真实 uniform-environment PureQuery、RigidBody/Mass 两个 StateOwner、initial/projection/derivative/evolution entries，以及 guidance/controller/actuator/fixed supplied-propulsion/terminal evaluator 的静态合同。Mass 的既有 `NumericalPolicy` 已进入 canonical Definition/config，runtime-facing initial/evolution entries 不要求 Session 另行生成策略。`ControlledPropelledRigidMassStepKernel` 等 R1 wrapper 仍只作为科学/oracle compatibility composition，不被登记为 StateOwner 或 RuntimeComponent。
+
+这些产品入口目前足够审查静态 plan/proof/link 关系，但 package-owned `RuntimeCellFactory` 与 invocation-result writer/binder 尚未定义或 exact-link；因此当前 Image 不能被描述为 R3 可直接物化。补齐该统一 factory 合同前，不得由 Kernel 按 model id/type switch 重建 invocation set，也不得把 telemetry 当作 environment/aero/closure 的权威 result flow。
 
 两段边界调用链：
 
@@ -49,6 +51,8 @@ opening committed rigid state + MassState
 ctest --preset dev -R '^r1\.yyz-rigid-step\.(probe|oracle)$'
 ctest --preset dev -R '^r1\.yyz-two-interval-mass-commit\.(probe|oracle)$'
 ctest --preset dev -R '^r2\.compiler-runtime-component-catalog\.probe$'
+ctest --preset dev -R '^r2\.yyz-static-product-contracts\.probe$'
+ctest --preset dev -R '^r2\.compiler-complete-yyz-plan\.probe$'
 ```
 
 首条 oracle 检查直接读取 `REF-YYZ-FROZEN-INTERVAL-001`；第二条读取 `REF-YYZ-TWO-INTERVAL-MASS-COMMIT-001`。两者都使用原 fixture 声明的容差，reference 与产品 model identity 保持分离。

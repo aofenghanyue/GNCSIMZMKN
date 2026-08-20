@@ -1,7 +1,7 @@
 # ADR-0015: R2 stateless sampled RuntimeComponent Catalog boundary
 
-- Status: Proposed
-- Date: 2026-08-19
+- Status: Accepted
+- Decision Date: 2026-08-20
 - Owner: Repository owner
 - Related tasks: R2-CAT-001、R2-PLAN-001
 - Architecture references: 00A §3.3、05 §5～§7、05 §12～§15、10 §4、12 §4、12 §9.3、12 §11～§14、13、14、15 §4
@@ -12,23 +12,24 @@ R1 已交付 `AltitudePitchGuidanceKernel`。它从 committed rigid observation 
 
 当前产品 wrapper `ControlledPropelledRigidMassStepKernel` 在调用内部构造 observation，并内联执行 guidance、controller、actuator、propulsion 与 rigid/mass candidate。Catalog 目前没有独立 RigidBody StateOwner/`PublishProjection` provider，也没有 package-owned environment PureQuery；`RunBinding` 只容纳初态、time origin、初始 ParameterState 与外部 replay/input ArtifactRef，不能替代每步 sampled provider。把单个 guidance occurrence 降为计划会留下 required input；把 wrapper 宣称为单一 state owner 又会绕过 rigid/mass 原子边界和未来 R3 transaction ownership。
 
-## Proposed decision
+## Decision
 
 1. `ModelExecutionForm` 增加封闭的 `RuntimeComponent` tag。只有该 form 可以携带 `StaticRuntimeComponentDescriptor`；PureQuery/Closure 继续要求 preparation identity，并拒绝 runtime-only facts。
 2. 首个 package-owned descriptor 选择 YYZ `AltitudePitchGuidance`，profile 为 stateless `SampledTransform`，唯一 obligation 为 `BoundaryEvaluation`。placement 固定为 `vehicle.process`。
 3. required input 为 current-cycle committed rigid observation，正式 output 为 current-cycle guidance output。两端使用 `SampledSignal`；输入 cardinality 为 exactly-one，输出 cardinality 为 one-or-more。
 4. schedule 把现有 R1 两区间产品的“每个 committed boundary 求值一次”冻结为 process phase、整数 step interval 1、offset 0、zero-order hold 和 input age 0。该事实只属于 `gnc.package.yyz.guidance.altitude-pitch.experimental@1`，不声称覆盖 00A/Reference A 的 10/20 Hz 目标 profile；后者需要独立 definition/source 并重新编译。该无状态 descriptor 不开放 state schema；lifecycle 只声明 instantiate/dispose；entry 锁定现有 guidance kernel identity。
-5. package 提供 Catalog-only exact config schema 与 builder，确定性保留 frame、clock、configuration revision、guidance gains/limit 和 quaternion policy。该 block 不进入 `CanonicalMissionIr` configuration v1，从而保留 ADR-0013 的现有 IR 范围。科学公式、控制符号、frame、时间边界与 R1 oracle 不变。
-6. Catalog 只接受上述已消费组合，并拒绝 invalid form/profile/recipe/obligation/schedule/port/lifecycle。Compiler 解析到 RuntimeComponent definition 后返回 `GNC-PLAN-RUNTIME-COMPONENT-UNAVAILABLE`，直到真实 provider/consumer graph 闭合。
-7. RuntimeComponent facts 尚未进入 `CanonicalMissionIr` 或 semantic bytes。`semantic-bytes@2` 显式拒绝 RuntimeComponent execution form，encoding identity 与既有 qualification vector 保持不变。
+5. package 提供 Catalog-only exact config schema 与 builder，确定性保留 frame、clock、configuration revision、guidance gains/limit 和 quaternion policy。该 builder 只服务 Catalog/package descriptor，不构成新的 canonical source schema。现有 qualification IR 继续使用 ADR-0013 的范围；完整 RuntimeComponent graph 使用后续明确版本的 canonical source/IR。科学公式、控制符号、frame、时间边界与 R1 oracle 不变。
+6. Catalog 只接受已有产品支撑的组合，并拒绝 invalid form/profile/recipe/obligation/schedule/port/lifecycle。`GNC-PLAN-RUNTIME-COMPONENT-UNAVAILABLE` 在真实图尚未闭合时保护旧的局部编译路径。真实 provider、consumer、schedule 与 temporal edge 闭合后，合法 canonical YYZ source 必须继续生成静态计划；该合法路径不再触发临时 firewall。
+7. 既有 `CanonicalMissionIr` revision 2 与 `semantic-bytes@2` 继续显式拒绝 RuntimeComponent execution form，encoding identity 与 qualification vector 保持不变。完整 RuntimeComponent 图使用 additive `CompleteCanonicalMissionIr` revision 3 与 `semantic-bytes@3`；两条 API 不互相转换或改写。
+8. 残缺图、缺 provider、provider/StateOwner/writer 不唯一、所有权冲突、非法 cycle、时间关系或调用授权不成立时继续 fail closed。图闭合不得使用 dummy provider、虚构 StateOwner、wrapper 伪装 owner、mini runtime 或临时 runner。
 
 ## Consequences
 
-- `R2-CAT-001` 获得可执行 Catalog snapshot、canonical config round-trip 和非法组合负例，可以进入 owner review。
-- `R2-PLAN-001`、`R2-PRF-001`、`R2-LINK-001` 保持 planned。当前不会发布部分 RuntimeComponent IR、未闭合 BindingPlan、虚构 provider、state owner、proof 或 link image。
-- sampled output contract 原样锁定现有被 controller 消费的 `AltitudePitchGuidanceOutput`；本 ADR 不把其中的 measured/error/saturation 字段重新分类为未来 `GuidanceCommand` 或 telemetry，稳定 contract 拆分等待真实闭合图。
-- 公共 descriptor 只增加首个 consumer 所需的 runtime recipe/profile、obligation、sampled port、schedule、lifecycle 与 algorithm-entry primitive；state-schema primitive 等待真实 state owner。
-- Runtime scheduler、Runtime Cell 实例、Session、CommittedStateStore、CycleFrame、StepTransaction、IntegrationScope 和 serializer 保持未实现。
+- `R2-CAT-001` 获得 owner 接受、可执行 Catalog snapshot、canonical config round-trip 和非法组合负例，满足完成条件。
+- `R2-PLAN-001`、`R2-PRF-001`、`R2-LINK-001` 在完整真实 YYZ graph 上连续推进；局部或未闭合图不发布 Descriptor/Image。
+- sampled output contract 原样锁定现有被 controller 消费的 `AltitudePitchGuidanceOutput`；本次闭合图不改写其中 measured/error/saturation 字段的既有产品语义，也不执行新的 command/telemetry contract 拆分。
+- state schema、initial builder、projection、derivative 与 interval candidate 只随真实 RigidBody/Mass owner 和完整静态图进入公共 descriptor。
+- Runtime scheduler、Runtime Cell 实例、Session、CommittedStateStore、CycleFrame、StepTransaction 执行和 serializer 保持未实现。
 
 ## Alternatives considered
 
@@ -36,10 +37,17 @@ R1 已交付 `AltitudePitchGuidanceKernel`。它从 committed rigid observation 
 - 为 guidance 创建 dummy observation provider 或 package-local runner：无法对应现有产品边界，并会绕过 Plan Firewall。
 - 把完整 controlled rigid/mass wrapper 声明为一个 RuntimeComponent：会隐藏 guidance/controller/actuator/propulsion 的真实连接以及 rigid/mass 多 owner 原子提交边界。
 
+## Implementation status
+
+当前 PR 已实现两项真实 StateOwner、产品入口与 planning/proof/science-entry link review。accepted architecture 同时要求 R2 冻结 package-owned RuntimeCellFactory，而当前 Image 尚无该 factory handle；authorized environment/aero/closure invocation result 也没有正式 exactly-once writer/binder。因此 `R2-CAT-001` 可完成，但 `R2-PLAN-001`/`R2-LINK-001` 仍是带明确 blocker 的 review/WIP，不能把 Definition builder 或 wrapper 描述为 factory。
+
 ## Executable evidence
 
 - `framework/include/gnc/model_sdk/static_descriptor.hpp`
 - `framework/include/gnc/compiler/static_mission_compiler.hpp`
+- `framework/include/gnc/compiler/complete_execution_plan.hpp`
 - `packages/yyz-rigid-step/src/mass_commit.cpp`
 - `tests/compiler_runtime_component_catalog.cpp`
+- `tests/yyz_static_product_contracts.cpp`
 - `r2.compiler-runtime-component-catalog.probe`
+- `r2.yyz-static-product-contracts.probe`

@@ -2,7 +2,7 @@
 
 职责：ModelDefinition、Algorithm six-piece、RuntimeCellRecipe、State/Port/Telemetry schema、execution obligations 和 behavior composition。
 
-当前已交付的 descriptor 覆盖真实 `PureQuery`、`Closure`、首个 stateless `RuntimeComponent` 与 AlgorithmKernel consumer：package 提供 static model/algorithm/port/preparation 描述，R2 Compiler 以只读方式消费。`RuntimeComponent` 是封闭 execution-form tag，只有该 form 可以携带 recipe、profile、obligation、sampled ports、schedule、lifecycle 与 algorithm-entry facts；当前无状态 consumer 不开放 state schema，PureQuery/Closure 继续只有 prepare-time facts与 output ports。
+当前已交付的 descriptor 覆盖真实 `PureQuery`、`Closure`、stateless `RuntimeComponent`、RigidBody/Mass state owner 与 AlgorithmKernel consumer：package 提供 static model/algorithm/port/preparation、state schema、initial builder、projection/evolution、obligation entry、schedule 与 lifecycle 描述，R2 Compiler 以只读方式消费。`RuntimeComponent` 是封闭 execution-form tag，只有该 form 可以携带 runtime recipe/profile/state/obligation facts；PureQuery/Closure 继续只携带 preparation、request/result contract、workspace 与 exact entry facts。
 
 允许依赖：foundation、contracts。
 
@@ -12,6 +12,7 @@
 
 - `model_metadata.hpp`：immutable definition/prepared metadata、封闭 execution form 和 typed prepare failure；现有 PreparedModel 产品使用 PureQuery/Closure，RuntimeComponent tag 由静态 Catalog descriptor 消费。
 - `algorithm_evaluation.hpp`：call-local formal output 与 telemetry 分离；YYZ/CAVH 的无状态 kernel 均直接返回该类型。
-- `static_descriptor.hpp`：YYZ `AltitudePitchGuidance` 形成首个 stateless `SampledTransform` consumer；descriptor 不携带 state schema，schedule 为 process phase 每个 committed boundary 执行，lifecycle 只声明 instantiate/dispose。
+- `static_descriptor.hpp`：冻结 execution form、typed ports、state ownership、obligation、phase、schedule、temporal relation 与 lifecycle 的 package-owned 静态语义。
+- `static_implementation.hpp`：package 向 composition root 提供 exact process-local entry identity/version/signature、type-preserving callable reference和 state layout `sizeof/alignof`；Compiler 只消费该通用表，不依赖具体 package。
 
-RuntimeComponent plan、cell factory、PreparedModel cache、registry、serializer 与 StateFragment 仍未实现。R1 的当前独立求值路径不依赖 Mission、Session、文件系统或 logger。
+最小 REF-YYZ 图的 RuntimeComponent/state descriptor 已能进入 R2 planning/linking，Mass 的既有数值策略也由 canonical Definition/config提供。当前仍缺 package-owned RuntimeCellFactory 的 descriptor identity、exact typed implementation entry与Image handle，以及invocation result writer/binder；这些是R2必须冻结而R3才调用的静态接缝，不能由Definition builder替代。实际 PreparedModel/Bound handles、workspace、RuntimeCell、per-session state、registry、serializer 与 StateFragment runtime 仍未实现。R1 的当前独立求值路径不依赖 Mission、Session、文件系统或 logger。
