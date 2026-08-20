@@ -484,14 +484,14 @@
       "depends_on": ["R2-BIND-001", "R2-CAT-001"],
       "deliverables": ["CompleteCanonicalMissionIr revision 3 and complete descriptor revision 4 for the current REF-YYZ qualification graph", "Typed occurrence, port, binding, state-block, initial-state, projection, query, closure, RuntimeComponent callsite and evaluator-history plans", "Boundary regions/DAG, IntegrationScopePlan and rigid/mass TransactionPlan", "Layered source semantic, descriptor and proof identities with direct provenance"],
       "acceptance": ["The complete static descriptor consumes only package-owned products and compiled obligations, contains no Session identity or mutable runtime object, and introduces no capability outside the current REF-YYZ path", "RigidBody and Mass each have one owner/writer, every required port has one compatible provider, invocation authorization is distinct from result flow, and current-cycle/interval/terminal relationships form a legal deterministic plan", "Incomplete providers, ownership, schedule, temporal, phase, authorization, integration, transaction, evaluator history or catalog selection fail before any image is published"],
-      "evidence": ["r2.compiler-complete-yyz-plan.probe constructs the current canonical REF-YYZ source facts and verifies the occurrence/port/state/query/closure/runtime/region/integration/transaction/evaluator planning review artifact", "The same probe covers deterministic source ordering and relocation, source-vs-implementation identity layering and focused compile diagnostics", "r2.compiler-static-plan.probe and r2.compiler-canonical-semantic-hash.reference preserve the accepted semantic-bytes@2 path and qualification vector", "ADR-0015 and ADR-0016 record the repository-owner Accepted R2/R3 boundary dated 2026-08-20", "Owner-review blocker: the plan has no package-owned RuntimeCellFactory handle and the authorized environment/aero/closure invocation results have no formal exactly-once writer/binder, so R3 materialization is not yet closed"],
+      "evidence": ["r2.compiler-complete-yyz-plan.probe constructs the current canonical REF-YYZ source facts and verifies the occurrence/port/state/query/closure/runtime/region/integration/transaction/evaluator planning review artifact", "The same probe covers deterministic source ordering and relocation, source-vs-implementation identity layering, exact RuntimeCellFactory/result-binder references and focused compile diagnostics", "r2.compiler-static-plan.probe and r2.compiler-canonical-semantic-hash.reference preserve the accepted semantic-bytes@2 path and qualification vector", "ADR-0015 and ADR-0016 record the repository-owner Accepted R2/R3 boundary dated 2026-08-20", "Owner review remains required before G3; R3 factory invocation, Session-local materialization and execution are intentionally absent"],
       "architecture_refs": ["05 §12–§15", "12 §11–§14", "14"]
     },
     {
       "id": "R2-PRF-001",
       "stage": "R2",
       "title": "Implement PlanProofRecord, ProofIndex and dry-run explain",
-      "status": "blocked",
+      "status": "review",
       "priority": "P0",
       "size": "L",
       "owner_role": "compiler_lead",
@@ -506,7 +506,7 @@
       "id": "R2-LINK-001",
       "stage": "R2",
       "title": "Implement exact plan linking and ExecutionPlanImage",
-      "status": "blocked",
+      "status": "review",
       "priority": "P0",
       "size": "L",
       "owner_role": "compiler_lead",
@@ -514,7 +514,7 @@
       "depends_on": ["R2-PLAN-001", "R2-CAT-001"],
       "deliverables": ["Process-local immutable typed entry and state-layout tables", "Exact package/entry/version/signature/build lock and stable link fingerprint", "Exact package-owned RuntimeCellFactory identity, typed implementation entry and per-component Image handle without factory invocation", "Numeric handles for occurrences, ports, slots, state blocks, callsites, invocations, invocation result writers, regions, integration scopes, transaction groups and evaluator history", "Descriptor/proof/image conformance index"],
       "acceptance": ["Linker resolves locked implementations and RuntimeCellFactory handles without model, adapter, order or solver reselection and without calling an entry", "Registration order and function address do not affect stable fingerprints; implementation identity, signature, build fingerprint or layout changes do", "Missing, duplicate or mismatched implementation and missing or mutated required proof fail closed", "Authorized invocation results have one formal exactly-once writer/binder and are never sourced from telemetry", "The image contains no PreparedModel, Bound handle, workspace, RuntimeCell, Session store or per-session state"],
-      "evidence": ["r2.compiler-complete-yyz-plan.probe verifies exact type-preserving science-callable resolution, layout checks, deterministic repeat/reorder linking and poison entries that prove link performs no invocation", "The same probe rejects missing, duplicate, wrong-signature, wrong-layout implementations and mutated proof indexes", "r0.source-boundaries proves Compiler production code has no concrete YYZ package dependency", "Owner-review blocker: accepted architecture requires a package-owned RuntimeCellFactory identity, typed implementation entry and Image handle plus a formal invocation-result writer/binder; the current Definition builder and raw obligation entries do not satisfy that materialization contract"],
+      "evidence": ["r2.compiler-complete-yyz-plan.probe verifies exact type-preserving science/factory/binder resolution, layout checks, deterministic repeat/reorder linking and poison entries that prove link performs no invocation or address fingerprinting", "The same probe rejects missing, duplicate, wrong-signature/call-shape/type/layout implementations, cross-component factory/provider-binder swaps, mutated invocation ordinals/result slots/held-form aliases and mutated proof indexes", "r0.source-boundaries proves Compiler production code has no concrete YYZ package dependency", "Owner review remains required; actual factory/binder invocation, RuntimeCell ownership and slot execution are deferred to R3 after G3"],
       "architecture_refs": ["05 §14"]
     },
     {

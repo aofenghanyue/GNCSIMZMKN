@@ -157,7 +157,16 @@ if ($null -ne $projectManifest -and $null -ne $backlog) {
             Add-Error "In-progress task $($task.id) has no assignee."
         }
 
-        if ($task.status -in @('in_progress', 'review', 'done')) {
+        if ($task.status -eq 'review') {
+            foreach ($dependency in $task.depends_on) {
+                if ($taskById.ContainsKey($dependency) -and
+                    $taskById[$dependency].status -notin @('review', 'done')) {
+                    Add-Error "Review task $($task.id) has dependency $dependency outside coordinated review or done."
+                }
+            }
+        }
+
+        if ($task.status -in @('in_progress', 'done')) {
             foreach ($dependency in $task.depends_on) {
                 if ($taskById.ContainsKey($dependency) -and $taskById[$dependency].status -ne 'done') {
                     Add-Error "Active or completed task $($task.id) has incomplete dependency $dependency."

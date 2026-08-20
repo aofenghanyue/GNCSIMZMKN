@@ -50,7 +50,7 @@ owner 已决定在 R2 补齐 package-owned RigidBody/Mass StateOwner 静态合�
 
 ## Implementation status
 
-当前 PR 的 complete API 已形成 deterministic descriptor、派生 proof 与 exact science-entry Image review artifact，并保持 link 阶段零调用。它尚未满足本决定的完整 R2 link 边界：RuntimeCellFactory identity/typed entry/Image handle 未实现，invocation result slot 也缺 package-owned writer/binder。R3 不能通过 model-id switch、signature解析、默认数值策略或 telemetry-as-authoritative-flow 补齐；这些静态接缝必须先在 R2 exact-link，R3 才能调用并物化。
+当前 PR 的 complete API 已形成 deterministic descriptor、派生 proof 与 exact-entry Image review artifact，并保持 link 阶段零调用。每个 RuntimeComponent 的 package-specific typed RuntimeCellFactory 和每个已授权 query/closure 的 formal-output binder 均以独立 identity、signature、call shape、C++ type witness 与 Image handle exact-link；invocation result slot、唯一 Binding、consumer port 和 package ordinal 也已冻结，FrozenInterval closure result 与 held form 共用同一权威值。R3 不得通过 model-id switch、signature解析、默认数值策略或 telemetry-as-authoritative-flow重新发现这些选择；它在 G3 通过后才由 package/generated composition恢复 entry、调用 factory/binder并物化Session对象。
 
 ## Executable evidence
 

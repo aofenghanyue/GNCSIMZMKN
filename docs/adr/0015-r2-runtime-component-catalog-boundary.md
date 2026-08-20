@@ -39,7 +39,7 @@ R1 已交付 `AltitudePitchGuidanceKernel`。它从 committed rigid observation 
 
 ## Implementation status
 
-当前 PR 已实现两项真实 StateOwner、产品入口与 planning/proof/science-entry link review。accepted architecture 同时要求 R2 冻结 package-owned RuntimeCellFactory，而当前 Image 尚无该 factory handle；authorized environment/aero/closure invocation result 也没有正式 exactly-once writer/binder。因此 `R2-CAT-001` 可完成，`R2-PLAN-001` 保持 review/WIP；依赖完整plan的 `R2-PRF-001` 与尚未闭合materialization contract的 `R2-LINK-001` 保持 blocked。不能把 Definition builder 或 wrapper 描述为 factory。
+当前 PR 已实现两项真实 StateOwner、产品入口，以及 planning/proof/exact-link review。七个 RuntimeComponent 各自冻结并 exact-link package-specific typed RuntimeCellFactory；environment/aero/closure invocation 也分别拥有只接收 formal output 的 package binder、唯一 result-flow Binding、稳定 ordinal 与 result slot，closure response 直接别名 held form。link 阶段不调用任何 entry。`R2-CAT-001` 已完成，`R2-PLAN-001`、`R2-PRF-001` 与 `R2-LINK-001` 均进入 owner review；这不表示 G3 已通过，也不把 Definition builder、wrapper 或统一 callback framework 描述为 factory。实际 factory 调用、Session-local RuntimeCell 与执行仍属于 R3。
 
 ## Executable evidence
 
