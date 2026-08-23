@@ -197,11 +197,26 @@ enum class CancellationDisposition : std::uint8_t {
     Superseded,
 };
 
+enum class CancellationReason : std::uint8_t {
+    None,
+    EmptyRequestId,
+    EmptyRunId,
+    WrongRunId,
+    InvalidLifecycle,
+    DuplicateRequest,
+    OtherRequestAccepted,
+};
+
+[[nodiscard]] std::string_view to_string(
+    CancellationReason reason) noexcept;
+
 struct CancellationOutcome {
     CancellationDisposition disposition =
         CancellationDisposition::Rejected;
+    CancellationReason reason = CancellationReason::None;
     CancellationRequestId request_id;
     RunId run_id;
+    RunId active_run_id;
     std::uint64_t observed_committed_epoch = 0U;
     std::int64_t observed_committed_tick = 0;
 
@@ -338,6 +353,7 @@ enum class RuntimeDiagnosticCode : std::uint8_t {
     HeldOutputExpired,
     HeldOutputCloneFailed,
     HeldOutputValidationFailed,
+    CommandSubmissionRejected,
 };
 
 enum class RuntimeDiagnosticStage : std::uint8_t {
@@ -367,25 +383,142 @@ enum class RuntimeDiagnosticStage : std::uint8_t {
     RestorePrecommit,
     HeldOutputInjection,
     HeldOutputCommit,
+    SessionCreation,
+    CommandSubmission,
+    RunDrive,
 };
 
 enum class RuntimeFailureDisposition : std::uint8_t {
     FailOperation,
+    RetryStep,
+    RejectCommand,
+};
+
+enum class RuntimeOperation : std::uint8_t {
+    None,
+    CreateSession,
+    Initialize,
+    Reset,
+    Checkpoint,
+    Restore,
+    ExecuteStep,
+    RunToTerminal,
+    SubmitCommand,
+    Dispose,
+};
+
+enum class RuntimeDiagnosticSourceKind : std::uint8_t {
+    RuntimeApi,
+    ImageConformance,
+    ImageField,
+};
+
+enum class RuntimeApiField : std::uint8_t {
+    None,
+    Image,
+    MaterializationProvider,
+    RunId,
+    RunBinding,
+    SessionLifecycle,
+    CommandId,
+    CommandRunId,
+    CommandRoute,
+    CommandTarget,
+    CommandPayloadSchema,
+    CommandAuthority,
+    CommandTiming,
+    CommandCapacity,
+    CommandPayload,
+    CommandSupersessionKey,
+    TransactionCutoff,
+    Checkpoint,
+    ImageRevision,
+    ImageStructure,
+    RuntimeAllocation,
+    RuntimeExecution,
+};
+
+enum class RuntimeDiagnosticSubjectKind : std::uint8_t {
+    Session,
+    Image,
+    MaterializationProvider,
+    Run,
+    Checkpoint,
+    Command,
+    Package,
+    Entry,
+    Occurrence,
+    Preparation,
+    Query,
+    Closure,
+    Port,
+    Slot,
+    StorageLayout,
+    WriterToken,
+    Binding,
+    StateBlock,
+    RuntimeComponent,
+    Callsite,
+    Invocation,
+    Region,
+    IntegrationScope,
+    Transaction,
+    CommandRoute,
+    EventDelivery,
+    Entity,
+    Activation,
+    EvaluatorHistory,
+    ResourcePlan,
+    ImageObject,
+};
+
+enum class RuntimeDiagnosticSubjectReferenceKind : std::uint8_t {
+    None,
+    ImageHandle,
+    NumericValue,
+};
+
+enum class RuntimeDiagnosticCauseKind : std::uint8_t {
+    SessionError,
+    CommandSubmissionReason,
 };
 
 [[nodiscard]] std::string_view to_string(
     RuntimeDiagnosticCode code) noexcept;
 [[nodiscard]] std::string_view to_string(
     RuntimeDiagnosticStage stage) noexcept;
+[[nodiscard]] std::string_view to_string(RuntimeOperation operation) noexcept;
+[[nodiscard]] std::string_view to_string(
+    RuntimeDiagnosticSourceKind source_kind) noexcept;
+[[nodiscard]] std::string_view to_string(RuntimeApiField field) noexcept;
+[[nodiscard]] std::string_view to_string(
+    RuntimeDiagnosticSubjectKind subject_kind) noexcept;
+[[nodiscard]] std::string_view to_string(
+    RuntimeDiagnosticSubjectReferenceKind reference_kind) noexcept;
+[[nodiscard]] std::string_view to_string(
+    RuntimeDiagnosticCauseKind cause_kind) noexcept;
 
 struct RuntimeDiagnostic {
     RuntimeDiagnosticCode code = RuntimeDiagnosticCode::None;
     RuntimeDiagnosticStage stage =
         RuntimeDiagnosticStage::InitializationRequest;
+    RuntimeOperation operation = RuntimeOperation::None;
+    RuntimeDiagnosticSourceKind source_kind =
+        RuntimeDiagnosticSourceKind::RuntimeApi;
+    std::uint32_t source_handle = 0U;
+    RuntimeApiField source_field = RuntimeApiField::None;
+    RuntimeDiagnosticSubjectKind subject_kind =
+        RuntimeDiagnosticSubjectKind::Session;
+    RuntimeDiagnosticSubjectReferenceKind subject_reference_kind =
+        RuntimeDiagnosticSubjectReferenceKind::None;
     std::uint32_t subject_handle = 0U;
     RunId run_id;
+    bool run_context_present = false;
     std::int64_t tick = 0;
     std::uint64_t base_epoch = 0U;
+    bool simulation_context_present = false;
+    RuntimeDiagnosticCauseKind cause_kind =
+        RuntimeDiagnosticCauseKind::SessionError;
     SessionError cause_code = SessionError::None;
     std::uint32_t cause_ref = 0U;
     contracts::EvidenceValidity validity_effect =
@@ -576,6 +709,12 @@ enum class RunDriveStatus : std::uint8_t {
 struct RunDriveOutcome {
     RunDriveStatus status = RunDriveStatus::Failed;
     SessionResult result;
+    RunId run_id;
+    std::int64_t observed_committed_tick = 0;
+    std::uint64_t observed_committed_epoch = 0U;
+    contracts::EvidenceValidity validity =
+        contracts::EvidenceValidity::Unknown;
+    std::optional<RuntimeDiagnostic> primary_diagnostic;
 
     [[nodiscard]] explicit operator bool() const noexcept {
         return status == RunDriveStatus::Completed && result;
@@ -798,6 +937,7 @@ enum class CommandSubmissionReason : std::uint8_t {
     CommandIdConflict,
     TransactionOpen,
     AllocationFailure,
+    InvalidSupersessionKey,
 };
 
 struct CommandRequest {
@@ -818,14 +958,30 @@ struct CommandSubmissionOutcome {
     CommandSubmissionReason reason = CommandSubmissionReason::None;
     CommandId command_id;
     RunId run_id;
+    RunId active_run_id;
     std::uint32_t route_handle = 0U;
     std::uint64_t ledger_sequence = 0U;
     std::uint64_t observed_committed_epoch = 0U;
     std::int64_t observed_committed_tick = 0;
     bool duplicate_retry = false;
+    std::optional<RuntimeDiagnostic> primary_diagnostic;
 
     [[nodiscard]] explicit operator bool() const noexcept {
         return status == CommandSubmissionStatus::Enqueued;
+    }
+};
+
+struct DisposeOutcome {
+    SessionResult result;
+    RunId run_id;
+    std::int64_t observed_committed_tick = 0;
+    std::uint64_t observed_committed_epoch = 0U;
+    contracts::EvidenceValidity validity =
+        contracts::EvidenceValidity::Unknown;
+    std::optional<RuntimeDiagnostic> primary_diagnostic;
+
+    [[nodiscard]] explicit operator bool() const noexcept {
+        return static_cast<bool>(result);
     }
 };
 
@@ -1194,13 +1350,23 @@ class SessionEventConsumptionContext final {
     [[nodiscard]] InProcessValueView payload() const noexcept {
         return payload_;
     }
+    [[nodiscard]] const SessionCommittedStateView& committed()
+        const noexcept {
+        return committed_;
+    }
+    [[nodiscard]] const SessionCandidateWriterSet& candidates()
+        const noexcept {
+        return candidates_;
+    }
 
   private:
     SessionEventConsumptionContext(
         std::uint32_t delivery_handle, std::uint32_t callsite_handle,
         std::uint32_t component_handle, EventId event_id,
         CommandId command_id, std::int64_t tick,
-        InProcessValueView payload) noexcept;
+        InProcessValueView payload,
+        SessionCommittedStateView committed,
+        SessionCandidateWriterSet candidates) noexcept;
 
     std::uint32_t delivery_handle_ = 0U;
     std::uint32_t callsite_handle_ = 0U;
@@ -1209,6 +1375,8 @@ class SessionEventConsumptionContext final {
     CommandId command_id_;
     std::int64_t tick_ = 0;
     InProcessValueView payload_;
+    SessionCommittedStateView committed_;
+    SessionCandidateWriterSet candidates_;
 
     friend class Session;
 };
@@ -1587,7 +1755,7 @@ class Session final {
         CancellationRequest request) noexcept;
     [[nodiscard]] CommandSubmissionOutcome submit_command(
         CommandRequest request) noexcept;
-    [[nodiscard]] SessionResult dispose() noexcept;
+    [[nodiscard]] DisposeOutcome dispose() noexcept;
     [[nodiscard]] StepOutcome execute_step() noexcept;
     [[nodiscard]] RunDriveOutcome run_to_terminal() noexcept;
     [[nodiscard]] const SessionResult& last_result() const noexcept;
@@ -1633,6 +1801,9 @@ class Session final {
     [[nodiscard]] std::uint64_t committed_epoch() const noexcept;
     [[nodiscard]] std::int64_t committed_tick() const noexcept;
     [[nodiscard]] std::uint64_t committed_step_count() const noexcept;
+    [[nodiscard]] std::optional<bool> entity_active(
+        std::uint32_t entity_handle) const noexcept;
+    [[nodiscard]] std::uint64_t topology_revision() const noexcept;
     [[nodiscard]] bool frame_open() const noexcept;
     [[nodiscard]] std::uint64_t command_ledger_sequence() const noexcept;
     [[nodiscard]] std::size_t pending_command_count() const noexcept;
@@ -1674,6 +1845,7 @@ class Session final {
     [[nodiscard]] CheckpointOutcome qualification_checkpoint_with_barrier(
         std::uint8_t barrier) noexcept;
     void qualification_set_restore_precommit_failure(bool fail) noexcept;
+    void qualification_set_activation_precommit_failure(bool fail) noexcept;
     void qualification_set_held_output_fault(std::uint8_t fault) noexcept;
     std::unique_ptr<Impl> implementation_;
 
@@ -1687,6 +1859,7 @@ class Session final {
 struct SessionCreation {
     std::unique_ptr<Session> session;
     SessionResult result;
+    std::optional<RuntimeDiagnostic> primary_diagnostic;
 
     [[nodiscard]] explicit operator bool() const noexcept {
         return session != nullptr && result.error == SessionError::None;

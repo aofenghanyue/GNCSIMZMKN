@@ -16,6 +16,15 @@ find_package(Threads REQUIRED)
 
 add_library(gnc_build_options INTERFACE)
 target_compile_features(gnc_build_options INTERFACE cxx_std_17)
+if(MSVC)
+    # ExecutionPlanImage freezes exact in-process STL-backed object layouts
+    # under a package build lock. Keep that ABI identical between Debug and
+    # Release; MSVC's Debug default (_ITERATOR_DEBUG_LEVEL=2) otherwise changes
+    # those layouts and makes the same build fingerprint describe two ABIs.
+    target_compile_definitions(
+        gnc_build_options
+        INTERFACE _ITERATOR_DEBUG_LEVEL=0)
+endif()
 target_include_directories(
     gnc_build_options
     INTERFACE
@@ -66,7 +75,9 @@ add_library(
         packages/yyz-rigid-step/src/rigid_step.cpp
         packages/yyz-rigid-step/src/mass_commit.cpp
         packages/yyz-rigid-step/src/qualification_00a.cpp
-        packages/yyz-rigid-step/src/scheduled_stuck_actuator.cpp)
+        packages/yyz-rigid-step/src/scheduled_stuck_actuator.cpp
+        packages/yyz-rigid-step/src/two_entity_causal.cpp
+        packages/yyz-rigid-step/src/inactive_child_activation.cpp)
 target_include_directories(
     yyz_rigid_step
     PUBLIC
@@ -342,6 +353,32 @@ if(GNC_BUILD_TESTS)
     endif()
     gnc_enable_warnings(gnc_kernel_stuck_actuator_probe)
 
+    # R3 two-entity causal path with explicit selector and atomic scope union.
+    add_executable(
+        gnc_kernel_two_entity_causal_probe
+        tests/kernel_two_entity_causal.cpp)
+    target_link_libraries(
+        gnc_kernel_two_entity_causal_probe
+        PRIVATE compiler kernel_session yyz_rigid_step)
+    if(MSVC)
+        target_compile_options(
+            gnc_kernel_two_entity_causal_probe PRIVATE /bigobj)
+    endif()
+    gnc_enable_warnings(gnc_kernel_two_entity_causal_probe)
+
+    # R3 predeclared inactive child with atomic three-owner activation.
+    add_executable(
+        gnc_kernel_inactive_child_activation_probe
+        tests/kernel_inactive_child_activation.cpp)
+    target_link_libraries(
+        gnc_kernel_inactive_child_activation_probe
+        PRIVATE compiler kernel_session yyz_rigid_step)
+    if(MSVC)
+        target_compile_options(
+            gnc_kernel_inactive_child_activation_probe PRIVATE /bigobj)
+    endif()
+    gnc_enable_warnings(gnc_kernel_inactive_child_activation_probe)
+
     # R0 validation spike: intentionally isolated from product modules and Legacy.
     add_executable(
         gnc_scientific_conventions
@@ -598,6 +635,12 @@ if(GNC_BUILD_TESTS)
     add_test(
         NAME r3.kernel-stuck-actuator.probe
         COMMAND gnc_kernel_stuck_actuator_probe --self-check)
+    add_test(
+        NAME r3.kernel-two-entity-causal.probe
+        COMMAND gnc_kernel_two_entity_causal_probe --self-check)
+    add_test(
+        NAME r3.kernel-inactive-child-activation.probe
+        COMMAND gnc_kernel_inactive_child_activation_probe --self-check)
     add_test(
         NAME r0.scientific-conventions.properties
         COMMAND gnc_scientific_conventions --self-check)
